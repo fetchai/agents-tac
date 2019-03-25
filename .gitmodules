@@ -1,0 +1,3 @@
+[submodule "oef-core"]
+	path = oef-core
+	url = https://github.com/fetchai/oef-core.git
