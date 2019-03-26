@@ -127,7 +127,7 @@ class ControllerAgent(TacAgent):
         if public_key in self.registered_agents:
             error_msg = "Agent already registered: '{}'".format(public_key)
             logger.error(error_msg)
-            return Error("")
+            return Error(error_msg)
         else:
             logger.debug("Agent registered: '{}'".format(public_key))
             self.registered_agents.add(public_key)

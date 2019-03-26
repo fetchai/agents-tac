@@ -147,7 +147,7 @@ class Error(Response):
         msg.error_msg = self.error_msg
         envelope = tac_pb2.TACController.Message()
         envelope.error.CopyFrom(msg)
-        return msg
+        return envelope
 
     def __str__(self):
         return self._build_str(error_msg=self.error_msg)
