@@ -18,7 +18,6 @@
 #
 # ------------------------------------------------------------------------------
 import copy
-import itertools
 import random
 from typing import List
 
