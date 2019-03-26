@@ -19,6 +19,7 @@
 #
 # ------------------------------------------------------------------------------
 
+"""Main entry point for the tac package to spawn agents."""
 
 if __name__ == '__main__':
     pass

@@ -5,5 +5,16 @@ Look at the `docs/` for further details.
 
 ## Preliminaries
 
-## Usage
+- Install the package:
+
+      python setup.py install 
+
+- Set up an OEF Node. You can find out how to do it [here](https://fetchai.github.io/oef-sdk-python/user/oef-node.html).
+
+## Agents
+
+- `controller`: the agent that handles the competition;
+- `baseline`: a baseline agent with a trivial strategy.
+
+
 

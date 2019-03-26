@@ -105,3 +105,4 @@ venv.bak/
 
 .idea/*
 ignore
+tac/*_pb2.py
