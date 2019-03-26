@@ -44,14 +44,6 @@ def parse_arguments():
     return parser.parse_args()
 
 
-class Game(object):
-
-    def __init__(self, money_endowment: int, instances_per_good: int, nb_agents: int):
-        self.money_endowment = money_endowment
-        self.instances_per_good = instances_per_good
-        self.nb_agents = nb_agents
-
-
 class ControllerHandler(object):
 
     def __init__(self, controller: 'ControllerAgent'):
@@ -105,8 +97,6 @@ class ControllerAgent(TacAgent):
         self.version = version
 
         self.registered_agents = set()  # type: Set[str]
-
-        self.game = None  # type: Optional[Game]
         self.handler = ControllerHandler(self)
 
     def register(self):
