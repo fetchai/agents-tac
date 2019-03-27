@@ -141,12 +141,13 @@ class Game(object):
         assert tx.buyer_id != tx.seller_id
         assert 0 <= tx.buyer_id < self.nb_agents
         assert 0 <= tx.seller_id < self.nb_agents
-        assert tx.quantity > 0
-        assert tx.amount > 0
+        assert all(q >= 0 for q in tx.quantities)
+        assert tx.amount >= 0
 
         result = True
         result = result and self.game_states[tx.buyer_id].balance >= tx.amount + self.fee
-        result = result and self.game_states[tx.seller_id].current_holdings[tx.good_id] >= tx.quantity
+        result = result and all(self.game_states[tx.seller_id].current_holdings[tx.good_ids[i]] >= tx.quantities[i]
+                                for i in range(len(tx.good_ids)))
 
         return result
 
@@ -155,8 +156,9 @@ class Game(object):
         seller_state = self.game_states[tx.seller_id]
 
         # update holdings
-        buyer_state.current_holdings[tx.good_id] += tx.quantity
-        seller_state.current_holdings[tx.good_id] -= tx.quantity
+        for good_id, quantity in zip(tx.good_ids, tx.quantities):
+            buyer_state.current_holdings[good_id] += quantity
+            seller_state.current_holdings[good_id] -= quantity
 
         # update balances
         buyer_state.balance -= tx.amount
@@ -174,15 +176,39 @@ class GameState:
         self.scores = scores
 
         self.current_holdings = copy.deepcopy(self.initial_endowment)
+        self._from_good_to_preference = dict(map(reversed, enumerate(self.preferences)))
 
     @property
     def nb_goods(self):
         return len(self.scores)
 
     def get_score(self) -> int:
-        holdings_score = sum(self.scores[i] * 1 if holding > 0 else 0 for i, holding in enumerate(self.current_holdings))
+        holdings_score = sum(self.scores[self._from_good_to_preference[i]] * (1 if holding > 0 else 0)
+                             for i, holding in enumerate(self.current_holdings))
         money_score = self.balance
         return holdings_score + money_score
+
+    def get_price_from_quantities_vector(self, quantities: List[int]):
+        """
+        Return the price of a vector of good quantities.
+        :param quantities: the vector of good quantities
+        :return: the overall price.
+        """
+        return sum(q * self.scores[idx] for idx, q in enumerate(quantities))
+
+    def get_excess_goods_quantities(self):
+        """
+        Return the vector of good quantities in excess. A quantity for a good is in excess if it is more than 1.
+        E.g. if an agent holds the good quantities [0, 2, 1], this function returns [0, 1, 0].
+        :return: the vector of good quantities in excess.
+        """
+        return [q - 1 if q > 1 else 0 for q in self.current_holdings]
+
+    def update(self, buyer: bool, amount: int, good_ids: List[int], quantities: List[int]):
+        switch = 1 if buyer else -1
+        for good_id, quantity in zip(good_ids, quantities):
+            self.current_holdings[good_id] += switch * quantity
+            self.balance -= switch * amount
 
     def __str__(self):
         return "GameState{}".format(pprint.pformat({
@@ -197,9 +223,10 @@ class GameState:
 class GameTransaction:
     """Represent a transaction between agents"""
 
-    def __init__(self, buyer_id: int, seller_id: int, amount: int, good_id: int, quantity: int):
+    def __init__(self, buyer_id: int, seller_id: int, amount: int, good_ids: List[int], quantities: List[int]):
+        assert len(good_ids) == len(quantities)
         self.buyer_id = buyer_id
         self.seller_id = seller_id
         self.amount = amount
-        self.good_id = good_id
-        self.quantity = quantity
+        self.good_ids = good_ids
+        self.quantities = quantities

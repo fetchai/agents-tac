@@ -207,8 +207,8 @@ class ControllerAgent(TacAgent):
             buyer_id,
             seller_id,
             request.amount,
-            request.good_id,
-            request.quantity
+            request.good_ids,
+            request.quantities
         )
         if self._current_game.is_transaction_valid(tx):
             self._current_game.settle_transaction(tx)

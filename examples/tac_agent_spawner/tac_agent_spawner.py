@@ -36,6 +36,8 @@ logger = logging.getLogger("tac")
 def parse_arguments():
     parser = argparse.ArgumentParser("tac_agent_spawner")
     parser.add_argument("N", type=int, help="Number of TAC agent to run.")
+    parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
+    parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
 
     arguments = parser.parse_args()
     return arguments
@@ -45,8 +47,8 @@ if __name__ == '__main__':
 
     arguments = parse_arguments()
 
-    tac_controller = ControllerAgent(public_key="tac_controller", oef_addr="127.0.0.1", oef_port=3333,
-                                     nb_agents=arguments.N)
+    tac_controller = ControllerAgent(public_key="tac_controller", oef_addr=arguments.oef_addr,
+                                     oef_port=arguments.oef_port, nb_agents=arguments.N)
     tac_controller.connect()
     tac_controller.register()
 

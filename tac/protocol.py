@@ -74,7 +74,7 @@ class Request(Message, ABC):
         elif case == "transaction":
             return Transaction(public_key, msg.transaction.transaction_id, msg.transaction.buyer,
                                msg.transaction.counterparty, msg.transaction.amount,
-                               msg.transaction.good_id, msg.transaction.quantity)
+                               msg.transaction.good_ids, msg.transaction.quantities)
         else:
             raise Exception("Unrecognized type of Response.")
 
@@ -104,24 +104,25 @@ class Unregister(Request):
 
 class Transaction(Request):
 
-    def __init__(self, public_key: str, transaction_id: int, buyer: bool, counterparty: str,
-                 amount: int, good_id: int, quantity: int):
+    def __init__(self, public_key: str, transaction_id: str, buyer: bool, counterparty: str,
+                 amount: int, good_ids: List[int], quantities: List[int]):
         """
 
         :param public_key: the public key of the sender.
         :param buyer: whether the transaction request is sent by a buyer.
         :param counterparty: the counterparty of the transaction.
         :param amount: the amount of money involved.
-        :param good_id: the good identifier.
-        :param quantity: the quantity of the good to be transacted.
+        :param good_ids: the good identifiers.
+        :param quantities: the quantities of the good to be transacted.
         """
         super().__init__(public_key)
         self.transaction_id = transaction_id
         self.buyer = buyer
         self.counterparty = counterparty
         self.amount = amount
-        self.good_id = good_id
-        self.quantity = quantity
+        self.good_ids = good_ids
+        self.quantities = quantities
+        assert len(self.good_ids) == len(quantities)
 
     def to_pb(self) -> tac_pb2.TACAgent.Message:
         msg = tac_pb2.TACAgent.Transaction()
@@ -129,8 +130,8 @@ class Transaction(Request):
         msg.buyer = self.buyer
         msg.counterparty = self.counterparty
         msg.amount = self.amount
-        msg.good_id = self.good_id
-        msg.quantity = self.quantity
+        msg.good_ids.extend(self.good_ids)
+        msg.quantities.extend(self.quantities)
         envelope = tac_pb2.TACAgent.Message()
         envelope.transaction.CopyFrom(msg)
         return envelope
