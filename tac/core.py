@@ -89,6 +89,9 @@ class Game(object):
         # every element of the matrix must be a valid amount of good
         # (that is, between 0 and the number of instances per good)
         assert all(0 <= e_ij <= self.instances_per_good for row_i in self.initial_endowments for e_ij in row_i)
+        # the sum of every column must be equal to the instances per good
+        assert all(
+            sum(self.initial_endowments[agent_id][good_id] for agent_id in range(self.nb_agents)) == self.instances_per_good for good_id in range(self.nb_goods))
 
         # Check the preferences.
 
@@ -105,7 +108,7 @@ class Game(object):
         """Generate a game, sampling the initial endowments and the preferences."""
 
         # compute random endowment
-        initial_endowments = [[0] * nb_goods] * nb_agents
+        initial_endowments = [[0] * nb_goods for _ in range(nb_agents)]
         for good_id in range(nb_goods):
             for _ in range(instances_per_good):
                 agent_id = random.randint(0, nb_agents - 1)
