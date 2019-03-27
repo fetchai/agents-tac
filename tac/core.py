@@ -18,6 +18,7 @@
 #
 # ------------------------------------------------------------------------------
 import copy
+import pprint
 import random
 from typing import List
 
@@ -54,53 +55,59 @@ class Game(object):
                             The index of good j in agent's row i represents the class of preference l for that good.
                             The associated score is scores[l].
         """
+        self._check_consistency(nb_agents, nb_goods, initial_money_amount, instances_per_good, scores,
+                                initial_endowments, preferences)
         self.nb_agents = nb_agents
         self.nb_goods = nb_goods
-        self.initial_money_amount = initial_money_amount
         self.instances_per_good = instances_per_good
+        self.initial_money_amount = initial_money_amount
         self.scores = scores
-        self.initial_endowments = initial_endowments
-        self.preferences = preferences
 
-        self.current_holdings = copy.deepcopy(initial_endowments)  # type: List[List[int]]
+        self.game_states = [GameState(initial_money_amount, initial_endowments[i], preferences[i], scores)
+                            for i in range(nb_agents)]  # type: List[GameState]
 
-        self._check_consistency()
-
-    def _check_consistency(self):
-        assert self.nb_agents > 0
-        assert self.nb_goods > 0
-        assert self.initial_money_amount > 0
+    @classmethod
+    def _check_consistency(cls, nb_agents: int,
+                           nb_goods: int,
+                           initial_money_amount: int,
+                           instances_per_good: int,
+                           scores: List[int],
+                           initial_endowments: List[List[int]],
+                           preferences: List[List[int]]):
+        assert nb_agents > 0
+        assert nb_goods > 0
+        assert initial_money_amount > 0
 
         # TODO the number of instances can be slightly higher or lower than the number of agents. To be changed.
-        assert self.instances_per_good >= self.nb_agents
+        assert instances_per_good >= nb_agents
 
         # we have a score for each class of preference (that is, "first preferred good", "second preferred good", etc.)
         # hence, the number of scores is equal to the number of goods.
-        assert len(self.scores) == self.nb_goods
+        assert len(scores) == nb_goods
         # no negative scores.
-        assert all(score >= 0 for score in self.scores)
+        assert all(score >= 0 for score in scores)
 
         # Check the initial endowments.
 
         # we have an endowment for every agent.
-        assert len(self.initial_endowments) == self.nb_agents
+        assert len(initial_endowments) == nb_agents
         # every endowment describes the amount for all the goods.
-        assert all(len(row) == self.nb_goods for row in self.initial_endowments)
+        assert all(len(row) == nb_goods for row in initial_endowments)
         # every element of the matrix must be a valid amount of good
         # (that is, between 0 and the number of instances per good)
-        assert all(0 <= e_ij <= self.instances_per_good for row_i in self.initial_endowments for e_ij in row_i)
+        assert all(0 <= e_ij <= instances_per_good for row_i in initial_endowments for e_ij in row_i)
         # the sum of every column must be equal to the instances per good
         assert all(
-            sum(self.initial_endowments[agent_id][good_id] for agent_id in range(self.nb_agents)) == self.instances_per_good for good_id in range(self.nb_goods))
+            sum(initial_endowments[agent_id][good_id] for agent_id in range(nb_agents)) == instances_per_good for good_id in range(nb_goods))
 
         # Check the preferences.
 
         # we have a preference list for every agent
-        assert len(self.preferences) == self.nb_agents
+        assert len(preferences) == nb_agents
         # every preference is a list whose length is the number of goods.
         # every preference contains all the good ids
-        assert all(len(preference) == len(set(preference)) == self.nb_goods for preference in self.preferences)
-        assert all(min(preference) == 0 and max(preference) == self.nb_goods - 1 for preference in self.preferences)
+        assert all(len(preference) == len(set(preference)) == nb_goods for preference in preferences)
+        assert all(min(preference) == 0 and max(preference) == nb_goods - 1 for preference in preferences)
 
     @staticmethod
     def generate_game(nb_agents: int, nb_goods: int, initial_money_amount: int,
@@ -121,3 +128,38 @@ class Game(object):
 
         return Game(nb_agents, nb_goods, initial_money_amount, instances_per_good,
                     scores, initial_endowments, preferences)
+
+    def get_game_data_by_agent_id(self, agent_id: int) -> 'GameState':
+        return self.game_states[agent_id]
+
+
+class GameState:
+    """Represent the state of an agent during the game."""
+
+    def __init__(self, money: int, initial_endowment: List[int], preferences: List[int], scores: List[int]):
+        self.money = money
+        self.initial_endowment = initial_endowment
+        self.preferences = preferences
+        self.scores = scores
+
+        self._current_holdings = copy.deepcopy(self.initial_endowment)
+
+    def add_good(self, good_id: int):
+        self._current_holdings[good_id] += 1
+
+    def remove_good(self, good_id: int):
+        self._current_holdings[good_id] -= 1
+
+    def get_score(self) -> int:
+        holdings_score = sum(self.scores[i] * 1 if holding > 0 else 0 for i, holding in enumerate(self._current_holdings))
+        money_score = self.money
+        return holdings_score + money_score
+
+    def __str__(self):
+        return "GameState{}".format(pprint.pformat({
+            "money": self.money,
+            "initial_endowment": self.initial_endowment,
+            "preferences": self.preferences,
+            "scores": self.scores,
+            "current_holdings": self._current_holdings
+        }))

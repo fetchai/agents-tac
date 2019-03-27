@@ -19,11 +19,17 @@
 # ------------------------------------------------------------------------------
 
 """Schemas for the protocol to communicate with the controller."""
+import logging
 import pprint
 from abc import ABC, abstractmethod
 from enum import Enum
+from typing import List
+
+from google.protobuf.message import DecodeError
 
 import tac.tac_pb2 as tac_pb2
+
+logger = logging.getLogger(__name__)
 
 
 class Message(ABC):
@@ -37,6 +43,10 @@ class Message(ABC):
     @abstractmethod
     def to_pb(self):
         """From 'Message' to Protobuf object"""
+
+    def serialize(self) -> bytes:
+        """Serialize the message."""
+        return self.to_pb().SerializeToString()
 
     def _build_str(self, **kwargs) -> str:
         return type(self).__name__ + "({})".format(pprint.pformat(kwargs))
@@ -102,18 +112,24 @@ class Response(Message):
 
     @classmethod
     def from_pb(cls, obj: bytes) -> 'Response':
-        msg = tac_pb2.TACController.Message()
-        msg.ParseFromString(obj)
-        case = msg.WhichOneof("msg")
-        if case == "registered":
-            return Registered()
-        elif case == "unregistered":
-            return Unregistered()
-        elif case == "error":
-            error_msg = msg.error.error_msg
-            return Error(error_msg)
-        else:
-            raise Exception("Unrecognized type of Response.")
+        try:
+            msg = tac_pb2.TACController.Message()
+            msg.ParseFromString(obj)
+            case = msg.WhichOneof("msg")
+            if case == "registered":
+                return Registered()
+            elif case == "unregistered":
+                return Unregistered()
+            elif case == "game_data":
+                return GameData(msg.game_data.money, msg.game_data.resources,
+                                msg.game_data.preferences, msg.game_data.scores)
+            elif case == "error":
+                error_msg = msg.error.error_msg
+                return Error(error_msg)
+            else:
+                raise Exception("Unrecognized type of Response.")
+        except DecodeError as e:
+            logger.exception(str(e))
 
     def to_pb(self) -> tac_pb2.TACController.Message:
         raise NotImplementedError
@@ -121,7 +137,7 @@ class Response(Message):
 
 class Registered(Response):
 
-    def to_pb(self) -> tac_pb2.TACController.Registered:
+    def to_pb(self) -> tac_pb2.TACController.Message:
         msg = tac_pb2.TACController.Registered()
         envelope = tac_pb2.TACController.Message()
         envelope.registered.CopyFrom(msg)
@@ -130,7 +146,7 @@ class Registered(Response):
 
 class Unregistered(Response):
 
-    def to_pb(self) -> tac_pb2.TACController.Unregistered:
+    def to_pb(self) -> tac_pb2.TACController.Message:
         msg = tac_pb2.TACController.Unregistered()
         envelope = tac_pb2.TACController.Message()
         envelope.unregistered.CopyFrom(msg)
@@ -142,7 +158,7 @@ class Error(Response):
     def __init__(self, error_msg: str):
         self.error_msg = error_msg
 
-    def to_pb(self) -> tac_pb2.TACController.Error:
+    def to_pb(self) -> tac_pb2.TACController.Message:
         msg = tac_pb2.TACController.Error()
         msg.error_msg = self.error_msg
         envelope = tac_pb2.TACController.Message()
@@ -151,3 +167,22 @@ class Error(Response):
 
     def __str__(self):
         return self._build_str(error_msg=self.error_msg)
+
+
+class GameData(Response):
+
+    def __init__(self, money: int, endowment: List[int], preference: List[int], scores: List[int]):
+        self.money = money
+        self.endowment = endowment
+        self.preference = preference
+        self.scores = scores
+
+    def to_pb(self) -> tac_pb2.TACController.Message:
+        msg = tac_pb2.TACController.GameData()
+        msg.money = self.money
+        msg.resources.extend(self.endowment)
+        msg.preferences.extend(self.preference)
+        msg.scores.extend(self.scores)
+        envelope = tac_pb2.TACController.Message()
+        envelope.game_data.CopyFrom(msg)
+        return envelope
