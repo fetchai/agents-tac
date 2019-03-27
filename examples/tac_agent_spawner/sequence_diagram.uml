@@ -7,7 +7,7 @@ participant "TAC Agent 2"
 participant "TAC Agent 3"
 
 note over "OEF Node"
-    For the sake of conciseness,
+    For the sake of brevity,
     assume that messages sent between agents
     are in fact sent through the OEF.
 end note
@@ -35,8 +35,8 @@ note over "Controller"
     details to the participants.
 end note
 
-"Controller" -> "TAC Agent 1": GameData(money, endowments, preferences, scores)
-"Controller" -> "TAC Agent 2": GameData(money, endowments, preferences, scores)
-"Controller" -> "TAC Agent 3": GameData(money, endowments, preferences, scores)
+"Controller" -> "TAC Agent 1": GameData(money, endowments, preferences, scores, fee)
+"Controller" -> "TAC Agent 2": GameData(money, endowments, preferences, scores, fee)
+"Controller" -> "TAC Agent 3": GameData(money, endowments, preferences, scores, fee)
 
 @enduml

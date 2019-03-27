@@ -21,15 +21,16 @@
 import argparse
 import logging
 import pprint
-from typing import List
+from typing import List, Optional
 
 from oef.query import Query, Constraint, Eq, GtEq
+from oef.schema import DataModel, AttributeSchema, Description
 
 from tac.controller import ControllerAgent
-from tac.core import TacAgent
-from tac.protocol import Register, Response
+from tac.core import TacAgent, GameState
+from tac.protocol import Register, Response, GameData, Transaction
 
-logger = logging.getLogger("tac")
+logger = logging.getLogger(__name__)
 
 
 def parse_arguments():
@@ -44,8 +45,21 @@ def parse_arguments():
 
 class BaselineAgent(TacAgent):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.controller = None  # type: Optional[ControllerAgent]
+        self.game_state = None  # type: Optional[GameState]
+        self.sell_data_model = None  # type: Optional[DataModel]
+        self.buyer_data_model = None  # type: Optional[DataModel]
+
     def on_search_result(self, search_id: int, agents: List[str]):
-        logger.debug("Agents found: {}".format(pprint.pformat(agents)))
+        logger.debug("[{}]: Agents found: {}".format(self.public_key, pprint.pformat(agents)))
+
+        if len(agents) == 0:
+            logger.debug("[{}]: No TAC Controller Agent found. Stopping...".format(self.public_key))
+            self.stop()
+            return
 
         # TODO remove assumption only one controller
         assert len(agents) <= 1
@@ -53,11 +67,37 @@ class BaselineAgent(TacAgent):
         msg = Register(self.public_key)
         msg_pb = msg.to_pb()
         msg_bytes = msg_pb.SerializeToString()
+        logger.debug("[{}]: Sending '{}' message to the TAC Controller {}"
+                     .format(self.public_key, msg, controller_pb_key))
         self.send_message(0, 0, controller_pb_key, msg_bytes)
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
         msg = Response.from_pb(content)
-        logger.debug(msg)
+        logger.debug("[{}]: Response from the TAC Controller '{}':\n{}".format(self.public_key, origin, str(msg)))
+
+        if isinstance(msg, GameData):
+            assert self.game_state is None and self.controller is None
+            self.controller = origin
+            self.game_state = GameState(msg.money, msg.endowment, msg.preference, msg.scores)
+
+            self.sell_data_model = DataModel("tac_seller", [
+                AttributeSchema("good_{:02d}".format(i), int, True)
+                for i in range(self.game_state.nb_goods)])
+            self.buyer_data_model = DataModel("tac_buyer", [
+                AttributeSchema("good_{:02d}".format(i), int, True)
+                for i in range(self.game_state.nb_goods)])
+
+            self._register_as_seller_for_excessing_goods()
+            # send dummy transaction.
+            # dest = "tac_agent_0" if self.public_key != "tac_agent_0" else "tac_agent_1"
+            # self.send_message(0, 0, self.controller,
+            #                   Transaction(self.public_key, 0, True, dest, 10, 0, 1).serialize())
+
+    def _register_as_seller_for_excessing_goods(self) -> None:
+        desc = Description({"good_{:02d}".format(k): v - 1 if v > 1 else 0
+                            for k, v in enumerate(self.game_state.current_holdings)},
+                           data_model=self.sell_data_model)
+        self.register_service(0, desc)
 
 
 def main():

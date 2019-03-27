@@ -26,10 +26,11 @@ from typing import Optional, Set, Dict
 
 from oef.schema import DataModel, Description, AttributeSchema
 
-from tac.core import TacAgent, Game
-from tac.protocol import Response, Request, Register, Registered, Unregister, Error, Unregistered, GameData
+from tac.core import TacAgent, Game, GameTransaction
+from tac.protocol import Response, Request, Register, Registered, Unregister, Error, Unregistered, GameData, \
+    Transaction, TransactionConfirmation
 
-logger = logging.getLogger("tac")
+logger = logging.getLogger(__name__)
 
 
 def parse_arguments():
@@ -61,17 +62,26 @@ class ControllerHandler(object):
         """
         message = self.decode(msg, public_key)  # type: Request
         response = self.dispatch(message)
-        logger.debug("Returning response: {}".format(str(response)))
+        logger.debug("[{}]: Returning response: {}".format(self.controller.public_key, str(response)))
         return response
 
     def dispatch(self, request: Request) -> Response:
         """Dispatch the request to the right handler"""
-        if isinstance(request, Register):
-            return self.controller.handle_register(request)
-        elif isinstance(request, Unregister):
-            return self.controller.handle_unregister(request)
-        else:
-            raise Exception("Something wrong happened.")
+        try:
+            if isinstance(request, Register):
+                return self.controller.handle_register(request)
+            elif isinstance(request, Unregister):
+                return self.controller.handle_unregister(request)
+            elif isinstance(request, Transaction):
+                return self.controller.handle_transaction(request)
+            else:
+                error_msg = "Request not recognized"
+                logger.error(error_msg)
+                return Error(error_msg)
+        except Exception as e:
+            error_msg = "Unexpected error."
+            logger.exception(error_msg)
+            return Error(error_msg)
 
     def decode(self, msg: bytes, public_key: str) -> Request:
         """From bytes to a Response message"""
@@ -86,7 +96,8 @@ class ControllerAgent(TacAgent):
     # TODO need at least one attribute in the search Query to the OEF.
 
     def __init__(self, public_key="controller", oef_addr="127.0.0.1", oef_port=3333,
-                 nb_agents: int = 5, money_endowment: int = 20, nb_goods: int = 5, version: int = 1, **kwargs):
+                 nb_agents: int = 5, money_endowment: int = 20, nb_goods: int = 5,
+                 fee: int = 1, version: int = 1, **kwargs):
         """
         Initialize a Controller Agent for TAC.
         :param public_key: The public key of the OEF Agent.
@@ -95,6 +106,7 @@ class ControllerAgent(TacAgent):
         :param nb_agents: the number of agents to wait for the registration.
         :param money_endowment: the initial amount of money to assign to every agent.
         :param nb_goods: the number of goods in the competition.
+        :param fee: the fee for a transaction.
         :param version: the version of the TAC controller.
         """
         super().__init__(public_key, oef_addr, oef_port, **kwargs)
@@ -105,12 +117,14 @@ class ControllerAgent(TacAgent):
             "nb_agents": nb_agents,
             "money_endowment": money_endowment,
             "nb_goods": nb_goods,
+            "fee": fee,
             "version": version,
         })))
 
         self.nb_agents = nb_agents
         self.money_endowment = money_endowment
         self.nb_goods = nb_goods
+        self.fee = fee
         self.version = version
 
         self.registered_agents = set()  # type: Set[str]
@@ -133,7 +147,8 @@ class ControllerAgent(TacAgent):
     def _create_game(self) -> Game:
         instances_per_good = self.nb_agents
         scores = list(reversed(range(self.nb_goods)))
-        self._current_game = Game.generate_game(self.nb_agents, self.nb_goods, self.money_endowment, instances_per_good, scores)
+        self._current_game = Game.generate_game(self.nb_agents, self.nb_goods, self.money_endowment,
+                                                instances_per_good, scores, self.fee)
         self._agent_pbk_to_id = dict(map(reversed, enumerate(self.registered_agents)))
         return self._current_game
 
@@ -142,21 +157,25 @@ class ControllerAgent(TacAgent):
             agent_id = self._agent_pbk_to_id[public_key]
             game_data = self._current_game.get_game_data_by_agent_id(agent_id)
             game_data_response = GameData(
-                game_data.money,
+                game_data.balance,
                 game_data.initial_endowment,
                 game_data.preferences,
-                game_data.scores
+                game_data.scores,
+                self.fee,
             )
+            logger.debug("[{}]: sending GameData to '{}': {}"
+                         .format(self.public_key, public_key, str(game_data_response)))
             self.send_message(0, 1, public_key, game_data_response.serialize())
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
         logger.debug("[ControllerAgent] on_message: msg_id={}, dialogue_id={}, origin={}"
                      .format(msg_id, dialogue_id, origin))
         response = self.handler.handle(content, origin)
-        response_bytes = response.serialize()
-        self.send_message(msg_id + 1, dialogue_id, origin, response_bytes)
+        if response is not None:
+            response_bytes = response.serialize()
+            self.send_message(msg_id + 1, dialogue_id, origin, response_bytes)
 
-    def handle_register(self, request: Register) -> Response:
+    def handle_register(self, request: Register) -> Optional[Response]:
         public_key = request.public_key
         if public_key in self.registered_agents:
             error_msg = "Agent already registered: '{}'".format(public_key)
@@ -167,9 +186,9 @@ class ControllerAgent(TacAgent):
             self.registered_agents.add(public_key)
             if len(self.registered_agents) >= self.nb_agents:
                 self.start_competition()
-            return Registered()
+            return None
 
-    def handle_unregister(self, request: Unregister) -> Response:
+    def handle_unregister(self, request: Unregister) -> Optional[Response]:
         public_key = request.public_key
         if public_key not in self.registered_agents:
             error_msg = "Agent not registered: '{}'".format(public_key)
@@ -178,7 +197,27 @@ class ControllerAgent(TacAgent):
         else:
             logger.debug("Agent unregistered: '{}'".format(public_key))
             self.registered_agents.remove(public_key)
-            return Unregistered()
+            return None
+
+    def handle_transaction(self, request: Transaction) -> Optional[Response]:
+        sender_id = self._agent_pbk_to_id[request.public_key]
+        receiver_id = self._agent_pbk_to_id[request.counterparty]
+        buyer_id, seller_id = (sender_id, receiver_id) if request.buyer else (receiver_id, sender_id)
+        tx = GameTransaction(
+            buyer_id,
+            seller_id,
+            request.amount,
+            request.good_id,
+            request.quantity
+        )
+        if self._current_game.is_transaction_valid(tx):
+            self._current_game.settle_transaction(tx)
+            tx_confirmation = TransactionConfirmation(request.transaction_id)
+            self.send_message(0, 0, request.public_key, tx_confirmation.serialize())
+            self.send_message(0, 0, request.counterparty, tx_confirmation.serialize())
+            return None
+        else:
+            return Error("Error in checking transaction.")
 
 
 def main():

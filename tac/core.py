@@ -20,7 +20,7 @@
 import copy
 import pprint
 import random
-from typing import List
+from typing import List, Dict
 
 from oef.agents import OEFAgent
 
@@ -37,6 +37,7 @@ class Game(object):
                  initial_money_amount: int,
                  instances_per_good: int,
                  scores: List[int],
+                 fee: int,
                  initial_endowments: List[List[int]],
                  preferences: List[List[int]]):
         """
@@ -46,6 +47,7 @@ class Game(object):
         :param nb_goods: the number of goods.
         :param initial_money_amount: the initial amount of money.
         :param scores: list of scores.
+        :param fee: the fee for a transaction.
         :param instances_per_good: the number of instances per good.
         :param initial_endowments: the endowments of the agents. A matrix where the first index is the agent id and
                                    the second index is the good id. A generic element at row i and column j is
@@ -55,13 +57,14 @@ class Game(object):
                             The index of good j in agent's row i represents the class of preference l for that good.
                             The associated score is scores[l].
         """
-        self._check_consistency(nb_agents, nb_goods, initial_money_amount, instances_per_good, scores,
+        self._check_consistency(nb_agents, nb_goods, initial_money_amount, instances_per_good, scores, fee,
                                 initial_endowments, preferences)
         self.nb_agents = nb_agents
         self.nb_goods = nb_goods
         self.instances_per_good = instances_per_good
         self.initial_money_amount = initial_money_amount
         self.scores = scores
+        self.fee = fee
 
         self.game_states = [GameState(initial_money_amount, initial_endowments[i], preferences[i], scores)
                             for i in range(nb_agents)]  # type: List[GameState]
@@ -72,11 +75,13 @@ class Game(object):
                            initial_money_amount: int,
                            instances_per_good: int,
                            scores: List[int],
+                           fee: int,
                            initial_endowments: List[List[int]],
                            preferences: List[List[int]]):
         assert nb_agents > 0
         assert nb_goods > 0
         assert initial_money_amount > 0
+        assert fee > 0
 
         # TODO the number of instances can be slightly higher or lower than the number of agents. To be changed.
         assert instances_per_good >= nb_agents
@@ -111,7 +116,7 @@ class Game(object):
 
     @staticmethod
     def generate_game(nb_agents: int, nb_goods: int, initial_money_amount: int,
-                      instances_per_good: int, scores: List[int]) -> 'Game':
+                      instances_per_good: int, scores: List[int], fee: int) -> 'Game':
         """Generate a game, sampling the initial endowments and the preferences."""
 
         # compute random endowment
@@ -127,39 +132,74 @@ class Game(object):
         preferences = list(map(lambda x: random.sample(x, len(x)), preferences))
 
         return Game(nb_agents, nb_goods, initial_money_amount, instances_per_good,
-                    scores, initial_endowments, preferences)
+                    scores, fee, initial_endowments, preferences)
 
     def get_game_data_by_agent_id(self, agent_id: int) -> 'GameState':
         return self.game_states[agent_id]
+
+    def is_transaction_valid(self, tx: 'GameTransaction') -> bool:
+        assert tx.buyer_id != tx.seller_id
+        assert 0 <= tx.buyer_id < self.nb_agents
+        assert 0 <= tx.seller_id < self.nb_agents
+        assert tx.quantity > 0
+        assert tx.amount > 0
+
+        result = True
+        result = result and self.game_states[tx.buyer_id].balance >= tx.amount + self.fee
+        result = result and self.game_states[tx.seller_id].current_holdings[tx.good_id] >= tx.quantity
+
+        return result
+
+    def settle_transaction(self, tx: 'GameTransaction'):
+        buyer_state = self.game_states[tx.buyer_id]
+        seller_state = self.game_states[tx.seller_id]
+
+        # update holdings
+        buyer_state.current_holdings[tx.good_id] += tx.quantity
+        seller_state.current_holdings[tx.good_id] -= tx.quantity
+
+        # update balances
+        buyer_state.balance -= tx.amount
+        seller_state.balance += tx.amount
 
 
 class GameState:
     """Represent the state of an agent during the game."""
 
     def __init__(self, money: int, initial_endowment: List[int], preferences: List[int], scores: List[int]):
-        self.money = money
+        self.balance = money
+        assert len(initial_endowment) == len(preferences) == len(scores)
         self.initial_endowment = initial_endowment
         self.preferences = preferences
         self.scores = scores
 
-        self._current_holdings = copy.deepcopy(self.initial_endowment)
+        self.current_holdings = copy.deepcopy(self.initial_endowment)
 
-    def add_good(self, good_id: int):
-        self._current_holdings[good_id] += 1
-
-    def remove_good(self, good_id: int):
-        self._current_holdings[good_id] -= 1
+    @property
+    def nb_goods(self):
+        return len(self.scores)
 
     def get_score(self) -> int:
-        holdings_score = sum(self.scores[i] * 1 if holding > 0 else 0 for i, holding in enumerate(self._current_holdings))
-        money_score = self.money
+        holdings_score = sum(self.scores[i] * 1 if holding > 0 else 0 for i, holding in enumerate(self.current_holdings))
+        money_score = self.balance
         return holdings_score + money_score
 
     def __str__(self):
         return "GameState{}".format(pprint.pformat({
-            "money": self.money,
+            "money": self.balance,
             "initial_endowment": self.initial_endowment,
             "preferences": self.preferences,
             "scores": self.scores,
-            "current_holdings": self._current_holdings
+            "current_holdings": self.current_holdings
         }))
+
+
+class GameTransaction:
+    """Represent a transaction between agents"""
+
+    def __init__(self, buyer_id: int, seller_id: int, amount: int, good_id: int, quantity: int):
+        self.buyer_id = buyer_id
+        self.seller_id = seller_id
+        self.amount = amount
+        self.good_id = good_id
+        self.quantity = quantity

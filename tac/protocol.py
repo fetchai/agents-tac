@@ -58,6 +58,10 @@ class Message(ABC):
 class Request(Message, ABC):
     """Message from clients to controller"""
 
+    def __init__(self, public_key: str):
+        super().__init__()
+        self.public_key = public_key
+
     @classmethod
     def from_pb(cls, obj: bytes, public_key: str = "") -> 'Request':
         msg = tac_pb2.TACAgent.Message()
@@ -67,6 +71,10 @@ class Request(Message, ABC):
             return Register(public_key)
         elif case == "unregister":
             return Unregister(public_key)
+        elif case == "transaction":
+            return Transaction(public_key, msg.transaction.transaction_id, msg.transaction.buyer,
+                               msg.transaction.counterparty, msg.transaction.amount,
+                               msg.transaction.good_id, msg.transaction.quantity)
         else:
             raise Exception("Unrecognized type of Response.")
 
@@ -76,10 +84,6 @@ class Request(Message, ABC):
 
 class Register(Request):
     """Message to register an agent to the competition."""
-
-    def __init__(self, public_key: str):
-        super().__init__()
-        self.public_key = public_key
 
     def to_pb(self) -> tac_pb2.TACAgent.Message:
         msg = tac_pb2.TACAgent.Register()
@@ -91,10 +95,6 @@ class Register(Request):
 class Unregister(Request):
     """Message to register an agent to the competition."""
 
-    def __init__(self, public_key: str):
-        super().__init__()
-        self.public_key = public_key
-
     def to_pb(self) -> tac_pb2.TACAgent.Message:
         msg = tac_pb2.TACAgent.Unregister()
         envelope = tac_pb2.TACAgent.Message()
@@ -102,9 +102,44 @@ class Unregister(Request):
         return envelope
 
 
+class Transaction(Request):
+
+    def __init__(self, public_key: str, transaction_id: int, buyer: bool, counterparty: str,
+                 amount: int, good_id: int, quantity: int):
+        """
+
+        :param public_key: the public key of the sender.
+        :param buyer: whether the transaction request is sent by a buyer.
+        :param counterparty: the counterparty of the transaction.
+        :param amount: the amount of money involved.
+        :param good_id: the good identifier.
+        :param quantity: the quantity of the good to be transacted.
+        """
+        super().__init__(public_key)
+        self.transaction_id = transaction_id
+        self.buyer = buyer
+        self.counterparty = counterparty
+        self.amount = amount
+        self.good_id = good_id
+        self.quantity = quantity
+
+    def to_pb(self) -> tac_pb2.TACAgent.Message:
+        msg = tac_pb2.TACAgent.Transaction()
+        msg.transaction_id = self.transaction_id
+        msg.buyer = self.buyer
+        msg.counterparty = self.counterparty
+        msg.amount = self.amount
+        msg.good_id = self.good_id
+        msg.quantity = self.quantity
+        envelope = tac_pb2.TACAgent.Message()
+        envelope.transaction.CopyFrom(msg)
+        return envelope
+
+
 class ResponseType(Enum):
     REGISTERED = "registered"
     UNREGISTERED = "unregistered"
+    GAME_DATA = "game_data"
 
 
 class Response(Message):
@@ -122,7 +157,9 @@ class Response(Message):
                 return Unregistered()
             elif case == "game_data":
                 return GameData(msg.game_data.money, msg.game_data.resources,
-                                msg.game_data.preferences, msg.game_data.scores)
+                                msg.game_data.preferences, msg.game_data.scores, msg.game_data.fee)
+            elif case == "tx_confirmation":
+                return TransactionConfirmation(msg.tx_confirmation.transaction_id)
             elif case == "error":
                 error_msg = msg.error.error_msg
                 return Error(error_msg)
@@ -171,11 +208,12 @@ class Error(Response):
 
 class GameData(Response):
 
-    def __init__(self, money: int, endowment: List[int], preference: List[int], scores: List[int]):
+    def __init__(self, money: int, endowment: List[int], preference: List[int], scores: List[int], fee: int):
         self.money = money
         self.endowment = endowment
         self.preference = preference
         self.scores = scores
+        self.fee = fee
 
     def to_pb(self) -> tac_pb2.TACController.Message:
         msg = tac_pb2.TACController.GameData()
@@ -183,6 +221,32 @@ class GameData(Response):
         msg.resources.extend(self.endowment)
         msg.preferences.extend(self.preference)
         msg.scores.extend(self.scores)
+        msg.fee = self.fee
         envelope = tac_pb2.TACController.Message()
         envelope.game_data.CopyFrom(msg)
         return envelope
+
+    def __str__(self):
+        return self._build_str(
+            money=self.money,
+            endowment=self.endowment,
+            preference=self.preference,
+            scores=self.scores,
+            fee=self.fee
+        )
+
+
+class TransactionConfirmation(Response):
+
+    def __init__(self, transaction_id: int):
+        self.transaction_id = transaction_id
+
+    def to_pb(self) -> tac_pb2.TACController.Message:
+        msg = tac_pb2.TACController.TransactionConfirmation()
+        msg.transaction_id = self.transaction_id
+        envelope = tac_pb2.TACController.Message()
+        envelope.tx_confirmation.CopyFrom(msg)
+        return envelope
+
+    def __str__(self):
+        return self._build_str(transaction_id=self.transaction_id)

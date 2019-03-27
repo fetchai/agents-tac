@@ -17,3 +17,15 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+import logging
+
+logger = logging.getLogger("tac")
+
+
+def callback(fut):
+    try:
+        _ = fut.result()
+    except Exception as e:
+        logger.exception('Unexpected error')
+        raise e
+
