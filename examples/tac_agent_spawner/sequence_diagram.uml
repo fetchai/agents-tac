@@ -1,0 +1,42 @@
+@startuml
+
+participant "Controller"
+participant "OEF Node"
+participant "TAC Agent 1"
+participant "TAC Agent 2"
+participant "TAC Agent 3"
+
+note over "OEF Node"
+    For the sake of conciseness,
+    assume that messages sent between agents
+    are in fact sent through the OEF.
+end note
+
+"Controller"->"OEF Node": register_service("tac")
+"Controller"->"Controller": run()
+activate "Controller"
+
+"TAC Agent 1" -> "OEF Node": search_services("tac")
+"TAC Agent 2" -> "OEF Node": search_services("tac")
+"TAC Agent 3" -> "OEF Node": search_services("tac")
+
+"OEF Node" -> "TAC Agent 1": search result: ["Controller"]
+"OEF Node" -> "TAC Agent 2": search result: ["Controller"]
+"OEF Node" -> "TAC Agent 3": search result: ["Controller"]
+
+"TAC Agent 1" -> "Controller": Register()
+"TAC Agent 2" -> "Controller": Register()
+"TAC Agent 3" -> "Controller": Register()
+
+note over "Controller"
+    When at least N TAC agents
+    will be registered for the competition,
+    Generate a Game instance and send
+    details to the participants.
+end note
+
+"Controller" -> "TAC Agent 1": GameData(money, endowments, preferences, scores)
+"Controller" -> "TAC Agent 2": GameData(money, endowments, preferences, scores)
+"Controller" -> "TAC Agent 3": GameData(money, endowments, preferences, scores)
+
+@enduml

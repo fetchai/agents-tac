@@ -4,10 +4,10 @@ This tutorial shows how to set up a simple TAC.
 
 - Be sure you're running an OEF Node on `localhost`. 
 
-- Run the controller:
-
-      python tac/controller.py
-    
-- Run the TAC agents:
+- Run the example:
 
       python examples/tac_agent_spawner/tac_agent_spawner.py
+
+Follows the sequence diagram of the communications between agents:
+
+![](./sequence_diagram.png)

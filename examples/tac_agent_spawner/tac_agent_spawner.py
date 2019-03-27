@@ -28,6 +28,7 @@ from typing import List, Optional
 import argparse
 
 from oef.query import Query, GtEq, Constraint
+from tac.controller import ControllerAgent
 
 from tac.protocol import Register, Response, GameData
 
@@ -81,10 +82,14 @@ if __name__ == '__main__':
 
     arguments = parse_arguments()
 
+    tac_controller = ControllerAgent(public_key="tac_controller", oef_addr="127.0.0.1", oef_port=3333)
+    tac_controller.connect()
+    tac_controller.register()
+
     agents = [SimpleTacCAgent("simple_agent_" + str(i), "127.0.0.1", 3333) for i in range(arguments.N)]
     for a in agents:
         a.connect()
         a.search_services(0, Query([Constraint("version", GtEq(1))]))
 
-    asyncio.gather(*[a.async_run() for a in agents])
+    asyncio.gather(*([a.async_run() for a in agents] + [tac_controller.async_run()]))
     asyncio.get_event_loop().run_forever()
