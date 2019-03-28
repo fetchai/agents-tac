@@ -48,7 +48,8 @@ class PlantUMLGenerator:
             self.message = message
 
         def draw(self):
-            return '"{}" -> "{}": {}\n'.format(self.sender, self.receiver, self.message)
+            return '"{}" -> "{}": {}\n'.format(self.sender, self.receiver,
+                                               self.message.replace("\n", "\\n\\\n").replace("'", "\""))
 
     class Note(Drawable):
 
@@ -57,7 +58,7 @@ class PlantUMLGenerator:
             self.over = over
 
         def draw(self):
-            return 'note over "{}"\n{}\nend note\n'.format(self.msg, self.over).replace("'", "\"")
+            return 'note over "{}"\n'.format(self.over) + '{}\nend note\n'.format(self.msg).replace("'", "\"")
 
     def __init__(self):
         self.drawables = []  # type: List[PlantUMLGenerator.Drawable]

@@ -149,8 +149,11 @@ class ControllerAgent(TacAgent):
         agent_id_to_pbk = dict(map(reversed, self._agent_pbk_to_id.items()))
         for agent_id, game_state in enumerate(self._current_game.game_states):
             agent_pbk = agent_id_to_pbk[agent_id]
-            self.add_drawable(PlantUMLGenerator.Note(self.public_key,
-                                                     "{}'s game state: \n".format(agent_pbk) + str(game_state)))
+            self.add_drawable(PlantUMLGenerator.Note("{} game state: \n".format(agent_pbk) + str(game_state) +
+                                                     "\nScore: {}".format(game_state.get_score()),
+                                                     self.public_key))
+            self.add_drawable(PlantUMLGenerator.Transition(self.public_key, agent_pbk,
+                                                           "GameData(money, endowments, preferences, scores, fee)"))
 
     def _create_game(self) -> Game:
         instances_per_good = self.nb_agents
@@ -226,8 +229,27 @@ class ControllerAgent(TacAgent):
             self.send_message(0, 0, request.counterparty, tx_confirmation.serialize())
             logger.debug("Transaction '{}' settled successfully.".format(request.transaction_id))
             logger.debug("Current state:\n{}".format(self._current_game.get_holdings_summary()))
+
+            self.add_drawable(PlantUMLGenerator.Note("Transaction {} settled.".format(request.transaction_id),
+                                                     self.public_key))
+            self.add_drawable(PlantUMLGenerator.Note("New holdings:\n" + self._current_game.get_holdings_summary(),
+                                                     self.public_key))
+            self.add_drawable(PlantUMLGenerator.Note("Details:\n" + "\n"
+                                                     .join(["score={}, money={}".format(g.get_score(), g.balance)
+                                                            for g in self._current_game.game_states]),
+                                                     self.public_key))
+
+            self.add_drawable(PlantUMLGenerator.Transition(
+                self.public_key, request.public_key, "ConfirmTransaction({})".format(request.transaction_id)))
+            self.add_drawable(PlantUMLGenerator.Transition(
+                self.public_key, request.counterparty, "ConfirmTransaction({})".format(request.transaction_id)))
             return None
         else:
+
+            self.add_drawable(PlantUMLGenerator.Transition(
+                self.public_key, request.public_key, "Error({})".format(request.transaction_id)))
+            self.add_drawable(PlantUMLGenerator.Transition(
+                self.public_key, request.counterparty, "Error({})".format(request.transaction_id)))
             return Error("Error in checking transaction.")
 
 
