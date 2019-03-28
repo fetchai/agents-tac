@@ -132,7 +132,10 @@ setup(
         'Programming Language :: Python :: 3.7',
     ],
     install_requires=[
-        "oef @ git+https://github.com/fetchai/oef-sdk-python.git#egg=oef",
+        "oef",
+    ],
+    dependency_links=[
+        "git+ssh://git@github.com/uvue-git/oef-sdk-python.git#egg=oef",
     ],
     tests_require=["tox"],
     entry_points={

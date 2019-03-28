@@ -23,12 +23,13 @@
 import argparse
 import asyncio
 import logging
+from typing import List
 
 from oef.query import Query, GtEq, Constraint
 
 from tac.baseline import BaselineAgent
 from tac.controller import ControllerAgent
-from tac.helpers import callback
+from tac.core import TacAgent
 
 logger = logging.getLogger("tac")
 
@@ -43,6 +44,20 @@ def parse_arguments():
     return arguments
 
 
+def run_agent(agent: TacAgent, loop):
+    agent.connect(loop=loop)
+    agent.search_services(0, Query([Constraint("version", GtEq(1))]))
+    agent.run(loop=loop)
+
+
+def run_agents(agents: List[TacAgent]):
+
+    from threading import Thread
+    threads = [Thread(target=run_agent, args=(a, asyncio.new_event_loop())) for a in agents]
+    for t in threads:
+        t.start()
+
+
 if __name__ == '__main__':
 
     arguments = parse_arguments()
@@ -53,10 +68,12 @@ if __name__ == '__main__':
     tac_controller.register()
 
     agents = [BaselineAgent("tac_agent_" + str(i), "127.0.0.1", 3333) for i in range(arguments.N)]
-    for a in agents:
-        a.connect()
-        a.search_services(0, Query([Constraint("version", GtEq(1))]))
 
-    task = asyncio.gather(*([a.async_run() for a in agents] + [tac_controller.async_run()]))
-    task.add_done_callback(callback)
-    asyncio.get_event_loop().run_forever()
+    tac_agents = agents  # type: List[TacAgent]
+    run_agents(tac_agents)
+
+    tac_controller.run()
+
+
+    # task.add_done_callback(callback)
+    # asyncio.get_event_loop().run_forever()

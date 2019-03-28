@@ -136,6 +136,16 @@ class Transaction(Request):
         envelope.transaction.CopyFrom(msg)
         return envelope
 
+    def __str__(self):
+        return self._build_str(
+            transaction_id=self.transaction_id,
+            buyer=self.buyer,
+            counterparty=self.counterparty,
+            amount=self.amount,
+            good_ids=self.good_ids,
+            quantities=self.quantities
+        )
+
 
 class ResponseType(Enum):
     REGISTERED = "registered"

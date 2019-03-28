@@ -164,6 +164,12 @@ class Game(object):
         buyer_state.balance -= tx.amount
         seller_state.balance += tx.amount
 
+    def get_holdings_summary(self) -> str:
+        result = ""
+        for i, game_state in enumerate(self.game_states):
+            result = result + "{:02d}".format(i) + " " + str(game_state.current_holdings) + "\n"
+        return result
+
 
 class GameState:
     """Represent the state of an agent during the game."""

@@ -19,9 +19,11 @@
 #
 # ------------------------------------------------------------------------------
 import argparse
+import asyncio
 import logging
 import pprint
 import random
+import time
 from typing import List, Optional, Tuple, Dict
 
 from oef.messages import CFP_TYPES, PROPOSE_TYPES
@@ -94,10 +96,13 @@ class BaselineAgent(TacAgent):
             return
 
         assert search_id == self.SEARCH_TAC_SELLER_ID
+        logger.debug("[{}]: Found potential sellers: {}".format(self.public_key, agents))
 
         # find goods with zero quantity and build a CFP asking for any of them.
         query = self.build_tac_sellers_query()
-        if query is None: return
+        if query is None:
+            logger.debug("[{}]: No need for any more good...".format(self.public_key))
+            return
         for seller in agents:
             self.send_cfp(1, random.randint(0, 100000), seller, 0, query)
 
@@ -136,6 +141,7 @@ class BaselineAgent(TacAgent):
             self.buyer_data_model = DataModel("tac_buyer", goods_quantities_attributes + [price_attribute])
 
             self._register_as_seller_for_excessing_goods()
+            time.sleep(1.0)
             self.search_tac_sellers()
         if isinstance(msg, TransactionConfirmation):
             transaction = self.pending_transactions.pop(msg.transaction_id)

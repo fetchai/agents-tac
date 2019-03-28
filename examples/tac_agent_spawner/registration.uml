@@ -50,4 +50,14 @@ end note
 "Baseline 2" -> "OEF Node": register_service("tac_seller", ...)
 "Baseline 3" -> "OEF Node": register_service("tac_seller", ...)
 
+note over "Baseline 1", "Baseline 3"
+        Each participant query the OEF
+        for sellers that offer the
+        goods that he need.
+end note
+
+"Baseline 1" -> "OEF Node": search_service("tac_seller", Query("good_01" >= 1 OR "good_04" >= 1 OR ...)
+"Baseline 2" -> "OEF Node": search_service("tac_seller", ...)
+"Baseline 3" -> "OEF Node": search_service("tac_seller", ...)
+
 @enduml

@@ -27,7 +27,7 @@ from typing import Optional, Set, Dict
 from oef.schema import DataModel, Description, AttributeSchema
 
 from tac.core import TacAgent, Game, GameTransaction
-from tac.protocol import Response, Request, Register, Registered, Unregister, Error, Unregistered, GameData, \
+from tac.protocol import Response, Request, Register, Unregister, Error, GameData, \
     Transaction, TransactionConfirmation
 
 logger = logging.getLogger(__name__)
@@ -131,7 +131,7 @@ class ControllerAgent(TacAgent):
         self.handler = ControllerHandler(self)
 
         self._current_game = None  # type: Optional[Game]
-        self._agent_pbk_to_id = None  # type: Dict[str, int]
+        self._agent_pbk_to_id = None  # type: Optional[Dict[str, int]]
 
     def register(self):
         desc = Description({"version": 1}, data_model=self.CONTROLLER_DATAMODEL)
@@ -143,6 +143,7 @@ class ControllerAgent(TacAgent):
         assert self._current_game is None and self._agent_pbk_to_id is None
         self._create_game()
         self._send_game_data_to_agents()
+        logger.debug("Started competition:\n{}".format(self._current_game.get_holdings_summary()))
 
     def _create_game(self) -> Game:
         instances_per_good = self.nb_agents
@@ -200,6 +201,7 @@ class ControllerAgent(TacAgent):
             return None
 
     def handle_transaction(self, request: Transaction) -> Optional[Response]:
+        logger.debug("Handling transaction: {}".format(request))
         sender_id = self._agent_pbk_to_id[request.public_key]
         receiver_id = self._agent_pbk_to_id[request.counterparty]
         buyer_id, seller_id = (sender_id, receiver_id) if request.buyer else (receiver_id, sender_id)
@@ -215,6 +217,8 @@ class ControllerAgent(TacAgent):
             tx_confirmation = TransactionConfirmation(request.transaction_id)
             self.send_message(0, 0, request.public_key, tx_confirmation.serialize())
             self.send_message(0, 0, request.counterparty, tx_confirmation.serialize())
+            logger.debug("Transaction '{}' settled successfully.".format(request.transaction_id))
+            logger.debug("Current state:\n{}".format(self._current_game.get_holdings_summary()))
             return None
         else:
             return Error("Error in checking transaction.")
