@@ -6,7 +6,7 @@ This tutorial shows how to set up a simple TAC.
 
 - Run the example:
 
-      python examples/tac_agent_spawner/tac_agent_spawner.py
+      python examples/baseline_demo/tac_agent_spawner.py
 
 Follows the sequence diagram of the communications between agents:
 

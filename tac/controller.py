@@ -27,6 +27,7 @@ from typing import Optional, Set, Dict
 from oef.schema import DataModel, Description, AttributeSchema
 
 from tac.core import TacAgent, Game, GameTransaction
+from tac.helpers import PlantUMLGenerator
 from tac.protocol import Response, Request, Register, Unregister, Error, GameData, \
     Transaction, TransactionConfirmation
 
@@ -144,6 +145,12 @@ class ControllerAgent(TacAgent):
         self._create_game()
         self._send_game_data_to_agents()
         logger.debug("Started competition:\n{}".format(self._current_game.get_holdings_summary()))
+
+        agent_id_to_pbk = dict(map(reversed, self._agent_pbk_to_id.items()))
+        for agent_id, game_state in enumerate(self._current_game.game_states):
+            agent_pbk = agent_id_to_pbk[agent_id]
+            self.add_drawable(PlantUMLGenerator.Note(self.public_key,
+                                                     "{}'s game state: \n".format(agent_pbk) + str(game_state)))
 
     def _create_game(self) -> Game:
         instances_per_good = self.nb_agents

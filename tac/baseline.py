@@ -19,19 +19,19 @@
 #
 # ------------------------------------------------------------------------------
 import argparse
-import asyncio
 import logging
 import pprint
 import random
 import time
-from typing import List, Optional, Tuple, Dict
+from typing import List, Optional, Dict
 
 from oef.messages import CFP_TYPES, PROPOSE_TYPES
 from oef.query import Query, Constraint, GtEq, Or
 from oef.schema import DataModel, AttributeSchema, Description
 
 from tac.controller import ControllerAgent
-from tac.core import TacAgent, GameState, GameTransaction
+from tac.core import TacAgent, GameState
+from tac.helpers import PlantUMLGenerator
 from tac.protocol import Register, Response, GameData, Transaction, TransactionConfirmation
 
 logger = logging.getLogger(__name__)
@@ -76,7 +76,7 @@ class BaselineAgent(TacAgent):
             self.search_services(self.SEARCH_TAC_SELLER_ID, query)
 
     def build_tac_sellers_query(self) -> Optional[Query]:
-        """Build the query to look for the needed goods (that is, the ones with zero count
+        """Build the query to look for the needed goods (that is, the ones with zero count)
 
         :return the Query, or None if the agent already have at least one instance for every good."""
         zero_quantity_goods_ids = set(map(lambda x: x[0],
@@ -85,12 +85,15 @@ class BaselineAgent(TacAgent):
 
         if len(zero_quantity_goods_ids) == 0: return None
         elif len(zero_quantity_goods_ids) == 1:
-            query = Query([Constraint("good_{:02d}".format(next(iter(zero_quantity_goods_ids))), GtEq(1))])
+            query = Query([Constraint("good_{:02d}".format(next(iter(zero_quantity_goods_ids))), GtEq(1))],
+                          model=self.seller_data_model)
         else:
-            query = Query([Or([Constraint("good_{:02d}".format(good_id), GtEq(1)) for good_id in zero_quantity_goods_ids])])
+            query = Query([Or([Constraint("good_{:02d}".format(good_id), GtEq(1)) for good_id in zero_quantity_goods_ids])],
+                          model=self.seller_data_model)
         return query
 
     def on_search_result(self, search_id: int, agents: List[str]):
+        super().on_search_result(search_id, agents)
         if self.SEARCH_TAC_CONTROLLER_ID == search_id:
             self._on_tac_search_result(agents)
             return
@@ -141,7 +144,7 @@ class BaselineAgent(TacAgent):
             self.buyer_data_model = DataModel("tac_buyer", goods_quantities_attributes + [price_attribute])
 
             self._register_as_seller_for_excessing_goods()
-            time.sleep(1.0)
+            time.sleep(2.0)
             self.search_tac_sellers()
         if isinstance(msg, TransactionConfirmation):
             transaction = self.pending_transactions.pop(msg.transaction_id)
@@ -206,7 +209,7 @@ class BaselineAgent(TacAgent):
             price = data.pop("price")
             good_ids, quantities = zip(*map(lambda x: (int(x[0][-2:]), x[1]), list(data.items())))
             candidate_transaction = Transaction(self.public_key, transaction_id, False, origin, price, good_ids,
-                                              quantities)
+                                                quantities)
             self.pending_transactions[transaction_id] = candidate_transaction
 
     def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES):

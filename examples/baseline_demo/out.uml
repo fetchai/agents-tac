@@ -1,0 +1,42 @@
+@startuml
+"tac_controller" -> "OEF Node": register_service(model=tac)
+"tac_agent_0" -> "OEF Node": search_services(model=tac)
+"tac_agent_2" -> "OEF Node": search_services(model=tac)
+"tac_agent_1" -> "OEF Node": search_services(model=tac)
+"OEF Node" -> "tac_agent_0": search result: ["tac_controller"]
+"OEF Node" -> "tac_agent_1": search result: ["tac_controller"]
+"OEF Node" -> "tac_agent_2": search result: ["tac_controller"]
+"tac_agent_0" -> "OEF Node": register_service(model=tac_seller)
+"tac_agent_2" -> "OEF Node": register_service(model=tac_seller)
+note over "tac_controller"
+tac_agent_0"s game state: 
+GameState{"current_holdings": [0, 1, 3, 2, 1],
+ "initial_endowment": [0, 1, 3, 2, 1],
+ "money": 20,
+ "preferences": [3, 1, 0, 4, 2],
+ "scores": [4, 3, 2, 1, 0]}
+end note
+note over "tac_controller"
+tac_agent_2"s game state: 
+GameState{"current_holdings": [1, 1, 0, 1, 2],
+ "initial_endowment": [1, 1, 0, 1, 2],
+ "money": 20,
+ "preferences": [2, 3, 4, 1, 0],
+ "scores": [4, 3, 2, 1, 0]}
+end note
+note over "tac_controller"
+tac_agent_1"s game state: 
+GameState{"current_holdings": [2, 1, 0, 0, 0],
+ "initial_endowment": [2, 1, 0, 0, 0],
+ "money": 20,
+ "preferences": [0, 1, 3, 4, 2],
+ "scores": [4, 3, 2, 1, 0]}
+end note
+"tac_agent_1" -> "OEF Node": register_service(model=tac_seller)
+"tac_agent_0" -> "OEF Node": search_services(model=tac_seller)
+"tac_agent_2" -> "OEF Node": search_services(model=tac_seller)
+"OEF Node" -> "tac_agent_2": search result: ["tac_agent_0"]
+"OEF Node" -> "tac_agent_0": search result: ["tac_agent_1"]
+"tac_agent_1" -> "OEF Node": search_services(model=tac_seller)
+"OEF Node" -> "tac_agent_1": search result: ["tac_agent_0", "tac_agent_2"]
+@enduml

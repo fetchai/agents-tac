@@ -30,6 +30,7 @@ from oef.query import Query, GtEq, Constraint
 from tac.baseline import BaselineAgent
 from tac.controller import ControllerAgent
 from tac.core import TacAgent
+from tac.helpers import plantuml_gen
 
 logger = logging.getLogger("tac")
 
@@ -39,14 +40,15 @@ def parse_arguments():
     parser.add_argument("N", type=int, help="Number of TAC agent to run.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
+    parser.add_argument("--out", default="out.uml", help="The output uml file")
 
     arguments = parser.parse_args()
     return arguments
 
 
-def run_agent(agent: TacAgent, loop):
+def run_agent(agent: BaselineAgent, loop):
     agent.connect(loop=loop)
-    agent.search_services(0, Query([Constraint("version", GtEq(1))]))
+    agent.search_tac_agents()
     agent.run(loop=loop)
 
 
@@ -60,20 +62,22 @@ def run_agents(agents: List[TacAgent]):
 
 if __name__ == '__main__':
 
-    arguments = parse_arguments()
+    try:
+        arguments = parse_arguments()
 
-    tac_controller = ControllerAgent(public_key="tac_controller", oef_addr=arguments.oef_addr,
-                                     oef_port=arguments.oef_port, nb_agents=arguments.N)
-    tac_controller.connect()
-    tac_controller.register()
+        tac_controller = ControllerAgent(public_key="tac_controller", oef_addr=arguments.oef_addr,
+                                         oef_port=arguments.oef_port, nb_agents=arguments.N)
+        tac_controller.connect()
+        tac_controller.register()
 
-    agents = [BaselineAgent("tac_agent_" + str(i), "127.0.0.1", 3333) for i in range(arguments.N)]
+        agents = [BaselineAgent("tac_agent_" + str(i), "127.0.0.1", 3333) for i in range(arguments.N)]
 
-    tac_agents = agents  # type: List[TacAgent]
-    run_agents(tac_agents)
+        tac_agents = agents  # type: List[TacAgent]
+        run_agents(tac_agents)
 
-    tac_controller.run()
-
+        tac_controller.run()
+    finally:
+        plantuml_gen.dump("out.uml")
 
     # task.add_done_callback(callback)
     # asyncio.get_event_loop().run_forever()

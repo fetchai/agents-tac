@@ -20,14 +20,47 @@
 import copy
 import pprint
 import random
-from typing import List, Dict
+from typing import List
 
 from oef.agents import OEFAgent
+from oef.query import Query
+from oef.schema import Description
+
+from tac.helpers import PlantUMLGenerator, plantuml_gen
 
 
 class TacAgent(OEFAgent):
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, **kwargs) -> None:
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, plantuml: bool=True, **kwargs) -> None:
+        """
+         :param plantuml: choose
+        """
         super().__init__(public_key, oef_addr, oef_port, **kwargs)
+        self.plantuml = plantuml
+        self.plantuml_generator = plantuml_gen
+
+    def add_drawable(self, d: PlantUMLGenerator.Drawable):
+        if self.plantuml:
+            self.plantuml_generator.add_drawable(d)
+
+    def connect(self, *args, **kwargs) -> bool:
+        super().connect(*args, **kwargs)
+        # self.add_drawable(PlantUMLGenerator.Transition(self.public_key, "OEF Node", self.connect.__name__))
+
+    def register_service(self, msg_id: int, service_description: Description) -> None:
+        super().register_service(msg_id, service_description)
+        self.add_drawable(PlantUMLGenerator.Transition(self.public_key, "OEF Node", "register_service(model={})"
+                                                       .format(service_description.data_model.name)))
+
+    def search_services(self, search_id: int, query: Query, additional_msg: str = "") -> None:
+        super().search_services(search_id, query)
+        self.add_drawable(PlantUMLGenerator.Transition(self.public_key, "OEF Node", "search_services(model={}{})"
+                                                       .format(query.model.name,
+                                                               ", " + additional_msg if additional_msg != "" else "")))
+
+    def on_search_result(self, search_id: int, agents: List[str]):
+        self.add_drawable(PlantUMLGenerator
+                          .Transition("OEF Node", self.public_key, "search result: [{}]"
+                                      .format(", ".join(sorted(map(lambda x: '"' + x + '"', agents))))))
 
 
 class Game(object):

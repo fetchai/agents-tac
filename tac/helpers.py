@@ -18,14 +18,60 @@
 #
 # ------------------------------------------------------------------------------
 import logging
+from abc import abstractmethod
+from typing import List
 
 logger = logging.getLogger("tac")
 
 
 def callback(fut):
+    """Callback to audit exception from asyncio tasks."""
     try:
         _ = fut.result()
     except Exception as e:
         logger.exception('Unexpected error')
         raise e
+
+
+class PlantUMLGenerator:
+
+    class Drawable:
+
+        @abstractmethod
+        def draw(self):
+            pass
+
+    class Transition(Drawable):
+        def __init__(self, sender: str, receiver: str, message: str):
+            self.sender = sender
+            self.receiver = receiver
+            self.message = message
+
+        def draw(self):
+            return '"{}" -> "{}": {}\n'.format(self.sender, self.receiver, self.message)
+
+    class Note(Drawable):
+
+        def __init__(self, msg: str, over: str):
+            self.msg = msg
+            self.over = over
+
+        def draw(self):
+            return 'note over "{}"\n{}\nend note\n'.format(self.msg, self.over).replace("'", "\"")
+
+    def __init__(self):
+        self.drawables = []  # type: List[PlantUMLGenerator.Drawable]
+
+    def add_drawable(self, dw: Drawable):
+        self.drawables.append(dw)
+
+    def dump(self, file: str):
+        with open(file, "w") as fout:
+            fout.writelines("@startuml\n")
+            for d in self.drawables:
+                fout.write(d.draw())
+            fout.writelines("@enduml\n")
+
+
+plantuml_gen = PlantUMLGenerator()
 
