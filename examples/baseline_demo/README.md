@@ -10,6 +10,6 @@ This tutorial shows how to set up a simple TAC.
 
   Where `N` is the number of participants.
     
-Follows the sequence diagram of the communications between agents:
+Follows the sequence    diagram of the communications between agents:
 
 ![](./sequence_diagram.png)

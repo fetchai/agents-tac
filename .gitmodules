@@ -1,3 +1,6 @@
 [submodule "TAC"]
 	path = TAC
 	url = git@github.com:uvue-git/TAC.git
+[submodule "docker-images"]
+	path = docker-images
+	url = https://github.com/uvue-git/docker-images.git

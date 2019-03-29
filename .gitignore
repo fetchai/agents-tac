@@ -107,4 +107,5 @@ venv.bak/
 ignore
 tac/*_pb2.py
 log*.txt
-
+examples/baseline_demo/out.uml
+examples/baseline_demo/out.png

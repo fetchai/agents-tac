@@ -40,7 +40,9 @@ def parse_arguments():
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
     parser.add_argument("--money",    default=20,   help="Money endowment for TAC agents.")
-    parser.add_argument("--nb-goods", default=5,   help="Number of goods")
+    parser.add_argument("--nb-agents", default=5, type=int, help="Number of goods")
+    parser.add_argument("--nb-goods", default=5, type=int, help="Number of goods")
+    parser.add_argument("--fee", default=1, type=int, help="Number of goods")
     # parser.add_argument("--gui", action="store_true", help="Show the GUI.")
 
     return parser.parse_args()
