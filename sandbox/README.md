@@ -27,3 +27,7 @@ To change the parameter:
 - set the variable in one command:
 
       NB_BASELINE_AGENTS=2 docker-compose up
+      
+To double-check whether the variable has been set successfully, use:
+
+    docker-compose config

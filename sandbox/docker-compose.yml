@@ -13,6 +13,8 @@ services:
 
   baseline:
     image: "baseline-image"
+    env_file:
+      - .env
     build:
       context: ../
       dockerfile: docker-tac-develop/Dockerfile
