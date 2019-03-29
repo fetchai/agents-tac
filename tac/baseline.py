@@ -98,6 +98,7 @@ class BaselineAgent(TacAgent):
         return query
 
     def on_search_result(self, search_id: int, agents: List[str]):
+        logger.debug("[{}]: search result: {} {}".format(self.public_key, search_id, agents))
         super().on_search_result(search_id, agents)
         if self.SEARCH_TAC_CONTROLLER_ID == search_id:
             self._on_tac_search_result(agents)

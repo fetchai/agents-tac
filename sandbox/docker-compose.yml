@@ -1,0 +1,38 @@
+version: '3'
+services:
+  oef-node:
+    image: "oef-core-image"
+    build:
+      context: ../oef-core/
+      dockerfile: oef-core-image/Dockerfile
+    ports:
+      - "3333:3333"
+    networks:
+      main_net:
+        ipv4_address: 172.28.1.1
+
+  baseline:
+    image: "baseline-image"
+    build:
+      context: ../
+      dockerfile: docker-tac-develop/Dockerfile
+    networks:
+      main_net:
+        ipv4_address: 172.28.1.2
+    entrypoint:
+      - "python3"
+      - "examples/baseline_demo/tac_agent_spawner.py"
+      - "${NB_BASELINE_AGENTS}"
+      - "--oef-addr"
+      - "172.28.1.1"
+      - "--oef-port"
+      - "3333"
+
+networks:
+    main_net:
+        ipam:
+            driver: default
+            config:
+                - subnet: 172.28.0.0/16
+
+

@@ -1,7 +1,7 @@
 # tac-agents
 OEF Agents for Trading Agents Competition
 
-Look at the `docs/` for further details.
+Look at the `examples/` for a better understanding.
 
 ## Preliminaries
 

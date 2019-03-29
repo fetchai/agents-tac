@@ -214,7 +214,7 @@ class GameState:
         self.preferences = preferences
         self.scores = scores
 
-        self.current_holdings = copy.deepcopy(self.initial_endowment)
+        self.current_holdings = copy.copy(self.initial_endowment)
         self._from_good_to_preference = dict(map(reversed, enumerate(self.preferences)))
 
     @property

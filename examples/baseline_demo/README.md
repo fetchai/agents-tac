@@ -12,4 +12,4 @@ This tutorial shows how to set up a simple TAC.
     
 Follows the sequence    diagram of the communications between agents:
 
-![](./sequence_diagram.png)
+![](./registration .png)
