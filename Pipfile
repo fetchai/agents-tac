@@ -8,9 +8,8 @@ ipython = "*"
 
 [packages]
 oef = {git = "ssh://git@github.com/uvue-git/oef-sdk-python.git"}
-pyqt5 = "*"
-quamash = "*"
-jsonschema = "*"
+flask-sqlalchemy = "*"
+sqlalchemy = "*"
 
 [requires]
 python_version = "3.6"

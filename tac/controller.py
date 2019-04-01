@@ -22,7 +22,7 @@
 import argparse
 import logging
 import pprint
-from typing import Optional, Set, Dict
+from typing import Optional, Set, Dict, List
 
 from oef.schema import DataModel, Description, AttributeSchema
 
@@ -135,6 +135,7 @@ class ControllerAgent(TacAgent):
 
         self._current_game = None  # type: Optional[Game]
         self._agent_pbk_to_id = None  # type: Optional[Dict[str, int]]
+        self._transaction_history = []  # type: List[Transaction]
 
     def register(self):
         desc = Description({"version": 1}, data_model=self.CONTROLLER_DATAMODEL)
