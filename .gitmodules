@@ -1,6 +1,3 @@
-[submodule "TAC"]
-	path = TAC
-	url = git@github.com:uvue-git/TAC.git
 [submodule "docker-images"]
 	path = docker-images
 	url = https://github.com/uvue-git/docker-images.git
@@ -10,3 +7,6 @@
 [submodule "oef-sdk-python"]
 	path = oef-sdk-python
 	url = git@github.com:uvue-git/oef-sdk-python.git
+[submodule "tac-cpp"]
+	path = tac-cpp
+	url = git@github.com:uvue-git/TAC.git

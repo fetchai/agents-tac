@@ -56,7 +56,7 @@ class ProtocCommand(distutils.cmd.Command):
 
     def initialize_options(self):
         """Set default values for options."""
-        self.proto_path = os.path.join("TAC", "proto")
+        self.proto_path = os.path.join("tac-cpp", "proto")
 
     def finalize_options(self):
         """Post-process options."""
