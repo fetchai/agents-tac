@@ -38,7 +38,9 @@ def parse_arguments():
     parser.add_argument("N", type=int, help="Number of TAC agent to run.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
-    parser.add_argument("--out", default="out.uml", help="The output uml file")
+    parser.add_argument("--uml-out", default="out.uml", help="The output uml file")
+    parser.add_argument("--data-output-dir", default="data", help="The output directory for the simulation data.")
+    parser.add_argument("--experiment-id", default=None, help="The experiment ID.")
 
     arguments = parser.parse_args()
     return arguments
@@ -77,5 +79,5 @@ if __name__ == '__main__':
 
         tac_controller.run()
     finally:
-        tac_controller.dump()
+        tac_controller.dump(arguments.data_output_dir, arguments.experiment_id)
         plantuml_gen.dump("out.uml")
