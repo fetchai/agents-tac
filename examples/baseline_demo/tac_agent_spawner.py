@@ -77,4 +77,5 @@ if __name__ == '__main__':
 
         tac_controller.run()
     finally:
+        tac_controller.dump()
         plantuml_gen.dump("out.uml")

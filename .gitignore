@@ -111,3 +111,5 @@ examples/baseline_demo/out.uml
 examples/baseline_demo/out.png
 
 *.sqlite3
+data/*
+!data/.gitkeep

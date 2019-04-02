@@ -18,9 +18,10 @@
 #
 # ------------------------------------------------------------------------------
 import copy
+import json
 import pprint
 import random
-from typing import List
+from typing import List, Dict, Any
 
 from oef.agents import OEFAgent
 from oef.query import Query
@@ -41,10 +42,6 @@ class TacAgent(OEFAgent):
     def add_drawable(self, d: PlantUMLGenerator.Drawable):
         if self.plantuml:
             self.plantuml_generator.add_drawable(d)
-
-    def connect(self, *args, **kwargs) -> bool:
-        super().connect(*args, **kwargs)
-        # self.add_drawable(PlantUMLGenerator.Transition(self.public_key, "OEF Node", self.connect.__name__))
 
     def register_service(self, msg_id: int, service_description: Description) -> None:
         super().register_service(msg_id, service_description)
@@ -99,6 +96,7 @@ class Game(object):
         self.scores = scores
         self.fee = fee
 
+        self.transactions = []  # type: List[GameTransaction]
         self.game_states = [GameState(initial_money_amount, initial_endowments[i], preferences[i], scores)
                             for i in range(nb_agents)]  # type: List[GameState]
 
@@ -185,6 +183,7 @@ class Game(object):
         return result
 
     def settle_transaction(self, tx: 'GameTransaction'):
+        self.transactions.append(tx)
         buyer_state = self.game_states[tx.buyer_id]
         seller_state = self.game_states[tx.seller_id]
 
@@ -202,6 +201,16 @@ class Game(object):
         for i, game_state in enumerate(self.game_states):
             result = result + "{:02d}".format(i) + " " + str(game_state.current_holdings) + "\n"
         return result
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "nb_agents": self.nb_agents,
+            "nb_goods": self.nb_goods,
+            "instances_per_good": self.instances_per_good,
+            "scores": self.scores,
+            "fee": self.fee,
+            "transactions": [t.to_dict() for t in self.transactions]
+        }
 
 
 class GameState:
@@ -269,3 +278,12 @@ class GameTransaction:
         self.amount = amount
         self.good_ids = good_ids
         self.quantities = quantities
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "buyer_id": self.buyer_id,
+            "seller_id": self.seller_id,
+            "amount": self.amount,
+            "good_ids": self.good_ids,
+            "quantities": self.quantities
+        }
