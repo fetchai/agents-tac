@@ -267,7 +267,7 @@ class ControllerAgent(TacAgent):
         game_dict = {} if self._current_game is None else self._current_game.to_dict()
 
         os.makedirs(experiment_dir, exist_ok=True)
-        with open(experiment_dir + "/" + "game.json", "w") as f:
+        with open(os.path.join(experiment_dir, "game.json"), "w") as f:
             json.dump(game_dict, f)
 
 
