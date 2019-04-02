@@ -94,6 +94,8 @@ class Game(object):
         self.nb_goods = nb_goods
         self.instances_per_good = instances_per_good
         self.initial_money_amount = initial_money_amount
+        self.initial_endowments = initial_endowments
+        self.preferences = preferences
         self.scores = scores
         self.fee = fee
 
@@ -207,11 +209,33 @@ class Game(object):
         return {
             "nb_agents": self.nb_agents,
             "nb_goods": self.nb_goods,
+            "initial_money_amount": self.initial_money_amount,
             "instances_per_good": self.instances_per_good,
             "scores": self.scores,
             "fee": self.fee,
+            "initial_endowments": self.initial_endowments,
+            "preferences": self.preferences,
             "transactions": [t.to_dict() for t in self.transactions]
         }
+
+    @classmethod
+    def from_dict(cls, d: Dict[str, Any]) -> 'Game':
+        obj = cls(
+            d["nb_agents"],
+            d["nb_goods"],
+            d["initial_money_amount"],
+            d["instances_per_good"],
+            d["scores"],
+            d["fee"],
+            d["initial_endowments"],
+            d["preferences"]
+        )
+
+        for tx_dict in d["transactions"]:
+            tx = GameTransaction.from_dict(tx_dict)
+            obj.settle_transaction(tx)
+
+        return obj
 
 
 class GameState:
@@ -288,3 +312,13 @@ class GameTransaction:
             "good_ids": self.good_ids,
             "quantities": self.quantities
         }
+
+    @classmethod
+    def from_dict(cls, d: Dict[str, Any]):
+        return cls(
+            d["buyer_id"],
+            d["seller_id"],
+            d["amount"],
+            d["good_ids"],
+            d["quantities"]
+        )
