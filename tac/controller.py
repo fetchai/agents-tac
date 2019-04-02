@@ -20,9 +20,13 @@
 # ------------------------------------------------------------------------------
 
 import argparse
+import datetime
+import json
 import logging
+import os
 import pprint
-from typing import Optional, Set, Dict
+import shutil
+from typing import Optional, Set, Dict, List
 
 from oef.schema import DataModel, Description, AttributeSchema
 
@@ -135,6 +139,7 @@ class ControllerAgent(TacAgent):
 
         self._current_game = None  # type: Optional[Game]
         self._agent_pbk_to_id = None  # type: Optional[Dict[str, int]]
+        self._transaction_history = []  # type: List[Transaction]
 
     def register(self):
         desc = Description({"version": 1}, data_model=self.CONTROLLER_DATAMODEL)
@@ -221,8 +226,8 @@ class ControllerAgent(TacAgent):
             buyer_id,
             seller_id,
             request.amount,
-            request.good_ids,
-            request.quantities
+            list(request.good_ids),
+            list(request.quantities)
         )
         if self._current_game.is_transaction_valid(tx):
             self._current_game.settle_transaction(tx)
@@ -253,6 +258,17 @@ class ControllerAgent(TacAgent):
             self.add_drawable(PlantUMLGenerator.Transition(
                 self.public_key, request.counterparty, "Error({})".format(request.transaction_id)))
             return Error("Error in checking transaction.")
+
+    def dump(self, directory: str = "data", experiment_name: Optional[str] = None):
+        experiment_name = experiment_name if experiment_name is not None else str(datetime.datetime.now())\
+            .replace(" ", "_")
+        experiment_dir = directory + "/" + experiment_name
+
+        game_dict = {} if self._current_game is None else self._current_game.to_dict()
+
+        os.makedirs(experiment_dir, exist_ok=True)
+        with open(experiment_dir + "/" + "game.json", "w") as f:
+            json.dump(game_dict, f)
 
 
 def main():
