@@ -29,7 +29,6 @@ from oef.messages import CFP_TYPES, PROPOSE_TYPES
 from oef.query import Query, Constraint, GtEq, Or
 from oef.schema import DataModel, AttributeSchema, Description
 
-from tac.controller import ControllerAgent
 from tac.core import TacAgent, GameState
 from tac.helpers import PlantUMLGenerator
 from tac.protocol import Register, Response, GameData, Transaction, TransactionConfirmation
@@ -65,8 +64,7 @@ class BaselineAgent(TacAgent):
         self.pending_transactions = {}  # type: Dict[str, Transaction]
 
     def search_tac_agents(self) -> None:
-        self.search_services(self.SEARCH_TAC_CONTROLLER_ID, Query([Constraint("version", GtEq(1))],
-                                                                  model=ControllerAgent.CONTROLLER_DATAMODEL))
+        self.search_services(self.SEARCH_TAC_CONTROLLER_ID, Query([Constraint("version", GtEq(1))]))
 
     def search_tac_sellers(self) -> None:
         query = self.build_tac_sellers_query()

@@ -50,9 +50,10 @@ class TacAgent(OEFAgent):
 
     def search_services(self, search_id: int, query: Query, additional_msg: str = "") -> None:
         super().search_services(search_id, query)
-        self.add_drawable(PlantUMLGenerator.Transition(self.public_key, "OEF Node", "search_services(model={}{})"
-                                                       .format(query.model.name,
-                                                               ", " + additional_msg if additional_msg != "" else "")))
+        data_model_string = ("model=" + query.model.name + ", " + additional_msg if additional_msg != "" else "") \
+            if query.model is not None else ""
+        self.add_drawable(PlantUMLGenerator.Transition(self.public_key, "OEF Node", "search_services({})"
+                                                       .format(data_model_string)))
 
     def on_search_result(self, search_id: int, agents: List[str]):
         self.add_drawable(PlantUMLGenerator
