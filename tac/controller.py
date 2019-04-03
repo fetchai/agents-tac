@@ -25,7 +25,6 @@ import json
 import logging
 import os
 import pprint
-import shutil
 from typing import Optional, Set, Dict, List
 
 from oef.schema import DataModel, Description, AttributeSchema

@@ -18,10 +18,11 @@
 #
 # ------------------------------------------------------------------------------
 import copy
+import datetime
 import json
 import pprint
 import random
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from oef.agents import OEFAgent
 from oef.query import Query
@@ -168,6 +169,10 @@ class Game(object):
         return Game(nb_agents, nb_goods, initial_money_amount, instances_per_good,
                     scores, fee, initial_endowments, preferences)
 
+    def get_scores(self) -> List[int]:
+        """Get the current scores for every agent."""
+        return [gs.get_score() for gs in self.game_states]
+
     def get_game_data_by_agent_id(self, agent_id: int) -> 'GameState':
         return self.game_states[agent_id]
 
@@ -296,13 +301,15 @@ class GameState:
 class GameTransaction:
     """Represent a transaction between agents"""
 
-    def __init__(self, buyer_id: int, seller_id: int, amount: int, good_ids: List[int], quantities: List[int]):
+    def __init__(self, buyer_id: int, seller_id: int, amount: int, good_ids: List[int], quantities: List[int],
+                 timestamp: Optional[datetime.datetime] = None):
         assert len(good_ids) == len(quantities)
         self.buyer_id = buyer_id
         self.seller_id = seller_id
         self.amount = amount
         self.good_ids = good_ids
         self.quantities = quantities
+        self.timestamp = datetime.datetime.now() if timestamp is None else timestamp
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -310,15 +317,17 @@ class GameTransaction:
             "seller_id": self.seller_id,
             "amount": self.amount,
             "good_ids": self.good_ids,
-            "quantities": self.quantities
+            "quantities": self.quantities,
+            "timestamp": str(self.timestamp)
         }
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]):
         return cls(
-            d["buyer_id"],
-            d["seller_id"],
-            d["amount"],
-            d["good_ids"],
-            d["quantities"]
+            buyer_id=d["buyer_id"],
+            seller_id=d["seller_id"],
+            amount=d["amount"],
+            good_ids=d["good_ids"],
+            quantities=d["quantities"],
+            timestamp=d["timestamp"]
         )

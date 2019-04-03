@@ -10,6 +10,9 @@ ipython = "*"
 oef = {git = "ssh://git@github.com/uvue-git/oef-sdk-python.git"}
 flask-sqlalchemy = "*"
 sqlalchemy = "*"
+numpy = "*"
+matplotlib = "*"
+
 
 [requires]
 python_version = "3.7"

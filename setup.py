@@ -133,6 +133,8 @@ setup(
     ],
     install_requires=[
         "oef",
+        "numpy",
+        "matplotlib"
     ],
     dependency_links=[
         "git+ssh://git@github.com/uvue-git/oef-sdk-python.git#egg=oef",
