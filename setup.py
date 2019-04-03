@@ -134,7 +134,8 @@ setup(
     install_requires=[
         "oef",
         "numpy",
-        "matplotlib"
+        "matplotlib",
+        "flask"
     ],
     dependency_links=[
         "git+ssh://git@github.com/uvue-git/oef-sdk-python.git#egg=oef",
