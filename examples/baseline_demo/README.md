@@ -32,3 +32,27 @@ Example:
           --data-output-dir my_data
           --experiment-id my_experiment
       
+It generates a `game.json` file in `my_data/my_experiment/` folder that looks like:
+
+```
+{'fee': 1,
+ 'initial_endowments': [[1, 0, 2, 2, 2], [1, 2, 0, 0, 0]],
+ 'initial_money_amount': 20,
+ 'instances_per_good': 2,
+ 'nb_agents': 2,
+ 'nb_goods': 5,
+ 'preferences': [[4, 0, 1, 3, 2], [3, 4, 2, 0, 1]],
+ 'scores': [4, 3, 2, 1, 0],
+ 'transactions': [{'amount': 3,
+                   'buyer_id': 1,
+                   'good_ids': [0, 1, 2, 3, 4],
+                   'quantities': [0, 0, 1, 1, 1],
+                   'seller_id': 0,
+                   'timestamp': '2019-04-03 15:25:25.240885'},
+                  {'amount': 3,
+                   'buyer_id': 0,
+                   'good_ids': [0, 1, 2, 3, 4],
+                   'quantities': [0, 1, 0, 0, 0],
+                   'seller_id': 1,
+                   'timestamp': '2019-04-03 15:25:25.242052'}]}
+```
