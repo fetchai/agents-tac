@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Display data{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+
+<p>Please select a JSON file describing a game simulation.</p>
+
+<form method="POST" enctype="multipart/form-data" action="/upload">
+  <input type="file" name="file[]" multiple="">
+  <input type="submit" value="submit">
+</form>
+
+<div>
+  <ul>
+    <li>nb_agents: {{nb_agents}}</li>
+    <li>nb_goods: {{nb_goods}}</li>
+    <li>initial_money_amount: {{initial_money_amount}}</li>
+    <li>instances_per_good: {{instances_per_good}}</li>
+    <li>scores: {{scores}}</li>
+    <li>fee: {{fee}}</li>
+    <li>#transactions: {{nb_transactions}}</li>
+  </ul>
+</div>
+<div>
+  <img src="{{saved_plot_figure}}">
+</div>
+
+{% endblock %}

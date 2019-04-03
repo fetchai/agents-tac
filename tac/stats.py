@@ -17,10 +17,10 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import numpy as np
-import matplotlib.pyplot as plt
+import pylab as plt
 from tac.core import Game
 
 
@@ -70,10 +70,18 @@ class GameStats:
 
         return result
 
-    def plot_score_history(self) -> None:
+    def plot_score_history(self, output_path: Optional[str] = None) -> None:
         history = self.score_history()
-        for idx, agent_history in enumerate(history.transpose()):
-            plt.plot(agent_history, label="agent_{}".format(idx))
 
-        plt.legend()
-        plt.show()
+        plt.ioff()
+        plt.plot(history)
+        labels = ["agent_{:02d}".format(idx) for idx in range(len(history))]
+        plt.legend(labels, loc="best")
+
+        if output_path is None:
+            plt.ion()
+            plt.show()
+        else:
+            plt.savefig(output_path)
+
+        plt.ion()

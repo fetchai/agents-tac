@@ -110,6 +110,8 @@ log*.txt
 out.uml
 examples/baseline_demo/out.uml
 examples/baseline_demo/out.png
+tac/gui/static/tmp/*
+!tac/gui/static/tmp/.gitkeep
 
 *.sqlite3
 data/*
