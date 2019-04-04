@@ -1,3 +1,5 @@
+# registration_demo
+
 This tutorial shows how the registration to the Trading Agent Competition works.
 
 ## Demo
@@ -10,7 +12,7 @@ This tutorial shows how the registration to the Trading Agent Competition works.
     
 - Run the baseline agent:
 
-      python examples/register/app.py
+      python examples/registration_demo/app.py
       
   The client agent will send a `register` request to the controller.
   

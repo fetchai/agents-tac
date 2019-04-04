@@ -1,30 +1,32 @@
-This tutorial shows how to set up a simple TAC.
+# simulation_demo
+
+This tutorial shows how to simulate a simple TAC.
 
 ## Demo
 
 - Be sure you're running an OEF Node on `localhost`. 
 
-- Run the example:
+- Run the simulation example:
 
-      python examples/baseline_demo/tac_agent_spawner.py N
+      python examples/simulation_demo/tac_agent_spawner.py N
 
   Where `N` is the number of participants.
     
-Follows the sequence diagram of the communications between agents:
+This follows the sequence diagram of the communications between agents:
 
-![](./registration .png)
+![](./registration.png)
 
 
-### Other parameters
+### Optional parameters
 
-- `--oef-addr` and `--oef-port` allow you to specify a different OEF Node tu use for the simulation.
-- `--uml-out` is the filepath where to to store the activity of the simulation in PlantUML syntax.
+- `--oef-addr` and `--oef-port` allow you to specify a different OEF Node to use for the simulation.
+- `--uml-out` is the filepath where to store the activity of the simulation in PlantUML syntax.
 - `--data-output-dir` is the output directory to use for storing simulation data.
-- `--experiment-id` is the name to give to the experiment. The data will be stored in `${data_output_dir}/${experiment_id}`.
+- `--experiment-id` is the name to give to the simulation. The data will be stored in `${data_output_dir}/${experiment_id}`.
 
 Example:
 
-      python examples/baseline_demo/tac_agent_spawner.py 
+      python examples/simulation_demo/tac_agent_spawner.py 
           3 
           --oef-addr oef.economicagents.com 
           --oef-port 3333
