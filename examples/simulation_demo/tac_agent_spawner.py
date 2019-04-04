@@ -25,10 +25,10 @@ import asyncio
 import logging
 from typing import List
 
-from tac.baseline import BaselineAgent
-from tac.controller import ControllerAgent
+from tac.agents.baseline import BaselineAgent
+from tac.agents.controller import ControllerAgent
 from tac.core import TacAgent
-from tac.helpers import plantuml_gen
+from tac.helpers.plantuml import plantuml_gen
 
 logger = logging.getLogger("tac")
 

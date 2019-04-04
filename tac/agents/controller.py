@@ -30,7 +30,7 @@ from typing import Optional, Set, Dict, List
 from oef.schema import DataModel, Description, AttributeSchema
 
 from tac.core import TacAgent, Game, GameTransaction
-from tac.helpers import PlantUMLGenerator
+from tac.helpers.plantuml import plantuml_gen
 from tac.protocol import Response, Request, Register, Unregister, Error, GameData, \
     Transaction, TransactionConfirmation
 
@@ -52,6 +52,7 @@ def parse_arguments():
 
 
 class ControllerHandler(object):
+    """Class to wrap the decoding procedure and dispatching the handling of the message to the right function."""
 
     def __init__(self, controller: 'ControllerAgent'):
         """
@@ -72,7 +73,12 @@ class ControllerHandler(object):
         return response
 
     def dispatch(self, request: Request) -> Response:
-        """Dispatch the request to the right handler"""
+        """
+        Dispatch the request to the right handler.
+
+        :param request: the request to handle
+        :return: the response.
+        """
         try:
             if isinstance(request, Register):
                 return self.controller.handle_register(request)
@@ -140,28 +146,103 @@ class ControllerAgent(TacAgent):
         self._agent_pbk_to_id = None  # type: Optional[Dict[str, int]]
         self._transaction_history = []  # type: List[Transaction]
 
+    def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
+        logger.debug("[ControllerAgent] on_message: msg_id={}, dialogue_id={}, origin={}"
+                     .format(msg_id, dialogue_id, origin))
+        response = self.handler.handle(content, origin)
+        if response is not None:
+            response_bytes = response.serialize()
+            self.send_message(msg_id + 1, dialogue_id, origin, response_bytes)
+
     def register(self):
+        """
+        Register on the OEF as a TAC controller agent.
+        :return: None.
+        """
         desc = Description({"version": 1}, data_model=self.CONTROLLER_DATAMODEL)
         logger.debug("Registering with {} data model".format(desc.data_model.name))
         self.register_service(0, desc)
 
-    def start_competition(self):
+    def handle_register(self, request: Register) -> Optional[Response]:
+        """
+        Handle a register message.
+        If the public key is already registered, answer with an error message.
+        If this is the n_th registration request, where n is equal to nb_agents, then start the competition.
+
+        :param request: the register request.
+        :return: an Error response if an error occurred, else None.
+        """
+        public_key = request.public_key
+        if public_key in self.registered_agents:
+            error_msg = "Agent already registered: '{}'".format(public_key)
+            logger.error(error_msg)
+            return Error(error_msg)
+        else:
+            logger.debug("Agent registered: '{}'".format(public_key))
+            self.registered_agents.add(public_key)
+            if len(self.registered_agents) >= self.nb_agents:
+                self._start_competition()
+            return None
+
+    def handle_unregister(self, request: Unregister) -> Optional[Response]:
+        """
+        Handle a unregister message.
+        If the public key is not registered, answer with an error message.
+
+        :param request: the register request.
+        :return: an Error response if an error occurred, else None.
+        """
+        public_key = request.public_key
+        if public_key not in self.registered_agents:
+            error_msg = "Agent not registered: '{}'".format(public_key)
+            logger.error(error_msg)
+            return Error(error_msg)
+        else:
+            logger.debug("Agent unregistered: '{}'".format(public_key))
+            self.registered_agents.remove(public_key)
+            return None
+
+    def handle_transaction(self, request: Transaction) -> Optional[Response]:
+        """
+        Handle a transaction request message.
+        If the transaction is invalid (e.g. whether because )
+
+        :param request: the transaction request.
+        :return: an Error response if an error occurred, else None.
+        """
+        logger.debug("Handling transaction: {}".format(request))
+        sender_id = self._agent_pbk_to_id[request.public_key]
+        receiver_id = self._agent_pbk_to_id[request.counterparty]
+        buyer_id, seller_id = (sender_id, receiver_id) if request.buyer else (receiver_id, sender_id)
+        tx = GameTransaction(
+            buyer_id,
+            seller_id,
+            request.amount,
+            list(request.good_ids),
+            list(request.quantities)
+        )
+        if self._current_game.is_transaction_valid(tx):
+            return self._handle_valid_transaction(request, tx)
+        else:
+            return self._handle_invalid_transaction(request)
+
+    def _start_competition(self):
         """Create a game and send the game setting to every registered agent."""
+        # assert that there is no competition running.
+        # TODO find a better way.
         assert self._current_game is None and self._agent_pbk_to_id is None
         self._create_game()
         self._send_game_data_to_agents()
         logger.debug("Started competition:\n{}".format(self._current_game.get_holdings_summary()))
-
-        agent_id_to_pbk = dict(map(reversed, self._agent_pbk_to_id.items()))
-        for agent_id, game_state in enumerate(self._current_game.game_states):
-            agent_pbk = agent_id_to_pbk[agent_id]
-            self.add_drawable(PlantUMLGenerator.Note("{} game state: \n".format(agent_pbk) + str(game_state) +
-                                                     "\nScore: {}".format(game_state.get_score()),
-                                                     self.public_key))
-            self.add_drawable(PlantUMLGenerator.Transition(self.public_key, agent_pbk,
-                                                           "GameData(money, endowments, preferences, scores, fee)"))
+        plantuml_gen.start_competition(self.public_key, self._current_game, self._agent_pbk_to_id)
 
     def _create_game(self) -> Game:
+        """
+        Create a TAC game.
+
+        :return: a Game instance.
+        """
+        # TODO is it compliant with the specifications?
         instances_per_good = self.nb_agents
         scores = list(reversed(range(self.nb_goods)))
         self._current_game = Game.generate_game(self.nb_agents, self.nb_goods, self.money_endowment,
@@ -170,6 +251,11 @@ class ControllerAgent(TacAgent):
         return self._current_game
 
     def _send_game_data_to_agents(self):
+        """
+        Send the data of every agent about the game (e.g. endowments, preferences, scores)
+
+        :return: None.
+        """
         for public_key in self._agent_pbk_to_id:
             agent_id = self._agent_pbk_to_id[public_key]
             game_data = self._current_game.get_game_data_by_agent_id(agent_id)
@@ -184,81 +270,35 @@ class ControllerAgent(TacAgent):
                          .format(self.public_key, public_key, str(game_data_response)))
             self.send_message(0, 1, public_key, game_data_response.serialize())
 
-    def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
-        logger.debug("[ControllerAgent] on_message: msg_id={}, dialogue_id={}, origin={}"
-                     .format(msg_id, dialogue_id, origin))
-        response = self.handler.handle(content, origin)
-        if response is not None:
-            response_bytes = response.serialize()
-            self.send_message(msg_id + 1, dialogue_id, origin, response_bytes)
+    def _handle_valid_transaction(self, request: Transaction, tx: GameTransaction):
+        """Handle a valid transaction."""
+        self._current_game.settle_transaction(tx)
+        tx_confirmation = TransactionConfirmation(request.transaction_id)
+        self.send_message(0, 0, request.public_key, tx_confirmation.serialize())
+        self.send_message(0, 0, request.counterparty, tx_confirmation.serialize())
 
-    def handle_register(self, request: Register) -> Optional[Response]:
-        public_key = request.public_key
-        if public_key in self.registered_agents:
-            error_msg = "Agent already registered: '{}'".format(public_key)
-            logger.error(error_msg)
-            return Error(error_msg)
-        else:
-            logger.debug("Agent registered: '{}'".format(public_key))
-            self.registered_agents.add(public_key)
-            if len(self.registered_agents) >= self.nb_agents:
-                self.start_competition()
-            return None
+        # log messages
+        logger.debug("Transaction '{}' settled successfully.".format(request.transaction_id))
+        logger.debug("Current state:\n{}".format(self._current_game.get_holdings_summary()))
 
-    def handle_unregister(self, request: Unregister) -> Optional[Response]:
-        public_key = request.public_key
-        if public_key not in self.registered_agents:
-            error_msg = "Agent not registered: '{}'".format(public_key)
-            logger.error(error_msg)
-            return Error(error_msg)
-        else:
-            logger.debug("Agent unregistered: '{}'".format(public_key))
-            self.registered_agents.remove(public_key)
-            return None
+        # plantuml entries
+        plantuml_gen.handle_valid_transaction(self.public_key, request.public_key, request.counterparty, request.transaction_id, self._current_game)
 
-    def handle_transaction(self, request: Transaction) -> Optional[Response]:
-        logger.debug("Handling transaction: {}".format(request))
-        sender_id = self._agent_pbk_to_id[request.public_key]
-        receiver_id = self._agent_pbk_to_id[request.counterparty]
-        buyer_id, seller_id = (sender_id, receiver_id) if request.buyer else (receiver_id, sender_id)
-        tx = GameTransaction(
-            buyer_id,
-            seller_id,
-            request.amount,
-            list(request.good_ids),
-            list(request.quantities)
-        )
-        if self._current_game.is_transaction_valid(tx):
-            self._current_game.settle_transaction(tx)
-            tx_confirmation = TransactionConfirmation(request.transaction_id)
-            self.send_message(0, 0, request.public_key, tx_confirmation.serialize())
-            self.send_message(0, 0, request.counterparty, tx_confirmation.serialize())
-            logger.debug("Transaction '{}' settled successfully.".format(request.transaction_id))
-            logger.debug("Current state:\n{}".format(self._current_game.get_holdings_summary()))
+        return None
 
-            self.add_drawable(PlantUMLGenerator.Note("Transaction {} settled.".format(request.transaction_id),
-                                                     self.public_key))
-            self.add_drawable(PlantUMLGenerator.Note("New holdings:\n" + self._current_game.get_holdings_summary(),
-                                                     self.public_key))
-            self.add_drawable(PlantUMLGenerator.Note("Details:\n" + "\n"
-                                                     .join(["score={}, money={}".format(g.get_score(), g.balance)
-                                                            for g in self._current_game.game_states]),
-                                                     self.public_key))
+    def _handle_invalid_transaction(self, request: Transaction):
+        """Handle an invalid transaction."""
+        plantuml_gen.handle_invalid_transaction(self.public_key, request.public_key, request.counterparty, request.transaction_id)
+        return Error("Error in checking transaction.")
 
-            self.add_drawable(PlantUMLGenerator.Transition(
-                self.public_key, request.public_key, "ConfirmTransaction({})".format(request.transaction_id)))
-            self.add_drawable(PlantUMLGenerator.Transition(
-                self.public_key, request.counterparty, "ConfirmTransaction({})".format(request.transaction_id)))
-            return None
-        else:
+    def dump(self, directory: str = "data", experiment_name: Optional[str] = None) -> None:
+        """
+        Dump the details of the simulation.
 
-            self.add_drawable(PlantUMLGenerator.Transition(
-                self.public_key, request.public_key, "Error({})".format(request.transaction_id)))
-            self.add_drawable(PlantUMLGenerator.Transition(
-                self.public_key, request.counterparty, "Error({})".format(request.transaction_id)))
-            return Error("Error in checking transaction.")
-
-    def dump(self, directory: str = "data", experiment_name: Optional[str] = None):
+        :param directory: the directory where experiments details are listed.
+        :param experiment_name: the name of the folder where the data about experiment will be saved.
+        :return: None.
+        """
         experiment_name = experiment_name if experiment_name is not None else str(datetime.datetime.now())\
             .replace(" ", "_")
         experiment_dir = directory + "/" + experiment_name

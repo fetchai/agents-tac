@@ -30,7 +30,7 @@ from oef.query import Query, Constraint, GtEq, Or
 from oef.schema import DataModel, AttributeSchema, Description
 
 from tac.core import TacAgent, GameState
-from tac.helpers import PlantUMLGenerator
+from tac.helpers.plantuml import plantuml_gen, PlantUMLGenerator
 from tac.protocol import Register, Response, GameData, Transaction, TransactionConfirmation
 
 logger = logging.getLogger(__name__)
@@ -112,9 +112,8 @@ class BaselineAgent(TacAgent):
             return
         for seller in agents:
             dialogue_id = random.randint(0, 100000)
-            self.add_drawable(PlantUMLGenerator.Transition(self.public_key, seller, "CFP(dialogue_id={}, {})"
-                                                           .format(dialogue_id, self._get_zero_quantity_goods_ids())))
             self.send_cfp(1, dialogue_id, seller, 0, query)
+            plantuml_gen.send_cfp(self.public_key, seller, dialogue_id, self._get_zero_quantity_goods_ids())
 
     def _on_tac_search_result(self, agents: List[str]):
         logger.debug("[{}]: Agents found: {}".format(self.public_key, pprint.pformat(agents)))
@@ -130,10 +129,11 @@ class BaselineAgent(TacAgent):
         msg = Register(self.public_key)
         msg_pb = msg.to_pb()
         msg_bytes = msg_pb.SerializeToString()
+        self.send_message(0, 0, controller_pb_key, msg_bytes)
         logger.debug("[{}]: Sending '{}' message to the TAC Controller {}"
                      .format(self.public_key, msg, controller_pb_key))
-        self.add_drawable(PlantUMLGenerator.Transition(self.public_key, controller_pb_key, "Register"))
-        self.send_message(0, 0, controller_pb_key, msg_bytes)
+
+        plantuml_gen.add_drawable(PlantUMLGenerator.Transition(self.public_key, controller_pb_key, "Register"))
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
         msg = Response.from_pb(content)
@@ -152,6 +152,7 @@ class BaselineAgent(TacAgent):
             self.buyer_data_model = DataModel("tac_buyer", goods_quantities_attributes + [price_attribute])
 
             self._register_as_seller_for_excessing_goods()
+            # TODO remember this sleep for two second: it might change.
             time.sleep(2.0)
             self.search_tac_sellers()
         if isinstance(msg, TransactionConfirmation):
@@ -191,7 +192,7 @@ class BaselineAgent(TacAgent):
         price = self.game_state.get_price_from_quantities_vector(self.game_state.get_excess_goods_quantities())
         seller_description.values["price"] = price
         if not query.check(seller_description):
-            self.add_drawable(PlantUMLGenerator.Note("Decline: holdings\ndo not match query", self.public_key))
+            self.send_decline(msg_id + 1, dialogue_id, origin, target)
             logger.debug("[{}]: sending to {} a Decline{}".format(self.public_key, origin,
                                                                   pprint.pformat({
                                                                       "msg_id": msg_id + 1,
@@ -199,8 +200,8 @@ class BaselineAgent(TacAgent):
                                                                       "origin": origin,
                                                                       "target": target
                                                                   })))
-            self.send_decline(msg_id + 1, dialogue_id, origin, target)
-            self.add_drawable(PlantUMLGenerator.Transition(self.public_key, origin, "Decline({})".format(dialogue_id)))
+            plantuml_gen.decline_cfp(self.public_key, origin, dialogue_id)
+
         else:
             proposals = [seller_description]
             logger.debug("[{}]: sending to {} a Propose{}".format(self.public_key, origin,
@@ -213,9 +214,7 @@ class BaselineAgent(TacAgent):
                                                                   })))
             self.send_propose(msg_id + 1, dialogue_id, origin, target, proposals)
             propose_content = pprint.pformat(dict(filter(lambda x: x[1] > 0, seller_description.values.items())))
-            self.add_drawable(PlantUMLGenerator.Transition(self.public_key, origin, "Propose(dialogue_id={}, {})"
-                                                           .format(dialogue_id,
-                                                                   propose_content)))
+            plantuml_gen.send_propose(self.public_key, origin, dialogue_id, propose_content)
 
             # add the proposal in the pending proposals.
             # transaction id: buyer_seller_dialogueId
@@ -241,11 +240,11 @@ class BaselineAgent(TacAgent):
         transaction_request = Transaction(self.public_key, transaction_id, True, origin, price, good_ids, quantities)
         self.pending_transactions[transaction_id] = transaction_request
         self.send_message(0, 0, self.controller, transaction_request.serialize())
-        self.add_drawable(PlantUMLGenerator.Transition(self.public_key, self.controller, str(transaction_request)))
+        plantuml_gen.add_drawable(PlantUMLGenerator.Transition(self.public_key, self.controller, str(transaction_request)))
 
         logger.debug("[{}]: send accept to '{}'".format(self.public_key, origin))
         self.send_accept(msg_id + 1, dialogue_id, origin, target)
-        self.add_drawable(PlantUMLGenerator.Transition(self.public_key, origin, "Accept({})".format(dialogue_id)))
+        plantuml_gen.add_drawable(PlantUMLGenerator.Transition(self.public_key, origin, "Accept({})".format(dialogue_id)))
 
     def on_decline(self, msg_id: int, dialogue_id: int, origin: str, target: int):
         logger.debug("[{}]: on_decline: msg_id={}, dialogue_id={}, origin={}, target={}"

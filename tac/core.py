@@ -28,38 +28,26 @@ from oef.agents import OEFAgent
 from oef.query import Query
 from oef.schema import Description
 
-from tac.helpers import PlantUMLGenerator, plantuml_gen
+from tac.helpers.plantuml import plantuml_gen
 
 
 class TacAgent(OEFAgent):
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, plantuml: bool=True, **kwargs) -> None:
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, **kwargs) -> None:
         """
          :param plantuml: choose
         """
         super().__init__(public_key, oef_addr, oef_port, **kwargs)
-        self.plantuml = plantuml
-        self.plantuml_generator = plantuml_gen
-
-    def add_drawable(self, d: PlantUMLGenerator.Drawable):
-        if self.plantuml:
-            self.plantuml_generator.add_drawable(d)
 
     def register_service(self, msg_id: int, service_description: Description) -> None:
         super().register_service(msg_id, service_description)
-        self.add_drawable(PlantUMLGenerator.Transition(self.public_key, "OEF Node", "register_service(model={})"
-                                                       .format(service_description.data_model.name)))
+        plantuml_gen.register_service(self.public_key, service_description)
 
     def search_services(self, search_id: int, query: Query, additional_msg: str = "") -> None:
         super().search_services(search_id, query)
-        data_model_string = ("model=" + query.model.name + ", " + additional_msg if additional_msg != "" else "") \
-            if query.model is not None else ""
-        self.add_drawable(PlantUMLGenerator.Transition(self.public_key, "OEF Node", "search_services({})"
-                                                       .format(data_model_string)))
+        plantuml_gen.search_services(self.public_key, query, additional_msg=additional_msg)
 
     def on_search_result(self, search_id: int, agents: List[str]):
-        self.add_drawable(PlantUMLGenerator
-                          .Transition("OEF Node", self.public_key, "search result: [{}]"
-                                      .format(", ".join(sorted(map(lambda x: '"' + x + '"', agents))))))
+        plantuml_gen.on_search_result(self.public_key, agents)
 
 
 class Game(object):

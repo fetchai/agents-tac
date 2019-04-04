@@ -147,12 +147,6 @@ class Transaction(Request):
         )
 
 
-class ResponseType(Enum):
-    REGISTERED = "registered"
-    UNREGISTERED = "unregistered"
-    GAME_DATA = "game_data"
-
-
 class Response(Message):
     """Message from controller to clients"""
 

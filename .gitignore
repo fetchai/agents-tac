@@ -108,6 +108,7 @@ ignore
 tac/*_pb2.py
 log*.txt
 out.uml
+out.png
 examples/baseline_demo/out.uml
 examples/baseline_demo/out.png
 tac/gui/static/tmp/*

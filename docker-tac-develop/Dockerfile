@@ -45,6 +45,8 @@ COPY . /build
 
 RUN cd oef-sdk-python && python3 setup.py install
 RUN python3 setup.py install
+
+# python package to parse plantuml files. docs: https://pythonhosted.org/plantuml/
 RUN pip3 install plantuml
 
 USER default
