@@ -76,6 +76,8 @@ class GameStats:
         plt.plot(history)
         labels = ["agent_{:02d}".format(idx) for idx in range(self.game.nb_agents)]
         plt.legend(labels, loc="best")
+        plt.xlabel("Transactions")
+        plt.ylabel("Score")
 
         plt.gca().xaxis.set_major_locator(plt.MaxNLocator(integer=True))
 

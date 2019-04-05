@@ -249,6 +249,10 @@ class GameState:
     def nb_goods(self):
         return len(self.scores)
 
+    @property
+    def scores_by_good(self):
+        return [self._from_good_to_preference[good_id] for good_id in range(self.nb_goods)]
+
     def get_score(self) -> int:
         holdings_score = self.score_good_quantities(self.current_holdings)
         money_score = self.balance
