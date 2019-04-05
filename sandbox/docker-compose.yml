@@ -15,6 +15,10 @@ services:
     image: "baseline-image"
     env_file:
       - .env
+    depends_on:
+      - oef-node
+    volumes:
+      - ../:/build
     build:
       context: ../
       dockerfile: docker-tac-develop/Dockerfile
@@ -23,8 +27,8 @@ services:
         ipv4_address: 172.28.1.2
     entrypoint:
       - "python3"
-      - "examples/baseline_demo/tac_agent_spawner.py"
-      - "${NB_BASELINE_AGENTS}"
+      - "examples/simulation_demo/tac_agent_spawner.py"
+      - "${NB_AGENTS}"
       - "--oef-addr"
       - "172.28.1.1"
       - "--oef-port"

@@ -33,6 +33,7 @@ from oef.query import Query, Constraint, GtEq, Or
 from oef.schema import DataModel, AttributeSchema, Description
 
 from tac.core import TacAgent, GameState
+from tac.helpers.misc import generate_transaction_id
 from tac.helpers.plantuml import plantuml_gen, PlantUMLGenerator
 from tac.protocol import Register, Response, GameData, Transaction, TransactionConfirmation
 
@@ -140,7 +141,7 @@ class BaselineAgent(TacAgent):
 
             # add the proposal in the pending proposals.
             # transaction id: "${buyer}_${seller}_${dialogueId}
-            transaction_id = self.generate_transaction_id(origin, self.public_key, dialogue_id)
+            transaction_id = generate_transaction_id(origin, self.public_key, dialogue_id)
             price, good_ids, quantities = self._extract_info_from_propose(proposals[0])
 
             candidate_transaction = Transaction(self.public_key, transaction_id, False, origin, price, good_ids,
@@ -211,7 +212,7 @@ class BaselineAgent(TacAgent):
         #     self.send_propose(msg_id + 1, dialogue_id, origin, msg_id, [counterpropose])
         #     plantuml_gen.send_propose(self.public_key, origin, dialogue_id, counterpropose)
         #     new_price, good_ids, new_quantities = self._extract_info_from_propose(counterpropose)
-        #     transaction_id = self.generate_transaction_id(self.public_key, origin, dialogue_id)
+        #     transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id)
         #     transaction_request = Transaction(self.public_key, transaction_id, True, origin, new_price, good_ids, new_quantities)
         #     self.pending_transactions[transaction_id] = transaction_request
         # # otherwise, decline the current proposal
@@ -261,7 +262,7 @@ class BaselineAgent(TacAgent):
         price, good_ids, quantities = self._extract_info_from_propose(proposal)
 
         buyer, seller = (self.public_key, origin) if is_buyer else (origin, self.public_key)
-        transaction_id = self.generate_transaction_id(buyer, seller, dialogue_id)
+        transaction_id = generate_transaction_id(buyer, seller, dialogue_id)
         transaction_request = Transaction(self.public_key, transaction_id, is_buyer, origin, price, good_ids, quantities)
         self.pending_transactions[transaction_id] = transaction_request
         self.send_message(0, 0, self.controller, transaction_request.serialize())
@@ -372,10 +373,6 @@ class BaselineAgent(TacAgent):
     def _register_as_seller_for_excessing_goods(self) -> None:
         desc = self.get_baseline_seller_description()
         self.register_service(0, desc)
-
-    def generate_transaction_id(self, seller, buyer, dialogue_id):
-        transaction_id = "{}_{}_{}".format(buyer, seller, dialogue_id)
-        return transaction_id
 
 
 def main():

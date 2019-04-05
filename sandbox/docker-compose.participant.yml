@@ -1,0 +1,27 @@
+version: '3'
+services:
+
+  # this overwrite the setting without participant
+  baseline:
+    entrypoint:
+      - "python3"
+      - "examples/simulation_demo/tac_agent_spawner.py"
+      - "${NB_AGENTS}"
+      - "--nb-baseline-agents"
+      - "${NB_BASELINE_AGENTS}"
+      - "--oef-addr"
+      - "172.28.1.1"
+      - "--oef-port"
+      - "3333"
+      - "--uml-out"
+      - "out.uml"
+
+
+networks:
+    main_net:
+        ipam:
+            driver: default
+            config:
+                - subnet: 172.28.0.0/16
+
+

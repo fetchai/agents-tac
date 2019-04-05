@@ -23,6 +23,7 @@
 import argparse
 import asyncio
 import logging
+import pprint
 from typing import List
 
 from tac.agents.baseline import BaselineAgent
@@ -36,8 +37,10 @@ logger = logging.getLogger("tac")
 
 def parse_arguments():
     parser = argparse.ArgumentParser("tac_agent_spawner")
-    parser.add_argument("nb_agents", type=int, default=5, help="Number of TAC agent to run.")
-    parser.add_argument("nb_goods",  type=int, default=5, help="Number of TAC agent to run.")
+    parser.add_argument("nb_agents", type=int, default=5, help="Number of TAC agent to wait for the competition.")
+    parser.add_argument("nb_goods",   type=int, default=5, nargs='?', help="Number of TAC agent to run.")
+    parser.add_argument("--nb-baseline-agents", type=int, default=None,
+                        help="Number of baseline agent to run. Defaults to the number of agents of the competition.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
     parser.add_argument("--uml-out", default=None, help="The output uml file")
@@ -45,6 +48,8 @@ def parse_arguments():
     parser.add_argument("--experiment-id", default=None, help="The experiment ID.")
 
     arguments = parser.parse_args()
+    logger.debug("Arguments: {}".format(pprint.pformat(arguments.__dict__)))
+
     return arguments
 
 
@@ -73,9 +78,10 @@ if __name__ == '__main__':
         tac_controller.connect()
         tac_controller.register()
 
+        nb_baseline_agents = arguments.nb_agents if arguments.nb_baseline_agents is None else arguments.nb_baseline_agents
         agents = [BaselineAgent("tac_agent_" + str(i), arguments.oef_addr, arguments.oef_port,
                                 loop=asyncio.new_event_loop())
-                  for i in range(arguments.nb_agents)]
+                  for i in range(nb_baseline_agents)]
 
         tac_agents = agents  # type: List[TacAgent]
         run_agents(tac_agents)

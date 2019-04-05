@@ -31,3 +31,18 @@ To change the parameter:
 To double-check whether the variable has been set successfully, use:
 
     docker-compose config
+    
+## Use your implementation
+
+- Set up an OEF-Node, a Controller agent and a list of baseline agents:
+
+      docker-compose -f docker-compose.yml -f docker-compose.participant.yml up
+      
+- Connect your agent to `localhost:3333`, e.g.:
+
+
+      python3 ../scripts/template_agent.py
+      
+
+You can change the number of baseline agents and the number of total agents by setting the environment variable
+`NB_AGENTS` and `NB_BASELINE_AGENTS`.

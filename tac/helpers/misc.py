@@ -29,3 +29,8 @@ def callback(fut):
     except Exception as e:
         logger.exception('Unexpected error')
         raise e
+
+
+def generate_transaction_id(seller, buyer, dialogue_id):
+    transaction_id = "{}_{}_{}".format(buyer, seller, dialogue_id)
+    return transaction_id
