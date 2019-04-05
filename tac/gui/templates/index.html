@@ -1,31 +1,56 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{% block title %}Display data{% endblock %}</h1>
+  <h2  align="center">{% block title %}Display data{% endblock %}</h2>
 {% endblock %}
 
 {% block content %}
 
-<p>Please select a JSON file describing a game simulation.</p>
+<div class="row">
+  <div class="col-xs-12">
+    <p>Please select a JSON file describing a game simulation.</p>
 
-<form method="POST" enctype="multipart/form-data" action="/upload">
-  <input type="file" name="file[]" multiple="">
-  <input type="submit" value="submit">
-</form>
-
-<div>
-  <ul>
-    <li>nb_agents: {{nb_agents}}</li>
-    <li>nb_goods: {{nb_goods}}</li>
-    <li>initial_money_amount: {{initial_money_amount}}</li>
-    <li>instances_per_good: {{instances_per_good}}</li>
-    <li>scores: {{scores}}</li>
-    <li>fee: {{fee}}</li>
-    <li>#transactions: {{nb_transactions}}</li>
-  </ul>
+    <form method="POST" enctype="multipart/form-data" action="/upload">
+      <input type="file" name="file[]" multiple="">
+      <input type="submit" value="submit">
+    </form>
+  </div>
 </div>
 <div>
+  Simulation parameters:
+    <ul>
+      <li>nb_agents: {{nb_agents}}</li>
+      <li>nb_goods: {{nb_goods}}</li>
+      <li>initial_money_amount: {{initial_money_amount}}</li>
+      <li>instances_per_good: {{instances_per_good}}</li>
+      <li>scores: {{scores}}</li>
+      <li>fee: {{fee}}</li>
+      <li>#transactions: {{nb_transactions}}</li>
+    </ul>
+</div>
+<div align="center">
   <img src="{{saved_plot_figure}}">
+  <br>
+  <table border="1" cellpadding="10">
+    <thead>
+      <tr>
+        <th>endowments</th>
+        <th>preferences</th>
+        <th>final holdings</th>
+        <th>final balance</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for game_state in game_states %}
+        <tr>
+          <th>{{ game_state.initial_endowment }}</th>
+          <th>{{ game_state.scores_by_good }}</th>
+          <th>{{ game_state.current_holdings }}</th>
+          <th>{{ game_state.balance }}</th>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
 
 {% endblock %}

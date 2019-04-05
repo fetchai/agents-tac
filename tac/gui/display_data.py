@@ -39,7 +39,6 @@ LIST_FILES = []
 current_file = None
 
 
-
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "GET":
@@ -61,7 +60,8 @@ def upload():
     game_stats.plot_score_history(output_path=output_filepath)
     return render_template("index.html", **game.to_dict(),
                            nb_transactions=len(game.transactions),
-                           saved_plot_figure=output_filepath)
+                           saved_plot_figure=output_filepath,
+                           game_states=game.game_states)
 
 
 if __name__ == '__main__':
