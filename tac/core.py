@@ -24,6 +24,7 @@ import pprint
 import random
 from typing import List, Dict, Any, Optional
 
+import numpy as np
 from oef.agents import OEFAgent
 from oef.query import Query
 from oef.schema import Description
@@ -249,10 +250,18 @@ class GameState:
         return len(self.scores)
 
     def get_score(self) -> int:
-        holdings_score = sum(self.scores[self._from_good_to_preference[i]] * (1 if holding > 0 else 0)
-                             for i, holding in enumerate(self.current_holdings))
+        holdings_score = self.score_good_quantities(self.current_holdings)
         money_score = self.balance
         return holdings_score + money_score
+
+    def score_good_quantity(self, good_id: int, quantity: int) -> int:
+        assert 0 <= good_id < self.nb_goods
+        assert 0 <= quantity
+        return self.scores[self._from_good_to_preference[good_id]] * (1 if quantity >= 1 else 0)
+
+    def score_good_quantities(self, quantities: List[int]) -> int:
+        assert len(quantities) == self.nb_goods
+        return sum(self.score_good_quantity(good_id, q) for good_id, q in enumerate(quantities))
 
     def get_price_from_quantities_vector(self, quantities: List[int]):
         """
@@ -260,6 +269,7 @@ class GameState:
         :param quantities: the vector of good quantities
         :return: the overall price.
         """
+        assert len(quantities) == self.nb_goods
         return sum(q * self.scores[idx] for idx, q in enumerate(quantities))
 
     def get_excess_goods_quantities(self):
@@ -269,6 +279,12 @@ class GameState:
         :return: the vector of good quantities in excess.
         """
         return [q - 1 if q > 1 else 0 for q in self.current_holdings]
+
+    def get_score_after_transaction(self, d_money, d_holdings):
+        new_holdings = np.asarray(self.current_holdings) + np.asarray(d_holdings)
+        new_holdings_score = self.score_good_quantities(new_holdings)
+        new_money = self.balance + d_money
+        return new_holdings_score + new_money
 
     def update(self, buyer: bool, amount: int, good_ids: List[int], quantities: List[int]):
         switch = 1 if buyer else -1

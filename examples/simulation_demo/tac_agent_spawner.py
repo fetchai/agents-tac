@@ -29,13 +29,15 @@ from tac.agents.baseline import BaselineAgent
 from tac.agents.controller import ControllerAgent
 from tac.core import TacAgent
 from tac.helpers.plantuml import plantuml_gen
+from tac.stats import GameStats
 
 logger = logging.getLogger("tac")
 
 
 def parse_arguments():
     parser = argparse.ArgumentParser("tac_agent_spawner")
-    parser.add_argument("N", type=int, help="Number of TAC agent to run.")
+    parser.add_argument("nb_agents", type=int, default=5, help="Number of TAC agent to run.")
+    parser.add_argument("nb_goods",  type=int, default=5, help="Number of TAC agent to run.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
     parser.add_argument("--uml-out", default=None, help="The output uml file")
@@ -66,18 +68,22 @@ if __name__ == '__main__':
 
     try:
         tac_controller = ControllerAgent(public_key="tac_controller", oef_addr=arguments.oef_addr,
-                                         oef_port=arguments.oef_port, nb_agents=arguments.N)
+                                         oef_port=arguments.oef_port, nb_agents=arguments.nb_agents,
+                                         nb_goods=arguments.nb_goods)
         tac_controller.connect()
         tac_controller.register()
 
         agents = [BaselineAgent("tac_agent_" + str(i), arguments.oef_addr, arguments.oef_port,
                                 loop=asyncio.new_event_loop())
-                  for i in range(arguments.N)]
+                  for i in range(arguments.nb_agents)]
 
         tac_agents = agents  # type: List[TacAgent]
         run_agents(tac_agents)
 
         tac_controller.run()
     finally:
+        game_stats = GameStats(tac_controller._current_game)
+        game_stats.plot_score_history()
         tac_controller.dump(arguments.data_output_dir, arguments.experiment_id)
         plantuml_gen.dump(arguments.uml_out) if arguments.uml_out is not None else None
+

@@ -27,6 +27,7 @@ import pprint
 from typing import Dict, Any
 
 from tac.core import Game
+from tac.stats import GameStats
 
 
 def parse_arguments():
@@ -53,3 +54,6 @@ if __name__ == '__main__':
     pprint.pprint(data)
     for g in game.game_states:
         print(str(g))
+
+    game_stats = GameStats(game)
+    game_stats.plot_score_history()

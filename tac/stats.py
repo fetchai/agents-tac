@@ -73,15 +73,14 @@ class GameStats:
     def plot_score_history(self, output_path: Optional[str] = None) -> None:
         history = self.score_history()
 
-        plt.ioff()
         plt.plot(history)
-        labels = ["agent_{:02d}".format(idx) for idx in range(len(history))]
+        labels = ["agent_{:02d}".format(idx) for idx in range(self.game.nb_agents)]
         plt.legend(labels, loc="best")
 
+        plt.gca().xaxis.set_major_locator(plt.MaxNLocator(integer=True))
+
         if output_path is None:
-            plt.ion()
             plt.show()
         else:
             plt.savefig(output_path)
 
-        plt.ion()

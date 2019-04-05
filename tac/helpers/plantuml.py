@@ -17,6 +17,7 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+import pprint
 from abc import abstractmethod
 from typing import List
 
@@ -118,7 +119,8 @@ class PlantUMLGenerator:
         self.add_drawable(PlantUMLGenerator.Note("Decline: holdings\ndo not match query", public_key))
         self.add_drawable(PlantUMLGenerator.Transition(public_key, destination, "Decline({})".format(dialogue_id)))
 
-    def send_propose(self, public_key, origin, dialogue_id, propose_content):
+    def send_propose(self, public_key, origin, dialogue_id, description):
+        propose_content = pprint.pformat(dict(filter(lambda x: x[1] > 0, description.values.items())))
         self.add_drawable(PlantUMLGenerator.Transition(public_key, origin, "Propose(dialogue_id={}, {})"
                                                        .format(dialogue_id, propose_content)))
 

@@ -19,11 +19,40 @@
 #
 # ------------------------------------------------------------------------------
 
-"""Module that contains utilities for keeping information about negotiations."""
+"""Module that contains utilities for keeping information about negotiations.
+TODO: discuss whether to integrate with the dialogue agent.
+"""
+
+import logging
+from typing import Optional
+
+from oef.dialogue import SingleDialogue, DialogueAgent
+from oef.messages import PROPOSE_TYPES, CFP_TYPES
+
+logger = logging.getLogger(__name__)
 
 
+class BaselineDialogue(SingleDialogue):
 
-class NegotiationDialogue:
+    def __init__(self, agent: DialogueAgent,
+                 destination: str,
+                 id_: Optional[int] = None):
+        super().__init__(agent, destination, id_=id_)
 
-    def __init__(self):
+    def on_message(self, msg_id: int, content: bytes) -> None:
+        pass
+
+    def on_cfp(self, msg_id: int, target: int, query: CFP_TYPES) -> None:
+        pass
+
+    def on_propose(self, msg_id: int, target: int, proposal: PROPOSE_TYPES) -> None:
+        pass
+
+    def on_accept(self, msg_id: int, target: int) -> None:
+        pass
+
+    def on_decline(self, msg_id: int, target: int) -> None:
+        pass
+
+    def on_dialogue_error(self, answer_id: int, dialogue_id: int, origin: str) -> None:
         pass

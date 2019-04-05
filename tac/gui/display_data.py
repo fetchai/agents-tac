@@ -27,12 +27,17 @@ from werkzeug.datastructures import FileStorage
 from tac.core import Game
 from tac.stats import GameStats
 
+import pylab as plt
+
+plt.ioff()
+
 app = Flask(__name__)
 # prevent caching
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 LIST_FILES = []
 current_file = None
+
 
 
 @app.route("/", methods=["GET", "POST"])
