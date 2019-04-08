@@ -242,11 +242,8 @@ class ControllerAgent(TacAgent):
 
         :return: a Game instance.
         """
-        # TODO is it compliant with the specifications?
-        instances_per_good = self.nb_agents
         scores = list(reversed(range(self.nb_goods)))
-        self._current_game = Game.generate_game(self.nb_agents, self.nb_goods, self.money_endowment,
-                                                instances_per_good, scores, self.fee)
+        self._current_game = Game.generate_game(self.nb_agents, self.nb_goods, self.money_endowment, scores, self.fee)
         self._agent_pbk_to_id = dict(map(reversed, enumerate(self.registered_agents)))
         return self._current_game
 
