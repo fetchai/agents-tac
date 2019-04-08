@@ -18,7 +18,9 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+import inspect
 import json
+import os
 
 import flask
 from flask import Flask, render_template, request
@@ -30,6 +32,8 @@ from tac.stats import GameStats
 import pylab as plt
 
 plt.ioff()
+
+THIS_DIR = os.path.dirname(inspect.getfile(inspect.currentframe()))
 
 app = Flask(__name__)
 # prevent caching
@@ -56,8 +60,9 @@ def upload():
     game = Game.from_dict(game_data)
 
     game_stats = GameStats(game)
-    output_filepath = "static/tmp/tmp.png"
-    game_stats.plot_score_history(output_path=output_filepath)
+    output_filepath = os.path.join("static", "tmp", "tmp.png")
+    full_output_path = os.path.join(THIS_DIR, output_filepath)
+    game_stats.plot_score_history(output_path=full_output_path)
     return render_template("index.html", **game.to_dict(),
                            nb_transactions=len(game.transactions),
                            saved_plot_figure=output_filepath,
