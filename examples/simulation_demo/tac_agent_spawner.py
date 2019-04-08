@@ -46,6 +46,7 @@ def parse_arguments():
     parser.add_argument("--uml-out", default=None, help="The output uml file")
     parser.add_argument("--data-output-dir", default="data", help="The output directory for the simulation data.")
     parser.add_argument("--experiment-id", default=None, help="The experiment ID.")
+    parser.add_argument("--plot", default=False, type=bool, help="Plot sequence of transactions and the changes in scores.")
 
     arguments = parser.parse_args()
     logger.debug("Arguments: {}".format(pprint.pformat(arguments.__dict__)))
@@ -87,9 +88,15 @@ if __name__ == '__main__':
         run_agents(tac_agents)
 
         tac_controller.run()
+    except KeyboardInterrupt:
+        logger.debug("Simulation interrupted...")
     finally:
-        game_stats = GameStats(tac_controller._current_game)
-        game_stats.plot_score_history()
+        logger.debug("Saving simulation data...")
         tac_controller.dump(arguments.data_output_dir, arguments.experiment_id)
-        plantuml_gen.dump(arguments.uml_out) if arguments.uml_out is not None else None
+        if arguments.uml_out is not None:
+            logger.debug("Generating transition diagram...")
+            plantuml_gen.dump(arguments.uml_out) if arguments.uml_out is not None else None
+        if arguments.plot:
+            game_stats = GameStats(tac_controller._current_game)
+            game_stats.plot_score_history()
 
