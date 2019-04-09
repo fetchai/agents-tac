@@ -270,7 +270,7 @@ class ControllerAgent(TacAgent):
         :return: a Game instance.
         """
         scores = list(reversed(range(self.nb_goods)))
-        agents_ids = list(self.registered_agents)
+        agents_ids = sorted(self.registered_agents)
         self._agent_pbk_to_id = dict(map(reversed, enumerate(agents_ids)))
         self._current_game = Game.generate_game(self.nb_agents, self.nb_goods, self.money_endowment, scores, self.fee,
                                                 agents_ids)
@@ -284,7 +284,7 @@ class ControllerAgent(TacAgent):
         """
         for public_key in self._agent_pbk_to_id:
             agent_id = self._agent_pbk_to_id[public_key]
-            game_data = self._current_game.get_game_data_by_agent_id(agent_id)
+            game_data = self._current_game.get_game_data_from_agent_id(agent_id)
             game_data_response = GameData(
                 game_data.balance,
                 game_data.initial_endowment,

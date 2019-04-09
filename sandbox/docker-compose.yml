@@ -28,7 +28,12 @@ services:
     entrypoint:
       - "python3"
       - "examples/simulation_demo/tac_agent_spawner.py"
+      - "--nb-agents"
       - "${NB_AGENTS}"
+      - "--nb-goods"
+      - "${NB_GOODS}"
+      - "--nb-baseline-agents"
+      - "${NB_BASELINE_AGENTS}"
       - "--oef-addr"
       - "172.28.1.1"
       - "--oef-port"

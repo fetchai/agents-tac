@@ -79,7 +79,7 @@ class Game(object):
                             is a list of good ids, ordered accordingly to the agent's preference.
                             The index of good j in agent's row i represents the class of preference l for that good.
                             The associated score is scores[l].
-        :param agents_ids: a list of agents ids.
+        :param agents_ids: a list of agents ids (as strings).
         """
         self._check_consistency(nb_agents, nb_goods, initial_money_amount, instances_per_good, scores, fee,
                                 initial_endowments, preferences, agents_ids)
@@ -92,6 +92,11 @@ class Game(object):
         self.scores = scores
         self.fee = fee
         self.agents_ids = agents_ids
+<<<<<<< HEAD
+=======
+
+        self._from_agent_pbk_to_agent_id = dict(map(reversed, enumerate(self.agents_ids)))
+>>>>>>> 074336601bb7ef54da5fefa017110b28364b24e8
 
         self.transactions = []  # type: List[GameTransaction]
         self.game_states = [GameState(agents_ids[i], initial_money_amount, initial_endowments[i], preferences[i], scores)
@@ -168,8 +173,16 @@ class Game(object):
         """Get the current scores for every agent."""
         return [gs.get_score() for gs in self.game_states]
 
-    def get_game_data_by_agent_id(self, agent_id: int) -> 'GameState':
+    def get_game_data_from_agent_id(self, agent_id: int) -> 'GameState':
         return self.game_states[agent_id]
+
+    def get_game_data_from_agent_pbk(self, agent_pbk: str) -> 'GameState':
+        """
+        Get game data from agent public key.
+        :param agent_pbk: the agent's public key.
+        :return: the game state of the agent
+        """
+        return self.game_states[self._from_agent_pbk_to_agent_id[agent_pbk]]
 
     def is_transaction_valid(self, tx: 'GameTransaction') -> bool:
         assert tx.buyer_id != tx.seller_id
@@ -245,6 +258,10 @@ class GameState:
 
     def __init__(self, agent_id: str, money: int, initial_endowment: List[int], preferences: List[int], scores: List[int]):
         self.agent_id = agent_id
+<<<<<<< HEAD
+=======
+        self.initial_money = money
+>>>>>>> 074336601bb7ef54da5fefa017110b28364b24e8
         self.balance = money
         assert len(initial_endowment) == len(preferences) == len(scores)
         self.initial_endowment = initial_endowment
