@@ -4,10 +4,12 @@ This package contains GUI tools to interact with the TAC project (e.g. data visu
 
 ### Tools
 
-- `display_daya.py`: Can load a JSON file describing a game simulation 
+- Load a JSON file describing a game simulation 
   (like the one described in [this section](../../examples/simulation_demo#other-parameters)) and
-  show some details.
+  show some details:
+
+    python display_data.py
   
-  Screenshot:
+- Screenshot:
   
   ![](../../docs/misc/screenshot_gui.png)
