@@ -92,8 +92,8 @@ class Game(object):
         self.scores = scores
         self.fee = fee
         self.agents_ids = agents_ids
-        self._from_agent_pbk_to_agent_id = dict(map(reversed, enumerate(self.agents_ids)))
 
+        self._from_agent_pbk_to_agent_id = dict(map(reversed, enumerate(self.agents_ids)))
 
         self.transactions = []  # type: List[GameTransaction]
         self.game_states = [GameState(agents_ids[i], initial_money_amount, initial_endowments[i], preferences[i], scores)
