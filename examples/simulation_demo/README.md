@@ -13,9 +13,6 @@ This tutorial shows how to simulate a simple TAC.
           --nb-goods 10
           --nb-baseline-agents 10
 
-    
-This follows the sequence diagram of the communications between agents:
-
 
 ### Optional parameters
 

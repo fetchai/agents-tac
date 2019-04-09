@@ -6,6 +6,9 @@ verify_ssl = true
 [dev-packages]
 ipython = "*"
 jupyter = "*"
+sphinx = "*"
+nbsphinx = "*"
+sphinxcontrib-plantuml = "*"
 
 [packages]
 oef = {git = "ssh://git@github.com/uvue-git/oef-sdk-python.git"}
