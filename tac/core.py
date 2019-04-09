@@ -29,6 +29,7 @@ from oef.agents import OEFAgent
 from oef.query import Query
 from oef.schema import Description
 
+from tac.helpers.misc import sample_good_instance, compute_endowment_of_good
 from tac.helpers.plantuml import plantuml_gen
 
 
@@ -56,7 +57,7 @@ class Game(object):
     def __init__(self, nb_agents: int,
                  nb_goods: int,
                  initial_money_amount: int,
-                 instances_per_good: int,
+                 instances_per_good: List[int],
                  scores: List[int],
                  fee: int,
                  initial_endowments: List[List[int]],
@@ -69,7 +70,7 @@ class Game(object):
         :param initial_money_amount: the initial amount of money.
         :param scores: list of scores.
         :param fee: the fee for a transaction.
-        :param instances_per_good: the number of instances per good.
+        :param instances_per_good: a list with the number of instances per every good.
         :param initial_endowments: the endowments of the agents. A matrix where the first index is the agent id and
                                    the second index is the good id. A generic element at row i and column j is
                                    an integer that denotes the amount of good j for agent i.
@@ -97,7 +98,7 @@ class Game(object):
     def _check_consistency(cls, nb_agents: int,
                            nb_goods: int,
                            initial_money_amount: int,
-                           instances_per_good: int,
+                           instances_per_good: List[int],
                            scores: List[int],
                            fee: int,
                            initial_endowments: List[List[int]],
@@ -107,8 +108,8 @@ class Game(object):
         assert initial_money_amount > 0
         assert fee > 0
 
-        # TODO the number of instances can be slightly higher or lower than the number of agents. To be changed.
-        assert instances_per_good >= nb_agents
+        # # TODO the number of instances can be slightly higher or lower than the number of agents. To be changed.
+        # assert instances_per_good >= nb_agents
 
         # we have a score for each class of preference (that is, "first preferred good", "second preferred good", etc.)
         # hence, the number of scores is equal to the number of goods.
@@ -124,10 +125,12 @@ class Game(object):
         assert all(len(row) == nb_goods for row in initial_endowments)
         # every element of the matrix must be a valid amount of good
         # (that is, between 0 and the number of instances per good)
-        assert all(0 <= e_ij <= instances_per_good for row_i in initial_endowments for e_ij in row_i)
+        assert all(0 <= e_ij <= instances_per_good[good_id] for row_i in initial_endowments for good_id, e_ij in enumerate(row_i))
         # the sum of every column must be equal to the instances per good
         assert all(
-            sum(initial_endowments[agent_id][good_id] for agent_id in range(nb_agents)) == instances_per_good for good_id in range(nb_goods))
+            sum(initial_endowments[agent_id][good_id] for agent_id in range(nb_agents)) == instances_per_good[good_id]
+            for good_id in range(nb_goods)
+        )
 
         # Check the preferences.
 
@@ -140,15 +143,12 @@ class Game(object):
 
     @staticmethod
     def generate_game(nb_agents: int, nb_goods: int, initial_money_amount: int,
-                      instances_per_good: int, scores: List[int], fee: int) -> 'Game':
+                      scores: List[int], fee: int, g: int = 3) -> 'Game':
         """Generate a game, sampling the initial endowments and the preferences."""
 
-        # compute random endowment
-        initial_endowments = [[0] * nb_goods for _ in range(nb_agents)]
-        for good_id in range(nb_goods):
-            for _ in range(instances_per_good):
-                agent_id = random.randint(0, nb_agents - 1)
-                initial_endowments[agent_id][good_id] += 1
+        instances_per_good = [sample_good_instance(nb_agents, g) for _ in range(nb_goods)]
+        endowments_by_good = [compute_endowment_of_good(nb_agents, I_j) for I_j in instances_per_good]
+        initial_endowments = np.asarray(endowments_by_good).T.tolist()
 
         # compute random preferences.
         # (permute every preference list randomly).
