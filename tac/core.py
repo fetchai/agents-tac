@@ -92,11 +92,8 @@ class Game(object):
         self.scores = scores
         self.fee = fee
         self.agents_ids = agents_ids
-<<<<<<< HEAD
-=======
-
         self._from_agent_pbk_to_agent_id = dict(map(reversed, enumerate(self.agents_ids)))
->>>>>>> 074336601bb7ef54da5fefa017110b28364b24e8
+
 
         self.transactions = []  # type: List[GameTransaction]
         self.game_states = [GameState(agents_ids[i], initial_money_amount, initial_endowments[i], preferences[i], scores)
@@ -258,10 +255,7 @@ class GameState:
 
     def __init__(self, agent_id: str, money: int, initial_endowment: List[int], preferences: List[int], scores: List[int]):
         self.agent_id = agent_id
-<<<<<<< HEAD
-=======
         self.initial_money = money
->>>>>>> 074336601bb7ef54da5fefa017110b28364b24e8
         self.balance = money
         assert len(initial_endowment) == len(preferences) == len(scores)
         self.initial_endowment = initial_endowment
