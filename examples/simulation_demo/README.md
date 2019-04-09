@@ -8,13 +8,13 @@ This tutorial shows how to simulate a simple TAC.
 
 - Run the simulation example:
 
-      python examples/simulation_demo/tac_agent_spawner.py N
+      python examples/simulation_demo/tac_agent_spawner.py 
+          --nb-agents 10
+          --nb-goods 10
+          --nb-baseline-agents 10
 
-  Where `N` is the number of participants.
     
 This follows the sequence diagram of the communications between agents:
-
-![](./registration.png)
 
 
 ### Optional parameters
@@ -27,7 +27,9 @@ This follows the sequence diagram of the communications between agents:
 Example:
 
       python examples/simulation_demo/tac_agent_spawner.py 
-          3 
+          --nb-agents 10
+          --nb-goods 10
+          --nb-baseline-agents 10
           --oef-addr oef.economicagents.com 
           --oef-port 3333
           --uml-out out.uml

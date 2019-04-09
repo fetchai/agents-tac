@@ -284,7 +284,7 @@ class ControllerAgent(TacAgent):
         """
         for public_key in self._agent_pbk_to_id:
             agent_id = self._agent_pbk_to_id[public_key]
-            game_data = self._current_game.get_game_data_by_agent_id(agent_id)
+            game_data = self._current_game.get_game_data_from_agent_id(agent_id)
             game_data_response = GameData(
                 game_data.balance,
                 game_data.initial_endowment,
