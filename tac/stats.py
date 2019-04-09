@@ -57,6 +57,7 @@ class GameStats:
             fee=self.game.fee,
             initial_endowments=self.game.initial_endowments,
             preferences=self.game.preferences,
+            agents_ids=self.game.agents_ids
         )
 
         # initial scores

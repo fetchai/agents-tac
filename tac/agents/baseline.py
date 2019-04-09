@@ -88,7 +88,7 @@ class BaselineAgent(TacAgent):
         if isinstance(msg, GameData):
             assert self.game_state is None and self.controller is None
             self.controller = origin
-            self.game_state = GameState(msg.money, list(msg.endowment), list(msg.preference), list(msg.scores))
+            self.game_state = GameState(self.public_key, msg.money, list(msg.endowment), list(msg.preference), list(msg.scores))
             logger.debug("[{}]: Score: {}".format(self.public_key, self.game_state.get_score()))
 
             goods_quantities_attributes = [AttributeSchema("good_{:02d}".format(i), int, True)
