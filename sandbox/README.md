@@ -9,7 +9,7 @@ Please install [Docker](https://www.docker.com/) and [Docker Compose](https://do
 
     docker-compose build
     
-## Run
+## Run TAC with baseline agents only
 
 To run the Docker ensemble, you need to set up the environment variable `NB_BASELINE_AGENTS`. 
 The default one, provided in the `.env` file, is `2`. If it's OK for you, 
@@ -32,14 +32,13 @@ To double-check whether the variable has been set successfully, use:
 
     docker-compose config
     
-## Use your implementation
+## Run TAC with baseline agents and your own agent implementation(s)
 
 - Set up an OEF-Node, a Controller agent and a list of baseline agents:
 
       docker-compose -f docker-compose.yml -f docker-compose.participant.yml up
       
 - Connect your agent to `localhost:3333`, e.g.:
-
 
       python3 ../scripts/template_agent.py
       
