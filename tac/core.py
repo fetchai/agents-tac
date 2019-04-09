@@ -61,7 +61,8 @@ class Game(object):
                  scores: List[int],
                  fee: int,
                  initial_endowments: List[List[int]],
-                 preferences: List[List[int]]):
+                 preferences: List[List[int]],
+                 agents_ids: List[str]):
         """
         Initialize a game.
 
@@ -78,9 +79,10 @@ class Game(object):
                             is a list of good ids, ordered accordingly to the agent's preference.
                             The index of good j in agent's row i represents the class of preference l for that good.
                             The associated score is scores[l].
+        :param agents_ids: a list of agents ids.
         """
         self._check_consistency(nb_agents, nb_goods, initial_money_amount, instances_per_good, scores, fee,
-                                initial_endowments, preferences)
+                                initial_endowments, preferences, agents_ids)
         self.nb_agents = nb_agents
         self.nb_goods = nb_goods
         self.instances_per_good = instances_per_good
@@ -89,9 +91,10 @@ class Game(object):
         self.preferences = preferences
         self.scores = scores
         self.fee = fee
+        self.agents_ids = agents_ids
 
         self.transactions = []  # type: List[GameTransaction]
-        self.game_states = [GameState(initial_money_amount, initial_endowments[i], preferences[i], scores)
+        self.game_states = [GameState(agents_ids[i], initial_money_amount, initial_endowments[i], preferences[i], scores)
                             for i in range(nb_agents)]  # type: List[GameState]
 
     @classmethod
@@ -102,11 +105,14 @@ class Game(object):
                            scores: List[int],
                            fee: int,
                            initial_endowments: List[List[int]],
-                           preferences: List[List[int]]):
+                           preferences: List[List[int]],
+                           agents_ids: List[str]):
         assert nb_agents > 0
         assert nb_goods > 0
         assert initial_money_amount > 0
         assert fee > 0
+
+        assert len(agents_ids) >= nb_agents
 
         # # TODO the number of instances can be slightly higher or lower than the number of agents. To be changed.
         # assert instances_per_good >= nb_agents
@@ -143,7 +149,7 @@ class Game(object):
 
     @staticmethod
     def generate_game(nb_agents: int, nb_goods: int, initial_money_amount: int,
-                      scores: List[int], fee: int, g: int = 3) -> 'Game':
+                      scores: List[int], fee: int, agent_ids: List[str], g: int = 3) -> 'Game':
         """Generate a game, sampling the initial endowments and the preferences."""
 
         instances_per_good = [sample_good_instance(nb_agents, g) for _ in range(nb_goods)]
@@ -156,7 +162,7 @@ class Game(object):
         preferences = list(map(lambda x: random.sample(x, len(x)), preferences))
 
         return Game(nb_agents, nb_goods, initial_money_amount, instances_per_good,
-                    scores, fee, initial_endowments, preferences)
+                    scores, fee, initial_endowments, preferences, agent_ids)
 
     def get_scores(self) -> List[int]:
         """Get the current scores for every agent."""
@@ -209,6 +215,7 @@ class Game(object):
             "fee": self.fee,
             "initial_endowments": self.initial_endowments,
             "preferences": self.preferences,
+            "agents_ids": self.agents_ids,
             "transactions": [t.to_dict() for t in self.transactions]
         }
 
@@ -222,7 +229,8 @@ class Game(object):
             d["scores"],
             d["fee"],
             d["initial_endowments"],
-            d["preferences"]
+            d["preferences"],
+            d["agents_ids"]
         )
 
         for tx_dict in d["transactions"]:
@@ -235,7 +243,9 @@ class Game(object):
 class GameState:
     """Represent the state of an agent during the game."""
 
-    def __init__(self, money: int, initial_endowment: List[int], preferences: List[int], scores: List[int]):
+    def __init__(self, agent_id: str, money: int, initial_endowment: List[int], preferences: List[int], scores: List[int]):
+        self.agent_id = agent_id
+        self.initial_money = money
         self.balance = money
         assert len(initial_endowment) == len(preferences) == len(scores)
         self.initial_endowment = initial_endowment

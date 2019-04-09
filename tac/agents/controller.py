@@ -270,8 +270,10 @@ class ControllerAgent(TacAgent):
         :return: a Game instance.
         """
         scores = list(reversed(range(self.nb_goods)))
-        self._current_game = Game.generate_game(self.nb_agents, self.nb_goods, self.money_endowment, scores, self.fee)
-        self._agent_pbk_to_id = dict(map(reversed, enumerate(self.registered_agents)))
+        agents_ids = sorted(self.registered_agents)
+        self._agent_pbk_to_id = dict(map(reversed, enumerate(agents_ids)))
+        self._current_game = Game.generate_game(self.nb_agents, self.nb_goods, self.money_endowment, scores, self.fee,
+                                                agents_ids)
         return self._current_game
 
     def _send_game_data_to_agents(self):

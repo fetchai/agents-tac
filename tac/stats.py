@@ -57,6 +57,7 @@ class GameStats:
             fee=self.game.fee,
             initial_endowments=self.game.initial_endowments,
             preferences=self.game.preferences,
+            agents_ids=self.game.agents_ids
         )
 
         # initial scores
@@ -74,7 +75,8 @@ class GameStats:
         history = self.score_history()
 
         plt.plot(history)
-        labels = ["agent_{:02d}".format(idx) for idx in range(self.game.nb_agents)]
+        # labels = ["agent_{:02d}".format(idx) for idx in range(self.game.nb_agents)]
+        labels = self.game.agents_ids
         plt.legend(labels, loc="best")
         plt.xlabel("Transactions")
         plt.ylabel("Score")

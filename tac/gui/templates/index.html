@@ -34,19 +34,25 @@
   <table border="1" cellpadding="10">
     <thead>
       <tr>
+        <th>agent id</th>
+        <th>initial score</th>
         <th>endowments</th>
         <th>preferences</th>
         <th>final holdings</th>
         <th>final balance</th>
+        <th>final score</th>
       </tr>
     </thead>
     <tbody>
       {% for game_state in game_states %}
         <tr>
+          <th>{{ game_state.agent_id }}</th>
+          <th>{{ game_state.score_good_quantities(game_state.initial_endowment) + game_state.initial_money}}</th>
           <th>{{ game_state.initial_endowment }}</th>
           <th>{{ game_state.scores_by_good }}</th>
           <th>{{ game_state.current_holdings }}</th>
           <th>{{ game_state.balance }}</th>
+          <th>{{ game_state.get_score() }}</th>
         </tr>
       {% endfor %}
     </tbody>
