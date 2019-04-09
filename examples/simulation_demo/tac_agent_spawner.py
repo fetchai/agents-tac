@@ -22,6 +22,7 @@
 """Spawn several TAC agents."""
 import argparse
 import asyncio
+import datetime
 import logging
 import pprint
 from typing import List
@@ -47,6 +48,7 @@ def parse_arguments():
     parser.add_argument("--data-output-dir", default="data", help="The output directory for the simulation data.")
     parser.add_argument("--experiment-id", default=None, help="The experiment ID.")
     parser.add_argument("--plot", default=False, type=bool, help="Plot sequence of transactions and the changes in scores.")
+    parser.add_argument("--timeout", default=5, type=int, help="The amount of time (in seconds) to wait for starting the competition.")
 
     arguments = parser.parse_args()
     logger.debug("Arguments: {}".format(pprint.pformat(arguments.__dict__)))
@@ -73,9 +75,10 @@ arguments = parse_arguments()
 if __name__ == '__main__':
 
     try:
+        start_time = datetime.datetime.now() + datetime.timedelta(0, arguments.timeout)
         tac_controller = ControllerAgent(public_key="tac_controller", oef_addr=arguments.oef_addr,
                                          oef_port=arguments.oef_port, nb_agents=arguments.nb_agents,
-                                         nb_goods=arguments.nb_goods)
+                                         nb_goods=arguments.nb_goods, start_time=start_time)
         tac_controller.connect()
         tac_controller.register()
 

@@ -20,6 +20,7 @@
 # ------------------------------------------------------------------------------
 
 import argparse
+import asyncio
 import datetime
 import json
 import logging
@@ -109,7 +110,7 @@ class ControllerAgent(TacAgent):
 
     def __init__(self, public_key="controller", oef_addr="127.0.0.1", oef_port=3333,
                  nb_agents: int = 5, money_endowment: int = 20, nb_goods: int = 5,
-                 fee: int = 1, version: int = 1, **kwargs):
+                 fee: int = 1, version: int = 1, start_time: datetime.datetime = None, **kwargs):
         """
         Initialize a Controller Agent for TAC.
         :param public_key: The public key of the OEF Agent.
@@ -120,6 +121,7 @@ class ControllerAgent(TacAgent):
         :param nb_goods: the number of goods in the competition.
         :param fee: the fee for a transaction.
         :param version: the version of the TAC controller.
+        :param start_time: the time when the competition will start.
         """
         super().__init__(public_key, oef_addr, oef_port, **kwargs)
         logger.debug("Initialized Controller Agent :\n{}".format(pprint.pformat({
@@ -131,6 +133,7 @@ class ControllerAgent(TacAgent):
             "nb_goods": nb_goods,
             "fee": fee,
             "version": version,
+            "start_time": str(start_time)
         })))
 
         self.nb_agents = nb_agents
@@ -138,6 +141,7 @@ class ControllerAgent(TacAgent):
         self.nb_goods = nb_goods
         self.fee = fee
         self.version = version
+        self.start_time = start_time
 
         self.registered_agents = set()  # type: Set[str]
         self.handler = ControllerHandler(self)
@@ -145,6 +149,31 @@ class ControllerAgent(TacAgent):
         self._current_game = None  # type: Optional[Game]
         self._agent_pbk_to_id = None  # type: Optional[Dict[str, int]]
         self._transaction_history = []  # type: List[Transaction]
+
+        # TODO: assuming that somewhere else the agent loop is running...
+        self._timeout_task = asyncio.ensure_future(self.timeout_competition(), loop=self._loop)
+
+    async def timeout_competition(self) -> bool:
+        """Wait until the registration time expires.
+        Then, if there are enough agents, start the competition.
+
+        :return True if
+        """
+
+        seconds_to_wait = (self.start_time - datetime.datetime.now()).seconds + 1
+        seconds_to_wait = 0 if seconds_to_wait < 0 else seconds_to_wait
+        logger.debug("[{}]: Waiting for {} seconds...".format(self.public_key, seconds_to_wait))
+        await asyncio.sleep(seconds_to_wait)
+        logger.debug("[{}]: Check if we can start the competition.".format(self.public_key, seconds_to_wait))
+        if len(self.registered_agents) >= self.nb_agents:
+            logger.debug("[{}]: Start competition. Registered agents: {}, minimum number of agents: {}."
+                         .format(self.public_key, len(self.registered_agents), self.nb_agents))
+            self._start_competition()
+            return True
+        else:
+            logger.debug("[{}]: Not enough agents to start TAC. Registered agents: {}, minimum number of agents: {}."
+                         .format(self.public_key, len(self.registered_agents), self.nb_agents))
+            return False
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
         logger.debug("[ControllerAgent] on_message: msg_id={}, dialogue_id={}, origin={}"
@@ -180,8 +209,6 @@ class ControllerAgent(TacAgent):
         else:
             logger.debug("Agent registered: '{}'".format(public_key))
             self.registered_agents.add(public_key)
-            if len(self.registered_agents) >= self.nb_agents:
-                self._start_competition()
             return None
 
     def handle_unregister(self, request: Unregister) -> Optional[Response]:
