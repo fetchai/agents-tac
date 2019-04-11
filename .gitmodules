@@ -4,9 +4,9 @@
 [submodule "oef-core"]
 	path = oef-core
 	url = https://github.com/fetchai/oef-core.git
-[submodule "oef-sdk-python"]
-	path = oef-sdk-python
-	url = git@github.com:uvue-git/oef-sdk-python.git
 [submodule "tac-cpp"]
 	path = tac-cpp
-	url = git@github.com:uvue-git/TAC.git
+	url = ../TAC.git
+[submodule "oef-sdk-python"]
+	path = oef-sdk-python
+	url = ../oef-sdk-python.git

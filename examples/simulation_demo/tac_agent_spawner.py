@@ -57,6 +57,7 @@ def parse_arguments():
 
 
 def run_agent(agent: BaselineAgent):
+    asyncio.set_event_loop(agent._loop)
     agent.connect()
     agent.search_tac_agents()
     agent.run()

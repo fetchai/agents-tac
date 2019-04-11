@@ -175,7 +175,7 @@ class ControllerAgent(TacAgent):
                          .format(self.public_key, len(self.registered_agents), self.nb_agents))
             return False
 
-    def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
+    async def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
         logger.debug("[ControllerAgent] on_message: msg_id={}, dialogue_id={}, origin={}"
                      .format(msg_id, dialogue_id, origin))
         response = self.handler.handle(content, origin)

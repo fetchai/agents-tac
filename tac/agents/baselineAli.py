@@ -70,7 +70,7 @@ class BaselineAgent(TacAgent):
 
         self.pending_transactions = {}  # type: Dict[str, Transaction]
 
-    def on_search_result(self, search_id: int, agents: List[str]):
+    async def on_search_result(self, search_id: int, agents: List[str]):
         logger.debug("[{}]: search result: {} {}".format(self.public_key, search_id, agents))
         super().on_search_result(search_id, agents)
         if self.SEARCH_TAC_CONTROLLER_ID == search_id:
@@ -81,7 +81,7 @@ class BaselineAgent(TacAgent):
         else:
             raise Exception("Shouldn't be here.")
 
-    def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
+    async def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
         msg = Response.from_pb(content)
         logger.debug("[{}]: Response from the TAC Controller '{}':\n{}".format(self.public_key, origin, str(msg)))
 
@@ -105,7 +105,7 @@ class BaselineAgent(TacAgent):
             transaction = self.pending_transactions.pop(msg.transaction_id)
             self.game_state.update(transaction.buyer, transaction.amount, transaction.good_ids, transaction.quantities)
 
-    def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES):
+    async def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES):
         logger.debug("[{}]: on_cfp: msg_id={}, dialogue_id={}, origin={}, target={}, query={}"
                      .format(self.public_key, msg_id, dialogue_id, origin, target, query))
 
@@ -148,7 +148,7 @@ class BaselineAgent(TacAgent):
                                                 quantities)
             self.pending_transactions[transaction_id] = candidate_transaction
 
-    def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES):
+    async def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES):
         logger.debug("[{}]: on_propose: msg_id={}, dialogue_id={}, origin={}, target={}, proposals={}"
                      .format(self.public_key, msg_id, dialogue_id, origin, target, proposals))
 
@@ -159,13 +159,13 @@ class BaselineAgent(TacAgent):
         else:
             self._on_propose_as_buyer(msg_id, dialogue_id, origin, target, proposals)
 
-    def on_decline(self, msg_id: int, dialogue_id: int, origin: str, target: int):
+    async def on_decline(self, msg_id: int, dialogue_id: int, origin: str, target: int):
         logger.debug("[{}]: on_decline: msg_id={}, dialogue_id={}, origin={}, target={}"
                      .format(self.public_key, msg_id, dialogue_id, origin, target))
         dialogue_key = (origin, dialogue_id)
         self.negotiation_as_seller.discard(dialogue_key)
 
-    def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int):
+    async def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int):
         logger.debug("[{}]: on_accept: msg_id={}, dialogue_id={}, origin={}, target={}"
                      .format(self.public_key, msg_id, dialogue_id, origin, target))
         # TODO send transaction confirmation?

@@ -48,7 +48,7 @@ class TacAgent(OEFAgent):
         super().search_services(search_id, query)
         plantuml_gen.search_services(self.public_key, query, additional_msg=additional_msg)
 
-    def on_search_result(self, search_id: int, agents: List[str]):
+    async def on_search_result(self, search_id: int, agents: List[str]):
         plantuml_gen.on_search_result(self.public_key, agents)
 
 
