@@ -157,7 +157,7 @@ class ControllerAgent(TacAgent):
         """Wait until the registration time expires.
         Then, if there are enough agents, start the competition.
 
-        :return True if
+        :return True if the competition has been successfully started. False otherwise.
         """
 
         seconds_to_wait = (self.start_time - datetime.datetime.now()).seconds + 1

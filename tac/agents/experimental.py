@@ -12,7 +12,7 @@ from tac.core import NegotiationAgent
 
 def parse_arguments():
     parser = argparse.ArgumentParser("experimental", description="Launch the experimental agent.")
-    parser.add_argument("--public-key", default="baseline", help="Public key of the agent.")
+    parser.add_argument("--public-key", default="experimental", help="Public key of the agent.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
     # parser.add_argument("--gui", action="store_true", help="Show the GUI.")
@@ -24,6 +24,7 @@ class ExperimentalAgent(NegotiationAgent):
 
     def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, **kwargs) -> None:
         super().__init__(public_key, oef_addr, oef_port, **kwargs)
+
         self.pending_searches = {}  # type: Dict[int, asyncio.Event]
         self.search_results = {}  # type: Dict[int, List[str]]
 
@@ -32,8 +33,8 @@ class ExperimentalAgent(NegotiationAgent):
             self.search_results[search_id] = agents
             self.pending_searches[search_id].set()
 
-    async def sync_search_services(self, search_id, q: Query) -> List[str]:
-        self.search_services(search_id, q)
+    async def sync_search_services(self, search_id, query: Query) -> List[str]:
+        self.search_services(search_id, query)
         event = asyncio.Event()
         self.pending_searches[search_id] = event
         await event.wait()

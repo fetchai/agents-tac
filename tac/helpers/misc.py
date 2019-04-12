@@ -26,8 +26,12 @@ import numpy as np
 logger = logging.getLogger("tac")
 
 
+class TacError(Exception):
+    """General purpose exception to detect exception associated with the logic of the TAC application."""
+
+
 def callback(fut):
-    """Callback to audit exception from asyncio tasks."""
+    """Callback to audit exceptions from asyncio tasks."""
     try:
         _ = fut.result()
     except Exception as e:

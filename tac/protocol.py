@@ -28,6 +28,7 @@ from typing import List
 from google.protobuf.message import DecodeError
 
 import tac.tac_pb2 as tac_pb2
+from tac.helpers.misc import TacError
 
 logger = logging.getLogger(__name__)
 
@@ -38,11 +39,11 @@ class Message(ABC):
     @classmethod
     @abstractmethod
     def from_pb(cls, obj):
-        """From Protobuf to 'Message' object"""
+        """From Protobuf to :class:`~tac.protocol.Message` object"""
 
     @abstractmethod
     def to_pb(self):
-        """From 'Message' to Protobuf object"""
+        """From :class:`~tac.protocol.Message` to Protobuf object"""
 
     def serialize(self) -> bytes:
         """Serialize the message."""
@@ -64,6 +65,13 @@ class Request(Message, ABC):
 
     @classmethod
     def from_pb(cls, obj: bytes, public_key: str = "") -> 'Request':
+        """
+        Parse a string of bytes associated to a request message to the TAC controller.
+        :param obj: the string of bytes to be parsed.
+        :return: a :class:`~tac.protocol.Response` object.
+        :raises TacError: if the string of bytes cannot be parsed as a Response from the TAC Controller.
+        """
+
         msg = tac_pb2.TACAgent.Message()
         msg.ParseFromString(obj)
         case = msg.WhichOneof("msg")
@@ -76,7 +84,7 @@ class Request(Message, ABC):
                                msg.transaction.counterparty, msg.transaction.amount,
                                msg.transaction.good_ids, msg.transaction.quantities)
         else:
-            raise Exception("Unrecognized type of Response.")
+            raise TacError("Unrecognized type of Request.")
 
     def to_pb(self):
         raise NotImplementedError
@@ -152,6 +160,13 @@ class Response(Message):
 
     @classmethod
     def from_pb(cls, obj: bytes) -> 'Response':
+        """
+        Parse a string of bytes associated to a response message from the TAC controller.
+        :param obj: the string of bytes to be parsed.
+        :return: a :class:`~tac.protocol.Response` object.
+        :raises TacError: if the string of bytes cannot be parsed as a Response from the TAC Controller.
+        """
+
         try:
             msg = tac_pb2.TACController.Message()
             msg.ParseFromString(obj)
@@ -169,9 +184,10 @@ class Response(Message):
                 error_msg = msg.error.error_msg
                 return Error(error_msg)
             else:
-                raise Exception("Unrecognized type of Response.")
+                raise TacError("Unrecognized type of Response.")
         except DecodeError as e:
             logger.exception(str(e))
+            raise TacError("Error in decoding the message.")
 
     def to_pb(self) -> tac_pb2.TACController.Message:
         raise NotImplementedError

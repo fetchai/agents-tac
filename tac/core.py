@@ -20,19 +20,25 @@
 import asyncio
 import copy
 import datetime
-import json
+import logging
 import pprint
 import random
+from abc import abstractmethod
 from typing import List, Dict, Any, Optional
 
 import numpy as np
 from oef.agents import OEFAgent
-from oef.query import Query, Constraint, GtEq
+from oef.dialogue import DialogueAgent
+from oef.messages import OEFErrorOperation, CFP_TYPES
+from oef.proxy import OEFNetworkProxy
+from oef.query import Query
 from oef.schema import Description
-from tac.protocol import Register
 
-from tac.helpers.misc import sample_good_instance, compute_endowment_of_good
+from tac.helpers.misc import sample_good_instance, compute_endowment_of_good, TacError
 from tac.helpers.plantuml import plantuml_gen
+from tac.protocol import Register, Response, GameData, TransactionConfirmation, Error
+
+logger = logging.getLogger(__name__)
 
 
 class TacAgent(OEFAgent):
@@ -51,19 +57,103 @@ class TacAgent(OEFAgent):
         plantuml_gen.on_search_result(self.public_key, agents)
 
 
-class NegotiationAgent(TacAgent):
+class NegotiationAgent(DialogueAgent):
 
     def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, **kwargs) -> None:
-        super().__init__(public_key, oef_addr, oef_port, **kwargs)
+        super().__init__(OEFNetworkProxy(public_key, oef_addr, oef_port, **kwargs))
         self.controller = None  # type: Optional[str]
         self.game_state = None  # type: Optional[GameState]
 
-        self.tac_search_id = set()
+        self.pending_searches = {}  # type: Dict[int, asyncio.Event]
+        self.search_results = {}  # type: Dict[int, List[str]]
 
-    def register(self):
-        """Register to a competition."""
+    async def on_search_result(self, search_id: int, agents: List[str]):
+        if search_id in self.pending_searches:
+            self.search_results[search_id] = agents
+            self.pending_searches[search_id].set()
+
+    async def sync_search_services(self, search_id: int, query: Query) -> List[str]:
+        self.search_services(search_id, query)
+        event = asyncio.Event()
+        self.pending_searches[search_id] = event
+        await event.wait()
+        result = self.search_results[search_id]
+        return result
+
+    @abstractmethod
+    async def on_start(self, game_data: GameData) -> None:
+        """
+        On receiving game data from the TAC controller, do the setup.
+
+        :param game_data: the set of parameters assigned to this agent by the TAC controller.
+        :return: ``None``
+        """
+
+    @abstractmethod
+    async def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
+        """
+        Handle the transaction confirmation.
+
+        :param tx_confirmation: the data of the confirmed transaction.
+        :return: ``None``
+        """
+
+    @abstractmethod
+    async def on_error(self, error: Error) -> None:
+        """
+        Handle error messages from the TAC controller.
+
+        :return: ``None``
+        """
+
+    @abstractmethod
+    async def on_new_cfp(self, msg_id: int, dialogue_id: int, from_: str, target: int, query: CFP_TYPES) -> None:
+        """
+        Handle the arrival of a CFP message.
+
+        :param msg_id: the message identifier for the dialogue.
+        :param dialogue_id: the identifier of the dialogue in which the message is sent.
+        :param from_: the identifier of the agent who sent the message.
+        :param target: the identifier of the message to whom this message is answering.
+        :param query: the query associated with the Call For Proposals.
+        :return: ``None``
+        """
+
+    async def on_new_message(self, msg_id: int, dialogue_id: int, from_: str, content: bytes) -> None:
+        """TODO Temporarily assume we can receive simple messages only from the controller agent."""
+        # here we can get a new message either from any agent, including the controller.
+        # however, the one from the controller should be handled in a different way.
+        # try to parse it as if it were a response from the Controller.
+
+        response = None  # type: Optional[Response]
+        try:
+            response = Response.from_pb(content)
+        except TacError as e:
+            # the message was not a 'Response' message.
+            logger.exception(str(e))
+
+        if isinstance(response, GameData):
+            await self.on_start(response)
+        elif isinstance(response, TransactionConfirmation):
+            await self.on_transaction_confirmed(response)
+        elif isinstance(response, Error):
+            await self.on_error(response)
+        else:
+            # TODO revise.
+            raise TacError("No correct message received.")
+
+    async def on_connection_error(self, operation: OEFErrorOperation) -> None:
+        pass
+
+    def register(self, tac_controller_pk: str) -> None:
+        """Register to a competition.
+        :param tac_controller_pk: the public key of the controller.
+        :return: ``None``
+        :raises AssertionError: if the agent is already registered.
+        """
+        assert self.controller is None and self.game_state is None
         msg = Register(self.public_key).serialize()
-        self.send_message(0, 0, "todo", msg)
+        self.send_message(0, 0, tac_controller_pk, msg)
 
 
 class Game(object):
@@ -193,7 +283,7 @@ class Game(object):
         :param agent_pbk: the agent's public key.
         :return: the game state of the agent
         """
-        return self.game_states[self._from_agent_pbk_to_agent_id[agent_pbk]]
+        return self.get_game_data_from_agent_id(self._from_agent_pbk_to_agent_id[agent_pbk])
 
     def is_transaction_valid(self, tx: 'GameTransaction') -> bool:
         assert tx.buyer_id != tx.seller_id
@@ -318,13 +408,32 @@ class GameState:
         """
         return [q - 1 if q > 1 else 0 for q in self.current_holdings]
 
-    def get_score_after_transaction(self, d_money, d_holdings):
+    def get_score_after_transaction(self, d_money: int, d_holdings: List[int]) -> int:
+        """
+        Simulate a transaction and get the resulting score.
+        :param d_money: the delta amount of money.
+                        A negative value means that we pay money in the transaction.
+                        A positive value means that we gain money from the transaction.
+        :param d_holdings: a list of integers containing the delta quantities for every good.
+                           A negative value ``q`` at position ``i`` means that we sold ``q`` instances of good ``i``.
+                           A positive value ``q`` at position ``i`` means that we bought ``q`` instances of good ``i``.
+        :return: the score that we would get if the transaction is confirmed.
+        """
         new_holdings = np.asarray(self.current_holdings) + np.asarray(d_holdings)
         new_holdings_score = self.score_good_quantities(new_holdings)
         new_money = self.balance + d_money
         return new_holdings_score + new_money
 
-    def update(self, buyer: bool, amount: int, good_ids: List[int], quantities: List[int]):
+    def update(self, buyer: bool, amount: int, good_ids: List[int], quantities: List[int]) -> None:
+        """
+        Update the game state.
+
+        :param buyer: whether the values of the transaction have to be intended as a seller or as a buyer.
+        :param amount: the amount of money involved in the transaction.
+        :param good_ids: the good ids involved in the transaction.
+        :param quantities: the quantities associated to the good ids involved in the transaction.
+        :return: None
+        """
         switch = 1 if buyer else -1
         for good_id, quantity in zip(good_ids, quantities):
             self.current_holdings[good_id] += switch * quantity
@@ -364,7 +473,7 @@ class GameTransaction:
         }
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any]):
+    def from_dict(cls, d: Dict[str, Any]) -> 'GameTransaction':
         return cls(
             buyer_id=d["buyer_id"],
             seller_id=d["seller_id"],
