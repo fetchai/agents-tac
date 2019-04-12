@@ -19,6 +19,7 @@
 #
 # ------------------------------------------------------------------------------
 import argparse
+import asyncio
 import copy
 import logging
 import pprint
@@ -96,8 +97,8 @@ class BaselineAgent(TacAgent):
             self.buyer_data_model = DataModel("tac_buyer", goods_quantities_attributes + [price_attribute])
 
             self._register_as_seller_for_excessing_goods()
-            # TODO remember this sleep for two second: it might change.
-            time.sleep(2.0)
+
+            await asyncio.sleep(2.0)
             self.search_tac_sellers()
         if isinstance(msg, TransactionConfirmation):
             transaction = self.pending_transactions.pop(msg.transaction_id)
@@ -317,8 +318,7 @@ class BaselineAgent(TacAgent):
         assert len(agents) <= 1
         controller_pb_key = agents[0]
         msg = Register(self.public_key)
-        msg_pb = msg.to_pb()
-        msg_bytes = msg_pb.SerializeToString()
+        msg_bytes = msg.serialize()
         self.send_message(0, 0, controller_pb_key, msg_bytes)
         logger.debug("[{}]: Sending '{}' message to the TAC Controller {}"
                      .format(self.public_key, msg, controller_pb_key))

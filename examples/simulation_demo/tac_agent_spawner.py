@@ -29,7 +29,6 @@ from typing import List
 
 from tac.agents.baseline import BaselineAgent
 from tac.agents.controller import ControllerAgent
-from tac.core import TacAgent
 from tac.helpers.plantuml import plantuml_gen
 from tac.stats import GameStats
 
@@ -56,41 +55,38 @@ def parse_arguments():
     return arguments
 
 
-def run_agent(agent: BaselineAgent):
-    asyncio.set_event_loop(agent._loop)
-    agent.connect()
+def initialize_controller_agent(arguments) -> ControllerAgent:
+    start_time = datetime.datetime.now() + datetime.timedelta(0, arguments.timeout)
+    tac_controller = ControllerAgent(public_key="tac_controller", oef_addr=arguments.oef_addr,
+                                     oef_port=arguments.oef_port, nb_agents=arguments.nb_agents,
+                                     nb_goods=arguments.nb_goods, start_time=start_time)
+    tac_controller.connect()
+    tac_controller.register()
+    return tac_controller
+
+
+async def run_baseline_agent(agent: BaselineAgent):
+    await agent.async_connect()
     agent.search_tac_agents()
-    agent.run()
+    await agent.async_run()
 
 
-def run_agents(agents: List[TacAgent]):
+def run(tac_controller: ControllerAgent, baseline_agents: List[BaselineAgent]):
+    asyncio.get_event_loop().run_until_complete(asyncio.gather(
+        tac_controller.async_run(),
+        *map(lambda a: run_baseline_agent(a), baseline_agents)
+    ))
 
-    from threading import Thread
-    threads = [Thread(target=run_agent, args=(a, ))for a in agents]
-    for t in threads:
-        t.start()
-
-
-arguments = parse_arguments()
 
 if __name__ == '__main__':
-
+    arguments = parse_arguments()
     try:
-        start_time = datetime.datetime.now() + datetime.timedelta(0, arguments.timeout)
-        tac_controller = ControllerAgent(public_key="tac_controller", oef_addr=arguments.oef_addr,
-                                         oef_port=arguments.oef_port, nb_agents=arguments.nb_agents,
-                                         nb_goods=arguments.nb_goods, start_time=start_time)
-        tac_controller.connect()
-        tac_controller.register()
 
-        agents = [BaselineAgent("tac_agent_" + str(i), arguments.oef_addr, arguments.oef_port,
-                                loop=asyncio.new_event_loop())
-                  for i in range(arguments.nb_baseline_agents)]
+        tac_controller = initialize_controller_agent(arguments)
+        baseline_agents = [BaselineAgent("tac_agent_" + str(i), arguments.oef_addr, arguments.oef_port)
+                           for i in range(arguments.nb_baseline_agents)]
+        run(tac_controller, baseline_agents)
 
-        tac_agents = agents  # type: List[TacAgent]
-        run_agents(tac_agents)
-
-        tac_controller.run()
     except KeyboardInterrupt:
         logger.debug("Simulation interrupted...")
     finally:
