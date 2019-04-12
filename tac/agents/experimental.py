@@ -4,10 +4,12 @@ import asyncio
 import time
 from typing import List, Dict
 
+from oef.messages import OEFErrorOperation, CFP_TYPES
 from oef.query import Query, Constraint, GtEq
 
 from tac.agents.controller import ControllerAgent
 from tac.core import NegotiationAgent
+from tac.protocol import Error, TransactionConfirmation, GameData
 
 
 def parse_arguments():
@@ -25,25 +27,24 @@ class ExperimentalAgent(NegotiationAgent):
     def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, **kwargs) -> None:
         super().__init__(public_key, oef_addr, oef_port, **kwargs)
 
-        self.pending_searches = {}  # type: Dict[int, asyncio.Event]
-        self.search_results = {}  # type: Dict[int, List[str]]
-
-    async def on_search_result(self, search_id: int, agents: List[str]):
-        if search_id in self.pending_searches:
-            self.search_results[search_id] = agents
-            self.pending_searches[search_id].set()
-
-    async def sync_search_services(self, search_id, query: Query) -> List[str]:
-        self.search_services(search_id, query)
-        event = asyncio.Event()
-        self.pending_searches[search_id] = event
-        await event.wait()
-        result = self.search_results[search_id]
-        return result
-
     async def search_controllers(self):
-        result = await self.sync_search_services(0, Query([Constraint("version", GtEq(1))]))
+        result = await self.search(Query([Constraint("version", GtEq(1))]))
         return result
+
+    async def on_start(self, game_data: GameData) -> None:
+        pass
+
+    async def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
+        pass
+
+    async def on_tac_error(self, error: Error) -> None:
+        pass
+
+    async def on_new_cfp(self, msg_id: int, dialogue_id: int, from_: str, target: int, query: CFP_TYPES) -> None:
+        pass
+
+    async def on_connection_error(self, operation: OEFErrorOperation) -> None:
+        pass
 
 
 async def main():

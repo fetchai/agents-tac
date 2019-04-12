@@ -141,7 +141,7 @@ class ControllerAgent(TacAgent):
         self.nb_goods = nb_goods
         self.fee = fee
         self.version = version
-        self.start_time = start_time
+        self.start_time = start_time if start_time is not None else datetime.datetime.now() + datetime.timedelta(0, 5)
 
         self.registered_agents = set()  # type: Set[str]
         self.handler = ControllerHandler(self)

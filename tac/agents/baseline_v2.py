@@ -22,10 +22,13 @@
 """Baseline agent - version 2"""
 
 import argparse
+import asyncio
+import datetime
 import logging
 from typing import Optional, Dict, Set, Tuple
 
-from oef.messages import CFP_TYPES
+from oef.messages import CFP_TYPES, OEFErrorOperation
+from oef.query import Query, Constraint, Eq
 from oef.schema import DataModel
 
 from tac.core import NegotiationAgent
@@ -55,23 +58,33 @@ class BaselineAgentV2(NegotiationAgent):
     async def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
         pass
 
-    async def on_error(self, error: Error) -> None:
+    async def on_tac_error(self, error: Error) -> None:
+        pass
+
+    async def on_connection_error(self, operation: OEFErrorOperation) -> None:
         pass
 
     async def on_new_cfp(self, msg_id: int, dialogue_id: int, from_: str, target: int, query: CFP_TYPES) -> None:
         pass
 
 
-def main():
+async def main():
     args = parse_arguments()
-    agent = BaselineAgentV2(public_key=args.public_key, oef_addr=args.oef_addr, oef_port=args.oef_port)
+    start_time = datetime.datetime.now() + datetime.timedelta(0, 5)
+    agent = BaselineAgentV2(public_key=args.public_key, oef_addr=args.oef_addr, oef_port=args.oef_port,
+                            start_time=start_time)
 
-    agent.connect()
+    await agent.async_connect()
+    agent_task = asyncio.ensure_future(agent.async_run())
+
+    # result = await agent.search(Query([Constraint("pow", Eq(True))]))
+    result = await agent.search(Query([Constraint("pow", Eq(True))]), callback=lambda x, y: print(y))
+    print(result)
 
     logger.debug("Running agent...")
-    agent.run()
+    await asyncio.sleep(3.0)
 
 
 if __name__ == '__main__':
-    main()
+    asyncio.get_event_loop().run_until_complete(main())
 

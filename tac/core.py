@@ -24,7 +24,7 @@ import logging
 import pprint
 import random
 from abc import abstractmethod
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Callable
 
 import numpy as np
 from oef.agents import OEFAgent
@@ -64,21 +64,46 @@ class NegotiationAgent(DialogueAgent):
         self.controller = None  # type: Optional[str]
         self.game_state = None  # type: Optional[GameState]
 
-        self.pending_searches = {}  # type: Dict[int, asyncio.Event]
+        self.pending_search_ids = set()
+        self.search_events = {} # type: Dict[int, asyncio.Event]
         self.search_results = {}  # type: Dict[int, List[str]]
+        self.search_callbacks = {}  # type: Dict[int, Callable]
 
     async def on_search_result(self, search_id: int, agents: List[str]):
-        if search_id in self.pending_searches:
-            self.search_results[search_id] = agents
-            self.pending_searches[search_id].set()
+        if search_id in self.pending_search_ids:
+            # check if the search operation has a callback or it does not.
+            if search_id in self.search_events:
+                self.search_results[search_id] = agents
+                self.search_events[search_id].set()
+            elif search_id in self.search_callbacks:
+                callback = self.search_callbacks[search_id]
+                await callback(self, agents)
 
-    async def sync_search_services(self, search_id: int, query: Query) -> List[str]:
+    async def search(self, query: Query, callback: Optional[Callable] = None) -> Optional[List[str]]:
+        """
+        Search for agents. It uses the SDK's search_services() method.
+
+        :param query: the query for the search.
+        :param callback: if None, the search operation is synchronous (that is, waits until the OEF answers with the result).
+                         The callbacks accepts 'self' as first argument and a list of strings as second argument.
+        :return: a list of agent's public keys. If a callback is provided, return None.
+        """
+        search_id = len(self.pending_search_ids)
+        self.pending_search_ids.add(search_id)
         self.search_services(search_id, query)
-        event = asyncio.Event()
-        self.pending_searches[search_id] = event
-        await event.wait()
-        result = self.search_results[search_id]
-        return result
+        if callback is not None:
+            # register a callback
+            self.search_callbacks[search_id] = callback
+            return None
+        else:
+            event = asyncio.Event()
+            self.search_events[search_id] = event
+            await event.wait()
+            result = self.search_results[search_id]
+            self.pending_search_ids.remove(search_id)
+            self.search_events.pop(search_id)
+            self.search_results.pop(search_id)
+            return result
 
     @abstractmethod
     async def on_start(self, game_data: GameData) -> None:
@@ -99,7 +124,7 @@ class NegotiationAgent(DialogueAgent):
         """
 
     @abstractmethod
-    async def on_error(self, error: Error) -> None:
+    async def on_tac_error(self, error: Error) -> None:
         """
         Handle error messages from the TAC controller.
 
@@ -137,13 +162,10 @@ class NegotiationAgent(DialogueAgent):
         elif isinstance(response, TransactionConfirmation):
             await self.on_transaction_confirmed(response)
         elif isinstance(response, Error):
-            await self.on_error(response)
+            await self.on_tac_error(response)
         else:
             # TODO revise.
             raise TacError("No correct message received.")
-
-    async def on_connection_error(self, operation: OEFErrorOperation) -> None:
-        pass
 
     def register(self, tac_controller_pk: str) -> None:
         """Register to a competition.
