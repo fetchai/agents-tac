@@ -17,6 +17,7 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+import asyncio
 import copy
 import datetime
 import json
@@ -26,8 +27,9 @@ from typing import List, Dict, Any, Optional
 
 import numpy as np
 from oef.agents import OEFAgent
-from oef.query import Query
+from oef.query import Query, Constraint, GtEq
 from oef.schema import Description
+from tac.protocol import Register
 
 from tac.helpers.misc import sample_good_instance, compute_endowment_of_good
 from tac.helpers.plantuml import plantuml_gen
@@ -35,9 +37,6 @@ from tac.helpers.plantuml import plantuml_gen
 
 class TacAgent(OEFAgent):
     def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, **kwargs) -> None:
-        """
-         :param plantuml: choose
-        """
         super().__init__(public_key, oef_addr, oef_port, **kwargs)
 
     def register_service(self, msg_id: int, service_description: Description) -> None:
@@ -50,6 +49,21 @@ class TacAgent(OEFAgent):
 
     async def on_search_result(self, search_id: int, agents: List[str]):
         plantuml_gen.on_search_result(self.public_key, agents)
+
+
+class NegotiationAgent(TacAgent):
+
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, **kwargs) -> None:
+        super().__init__(public_key, oef_addr, oef_port, **kwargs)
+        self.controller = None  # type: Optional[str]
+        self.game_state = None  # type: Optional[GameState]
+
+        self.tac_search_id = set()
+
+    def register(self):
+        """Register to a competition."""
+        msg = Register(self.public_key).serialize()
+        self.send_message(0, 0, "todo", msg)
 
 
 class Game(object):
