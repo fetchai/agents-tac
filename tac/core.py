@@ -79,9 +79,11 @@ class NegotiationAgent(DialogueAgent):
                 callback = self.search_callbacks[search_id]
                 await callback(self, agents)
 
-    async def search(self, query: Query, callback: Optional[Callable] = None) -> Optional[List[str]]:
+    async def search(self, query: Query, callback: Optional[Callable[['TacAgent', Any], Any]] = None) -> Optional[List[str]]:
         """
         Search for agents. It uses the SDK's search_services() method.
+        The main purpose of this method is to implement a blocking call such that waits until the OEF answers with a list of agents.
+        Or, specify a custom function callback that will be executed when the result arrives.
 
         :param query: the query for the search.
         :param callback: if None, the search operation is synchronous (that is, waits until the OEF answers with the result).
@@ -176,6 +178,9 @@ class NegotiationAgent(DialogueAgent):
         assert self.controller is None and self.game_state is None
         msg = Register(self.public_key).serialize()
         self.send_message(0, 0, tac_controller_pk, msg)
+
+    def search_tac_controllers(self):
+        pass
 
 
 class Game(object):

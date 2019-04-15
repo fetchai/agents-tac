@@ -2,7 +2,6 @@
 import argparse
 import asyncio
 import time
-from typing import List, Dict
 
 from oef.messages import OEFErrorOperation, CFP_TYPES
 from oef.query import Query, Constraint, GtEq

@@ -22,6 +22,7 @@ import random
 from typing import List
 
 import numpy as np
+from oef.schema import AttributeSchema, DataModel, Description
 
 logger = logging.getLogger("tac")
 
@@ -85,3 +86,39 @@ def compute_endowment_of_good(n, nb_instances) -> List[int]:
     endowment = [a_1[idx] + a_2[idx] for idx in range(n)]
 
     return endowment
+
+
+def _build_seller_datamodel(nb_goods: int) -> DataModel:
+    """
+    Build a data model for sellers.
+
+    :param nb_goods: the number of goods.
+    :return: the seller data model.
+    """
+    goods_quantities_attributes = [AttributeSchema("good_{:02d}".format(i), int, True) for i in range(nb_goods)]
+    price_attribute = AttributeSchema("price", int, False)
+    data_model = DataModel("tac_seller", goods_quantities_attributes + [price_attribute])
+    return data_model
+
+
+def get_baseline_seller_description(game_state: 'GameState') -> Description:
+    """
+    Get the TAC seller description, following a baseline policy.
+    That is, a description with the following structure:
+    >>> {
+    ...     "good_01": 1,
+    ...     "good_02": 0,
+    ...     #...
+    ...
+    ... }
+     where the keys indicate the good and the values the quantity that the seller wants to sell.
+
+     The baseline agent decides to sell everything in excess, but keeping the goods that
+
+    :return: the description to advertise on the Service Directory.
+    """
+    seller_data_model = _build_seller_datamodel(game_state.nb_goods)
+    desc = Description({"good_{:02d}".format(i): q
+                        for i, q in enumerate(game_state.get_excess_goods_quantities())},
+                       data_model=seller_data_model)
+    return desc

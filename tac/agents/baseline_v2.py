@@ -25,14 +25,15 @@ import argparse
 import asyncio
 import datetime
 import logging
-from typing import Optional, Dict, Set, Tuple
 
-from oef.messages import CFP_TYPES, OEFErrorOperation
-from oef.query import Query, Constraint, Eq
-from oef.schema import DataModel
+from oef.dialogue import SingleDialogue
+from oef.messages import CFP_TYPES, OEFErrorOperation, PROPOSE_TYPES
+from oef.query import Query, Constraint, Eq, Gt, GtEq
+from oef.schema import Description, DataModel
 
 from tac.core import NegotiationAgent
-from tac.protocol import Transaction, GameData, Error, TransactionConfirmation
+from tac.helpers.misc import _build_seller_datamodel, get_baseline_seller_description
+from tac.protocol import GameData, Error, TransactionConfirmation
 
 logger = logging.getLogger(__name__)
 
@@ -47,13 +48,42 @@ def parse_arguments():
     return parser.parse_args()
 
 
+class BaselineDialogue(SingleDialogue):
+
+    async def on_message(self, msg_id: int, content: bytes) -> None:
+        pass
+
+    async def on_cfp(self, msg_id: int, target: int, query: CFP_TYPES) -> None:
+        pass
+
+    async def on_propose(self, msg_id: int, target: int, proposal: PROPOSE_TYPES) -> None:
+        pass
+
+    async def on_accept(self, msg_id: int, target: int) -> None:
+        pass
+
+    async def on_decline(self, msg_id: int, target: int) -> None:
+        pass
+
+    async def on_dialogue_error(self, answer_id: int, dialogue_id: int, origin: str) -> None:
+        pass
+
+
 class BaselineAgentV2(NegotiationAgent):
 
     def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, **kwargs) -> None:
         super().__init__(public_key, oef_addr, oef_port, **kwargs)
 
+    @property
+    def seller_data_model(self) -> DataModel:
+        return _build_seller_datamodel(self.game_state.nb_goods)
+
     async def on_start(self, game_data: GameData) -> None:
-        print("Called on_start")
+
+        # register as seller
+        self._register_as_seller_for_excessing_goods()
+        results = self.search(Query([Constraint("good_01", GtEq(0))], self.seller_data_model))
+        print("On Start.", results)
 
     async def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
         pass
@@ -67,6 +97,10 @@ class BaselineAgentV2(NegotiationAgent):
     async def on_new_cfp(self, msg_id: int, dialogue_id: int, from_: str, target: int, query: CFP_TYPES) -> None:
         pass
 
+    def _register_as_seller_for_excessing_goods(self) -> None:
+        desc = get_baseline_seller_description(self.game_state)
+        self.register_service(0, desc)
+
 
 async def main():
     args = parse_arguments()
@@ -77,9 +111,9 @@ async def main():
     await agent.async_connect()
     agent_task = asyncio.ensure_future(agent.async_run())
 
-    # result = await agent.search(Query([Constraint("pow", Eq(True))]))
-    result = await agent.search(Query([Constraint("pow", Eq(True))]), callback=lambda x, y: print(y))
-    print(result)
+    # result = await agent.search(Query([Constraint("version", GtEq(1))]), callback=agent.on_start)
+    # result = await agent.search(Query([Constraint("version", GtEq(1))]), callback=lambda x, y: print(y))
+    # print(result)
 
     logger.debug("Running agent...")
     await asyncio.sleep(3.0)
