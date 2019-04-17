@@ -25,6 +25,7 @@ import asyncio
 import datetime
 import logging
 import pprint
+from threading import Thread
 from typing import List
 
 from tac.agents.baseline import BaselineAgent
@@ -79,22 +80,19 @@ def run_controller(tac_controller: ControllerAgent):
 
 def run(tac_controller: ControllerAgent, baseline_agents: List[BaselineAgent]):
 
-    executor = concurrent.futures.ThreadPoolExecutor()
-
     # generate task for the controller
-    controller_future = executor.submit(run_controller, tac_controller)
+    controller_thread = Thread(target=run_controller, args=(tac_controller, ))
+    timeout_thread = Thread(target=tac_controller.timeout_competition, args=())
 
     # generate tasks for baseline agents
-    futures_to_pbk = {executor.submit(run_baseline_agent, baseline_agent): baseline_agent.public_key
-                      for baseline_agent in baseline_agents}
+    baseline_threads = [Thread(target=run_baseline_agent, args=(baseline_agent, ))for baseline_agent in baseline_agents]
 
-    futures_to_pbk[controller_future] = tac_controller.public_key
+    all_threads = [controller_thread, timeout_thread] + baseline_threads
+    for thread in all_threads:
+        thread.start()
 
-    executor.submit(tac_controller.timeout_competition())
-
-    for future in concurrent.futures.as_completed(futures_to_pbk):
-        public_key = futures_to_pbk[future]
-        _ = future.result()
+    for thread in all_threads:
+        thread.join()
 
 
 if __name__ == '__main__':
