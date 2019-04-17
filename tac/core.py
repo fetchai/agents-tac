@@ -23,6 +23,7 @@ import datetime
 import logging
 import pprint
 import random
+import threading
 from abc import abstractmethod
 from typing import List, Dict, Any, Optional, Callable
 
@@ -53,7 +54,7 @@ class TacAgent(OEFAgent):
         super().search_services(search_id, query)
         plantuml_gen.search_services(self.public_key, query, additional_msg=additional_msg)
 
-    async def on_search_result(self, search_id: int, agents: List[str]):
+    def on_search_result(self, search_id: int, agents: List[str]):
         plantuml_gen.on_search_result(self.public_key, agents)
 
 
@@ -69,7 +70,7 @@ class NegotiationAgent(DialogueAgent):
         self.search_results = {}  # type: Dict[int, List[str]]
         self.search_callbacks = {}  # type: Dict[int, Callable]
 
-    async def on_search_result(self, search_id: int, agents: List[str]):
+    def on_search_result(self, search_id: int, agents: List[str]):
         if search_id in self.pending_search_ids:
             # check if the search operation has a callback or it does not.
             if search_id in self.search_events:
@@ -77,7 +78,7 @@ class NegotiationAgent(DialogueAgent):
                 self.search_events[search_id].set()
             elif search_id in self.search_callbacks:
                 callback = self.search_callbacks[search_id]
-                await callback(self, agents)
+                callback(self, agents)
 
     async def search(self, query: Query, callback: Optional[Callable[['TacAgent', Any], Any]] = None) -> Optional[List[str]]:
         """
@@ -98,9 +99,9 @@ class NegotiationAgent(DialogueAgent):
             self.search_callbacks[search_id] = callback
             return None
         else:
-            event = asyncio.Event()
+            event = threading.Event()
             self.search_events[search_id] = event
-            await event.wait()
+            event.wait()
             result = self.search_results[search_id]
             self.pending_search_ids.remove(search_id)
             self.search_events.pop(search_id)
@@ -108,7 +109,7 @@ class NegotiationAgent(DialogueAgent):
             return result
 
     @abstractmethod
-    async def on_start(self, game_data: GameData) -> None:
+    def on_start(self, game_data: GameData) -> None:
         """
         On receiving game data from the TAC controller, do the setup.
 
@@ -117,7 +118,7 @@ class NegotiationAgent(DialogueAgent):
         """
 
     @abstractmethod
-    async def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
+    def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
         """
         Handle the transaction confirmation.
 
@@ -126,7 +127,7 @@ class NegotiationAgent(DialogueAgent):
         """
 
     @abstractmethod
-    async def on_tac_error(self, error: Error) -> None:
+    def on_tac_error(self, error: Error) -> None:
         """
         Handle error messages from the TAC controller.
 
@@ -134,7 +135,7 @@ class NegotiationAgent(DialogueAgent):
         """
 
     @abstractmethod
-    async def on_new_cfp(self, msg_id: int, dialogue_id: int, from_: str, target: int, query: CFP_TYPES) -> None:
+    def on_new_cfp(self, msg_id: int, dialogue_id: int, from_: str, target: int, query: CFP_TYPES) -> None:
         """
         Handle the arrival of a CFP message.
 
@@ -146,7 +147,7 @@ class NegotiationAgent(DialogueAgent):
         :return: ``None``
         """
 
-    async def on_new_message(self, msg_id: int, dialogue_id: int, from_: str, content: bytes) -> None:
+    def on_new_message(self, msg_id: int, dialogue_id: int, from_: str, content: bytes) -> None:
         """TODO Temporarily assume we can receive simple messages only from the controller agent."""
         # here we can get a new message either from any agent, including the controller.
         # however, the one from the controller should be handled in a different way.
@@ -160,11 +161,11 @@ class NegotiationAgent(DialogueAgent):
             logger.exception(str(e))
 
         if isinstance(response, GameData):
-            await self.on_start(response)
+            self.on_start(response)
         elif isinstance(response, TransactionConfirmation):
-            await self.on_transaction_confirmed(response)
+            self.on_transaction_confirmed(response)
         elif isinstance(response, Error):
-            await self.on_tac_error(response)
+            self.on_tac_error(response)
         else:
             # TODO revise.
             raise TacError("No correct message received.")

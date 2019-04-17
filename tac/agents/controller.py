@@ -26,6 +26,7 @@ import json
 import logging
 import os
 import pprint
+import time
 from typing import Optional, Set, Dict, List
 
 from oef.schema import DataModel, Description, AttributeSchema
@@ -150,10 +151,7 @@ class ControllerAgent(TacAgent):
         self._agent_pbk_to_id = None  # type: Optional[Dict[str, int]]
         self._transaction_history = []  # type: List[Transaction]
 
-        # TODO: assuming that somewhere else the agent loop is running...
-        self._timeout_task = asyncio.ensure_future(self.timeout_competition(), loop=self._loop)
-
-    async def timeout_competition(self) -> bool:
+    def timeout_competition(self) -> bool:
         """Wait until the registration time expires.
         Then, if there are enough agents, start the competition.
 
@@ -163,7 +161,7 @@ class ControllerAgent(TacAgent):
         seconds_to_wait = (self.start_time - datetime.datetime.now()).seconds + 1
         seconds_to_wait = 0 if seconds_to_wait < 0 else seconds_to_wait
         logger.debug("[{}]: Waiting for {} seconds...".format(self.public_key, seconds_to_wait))
-        await asyncio.sleep(seconds_to_wait)
+        time.sleep(seconds_to_wait)
         logger.debug("[{}]: Check if we can start the competition.".format(self.public_key, seconds_to_wait))
         if len(self.registered_agents) >= self.nb_agents:
             logger.debug("[{}]: Start competition. Registered agents: {}, minimum number of agents: {}."
@@ -175,7 +173,7 @@ class ControllerAgent(TacAgent):
                          .format(self.public_key, len(self.registered_agents), self.nb_agents))
             return False
 
-    async def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
+    def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
         logger.debug("[ControllerAgent] on_message: msg_id={}, dialogue_id={}, origin={}"
                      .format(msg_id, dialogue_id, origin))
         response = self.handler.handle(content, origin)

@@ -31,6 +31,7 @@ from tac.agents.baseline import BaselineAgent
 from tac.agents.controller import ControllerAgent
 from tac.helpers.plantuml import plantuml_gen
 from tac.stats import GameStats
+import concurrent.futures
 
 logger = logging.getLogger("tac")
 
@@ -60,22 +61,40 @@ def initialize_controller_agent(arguments) -> ControllerAgent:
     tac_controller = ControllerAgent(public_key="tac_controller", oef_addr=arguments.oef_addr,
                                      oef_port=arguments.oef_port, nb_agents=arguments.nb_agents,
                                      nb_goods=arguments.nb_goods, start_time=start_time)
+
     tac_controller.connect()
     tac_controller.register()
     return tac_controller
 
 
-async def run_baseline_agent(agent: BaselineAgent):
-    await agent.async_connect()
+def run_baseline_agent(agent: BaselineAgent):
+    agent.connect()
     agent.search_tac_agents()
-    await agent.async_run()
+    agent.run()
+
+
+def run_controller(tac_controller: ControllerAgent):
+    tac_controller.run()
 
 
 def run(tac_controller: ControllerAgent, baseline_agents: List[BaselineAgent]):
-    asyncio.get_event_loop().run_until_complete(asyncio.gather(
-        tac_controller.async_run(),
-        *map(lambda a: run_baseline_agent(a), baseline_agents)
-    ))
+
+    executor = concurrent.futures.ThreadPoolExecutor()
+
+    # generate task for the controller
+    controller_future = executor.submit(run_controller, tac_controller)
+
+    # generate tasks for baseline agents
+    futures_to_pbk = {executor.submit(run_baseline_agent, baseline_agent): baseline_agent.public_key
+                      for baseline_agent in baseline_agents}
+
+    futures_to_pbk[controller_future] = tac_controller.public_key
+
+    executor.submit(tac_controller.timeout_competition())
+
+    for future in concurrent.futures.as_completed(futures_to_pbk):
+        public_key = futures_to_pbk[future]
+        _ = future.result()
 
 
 if __name__ == '__main__':
@@ -83,7 +102,8 @@ if __name__ == '__main__':
     try:
 
         tac_controller = initialize_controller_agent(arguments)
-        baseline_agents = [BaselineAgent("tac_agent_" + str(i), arguments.oef_addr, arguments.oef_port)
+        baseline_agents = [BaselineAgent("tac_agent_{:02}".format(i), arguments.oef_addr, arguments.oef_port,
+                                         loop=asyncio.new_event_loop())
                            for i in range(arguments.nb_baseline_agents)]
         run(tac_controller, baseline_agents)
 
@@ -96,6 +116,7 @@ if __name__ == '__main__':
             logger.debug("Generating transition diagram...")
             plantuml_gen.dump(arguments.uml_out) if arguments.uml_out is not None else None
         if arguments.plot:
+            logger.debug("Plotting data...")
             game_stats = GameStats(tac_controller._current_game)
             game_stats.plot_score_history()
 

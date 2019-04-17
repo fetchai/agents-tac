@@ -85,16 +85,16 @@ class BaselineAgentV2(NegotiationAgent):
         results = self.search(Query([Constraint("good_01", GtEq(0))], self.seller_data_model))
         print("On Start.", results)
 
-    async def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
+    def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
         pass
 
-    async def on_tac_error(self, error: Error) -> None:
+    def on_tac_error(self, error: Error) -> None:
         pass
 
-    async def on_connection_error(self, operation: OEFErrorOperation) -> None:
+    def on_connection_error(self, operation: OEFErrorOperation) -> None:
         pass
 
-    async def on_new_cfp(self, msg_id: int, dialogue_id: int, from_: str, target: int, query: CFP_TYPES) -> None:
+    def on_new_cfp(self, msg_id: int, dialogue_id: int, from_: str, target: int, query: CFP_TYPES) -> None:
         pass
 
     def _register_as_seller_for_excessing_goods(self) -> None:
