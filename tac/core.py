@@ -58,6 +58,7 @@ class TacAgent(OEFAgent):
         plantuml_gen.on_search_result(self.public_key, agents)
 
 
+# TODO ignore this class
 class NegotiationAgent(DialogueAgent):
 
     def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, **kwargs) -> None:
@@ -80,7 +81,7 @@ class NegotiationAgent(DialogueAgent):
                 callback = self.search_callbacks[search_id]
                 callback(self, agents)
 
-    async def search(self, query: Query, callback: Optional[Callable[['TacAgent', Any], Any]] = None) -> Optional[List[str]]:
+    def search(self, query: Query, callback: Optional[Callable[['TacAgent', Any], Any]] = None) -> Optional[List[str]]:
         """
         Search for agents. It uses the SDK's search_services() method.
         The main purpose of this method is to implement a blocking call such that waits until the OEF answers with a list of agents.

@@ -50,22 +50,22 @@ def parse_arguments():
 
 class BaselineDialogue(SingleDialogue):
 
-    async def on_message(self, msg_id: int, content: bytes) -> None:
+    def on_message(self, msg_id: int, content: bytes) -> None:
         pass
 
-    async def on_cfp(self, msg_id: int, target: int, query: CFP_TYPES) -> None:
+    def on_cfp(self, msg_id: int, target: int, query: CFP_TYPES) -> None:
         pass
 
-    async def on_propose(self, msg_id: int, target: int, proposal: PROPOSE_TYPES) -> None:
+    def on_propose(self, msg_id: int, target: int, proposal: PROPOSE_TYPES) -> None:
         pass
 
-    async def on_accept(self, msg_id: int, target: int) -> None:
+    def on_accept(self, msg_id: int, target: int) -> None:
         pass
 
-    async def on_decline(self, msg_id: int, target: int) -> None:
+    def on_decline(self, msg_id: int, target: int) -> None:
         pass
 
-    async def on_dialogue_error(self, answer_id: int, dialogue_id: int, origin: str) -> None:
+    def on_dialogue_error(self, answer_id: int, dialogue_id: int, origin: str) -> None:
         pass
 
 
@@ -78,7 +78,7 @@ class BaselineAgentV2(NegotiationAgent):
     def seller_data_model(self) -> DataModel:
         return _build_seller_datamodel(self.game_state.nb_goods)
 
-    async def on_start(self, game_data: GameData) -> None:
+    def on_start(self, game_data: GameData) -> None:
 
         # register as seller
         self._register_as_seller_for_excessing_goods()
@@ -111,9 +111,9 @@ async def main():
     await agent.async_connect()
     agent_task = asyncio.ensure_future(agent.async_run())
 
-    # result = await agent.search(Query([Constraint("version", GtEq(1))]), callback=agent.on_start)
     # result = await agent.search(Query([Constraint("version", GtEq(1))]), callback=lambda x, y: print(y))
-    # print(result)
+    result = await agent.search(Query([Constraint("version", GtEq(1))]), callback=agent.on_start)
+    print(result)
 
     logger.debug("Running agent...")
     await asyncio.sleep(3.0)
