@@ -31,7 +31,8 @@ from oef.messages import CFP_TYPES, PROPOSE_TYPES
 from oef.query import Query, Constraint, GtEq, Or
 from oef.schema import DataModel, AttributeSchema, Description
 
-from tac.core import TacAgent, GameState
+from tac.core import TacAgent
+from tac.game import GameState
 from tac.helpers.misc import generate_transaction_id
 from tac.helpers.plantuml import plantuml_gen, PlantUMLGenerator
 from tac.protocol import Register, Response, GameData, Transaction, TransactionConfirmation
@@ -87,7 +88,7 @@ class BaselineAgent(TacAgent):
         if isinstance(msg, GameData):
             assert self.game_state is None and self.controller is None
             self.controller = origin
-            self.game_state = GameState(self.public_key, msg.money, list(msg.endowment), list(msg.preference), list(msg.scores))
+            self.game_state = GameState(self.public_key, msg.money, list(msg.endowment), list(msg.preferences))
             logger.debug("[{}]: Score: {}".format(self.public_key, self.game_state.get_score()))
 
             goods_quantities_attributes = [AttributeSchema("good_{:02d}".format(i), int, True)

@@ -26,7 +26,7 @@ import flask
 from flask import Flask, render_template, request
 from werkzeug.datastructures import FileStorage
 
-from tac.core import Game
+from tac.game import Game
 from tac.stats import GameStats
 
 import pylab as plt

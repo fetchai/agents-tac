@@ -26,7 +26,7 @@ import json
 import pprint
 from typing import Dict, Any
 
-from tac.core import Game
+from tac.game import Game
 from tac.stats import GameStats
 
 

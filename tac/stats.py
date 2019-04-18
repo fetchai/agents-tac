@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pylab as plt
-from tac.core import Game
+from tac.game import Game
 
 
 class GameStats:
@@ -51,7 +51,7 @@ class GameStats:
         temp_game = Game(
             nb_agents=self.game.nb_agents,
             nb_goods=self.game.nb_goods,
-            initial_money_amount=self.game.initial_money_amount,
+            initial_money_amounts=self.game.initial_money_amount,
             instances_per_good=self.game.instances_per_good,
             scores=self.game.scores,
             fee=self.game.fee,

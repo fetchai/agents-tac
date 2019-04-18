@@ -19,7 +19,7 @@
 # ------------------------------------------------------------------------------
 import logging
 import random
-from typing import List
+from typing import List, Set
 
 import numpy as np
 from oef.schema import AttributeSchema, DataModel, Description
@@ -72,6 +72,18 @@ def compute_allocation(n: int, h: int) -> List[int]:
     return allocation
 
 
+def compute_instances_per_good(nb_goods: int, nb_agents: int, g: int) -> List[int]:
+    """
+    Compute the vector of good instances available in the game.
+    An element of the vector at index j determines the number of instances of good j in the game.
+    :param nb_goods: the number of goods.
+    :param nb_agents: the number of agents.
+    :param g: tuning parameter
+    :return: the vector of good instances.
+    """
+    return [sample_good_instance(nb_agents, g) for _ in range(nb_goods)]
+
+
 def compute_endowment_of_good(n, nb_instances) -> List[int]:
     """
     Compute the allocation for all the agent of a single good.
@@ -86,6 +98,37 @@ def compute_endowment_of_good(n, nb_instances) -> List[int]:
     endowment = [a_1[idx] + a_2[idx] for idx in range(n)]
 
     return endowment
+
+
+def compute_endowments(nb_agents: int, instances_per_good: List[int]) -> List[List[int]]:
+    """
+    Compute endowments per agent. That is, a matrix of shape (nb_agents, nb_goods)
+    :param nb_agents: the number of agents.
+    :param instances_per_good: the number of goods.
+    :return: the endowments matrix.
+    """
+    # compute endowment matrix per good. The shape is (nb_goods, nb_agents).
+    # Row i contains the holdings for every agent j.
+    endowments_by_good = [compute_endowment_of_good(nb_agents, I_j) for I_j in instances_per_good] # type: List[List[int]]
+    # transpose the matrix.
+    endowments = np.asarray(endowments_by_good).T.tolist()
+    return endowments
+
+
+def compute_random_preferences(nb_agents: int, scores: Set[int]) -> List[List[int]]:
+    """
+    Compute the preference matrix. That is, a generic element e_ij is the utility of good j for agent i.
+
+    :param nb_agents: number of agents.
+    :param scores: the set of scores values.
+    :return: the preference matrix.
+    """
+
+    # matrix where each row is in the same order.
+    temporary_matrix = [list(scores)] * nb_agents
+    # compute random preferences (i.e. permute every preference list randomly).
+    preferences = list(map(lambda x: random.sample(x, len(x)), temporary_matrix))
+    return preferences
 
 
 def _build_seller_datamodel(nb_goods: int) -> DataModel:

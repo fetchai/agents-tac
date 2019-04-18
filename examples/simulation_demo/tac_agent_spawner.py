@@ -176,8 +176,8 @@ if __name__ == '__main__':
     arguments = parse_arguments()
     try:
 
-        tac_controller = initialize_controller_agent(arguments.public_key, arguments.oef_addr, arguments.oef_port,
-                                                     arguments.min_nb_agents, arguments.nb_goods, arguments.timeout)
+        tac_controller = initialize_controller_agent("tac_controller", arguments.oef_addr, arguments.oef_port,
+                                                     arguments.nb_agents, arguments.nb_goods, arguments.timeout)
         baseline_agents = initialize_baseline_agents(arguments.nb_baseline_agents, arguments.oef_addr, arguments.oef_port)
         run(tac_controller, baseline_agents)
 

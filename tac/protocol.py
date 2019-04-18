@@ -22,7 +22,6 @@
 import logging
 import pprint
 from abc import ABC, abstractmethod
-from enum import Enum
 from typing import List
 
 from google.protobuf.message import DecodeError
@@ -68,6 +67,7 @@ class Request(Message, ABC):
         """
         Parse a string of bytes associated to a request message to the TAC controller.
         :param obj: the string of bytes to be parsed.
+        :param public_key: the public key of the request sender.
         :return: a :class:`~tac.protocol.Response` object.
         :raises TacError: if the string of bytes cannot be parsed as a Response from the TAC Controller.
         """
@@ -115,6 +115,7 @@ class Transaction(Request):
     def __init__(self, public_key: str, transaction_id: str, buyer: bool, counterparty: str,
                  amount: int, good_ids: List[int], quantities: List[int]):
         """
+        A transaction request.
 
         :param public_key: the public key of the sender.
         :param buyer: whether the transaction request is sent by a buyer.
@@ -176,8 +177,7 @@ class Response(Message):
             elif case == "unregistered":
                 return Unregistered()
             elif case == "game_data":
-                return GameData(msg.game_data.money, msg.game_data.resources,
-                                msg.game_data.preferences, msg.game_data.scores, msg.game_data.fee)
+                return GameData(msg.game_data.money, msg.game_data.resources, msg.game_data.scores, msg.game_data.fee)
             elif case == "tx_confirmation":
                 return TransactionConfirmation(msg.tx_confirmation.transaction_id)
             elif case == "error":
@@ -194,6 +194,7 @@ class Response(Message):
 
 
 class Registered(Response):
+    """This response from the TAC Controller means that the agent has been registered to the TAC."""
 
     def to_pb(self) -> tac_pb2.TACController.Message:
         msg = tac_pb2.TACController.Registered()
@@ -203,6 +204,7 @@ class Registered(Response):
 
 
 class Unregistered(Response):
+    """This response from the TAC Controller means that the agent has been unregistered to the TAC."""
 
     def to_pb(self) -> tac_pb2.TACController.Message:
         msg = tac_pb2.TACController.Unregistered()
@@ -212,6 +214,7 @@ class Unregistered(Response):
 
 
 class Error(Response):
+    """This response means that something bad happened to some request."""
 
     def __init__(self, error_msg: str):
         self.error_msg = error_msg
@@ -228,20 +231,27 @@ class Error(Response):
 
 
 class GameData(Response):
+    """Class that holds the initial condition of a TAC agent."""
 
-    def __init__(self, money: int, endowment: List[int], preference: List[int], scores: List[int], fee: int):
+    def __init__(self, money: int, endowment: List[int], preferences: List[int], fee: int):
+        """
+        Initialize a game data object.
+        :param money: the money amount.
+        :param endowment: the endowment for every good.
+        :param preferences: the utilities for every good.
+        :param fee: the transaction fee.
+        """
+        assert len(endowment) == len(preferences)
         self.money = money
         self.endowment = endowment
-        self.preference = preference
-        self.scores = scores
+        self.preferences = preferences
         self.fee = fee
 
     def to_pb(self) -> tac_pb2.TACController.Message:
         msg = tac_pb2.TACController.GameData()
         msg.money = self.money
         msg.resources.extend(self.endowment)
-        msg.preferences.extend(self.preference)
-        msg.scores.extend(self.scores)
+        msg.preferences.extend(self.preferences)
         msg.fee = self.fee
         envelope = tac_pb2.TACController.Message()
         envelope.game_data.CopyFrom(msg)
@@ -251,8 +261,7 @@ class GameData(Response):
         return self._build_str(
             money=self.money,
             endowment=self.endowment,
-            preference=self.preference,
-            scores=self.scores,
+            preferences=self.preferences,
             fee=self.fee
         )
 

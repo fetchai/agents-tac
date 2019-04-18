@@ -20,7 +20,6 @@
 # ------------------------------------------------------------------------------
 
 import argparse
-import asyncio
 import datetime
 import json
 import logging
@@ -31,7 +30,8 @@ from typing import Optional, Set, Dict, List
 
 from oef.schema import DataModel, Description, AttributeSchema
 
-from tac.core import TacAgent, Game, GameTransaction
+from tac.core import TacAgent
+from tac.game import Game, GameTransaction
 from tac.helpers.plantuml import plantuml_gen
 from tac.protocol import Response, Request, Register, Unregister, Error, GameData, \
     Transaction, TransactionConfirmation
@@ -59,7 +59,8 @@ class ControllerHandler(object):
     def __init__(self, controller: 'ControllerAgent'):
         """
         Initialize a Controller handler, i.e. the class that manages the handling of incoming messages.
-        :param controller: The Controller Agent the handler is associated to.
+
+        :param controller: The Controller Agent the handler is associated with.
         """
         self.controller = controller
 
@@ -175,9 +176,11 @@ class ControllerAgent(TacAgent):
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
         """
         Handle a simple message.
-        The TAC Controller expects that 'content' is a Protobuf serialization of tac.messages.Request object.
+        The TAC Controller expects that 'content' is a Protobuf serialization of a tac.messages.Request object.
         The request is dispatched to the right request handler (using the ControllerHandler).
         The handler returns an optional response, that is sent back to the sender.
+        Notice: the message sent back has the same message id, such that the client knows to which request
+                the response is associated to.
 
         :param msg_id: the message id
         :param dialogue_id: the dialogue id
@@ -190,7 +193,7 @@ class ControllerAgent(TacAgent):
         response = self.handler.handle(content, origin)  # type: Optional[Response]
         if response is not None:
             response_bytes = response.serialize()
-            self.send_message(msg_id + 1, dialogue_id, origin, response_bytes)
+            self.send_message(msg_id, dialogue_id, origin, response_bytes)
 
     def register(self):
         """
@@ -241,7 +244,7 @@ class ControllerAgent(TacAgent):
     def handle_transaction(self, request: Transaction) -> Optional[Response]:
         """
         Handle a transaction request message.
-        If the transaction is invalid (e.g. whether because )
+        If the transaction is invalid (e.g. because the state of the )
 
         :param request: the transaction request.
         :return: an Error response if an error occurred, else None.
@@ -250,6 +253,7 @@ class ControllerAgent(TacAgent):
         sender_id = self._agent_pbk_to_id[request.public_key]
         receiver_id = self._agent_pbk_to_id[request.counterparty]
         buyer_id, seller_id = (sender_id, receiver_id) if request.buyer else (receiver_id, sender_id)
+        request.good_ids
         tx = GameTransaction(
             buyer_id,
             seller_id,
@@ -265,7 +269,6 @@ class ControllerAgent(TacAgent):
     def _start_competition(self):
         """Create a game and send the game setting to every registered agent."""
         # assert that there is no competition running.
-        # TODO find a better way.
         assert self._current_game is None and self._agent_pbk_to_id is None
         self._create_game()
         self._send_game_data_to_agents()
@@ -278,11 +281,10 @@ class ControllerAgent(TacAgent):
 
         :return: a Game instance.
         """
-        scores = list(reversed(range(self.nb_goods)))
+        scores = set(range(self.nb_goods))
         agents_ids = sorted(self.registered_agents)
         self._agent_pbk_to_id = dict(map(reversed, enumerate(agents_ids)))
-        self._current_game = Game.generate_game(self.min_nb_agents, self.nb_goods, self.money_endowment, scores, self.fee,
-                                                agents_ids)
+        self._current_game = Game.generate_game([self.money_endowment] * self.nb_agents, scores, self.fee, agents_ids)
         return self._current_game
 
     def _send_game_data_to_agents(self):
