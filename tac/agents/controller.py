@@ -110,14 +110,14 @@ class ControllerAgent(TacAgent):
     # TODO need at least one attribute in the search Query to the OEF.
 
     def __init__(self, public_key="controller", oef_addr="127.0.0.1", oef_port=3333,
-                 nb_agents: int = 5, money_endowment: int = 20, nb_goods: int = 5,
+                 min_nb_agents: int = 5, money_endowment: int = 20, nb_goods: int = 5,
                  fee: int = 1, version: int = 1, start_time: datetime.datetime = None, **kwargs):
         """
         Initialize a Controller Agent for TAC.
         :param public_key: The public key of the OEF Agent.
         :param oef_addr: the OEF address.
         :param oef_port: the OEF listening port.
-        :param nb_agents: the number of agents to wait for the registration.
+        :param min_nb_agents: the number of agents to wait for the registration.
         :param money_endowment: the initial amount of money to assign to every agent.
         :param nb_goods: the number of goods in the competition.
         :param fee: the fee for a transaction.
@@ -129,7 +129,7 @@ class ControllerAgent(TacAgent):
             "public_key": public_key,
             "oef_addr": oef_addr,
             "oef_port": oef_port,
-            "nb_agents": nb_agents,
+            "min_nb_agents": min_nb_agents,
             "money_endowment": money_endowment,
             "nb_goods": nb_goods,
             "fee": fee,
@@ -137,7 +137,7 @@ class ControllerAgent(TacAgent):
             "start_time": str(start_time)
         })))
 
-        self.nb_agents = nb_agents
+        self.min_nb_agents = min_nb_agents
         self.money_endowment = money_endowment
         self.nb_goods = nb_goods
         self.fee = fee
@@ -152,8 +152,7 @@ class ControllerAgent(TacAgent):
         self._transaction_history = []  # type: List[Transaction]
 
     def timeout_competition(self) -> bool:
-        """Wait until the registration time expires.
-        Then, if there are enough agents, start the competition.
+        """Wait until the registration time expires. Then, if there are enough agents, start the competition.
 
         :return True if the competition has been successfully started. False otherwise.
         """
@@ -163,20 +162,32 @@ class ControllerAgent(TacAgent):
         logger.debug("[{}]: Waiting for {} seconds...".format(self.public_key, seconds_to_wait))
         time.sleep(seconds_to_wait)
         logger.debug("[{}]: Check if we can start the competition.".format(self.public_key, seconds_to_wait))
-        if len(self.registered_agents) >= self.nb_agents:
+        if len(self.registered_agents) >= self.min_nb_agents:
             logger.debug("[{}]: Start competition. Registered agents: {}, minimum number of agents: {}."
-                         .format(self.public_key, len(self.registered_agents), self.nb_agents))
+                         .format(self.public_key, len(self.registered_agents), self.min_nb_agents))
             self._start_competition()
             return True
         else:
             logger.debug("[{}]: Not enough agents to start TAC. Registered agents: {}, minimum number of agents: {}."
-                         .format(self.public_key, len(self.registered_agents), self.nb_agents))
+                         .format(self.public_key, len(self.registered_agents), self.min_nb_agents))
             return False
 
-    def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
+    def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
+        """
+        Handle a simple message.
+        The TAC Controller expects that 'content' is a Protobuf serialization of tac.messages.Request object.
+        The request is dispatched to the right request handler (using the ControllerHandler).
+        The handler returns an optional response, that is sent back to the sender.
+
+        :param msg_id: the message id
+        :param dialogue_id: the dialogue id
+        :param origin: the public key of the sender.
+        :param content: the content of the message.
+        :return: None
+        """
         logger.debug("[ControllerAgent] on_message: msg_id={}, dialogue_id={}, origin={}"
                      .format(msg_id, dialogue_id, origin))
-        response = self.handler.handle(content, origin)
+        response = self.handler.handle(content, origin)  # type: Optional[Response]
         if response is not None:
             response_bytes = response.serialize()
             self.send_message(msg_id + 1, dialogue_id, origin, response_bytes)
@@ -270,7 +281,7 @@ class ControllerAgent(TacAgent):
         scores = list(reversed(range(self.nb_goods)))
         agents_ids = sorted(self.registered_agents)
         self._agent_pbk_to_id = dict(map(reversed, enumerate(agents_ids)))
-        self._current_game = Game.generate_game(self.nb_agents, self.nb_goods, self.money_endowment, scores, self.fee,
+        self._current_game = Game.generate_game(self.min_nb_agents, self.nb_goods, self.money_endowment, scores, self.fee,
                                                 agents_ids)
         return self._current_game
 
