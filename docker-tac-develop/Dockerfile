@@ -39,18 +39,37 @@ RUN apt-get install protobuf-compiler -y &&\
 
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/lib
 
+
+# install Pipenv
+ENV DEBIAN_FRONTEND noninteractive
+ENV LC_ALL C.UTF-8
+ENV LANG C.UTF-8
+# -- Install Pipenv:
+RUN apt install python3.7-dev -y
+RUN curl --silent https://bootstrap.pypa.io/get-pip.py | python3.7
+# Backwards compatility.
+RUN rm -fr /usr/bin/python3 && ln /usr/bin/python3.7 /usr/bin/python3
+RUN pip3 install pipenv
+
+# Docs dependencies:
+RUN apt install pandoc -y
+# python package to parse plantuml files. docs: https://pythonhosted.org/plantuml/
+RUN apt install plantuml -y
+
 RUN mkdir /build
 WORKDIR /build
 COPY . /build
 
-RUN cd oef-sdk-python && python3 setup.py install
-RUN python3 setup.py install
+RUN make clean
+RUN sed -i 's/^oef =.*//' ./Pipfile
 
-# python package to parse plantuml files. docs: https://pythonhosted.org/plantuml/
-RUN pip3 install plantuml
+#USER default
 
-USER default
+# TODO remove when new SDK version will be public
+RUN pipenv --python python3.7
+RUN pipenv run pip3 install oef-sdk-python/
+RUN pipenv install --dev
+RUN pipenv run python3 setup.py install
 
-
-ENTRYPOINT []
+ENTRYPOINT ["/bin/bash"]
 

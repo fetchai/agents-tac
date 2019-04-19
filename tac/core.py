@@ -25,7 +25,7 @@ from typing import List, Dict, Any, Optional, Callable
 
 from oef.agents import OEFAgent
 from oef.dialogue import DialogueAgent
-from oef.messages import CFP_TYPES
+from oef.messages import CFP_TYPES, PROPOSE_TYPES
 from oef.proxy import OEFNetworkProxy
 from oef.query import Query
 from oef.schema import Description
@@ -51,6 +51,15 @@ class TacAgent(OEFAgent):
 
     def on_search_result(self, search_id: int, agents: List[str]):
         plantuml_gen.on_search_result(self.public_key, agents)
+
+    def send_cfp(self, msg_id: int, dialogue_id: int, destination: str, target: int, query: CFP_TYPES) -> None:
+        super().send_cfp(msg_id, dialogue_id, destination, target,query)
+        plantuml_gen.send_cfp(self.public_key, destination, dialogue_id, "")
+
+    def send_propose(self, msg_id: int, dialogue_id: int, destination: str, target: int,
+                     proposals: PROPOSE_TYPES) -> None:
+        super().send_propose(msg_id, dialogue_id, destination, target, proposals)
+        plantuml_gen.send_propose(self.public_key, destination, dialogue_id, Description({}))
 
 
 # TODO ignore this class

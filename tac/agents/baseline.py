@@ -78,6 +78,7 @@ class BaselineAgent(TacAgent):
             return
         elif search_id == self.SEARCH_TAC_SELLER_ID:
             self._on_tac_seller_search_result(agents)
+            return
         else:
             raise Exception("Shouldn't be here.")
 

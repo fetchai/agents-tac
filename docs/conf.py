@@ -34,7 +34,8 @@
 extensions = ['sphinx.ext.mathjax',
     'sphinx.ext.githubpages',
     'nbsphinx',
-    'sphinxcontrib.plantuml'
+    'sphinxcontrib.plantuml',
+    'sphinx.ext.todo',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -79,8 +80,9 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 pygments_style = 'sphinx'
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
-todo_include_todos = False
-
+todo_include_todos = True
+todo_emit_warnings = True
+todo_link_only = False
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -107,6 +109,7 @@ html_static_path = ['_static']
 # refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
 html_sidebars = {
     '**': [
+        'globaltoc.html',
         'relations.html',  # needs 'show_related': True theme option to display
         'searchbox.html',
     ]
