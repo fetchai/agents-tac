@@ -9,6 +9,9 @@ jupyter = "*"
 sphinx = "*"
 nbsphinx = "*"
 sphinxcontrib-plantuml = "*"
+pytest = "*"
+tox = "*"
+pytest-cov = "*"
 
 [packages]
 oef = {git = "ssh://git@github.com/uvue-git/oef-sdk-python.git"}
@@ -16,6 +19,7 @@ flask-sqlalchemy = "*"
 sqlalchemy = "*"
 numpy = "*"
 matplotlib = "*"
+python-dateutil = "*"
 
 [requires]
 python_version = "3.7"

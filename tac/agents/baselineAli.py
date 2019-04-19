@@ -235,8 +235,8 @@ class BaselineAgent(TacAgent):
         # transform every quantity greater or equal than 1 into 1, because we don't want more than one copy of the same good.
         new_quantities = [1 if q >= 1 else 0 for q in quantities]
         # if there is a score equal to 0 and the quantity of the associated good is > 0, just remove it
-        if any(s == 0 for s in self.game_state.scores):
-            good_id_with_zero_score = self.game_state.scores.index(0)
+        if any(s == 0 for s in self.game_state.utilities):
+            good_id_with_zero_score = self.game_state.utilities.index(0)
             new_quantities[good_id_with_zero_score] = 0
 
         # compute the proposal score
@@ -345,12 +345,13 @@ class BaselineAgent(TacAgent):
         """
         Get the TAC seller description, following a baseline policy.
         That is, a description with the following structure:
-        >>> {
+        >>> description = {
         ...     "good_01": 1,
         ...     "good_02": 0,
         ...     #...
         ...
         ... }
+        >>>
          where the keys indicate the good and the values the quantity that the seller wants to sell.
 
          The baseline agent decides to sell everything in excess, but keeping the goods that

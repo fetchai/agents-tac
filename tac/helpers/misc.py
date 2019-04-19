@@ -17,10 +17,12 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+import datetime
 import logging
 import random
 from typing import List, Set
 
+import dateutil.parser
 import numpy as np
 from oef.schema import AttributeSchema, DataModel, Description
 
@@ -148,12 +150,14 @@ def get_baseline_seller_description(game_state: 'GameState') -> Description:
     """
     Get the TAC seller description, following a baseline policy.
     That is, a description with the following structure:
-    >>> {
+    >>> desciption = {
     ...     "good_01": 1,
     ...     "good_02": 0,
     ...     #...
     ...
     ... }
+    >>>
+
      where the keys indicate the good and the values the quantity that the seller wants to sell.
 
      The baseline agent decides to sell everything in excess, but keeping the goods that
@@ -165,3 +169,12 @@ def get_baseline_seller_description(game_state: 'GameState') -> Description:
                         for i, q in enumerate(game_state.get_excess_goods_quantities())},
                        data_model=seller_data_model)
     return desc
+
+
+def from_iso_format(date_string: str) -> datetime.datetime:
+    """
+    From string representation in ISO format to a datetime.datetime object
+    :param date_string: the string to parse.
+    :return: the datetime object.
+    """
+    return dateutil.parser.parse(date_string)

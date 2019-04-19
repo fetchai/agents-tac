@@ -22,7 +22,7 @@
 import logging
 import pprint
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Dict
 
 from google.protobuf.message import DecodeError
 
@@ -30,6 +30,19 @@ import tac.tac_pb2 as tac_pb2
 from tac.helpers.misc import TacError
 
 logger = logging.getLogger(__name__)
+
+
+def _make_int_pair(key: int, value: int) -> tac_pb2.IntPair:
+    """
+    Helper method to make a Protobuf IntPair.
+    :param key: the first element of the pair.
+    :param value: the second element of the pair.
+    :return: a IntPair protobuf object.
+    """
+    pair = tac_pb2.IntPair()
+    pair.key = key
+    pair.value = value
+    return pair
 
 
 class Message(ABC):
@@ -58,12 +71,8 @@ class Message(ABC):
 class Request(Message, ABC):
     """Message from clients to controller"""
 
-    def __init__(self, public_key: str):
-        super().__init__()
-        self.public_key = public_key
-
     @classmethod
-    def from_pb(cls, obj: bytes, public_key: str = "") -> 'Request':
+    def from_pb(cls, obj: bytes) -> 'Request':
         """
         Parse a string of bytes associated to a request message to the TAC controller.
         :param obj: the string of bytes to be parsed.
@@ -76,18 +85,19 @@ class Request(Message, ABC):
         msg.ParseFromString(obj)
         case = msg.WhichOneof("msg")
         if case == "register":
-            return Register(public_key)
+            return Register()
         elif case == "unregister":
-            return Unregister(public_key)
+            return Unregister()
         elif case == "transaction":
-            return Transaction(public_key, msg.transaction.transaction_id, msg.transaction.buyer,
-                               msg.transaction.counterparty, msg.transaction.amount,
-                               msg.transaction.good_ids, msg.transaction.quantities)
+            return Transaction.from_pb(obj)
         else:
             raise TacError("Unrecognized type of Request.")
 
     def to_pb(self):
         raise NotImplementedError
+
+    def __eq__(self, other):
+        return type(self) == type(other)
 
 
 class Register(Request):
@@ -112,26 +122,22 @@ class Unregister(Request):
 
 class Transaction(Request):
 
-    def __init__(self, public_key: str, transaction_id: str, buyer: bool, counterparty: str,
-                 amount: int, good_ids: List[int], quantities: List[int]):
+    def __init__(self, transaction_id: str, buyer: bool, counterparty: str,
+                 amount: int, quantities_by_good_id: Dict[int, int]):
         """
         A transaction request.
 
-        :param public_key: the public key of the sender.
+        :param transaction_id: the id of the transaction.
         :param buyer: whether the transaction request is sent by a buyer.
         :param counterparty: the counterparty of the transaction.
         :param amount: the amount of money involved.
-        :param good_ids: the good identifiers.
-        :param quantities: the quantities of the good to be transacted.
+        :param quantities_by_good_id: a map from good id to the quantity of that good involved in the transaction.
         """
-        super().__init__(public_key)
         self.transaction_id = transaction_id
         self.buyer = buyer
         self.counterparty = counterparty
         self.amount = amount
-        self.good_ids = good_ids
-        self.quantities = quantities
-        assert len(self.good_ids) == len(quantities)
+        self.quantities_by_good_id = quantities_by_good_id
 
     def to_pb(self) -> tac_pb2.TACAgent.Message:
         msg = tac_pb2.TACAgent.Transaction()
@@ -139,11 +145,28 @@ class Transaction(Request):
         msg.buyer = self.buyer
         msg.counterparty = self.counterparty
         msg.amount = self.amount
-        msg.good_ids.extend(self.good_ids)
-        msg.quantities.extend(self.quantities)
+
+        good_id_quantity_pairs = [_make_int_pair(gid, q) for gid, q in self.quantities_by_good_id.items()]
+        dictionary = tac_pb2.Dictionary()
+        dictionary.pairs.extend(good_id_quantity_pairs)
+        msg.quantities.CopyFrom(dictionary)
+
         envelope = tac_pb2.TACAgent.Message()
         envelope.transaction.CopyFrom(msg)
         return envelope
+
+    @classmethod
+    def from_pb(cls, obj: bytes) -> 'Request':
+        msg = tac_pb2.TACAgent.Message()
+        msg.ParseFromString(obj)
+
+        quantities_per_good_id = {pair.key: pair.value for pair in msg.transaction.quantities.pairs}
+
+        return Transaction(msg.transaction.transaction_id,
+                           msg.transaction.buyer,
+                           msg.transaction.counterparty,
+                           msg.transaction.amount,
+                           quantities_per_good_id)
 
     def __str__(self):
         return self._build_str(
@@ -151,8 +174,7 @@ class Transaction(Request):
             buyer=self.buyer,
             counterparty=self.counterparty,
             amount=self.amount,
-            good_ids=self.good_ids,
-            quantities=self.quantities
+            good_id_quantity_pairs=self.quantities_by_good_id
         )
 
 
@@ -177,7 +199,10 @@ class Response(Message):
             elif case == "unregistered":
                 return Unregistered()
             elif case == "game_data":
-                return GameData(msg.game_data.money, msg.game_data.resources, msg.game_data.scores, msg.game_data.fee)
+                return GameData(msg.game_data.money,
+                                msg.game_data.resources,
+                                msg.game_data.preferences,
+                                msg.game_data.fee)
             elif case == "tx_confirmation":
                 return TransactionConfirmation(msg.tx_confirmation.transaction_id)
             elif case == "error":
@@ -191,6 +216,9 @@ class Response(Message):
 
     def to_pb(self) -> tac_pb2.TACController.Message:
         raise NotImplementedError
+
+    def __eq__(self, other):
+        return type(self) == type(other)
 
 
 class Registered(Response):
@@ -214,7 +242,7 @@ class Unregistered(Response):
 
 
 class Error(Response):
-    """This response means that something bad happened to some request."""
+    """This response means that something bad happened while processing a request."""
 
     def __init__(self, error_msg: str):
         self.error_msg = error_msg
@@ -228,6 +256,9 @@ class Error(Response):
 
     def __str__(self):
         return self._build_str(error_msg=self.error_msg)
+
+    def __eq__(self, other):
+        return super().__eq__(other) and self.error_msg == other.error_msg
 
 
 class GameData(Response):
@@ -265,10 +296,17 @@ class GameData(Response):
             fee=self.fee
         )
 
+    def __eq__(self, other):
+        return super().__eq__(other) and \
+            self.money == other.money and \
+            self.endowment == other.endowment and \
+            self.preferences == other.preferences and \
+            self.fee == other.fee
+
 
 class TransactionConfirmation(Response):
 
-    def __init__(self, transaction_id: int):
+    def __init__(self, transaction_id: str):
         self.transaction_id = transaction_id
 
     def to_pb(self) -> tac_pb2.TACController.Message:

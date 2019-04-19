@@ -18,20 +18,32 @@
 #
 # ------------------------------------------------------------------------------
 
-"""This module contains all the classes to represent the TAC game."""
+"""This module contains all the classes to represent the TAC game.
+
+Classes:
+
+- GameConfiguration: a class to hold the initial configuration of a game. Immutable.
+- Game: the class that manages an instance of a game (e.g. validate and settling transactions).
+- GameState: a data structure to hold the current state of a player, plus some he
+- GameTransaction: a class that keep information about a transaction in the game.
+
+"""
 
 import copy
 import datetime
 import pprint
 from typing import List, Dict, Any, Optional, Set
 
-from tac.helpers.misc import compute_endowments, compute_instances_per_good, compute_random_preferences
+from tac.helpers.misc import compute_endowments, compute_instances_per_good, compute_random_preferences, from_iso_format
+
+Endowment = List[int]  # an element e_i is the endowment for good i.
+Utilities = List[int]  # an element u_i is the utility value for good i.
 
 
 class GameConfiguration:
 
     def __init__(self, initial_money_amounts: List[int],
-                 endowments: List[List[int]],
+                 endowments: List[Endowment],
                  utilities: List[List[int]],
                  fee: int,
                  agent_labels: Optional[List[str]] = None):
@@ -47,17 +59,44 @@ class GameConfiguration:
         :param agent_labels: a list of participant labels (as strings). If None, generate a default list of labels.
         """
 
-        self.initial_money_amounts = initial_money_amounts
-        self.endowments = endowments
-        self.utilities = utilities
-        self.fee = fee
+        self._initial_money_amounts = initial_money_amounts
+        self._endowments = endowments
+        self._utilities = utilities
+        self._fee = fee
 
-        self.nb_agents = len(self.endowments)
-        self.nb_goods = len(self.utilities)
-        self.agent_labels = agent_labels if agent_labels is not None else self._generate_ids(self.nb_agents)
+        self._agent_labels = agent_labels if agent_labels is not None else self._generate_ids(self.nb_agents)
+
         self._from_agent_pbk_to_agent_id = dict(map(reversed, enumerate(self.agent_labels)))
 
         self._check_consistency()
+
+    @property
+    def initial_money_amounts(self) -> List[int]:
+        return self._initial_money_amounts
+
+    @property
+    def endowments(self) -> List[Endowment]:
+        return self._endowments
+
+    @property
+    def utilities(self) -> List[Utilities]:
+        return self._utilities
+
+    @property
+    def fee(self) -> int:
+        return self._fee
+
+    @property
+    def nb_agents(self) -> int:
+        return len(self.endowments)
+
+    @property
+    def nb_goods(self) -> int:
+        return len(self.utilities)
+
+    @property
+    def agent_labels(self) -> List[str]:
+        return self._agent_labels
 
     def _generate_ids(self, nb_agents: int) -> List[str]:
         """
@@ -93,10 +132,10 @@ class GameConfiguration:
         assert all(e >= 0 for row in self.utilities for e in row), "Utilities must be non-negative."
         assert self.fee >= 0, "Fee must be non-negative."
 
-        # checks that the matrix have the number of rows equal to the number of agents
-        assert self.nb_agents > 0
-        assert self.nb_agents == len(self.endowments)
+        # checks that the data structure have information about the right number of agents
+        assert self.nb_agents > 1
         assert self.nb_agents == len(self.initial_money_amounts)
+        assert self.nb_agents == len(self.endowments)
         assert self.nb_agents == len(self.utilities)
         assert self.nb_agents == len(self.agent_labels)
 
@@ -108,8 +147,9 @@ class GameConfiguration:
         assert len(set(self.agent_labels)) == self.nb_agents, "Labels must be unique."
 
         # check that all the rows of the utility matrix have the same elements and no duplicates
-        utilities_values = map(set, self.utilities)
-        first_value = next(utilities_values)
+        utilities_values = list(map(set, self.utilities))  # List[Set[int]]
+        first_value = utilities_values[0]  # type: Set[int]
+        assert len(first_value) == self.nb_goods
         assert all(first_value == value for value in utilities_values)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -134,8 +174,37 @@ class GameConfiguration:
         )
         return obj
 
+    def __eq__(self, other):
+        return isinstance(other, GameConfiguration) and \
+            self.initial_money_amounts == other.initial_money_amounts and \
+            self.endowments == other.endowments and \
+            self.utilities == other.utilities and \
+            self.fee == other.fee
 
-class Game(object):
+
+class Game:
+    """
+    >>> money_amounts = [20, 20, 20]
+    >>> endowment = [
+    ... [1, 1, 0],
+    ... [1, 0, 0],
+    ... [0, 1, 2]]
+    >>> utilities = [
+    ... [20, 40, 60],
+    ... [20, 60, 40],
+    ... [40, 20, 60]]
+    >>> game_configuration = GameConfiguration(
+    ...     money_amounts,
+    ...     endowment,
+    ...     utilities,
+    ...     1
+    ... )
+    >>> game = Game(game_configuration)
+
+    Get the scores:
+    >>> game.get_scores()
+    [80, 40, 100]
+    """
 
     def __init__(self, configuration: GameConfiguration):
         """
@@ -180,6 +249,14 @@ class Game(object):
         """Get the current scores for every agent."""
         return [gs.get_score() for gs in self.game_states]
 
+    def agent_id_from_label(self, agent_label: str) -> int:
+        """
+        Get agent id from label.
+        :param agent_label: the label for the agent.
+        :return: the agent id associated with the label.
+        """
+        return self.configuration.agent_id_from_label(agent_label)
+
     def get_game_data_from_agent_label(self, agent_label: str) -> 'GameState':
         """
         Get game data from agent public key.
@@ -190,14 +267,14 @@ class Game(object):
 
     def is_transaction_valid(self, tx: 'GameTransaction') -> bool:
         """
-        Check whether the transaction is valid given the state of the game.
+        Check w hether the transaction is valid given the state of the game.
         :param tx: the game transaction.
         :return: True if the transaction is valid, False otherwise.
         :raises: AssertionError: if the data in the transaction are not allowed (e.g. negative amount).
         """
 
         # check if the buyer has enough balance to pay the transaction.
-        if self.game_states[tx.buyer_id].balance >= tx.amount + self.configuration.fee:
+        if self.game_states[tx.buyer_id].balance < tx.amount + self.configuration.fee:
             return False
 
         # check if we have enough instances of goods, for every good involved in the transaction.
@@ -216,9 +293,9 @@ class Game(object):
         ... initial_money_amounts = [20, 20],
         ... endowments = [[0, 0], [1, 1]],
         ... utilities = [[10, 20], [10, 20]],
-        ... fee = 1))
-        >>> game_state_1 = game.game_states[0]
-        >>> game_state_2 = game.game_states[1]
+        ... fee = 0))
+        >>> game_state_1 = game.game_states[0] # game state of player 1
+        >>> game_state_2 = game.game_states[1] # game state of player 2
         >>> game_state_1.balance, game_state_1.current_holdings
         (20, [0, 0])
         >>> game_state_2.balance, game_state_2.current_holdings
@@ -248,6 +325,31 @@ class Game(object):
         seller_state.balance += tx.amount
 
     def get_holdings_summary(self) -> str:
+        """
+        Get holdings summary.
+
+        >>> money_amounts = [20, 20, 20]
+        >>> endowment = [
+        ... [1, 1, 0],
+        ... [1, 0, 0],
+        ... [0, 1, 2]]
+        >>> utilities = [
+        ... [20, 40, 60],
+        ... [20, 60, 40],
+        ... [40, 20, 60]]
+        >>> game_configuration = GameConfiguration(
+        ... money_amounts,
+        ... endowment,
+        ... utilities,
+        ... 1)
+        >>> game = Game(game_configuration)
+        >>> print(game.get_holdings_summary(), end="")
+        00 [1, 1, 0]
+        01 [1, 0, 0]
+        02 [0, 1, 2]
+
+        :return: a string representing the holdings for every agent.
+        """
         result = ""
         for i, game_state in enumerate(self.game_states):
             result = result + "{:02d}".format(i) + " " + str(game_state.current_holdings) + "\n"
@@ -270,24 +372,33 @@ class Game(object):
 
         return game
 
+    def __eq__(self, other):
+        return isinstance(other, Game) and \
+                self.configuration == other.configuration and \
+                self.transactions == other.transactions
+
 
 class GameState:
     """Represent the state of an agent during the game."""
 
-    def __init__(self, money: int, endowment: List[int], scores: List[int]):
+    def __init__(self, money: int, endowment: Endowment, utilities: Utilities):
         """
         Instantiate a game state object.
 
         :param money: the money of the game state.
         :param endowment: the endowment for every good.
-        :param scores: the scores for every good.
+        :param utilities: the utility values for every good.
         """
-        assert len(endowment) == len(scores)
+        assert len(endowment) == len(utilities)
         self.balance = money
-        self.scores = scores
+        self._utilities = utilities
         self.current_holdings = copy.copy(endowment)
 
-        self.nb_goods = len(scores)
+        self.nb_goods = len(utilities)
+
+    @property
+    def utilities(self) -> Utilities:
+        return self._utilities
 
     def get_score(self) -> int:
         """
@@ -311,7 +422,7 @@ class GameState:
         """
         assert 0 <= good_id < self.nb_goods
         assert 0 <= quantity
-        return self.scores[good_id] * (1 if quantity >= 1 else 0)
+        return self.utilities[good_id] * (1 if quantity >= 1 else 0)
 
     def score_good_quantities(self, quantities: List[int]) -> int:
         """
@@ -372,8 +483,9 @@ class GameState:
         self._check_update(delta_money, delta_quantities_by_good_id)
         # create a new (temporary) holdings
         new_holdings = self._apply_delta_quantitites(delta_quantities_by_good_id)
+        new_holdings_score = self.score_good_quantities(new_holdings)
         new_money = self.balance + delta_money
-        return new_holdings + new_money
+        return new_holdings_score + new_money
 
     def _check_update(self, delta_money: int, delta_quantities_by_good_id: Dict[int, int]) -> None:
         """
@@ -396,9 +508,15 @@ class GameState:
     def __str__(self):
         return "GameState{}".format(pprint.pformat({
             "money": self.balance,
-            "scores": self.scores,
+            "scores": self.utilities,
             "current_holdings": self.current_holdings
         }))
+
+    def __eq__(self, other) -> bool:
+        return isinstance(other, GameState) and \
+               self.balance == other.balance and \
+               self.utilities == other.utilities and \
+               self.current_holdings == other.current_holdings
 
 
 class GameTransaction:
@@ -451,5 +569,13 @@ class GameTransaction:
             seller_id=d["seller_id"],
             amount=d["amount"],
             quantities_by_good_id=d["quantities_by_good_id"],
-            timestamp=d["timestamp"]
+            timestamp=from_iso_format(d["timestamp"])
         )
+
+    def __eq__(self, other) -> bool:
+        return isinstance(other, GameTransaction) and \
+               self.buyer_id == other.buyer_id and \
+               self.seller_id == other.seller_id and \
+               self.amount == other.amount and \
+               self.quantities_by_good_id == other.quantities_by_good_id and \
+               self.timestamp == other.timestamp
