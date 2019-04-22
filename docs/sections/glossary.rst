@@ -16,4 +16,3 @@ Glossary
 * `OEF Python SDK <https://github.com/fetchai/oef-sdk-python/>`_:
   the SDK for agent development.
   (`docs <https://fetchai.github.io/oef-sdk-python/>`_)
-

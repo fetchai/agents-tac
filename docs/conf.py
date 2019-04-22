@@ -36,8 +36,12 @@ extensions = ['sphinx.ext.mathjax',
     'nbsphinx',
     'sphinxcontrib.plantuml',
     'sphinx.ext.todo',
-    'sphinx.ext.autodoc'
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosectionlabel'
 ]
+
+# autosectionlabel
+autosectionlabel_prefix_document = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

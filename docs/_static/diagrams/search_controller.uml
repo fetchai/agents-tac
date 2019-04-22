@@ -6,6 +6,7 @@ participant "Controller"
 
 activate "Controller"
 
-"TAC Agent" -> "Controller": Message{Register{}}
+"TAC Agent" -> "OEF Node": search_services("tac", version==1)
+"OEF Node" -> "TAC Agent": search result: ["Controller"]
 
 @enduml

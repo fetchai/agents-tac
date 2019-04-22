@@ -11,6 +11,12 @@ To do so, the participant must contact the *controller agent*
 that will be running on the OEF throughout the duration
 of the competition.
 
+At the end of the registration time, the controller
+generates the game parameters for every participant
+(that is, the initial holdings and the preferences of goods).
+Then, the agent can start to negotiate and
+to submit transaction to the controller agent.
+
 In the following sections, we will explain:
 
 * the initial setup of the controller agent;
@@ -99,14 +105,17 @@ the registration, the agent can unregister from the competition by sending the :
 message.
 
 
-.. uml:: ../_static/diagrams/search_controller.uml
+.. uml:: ../_static/diagrams/register_to_tac.uml
     :align: center
     :caption: an agent registers to TAC.
 
 
 
 Start of the competition
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
+
+Once trading agents receive the :class:`~tac.protocol.GameData` message, the competition starts
+and the *trading phase* begins.
 
 The message :class:`~tac.protocol.GameData` contains the following information:
 
@@ -115,30 +124,6 @@ The message :class:`~tac.protocol.GameData` contains the following information:
 - preferences (list of integers): the utility values for every good.
 - fee (integer): the transaction fee for every trade.
 
-Once trading agents receive the :class:`~tac.protocol.GameData` message, the competition starts
-and the *trading phase* begins.
-
-
-Handle Errors
--------------
-
-Handle unexpected disconnection
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-TODO: if the agent didn't store the data, he should be able to ask for them explicitly.
--> reserve a message to ask for details for the current status in the game (holdings, balance, preferences etc.),
-e.g. ``GetInfo{}``.
-
-.. todo
-
-    if the agent didn't store the data, he should be able to ask for them explicitly.
-
-
-Handle OEF Errors/Dialogue Errors
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-For the OEF related errors, please look at
-`this link <https://fetchai.github.io/oef-sdk-python/user/communication-protocols.html#error-handling>`_.
 
 Summary
 --------

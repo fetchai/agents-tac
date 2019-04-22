@@ -19,7 +19,6 @@
 #
 # ------------------------------------------------------------------------------
 import argparse
-import asyncio
 import copy
 import logging
 import pprint

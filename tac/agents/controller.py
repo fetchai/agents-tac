@@ -235,6 +235,7 @@ class GameHandler:
         Check if an instance of a game is already set up.
         :return: Return True if there is a game running, False otherwise.
         """
+        return self.current_game is None
 
     def from_request_to_game_tx(self, transaction: Transaction, agent_label: str) -> GameTransaction:
         """
@@ -298,8 +299,8 @@ class GameHandler:
                 self.fee,
             )
             logger.debug("[{}]: sending GameData to '{}': {}"
-                         .format(self.public_key, public_key, str(game_data_response)))
-            self.send_message(0, 1, public_key, game_data_response.serialize())
+                         .format(self.controller_agent.public_key, public_key, str(game_data_response)))
+            self.controller_agent.send_message(0, 1, public_key, game_data_response.serialize())
 
     def timeout_competition(self) -> bool:
         """Wait until the registration time expires. Then, if there are enough agents, start the competition.
