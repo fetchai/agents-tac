@@ -11,7 +11,7 @@ Glossary
   that trades fictitious goods with other agent
   during the competition.
 * **OEF Node**: an instance of the
-  `OEF core <https://github.com/fetchai/oef-core.git>`_,
+  `OEF core <https://gith   ub.com/fetchai/oef-core.git>`_,
   the Fetch's multi-agent platform.
 * `OEF Python SDK <https://github.com/fetchai/oef-sdk-python/>`_:
   the SDK for agent development.

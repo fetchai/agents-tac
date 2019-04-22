@@ -17,6 +17,8 @@ Welcome to TAC's documentation!
    sections/generator
    sections/glossary
 
+   tac
+
 Indices and tables
 ==================
 

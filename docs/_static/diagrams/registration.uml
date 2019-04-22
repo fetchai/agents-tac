@@ -2,9 +2,9 @@
 
 participant "Controller"
 participant "OEF Node"
-participant "Baseline 1"
-participant "Baseline 2"
-participant "Baseline 3"
+participant "TAC Agent 1"
+participant "TAC Agent 2"
+participant "TAC Agent 3"
 
 note over "OEF Node"
     For the sake of brevity,
@@ -16,17 +16,17 @@ end note
 "Controller"->"Controller": run()
 activate "Controller"
 
-"Baseline 1" -> "OEF Node": search_services("tac")
-"Baseline 2" -> "OEF Node": search_services("tac")
-"Baseline 3" -> "OEF Node": search_services("tac")
+"TAC Agent 1" -> "OEF Node": search_services("tac")
+"TAC Agent 2" -> "OEF Node": search_services("tac")
+"TAC Agent 3" -> "OEF Node": search_services("tac")
 
-"OEF Node" -> "Baseline 1": search result: ["Controller"]
-"OEF Node" -> "Baseline 2": search result: ["Controller"]
-"OEF Node" -> "Baseline 3": search result: ["Controller"]
+"OEF Node" -> "TAC Agent 1": search result: ["Controller"]
+"OEF Node" -> "TAC Agent 2": search result: ["Controller"]
+"OEF Node" -> "TAC Agent 3": search result: ["Controller"]
 
-"Baseline 1" -> "Controller": Register()
-"Baseline 2" -> "Controller": Register()
-"Baseline 3" -> "Controller": Register()
+"TAC Agent 1" -> "Controller": Register()
+"TAC Agent 2" -> "Controller": Register()
+"TAC Agent 3" -> "Controller": Register()
 
 note over "Controller"
     When at least N TAC agents
@@ -35,29 +35,8 @@ note over "Controller"
     details to the participants.
 end note
 
-"Controller" -> "Baseline 1": GameData(money, endowments, preferences, scores, fee)
-"Controller" -> "Baseline 2": GameData(money, endowments, preferences, scores, fee)
-"Controller" -> "Baseline 3": GameData(money, endowments, preferences, scores, fee)
-
-note over "Baseline 1", "Baseline 3"
-        Each participant registers
-        as "tac_seller" on the Service Directory,
-        providing the quantity of good
-        that want to sell, for every good.
-end note
-
-"Baseline 1" -> "OEF Node": register_service("tac_seller", {"good_01": 1, ...})
-"Baseline 2" -> "OEF Node": register_service("tac_seller", ...)
-"Baseline 3" -> "OEF Node": register_service("tac_seller", ...)
-
-note over "Baseline 1", "Baseline 3"
-        Each participant query the OEF
-        for sellers that offer the
-        goods that he need.
-end note
-
-"Baseline 1" -> "OEF Node": search_service("tac_seller", Query("good_01" >= 1 OR "good_04" >= 1 OR ...)
-"Baseline 2" -> "OEF Node": search_service("tac_seller", ...)
-"Baseline 3" -> "OEF Node": search_service("tac_seller", ...)
+"Controller" -> "TAC Agent 1": GameData(money, endowments, preferences, scores, fee)
+"Controller" -> "TAC Agent 2": GameData(money, endowments, preferences, scores, fee)
+"Controller" -> "TAC Agent 3": GameData(money, endowments, preferences, scores, fee)
 
 @enduml
