@@ -17,12 +17,16 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+import datetime
 import logging
 import random
-from typing import List
+from typing import List, Set, Optional
 
+import dateutil.parser
 import numpy as np
+from oef.query import Query, Constraint, GtEq, Or
 from oef.schema import AttributeSchema, DataModel, Description
+
 
 logger = logging.getLogger("tac")
 
@@ -72,6 +76,18 @@ def compute_allocation(n: int, h: int) -> List[int]:
     return allocation
 
 
+def compute_instances_per_good(nb_goods: int, nb_agents: int, g: int) -> List[int]:
+    """
+    Compute the vector of good instances available in the game.
+    An element of the vector at index j determines the number of instances of good j in the game.
+    :param nb_goods: the number of goods.
+    :param nb_agents: the number of agents.
+    :param g: tuning parameter
+    :return: the vector of good instances.
+    """
+    return [sample_good_instance(nb_agents, g) for _ in range(nb_goods)]
+
+
 def compute_endowment_of_good(n, nb_instances) -> List[int]:
     """
     Compute the allocation for all the agent of a single good.
@@ -88,7 +104,38 @@ def compute_endowment_of_good(n, nb_instances) -> List[int]:
     return endowment
 
 
-def _build_seller_datamodel(nb_goods: int) -> DataModel:
+def compute_endowments(nb_agents: int, instances_per_good: List[int]) -> List[List[int]]:
+    """
+    Compute endowments per agent. That is, a matrix of shape (nb_agents, nb_goods)
+    :param nb_agents: the number of agents.
+    :param instances_per_good: the number of goods.
+    :return: the endowments matrix.
+    """
+    # compute endowment matrix per good. The shape is (nb_goods, nb_agents).
+    # Row i contains the holdings for every agent j.
+    endowments_by_good = [compute_endowment_of_good(nb_agents, I_j) for I_j in instances_per_good] # type: List[List[int]]
+    # transpose the matrix.
+    endowments = np.asarray(endowments_by_good).T.tolist()
+    return endowments
+
+
+def compute_random_preferences(nb_agents: int, scores: Set[int]) -> List[List[int]]:
+    """
+    Compute the preference matrix. That is, a generic element e_ij is the utility of good j for agent i.
+
+    :param nb_agents: number of agents.
+    :param scores: the set of scores values.
+    :return: the preference matrix.
+    """
+
+    # matrix where each row is in the same order.
+    temporary_matrix = [list(scores)] * nb_agents
+    # compute random preferences (i.e. permute every preference list randomly).
+    preferences = list(map(lambda x: random.sample(x, len(x)), temporary_matrix))
+    return preferences
+
+
+def build_seller_datamodel(nb_goods: int) -> DataModel:
     """
     Build a data model for sellers.
 
@@ -105,20 +152,56 @@ def get_baseline_seller_description(game_state: 'GameState') -> Description:
     """
     Get the TAC seller description, following a baseline policy.
     That is, a description with the following structure:
-    >>> {
+    >>> desciption = {
     ...     "good_01": 1,
     ...     "good_02": 0,
     ...     #...
     ...
     ... }
+    >>>
+
      where the keys indicate the good and the values the quantity that the seller wants to sell.
 
      The baseline agent decides to sell everything in excess, but keeping the goods that
 
     :return: the description to advertise on the Service Directory.
     """
-    seller_data_model = _build_seller_datamodel(game_state.nb_goods)
+    seller_data_model = build_seller_datamodel(game_state.nb_goods)
     desc = Description({"good_{:02d}".format(i): q
                         for i, q in enumerate(game_state.get_excess_goods_quantities())},
                        data_model=seller_data_model)
     return desc
+
+
+def _build_tac_sellers_query(good_ids: Set[int], nb_goods: Optional[int] = None) -> Query:
+    """
+    Build the query that the buyer can send to look for goods.
+
+    In particular, if the needed good ids are {0, 2, 3}, the resulting constraint expression is:
+
+        good_00 >= 1 OR good_02 >= 1 OR good_03 >= 1
+
+    That is, the OEF will return all the sellers that have at least one of the good in the query
+    (assuming that the sellers are registered with the data model for baseline sellers.
+
+    :param good_ids: the good ids to put in the query.
+    :param nb_goods: the total number of goods (to build the data model, optional)
+    :return: the query.
+    """
+    data_model = None if nb_goods is None else build_seller_datamodel(nb_goods)
+    constraints = [Constraint("good_{:02d}".format(good_id), GtEq(1)) for good_id in good_ids]
+
+    if len(good_ids) > 1:
+        constraints = [Or(constraints)]
+
+    query = Query(constraints, model=data_model)
+    return query
+
+
+def from_iso_format(date_string: str) -> datetime.datetime:
+    """
+    From string representation in ISO format to a datetime.datetime object
+    :param date_string: the string to parse.
+    :return: the datetime object.
+    """
+    return dateutil.parser.parse(date_string)

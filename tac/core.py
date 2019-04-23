@@ -18,26 +18,20 @@
 #
 # ------------------------------------------------------------------------------
 import asyncio
-import copy
-import datetime
 import logging
-import pprint
-import random
-import threading
 from abc import abstractmethod
-from typing import List, Dict, Any, Optional, Callable
+from typing import List, Dict, Optional, Callable
 
-import numpy as np
-from oef.agents import OEFAgent
-from oef.dialogue import DialogueAgent
-from oef.messages import OEFErrorOperation, CFP_TYPES
+from oef.agents import OEFAgent, Agent
+from oef.messages import CFP_TYPES, PROPOSE_TYPES
 from oef.proxy import OEFNetworkProxy
-from oef.query import Query
+from oef.query import Query, Constraint, GtEq
 from oef.schema import Description
 
-from tac.helpers.misc import sample_good_instance, compute_endowment_of_good, TacError
+from tac.game import GameState
+from tac.helpers.misc import TacError
 from tac.helpers.plantuml import plantuml_gen
-from tac.protocol import Register, Response, GameData, TransactionConfirmation, Error
+from tac.protocol import Register, Response, GameData, TransactionConfirmation, Error, Transaction
 
 logger = logging.getLogger(__name__)
 
@@ -57,57 +51,54 @@ class TacAgent(OEFAgent):
     def on_search_result(self, search_id: int, agents: List[str]):
         plantuml_gen.on_search_result(self.public_key, agents)
 
+    def send_cfp(self, msg_id: int, dialogue_id: int, destination: str, target: int, query: CFP_TYPES) -> None:
+        super().send_cfp(msg_id, dialogue_id, destination, target,query)
+        plantuml_gen.send_cfp(self.public_key, destination, dialogue_id, "")
 
-# TODO ignore this class
-class NegotiationAgent(DialogueAgent):
+    def send_propose(self, msg_id: int, dialogue_id: int, destination: str, target: int,
+                     proposals: PROPOSE_TYPES) -> None:
+        super().send_propose(msg_id, dialogue_id, destination, target, proposals)
+        plantuml_gen.send_propose(self.public_key, destination, dialogue_id, Description({}))
+
+
+class NegotiationAgent(Agent):
+
+    TAC_CONTROLLER_SEARCH_ID = 1
 
     def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, **kwargs) -> None:
         super().__init__(OEFNetworkProxy(public_key, oef_addr, oef_port, **kwargs))
-        self.controller = None  # type: Optional[str]
-        self.game_state = None  # type: Optional[GameState]
 
-        self.pending_search_ids = set()
-        self.search_events = {} # type: Dict[int, asyncio.Event]
-        self.search_results = {}  # type: Dict[int, List[str]]
-        self.search_callbacks = {}  # type: Dict[int, Callable]
+        # data about the current game
+        self._controller_pbk = None  # type: Optional[str]
+        self._game_state = None  # type: Optional[GameState]
+        self._fee = None         # type: Optional[int]
+
+        self._pending_transactions = {}  # type: Dict[str, Transaction]
+
+    def reset(self):
+        """
+        Reset the agent to its initial condition.
+        """
+        self._controller_pbk = None
+        self._game_state = None
+        self._fee = None
+        self._pending_transactions = {}
 
     def on_search_result(self, search_id: int, agents: List[str]):
-        if search_id in self.pending_search_ids:
-            # check if the search operation has a callback or it does not.
-            if search_id in self.search_events:
-                self.search_results[search_id] = agents
-                self.search_events[search_id].set()
-            elif search_id in self.search_callbacks:
-                callback = self.search_callbacks[search_id]
-                callback(self, agents)
-
-    def search(self, query: Query, callback: Optional[Callable[['TacAgent', Any], Any]] = None) -> Optional[List[str]]:
-        """
-        Search for agents. It uses the SDK's search_services() method.
-        The main purpose of this method is to implement a blocking call such that waits until the OEF answers with a list of agents.
-        Or, specify a custom function callback that will be executed when the result arrives.
-
-        :param query: the query for the search.
-        :param callback: if None, the search operation is synchronous (that is, waits until the OEF answers with the result).
-                         The callbacks accepts 'self' as first argument and a list of strings as second argument.
-        :return: a list of agent's public keys. If a callback is provided, return None.
-        """
-        search_id = len(self.pending_search_ids)
-        self.pending_search_ids.add(search_id)
-        self.search_services(search_id, query)
-        if callback is not None:
-            # register a callback
-            self.search_callbacks[search_id] = callback
-            return None
+        """Handle search results."""
+        if search_id == self.TAC_CONTROLLER_SEARCH_ID:
+            # assuming the number of active controller is only one.
+            assert len(agents) == 1
+            controller_public_key = agents[0]
+            self.register(controller_public_key)
         else:
-            event = threading.Event()
-            self.search_events[search_id] = event
-            event.wait()
-            result = self.search_results[search_id]
-            self.pending_search_ids.remove(search_id)
-            self.search_events.pop(search_id)
-            self.search_results.pop(search_id)
-            return result
+            self.on_search_results(search_id, agents)
+
+    def on_search_results(self, search_id: int, agents: List[str]):
+        """Handle search results. To be implemented by the developer.
+
+        TODO this is different from the SDK's on_search_result,
+             because that one is used for low-level operations."""
 
     @abstractmethod
     def on_start(self, game_data: GameData) -> None:
@@ -118,7 +109,18 @@ class NegotiationAgent(DialogueAgent):
         :return: ``None``
         """
 
-    @abstractmethod
+    def _on_start(self, controller_public_key: str, game_data: GameData) -> None:
+        """The private handler for the on_start event. It is used to populate
+        data structures of the agent and remove the burden from the developer to do so."""
+
+        # populate data structures about the started competition
+        self._controller_pbk = controller_public_key
+        self._game_state = GameState(game_data.money, game_data.endowment, game_data.preferences)
+        self._fee = game_data.fee
+
+        # dispatch the handling to the developer's implementation.
+        self.on_start(game_data)
+
     def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
         """
         Handle the transaction confirmation.
@@ -126,6 +128,8 @@ class NegotiationAgent(DialogueAgent):
         :param tx_confirmation: the data of the confirmed transaction.
         :return: ``None``
         """
+        transaction = self._pending_transactions.pop(tx_confirmation.transaction_id)
+        self._game_state.update(transaction)
 
     @abstractmethod
     def on_tac_error(self, error: Error) -> None:
@@ -135,24 +139,10 @@ class NegotiationAgent(DialogueAgent):
         :return: ``None``
         """
 
-    @abstractmethod
-    def on_new_cfp(self, msg_id: int, dialogue_id: int, from_: str, target: int, query: CFP_TYPES) -> None:
-        """
-        Handle the arrival of a CFP message.
-
-        :param msg_id: the message identifier for the dialogue.
-        :param dialogue_id: the identifier of the dialogue in which the message is sent.
-        :param from_: the identifier of the agent who sent the message.
-        :param target: the identifier of the message to whom this message is answering.
-        :param query: the query associated with the Call For Proposals.
-        :return: ``None``
-        """
-
-    def on_new_message(self, msg_id: int, dialogue_id: int, from_: str, content: bytes) -> None:
-        """TODO Temporarily assume we can receive simple messages only from the controller agent."""
-        # here we can get a new message either from any agent, including the controller.
+    def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
+        # here we can get a new message from any agent, including the controller.
         # however, the one from the controller should be handled in a different way.
-        # try to parse it as if it were a response from the Controller.
+        # try to parse it as if it were a response from the Controller Agent.
 
         response = None  # type: Optional[Response]
         try:
@@ -162,14 +152,25 @@ class NegotiationAgent(DialogueAgent):
             logger.exception(str(e))
 
         if isinstance(response, GameData):
-            self.on_start(response)
+            controller_public_key = origin
+            self._on_start(controller_public_key, response)
         elif isinstance(response, TransactionConfirmation):
             self.on_transaction_confirmed(response)
         elif isinstance(response, Error):
             self.on_tac_error(response)
         else:
-            # TODO revise.
             raise TacError("No correct message received.")
+
+    def register_to_tac(self):
+        """Search for active TAC Controller, and register to one of them.
+
+        We assume that the controller is registered as a service with the 'tac' data model
+        and with an attribute version = 1."""
+
+        query = Query([Constraint("version", GtEq(1))])
+        self.search_services(self.TAC_CONTROLLER_SEARCH_ID, query)
+        # when the search result arrives, the on_search_result method is executed and
+        # the actual registration request is sent.
 
     def register(self, tac_controller_pk: str) -> None:
         """Register to a competition.
@@ -177,337 +178,22 @@ class NegotiationAgent(DialogueAgent):
         :return: ``None``
         :raises AssertionError: if the agent is already registered.
         """
-        assert self.controller is None and self.game_state is None
-        msg = Register(self.public_key).serialize()
+        assert self._controller_pbk is None and self._game_state is None
+        msg = Register().serialize()
         self.send_message(0, 0, tac_controller_pk, msg)
 
-    def search_tac_controllers(self):
-        pass
-
-
-class Game(object):
-
-    def __init__(self, nb_agents: int,
-                 nb_goods: int,
-                 initial_money_amount: int,
-                 instances_per_good: List[int],
-                 scores: List[int],
-                 fee: int,
-                 initial_endowments: List[List[int]],
-                 preferences: List[List[int]],
-                 agents_ids: List[str]):
+    def submit_transaction(self, tx: Transaction, only_store=False):
         """
-        Initialize a game.
+        Submit a transaction, that is:
+        - put in the local pool of pending transaction (waiting for confirmation)
+        - send the transaction request to the controller
 
-        :param nb_agents: the number of agents.
-        :param nb_goods: the number of goods.
-        :param initial_money_amount: the initial amount of money.
-        :param scores: list of scores.
-        :param fee: the fee for a transaction.
-        :param instances_per_good: a list with the number of instances per every good.
-        :param initial_endowments: the endowments of the agents. A matrix where the first index is the agent id and
-                                   the second index is the good id. A generic element at row i and column j is
-                                   an integer that denotes the amount of good j for agent i.
-        :param preferences: the preferences of the agents. A matrix of integers where a generic row i
-                            is a list of good ids, ordered accordingly to the agent's preference.
-                            The index of good j in agent's row i represents the class of preference l for that good.
-                            The associated score is scores[l].
-        :param agents_ids: a list of agents ids (as strings).
-        """
-        self._check_consistency(nb_agents, nb_goods, initial_money_amount, instances_per_good, scores, fee,
-                                initial_endowments, preferences, agents_ids)
-        self.nb_agents = nb_agents
-        self.nb_goods = nb_goods
-        self.instances_per_good = instances_per_good
-        self.initial_money_amount = initial_money_amount
-        self.initial_endowments = initial_endowments
-        self.preferences = preferences
-        self.scores = scores
-        self.fee = fee
-        self.agents_ids = agents_ids
-
-        self._from_agent_pbk_to_agent_id = dict(map(reversed, enumerate(self.agents_ids)))
-
-        self.transactions = []  # type: List[GameTransaction]
-        self.game_states = [GameState(agents_ids[i], initial_money_amount, initial_endowments[i], preferences[i], scores)
-                            for i in range(nb_agents)]  # type: List[GameState]
-
-    @classmethod
-    def _check_consistency(cls, nb_agents: int,
-                           nb_goods: int,
-                           initial_money_amount: int,
-                           instances_per_good: List[int],
-                           scores: List[int],
-                           fee: int,
-                           initial_endowments: List[List[int]],
-                           preferences: List[List[int]],
-                           agents_ids: List[str]):
-        assert nb_agents > 0
-        assert nb_goods > 0
-        assert initial_money_amount > 0
-        assert fee > 0
-
-        assert len(agents_ids) >= nb_agents
-
-        # # TODO the number of instances can be slightly higher or lower than the number of agents. To be changed.
-        # assert instances_per_good >= nb_agents
-
-        # we have a score for each class of preference (that is, "first preferred good", "second preferred good", etc.)
-        # hence, the number of scores is equal to the number of goods.
-        assert len(scores) == nb_goods
-        # no negative scores.
-        assert all(score >= 0 for score in scores)
-
-        # Check the initial endowments.
-
-        # we have an endowment for every agent.
-        assert len(initial_endowments) == nb_agents
-        # every endowment describes the amount for all the goods.
-        assert all(len(row) == nb_goods for row in initial_endowments)
-        # every element of the matrix must be a valid amount of good
-        # (that is, between 0 and the number of instances per good)
-        assert all(0 <= e_ij <= instances_per_good[good_id] for row_i in initial_endowments for good_id, e_ij in enumerate(row_i))
-        # the sum of every column must be equal to the instances per good
-        assert all(
-            sum(initial_endowments[agent_id][good_id] for agent_id in range(nb_agents)) == instances_per_good[good_id]
-            for good_id in range(nb_goods)
-        )
-
-        # Check the preferences.
-
-        # we have a preference list for every agent
-        assert len(preferences) == nb_agents
-        # every preference is a list whose length is the number of goods.
-        # every preference contains all the good ids
-        assert all(len(preference) == len(set(preference)) == nb_goods for preference in preferences)
-        assert all(min(preference) == 0 and max(preference) == nb_goods - 1 for preference in preferences)
-
-    @staticmethod
-    def generate_game(nb_agents: int, nb_goods: int, initial_money_amount: int,
-                      scores: List[int], fee: int, agent_ids: List[str], g: int = 3) -> 'Game':
-        """Generate a game, sampling the initial endowments and the preferences."""
-
-        instances_per_good = [sample_good_instance(nb_agents, g) for _ in range(nb_goods)]
-        endowments_by_good = [compute_endowment_of_good(nb_agents, I_j) for I_j in instances_per_good]
-        initial_endowments = np.asarray(endowments_by_good).T.tolist()
-
-        # compute random preferences.
-        # (permute every preference list randomly).
-        preferences = [list(range(nb_goods))] * nb_agents
-        preferences = list(map(lambda x: random.sample(x, len(x)), preferences))
-
-        return Game(nb_agents, nb_goods, initial_money_amount, instances_per_good,
-                    scores, fee, initial_endowments, preferences, agent_ids)
-
-    def get_scores(self) -> List[int]:
-        """Get the current scores for every agent."""
-        return [gs.get_score() for gs in self.game_states]
-
-    def get_game_data_from_agent_id(self, agent_id: int) -> 'GameState':
-        return self.game_states[agent_id]
-
-    def get_game_data_from_agent_pbk(self, agent_pbk: str) -> 'GameState':
-        """
-        Get game data from agent public key.
-        :param agent_pbk: the agent's public key.
-        :return: the game state of the agent
-        """
-        return self.get_game_data_from_agent_id(self._from_agent_pbk_to_agent_id[agent_pbk])
-
-    def is_transaction_valid(self, tx: 'GameTransaction') -> bool:
-        assert tx.buyer_id != tx.seller_id
-        assert 0 <= tx.buyer_id < self.nb_agents
-        assert 0 <= tx.seller_id < self.nb_agents
-        assert all(q >= 0 for q in tx.quantities)
-        assert tx.amount >= 0
-
-        result = True
-        result = result and self.game_states[tx.buyer_id].balance >= tx.amount + self.fee
-        result = result and all(self.game_states[tx.seller_id].current_holdings[tx.good_ids[i]] >= tx.quantities[i]
-                                for i in range(len(tx.good_ids)))
-
-        return result
-
-    def settle_transaction(self, tx: 'GameTransaction'):
-        self.transactions.append(tx)
-        buyer_state = self.game_states[tx.buyer_id]
-        seller_state = self.game_states[tx.seller_id]
-
-        # update holdings
-        for good_id, quantity in zip(tx.good_ids, tx.quantities):
-            buyer_state.current_holdings[good_id] += quantity
-            seller_state.current_holdings[good_id] -= quantity
-
-        # update balances
-        buyer_state.balance -= tx.amount
-        seller_state.balance += tx.amount
-
-    def get_holdings_summary(self) -> str:
-        result = ""
-        for i, game_state in enumerate(self.game_states):
-            result = result + "{:02d}".format(i) + " " + str(game_state.current_holdings) + "\n"
-        return result
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "nb_agents": self.nb_agents,
-            "nb_goods": self.nb_goods,
-            "initial_money_amount": self.initial_money_amount,
-            "instances_per_good": self.instances_per_good,
-            "scores": self.scores,
-            "fee": self.fee,
-            "initial_endowments": self.initial_endowments,
-            "preferences": self.preferences,
-            "agents_ids": self.agents_ids,
-            "transactions": [t.to_dict() for t in self.transactions]
-        }
-
-    @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> 'Game':
-        obj = cls(
-            d["nb_agents"],
-            d["nb_goods"],
-            d["initial_money_amount"],
-            d["instances_per_good"],
-            d["scores"],
-            d["fee"],
-            d["initial_endowments"],
-            d["preferences"],
-            d["agents_ids"]
-        )
-
-        for tx_dict in d["transactions"]:
-            tx = GameTransaction.from_dict(tx_dict)
-            obj.settle_transaction(tx)
-
-        return obj
-
-
-class GameState:
-    """Represent the state of an agent during the game."""
-
-    def __init__(self, agent_id: str, money: int, initial_endowment: List[int], preferences: List[int], scores: List[int]):
-        self.agent_id = agent_id
-        self.initial_money = money
-        self.balance = money
-        assert len(initial_endowment) == len(preferences) == len(scores)
-        self.initial_endowment = initial_endowment
-        self.preferences = preferences
-        self.scores = scores
-
-        self.current_holdings = copy.copy(self.initial_endowment)
-        self._from_good_to_preference = dict(map(reversed, enumerate(self.preferences)))
-
-    @property
-    def nb_goods(self):
-        return len(self.scores)
-
-    @property
-    def scores_by_good(self):
-        return [self._from_good_to_preference[good_id] for good_id in range(self.nb_goods)]
-
-    def get_score(self) -> int:
-        holdings_score = self.score_good_quantities(self.current_holdings)
-        money_score = self.balance
-        return holdings_score + money_score
-
-    def score_good_quantity(self, good_id: int, quantity: int) -> int:
-        assert 0 <= good_id < self.nb_goods
-        assert 0 <= quantity
-        return self.scores[self._from_good_to_preference[good_id]] * (1 if quantity >= 1 else 0)
-
-    def score_good_quantities(self, quantities: List[int]) -> int:
-        assert len(quantities) == self.nb_goods
-        return sum(self.score_good_quantity(good_id, q) for good_id, q in enumerate(quantities))
-
-    def get_price_from_quantities_vector(self, quantities: List[int]):
-        """
-        Return the price of a vector of good quantities.
-        :param quantities: the vector of good quantities
-        :return: the overall price.
-        """
-        assert len(quantities) == self.nb_goods
-        return sum(q * self.scores[idx] for idx, q in enumerate(quantities))
-
-    def get_excess_goods_quantities(self):
-        """
-        Return the vector of good quantities in excess. A quantity for a good is in excess if it is more than 1.
-        E.g. if an agent holds the good quantities [0, 2, 1], this function returns [0, 1, 0].
-        :return: the vector of good quantities in excess.
-        """
-        return [q - 1 if q > 1 else 0 for q in self.current_holdings]
-
-    def get_score_after_transaction(self, d_money: int, d_holdings: List[int]) -> int:
-        """
-        Simulate a transaction and get the resulting score.
-        :param d_money: the delta amount of money.
-                        A negative value means that we pay money in the transaction.
-                        A positive value means that we gain money from the transaction.
-        :param d_holdings: a list of integers containing the delta quantities for every good.
-                           A negative value ``q`` at position ``i`` means that we sold ``q`` instances of good ``i``.
-                           A positive value ``q`` at position ``i`` means that we bought ``q`` instances of good ``i``.
-        :return: the score that we would get if the transaction is confirmed.
-        """
-        new_holdings = np.asarray(self.current_holdings) + np.asarray(d_holdings)
-        new_holdings_score = self.score_good_quantities(new_holdings)
-        new_money = self.balance + d_money
-        return new_holdings_score + new_money
-
-    def update(self, buyer: bool, amount: int, good_ids: List[int], quantities: List[int]) -> None:
-        """
-        Update the game state.
-
-        :param buyer: whether the values of the transaction have to be intended as a seller or as a buyer.
-        :param amount: the amount of money involved in the transaction.
-        :param good_ids: the good ids involved in the transaction.
-        :param quantities: the quantities associated to the good ids involved in the transaction.
+        :param tx: the transaction request.
+        :param only_store: TODO a debug parameter... True means: only store in the pool
         :return: None
         """
-        switch = 1 if buyer else -1
-        for good_id, quantity in zip(good_ids, quantities):
-            self.current_holdings[good_id] += switch * quantity
-            self.balance -= switch * amount
+        self._pending_transactions[tx.transaction_id] = tx
+        if not only_store:
+            dialogue_id = abs(hash(tx.transaction_id) % 2**31)
+            self.send_message(0, dialogue_id, self._controller_pbk, tx.serialize())
 
-    def __str__(self):
-        return "GameState{}".format(pprint.pformat({
-            "money": self.balance,
-            "initial_endowment": self.initial_endowment,
-            "preferences": self.preferences,
-            "scores": self.scores,
-            "current_holdings": self.current_holdings
-        }))
-
-
-class GameTransaction:
-    """Represent a transaction between agents"""
-
-    def __init__(self, buyer_id: int, seller_id: int, amount: int, good_ids: List[int], quantities: List[int],
-                 timestamp: Optional[datetime.datetime] = None):
-        assert len(good_ids) == len(quantities)
-        self.buyer_id = buyer_id
-        self.seller_id = seller_id
-        self.amount = amount
-        self.good_ids = good_ids
-        self.quantities = quantities
-        self.timestamp = datetime.datetime.now() if timestamp is None else timestamp
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "buyer_id": self.buyer_id,
-            "seller_id": self.seller_id,
-            "amount": self.amount,
-            "good_ids": self.good_ids,
-            "quantities": self.quantities,
-            "timestamp": str(self.timestamp)
-        }
-
-    @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> 'GameTransaction':
-        return cls(
-            buyer_id=d["buyer_id"],
-            seller_id=d["seller_id"],
-            amount=d["amount"],
-            good_ids=d["good_ids"],
-            quantities=d["quantities"],
-            timestamp=d["timestamp"]
-        )

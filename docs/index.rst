@@ -11,9 +11,15 @@ Welcome to TAC's documentation!
    :caption: Contents:
 
    sections/introduction
-   sections/generator
-   sections/protocol
    sections/registration_phase
+   sections/trading_phase
+   sections/evaluation_phase
+   sections/controller_protocol
+   sections/baseline_agent
+   sections/generator
+   sections/glossary
+
+   tac
 
 Indices and tables
 ==================

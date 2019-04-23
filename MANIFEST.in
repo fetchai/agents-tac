@@ -1,5 +1,5 @@
 include README.md LICENSE Pipfile Pipfile.lock
 
 recursive-include tac *
-recursive-include TAC/proto *
+recursive-include tac-cpp/proto *
 recursive-include tests *

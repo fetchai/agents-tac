@@ -26,7 +26,7 @@ import flask
 from flask import Flask, render_template, request
 from werkzeug.datastructures import FileStorage
 
-from tac.core import Game
+from tac.game import Game
 from tac.stats import GameStats
 
 import pylab as plt
@@ -63,7 +63,16 @@ def upload():
     output_filepath = os.path.join("static", "tmp", "tmp.png")
     full_output_path = os.path.join(THIS_DIR, output_filepath)
     game_stats.plot_score_history(output_path=full_output_path)
-    return render_template("index.html", **game.to_dict(),
+
+    g= game.game_states[0]
+
+    return render_template("index.html",
+                           nb_agents=game.configuration.nb_agents,
+                           nb_goods=game.configuration.nb_goods,
+                           initial_money_amounts=game.configuration.initial_money_amounts,
+                           fee=game.configuration.fee,
+                           idx_game_states=enumerate(game.game_states),
+                           game=game,
                            nb_transactions=len(game.transactions),
                            saved_plot_figure=output_filepath,
                            game_states=game.game_states)

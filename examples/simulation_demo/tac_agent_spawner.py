@@ -32,17 +32,15 @@ from tac.agents.baseline import BaselineAgent
 from tac.agents.controller import ControllerAgent
 from tac.helpers.plantuml import plantuml_gen
 from tac.stats import GameStats
-import concurrent.futures
 
 logger = logging.getLogger("tac")
 
 
 def parse_arguments():
     parser = argparse.ArgumentParser("tac_agent_spawner")
-    parser.add_argument("--nb-agents", type=int, default=5, help="Number of TAC agent to wait for the competition.")
+    parser.add_argument("--nb-agents", type=int, default=5, help="(minimum) number of TAC agent to wait for the competition.")
     parser.add_argument("--nb-goods",   type=int, default=5, help="Number of TAC agent to run.")
-    parser.add_argument("--nb-baseline-agents", type=int, default=0,
-                        help="Number of baseline agent to run. Defaults to the number of agents of the competition.")
+    parser.add_argument("--nb-baseline-agents", type=int, default=0, help="Number of baseline agent to run. Defaults to the number of agents of the competition.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
     parser.add_argument("--uml-out", default=None, help="The output uml file")
@@ -57,40 +55,119 @@ def parse_arguments():
     return arguments
 
 
-def initialize_controller_agent(arguments) -> ControllerAgent:
-    start_time = datetime.datetime.now() + datetime.timedelta(0, arguments.timeout)
-    tac_controller = ControllerAgent(public_key="tac_controller", oef_addr=arguments.oef_addr,
-                                     oef_port=arguments.oef_port, nb_agents=arguments.nb_agents,
-                                     nb_goods=arguments.nb_goods, start_time=start_time)
+def _compute_competition_start_time(timeout: int) -> datetime.datetime:
+    """
+    Compute the start time of the competition.
+    It just sums N seconds from 'now'.
+    :param timeout: seconds to wait from 'now'.
+    :return: the date time of the start of the competition.
+    """
+    delta = datetime.timedelta(0, timeout)
+    now = datetime.datetime.now()
 
+    # the start time of the competition is NOW  plus N seconds in the future, where N is in the 'timeout' variable.
+    # TODO the "now" might have different meaning depending on where the following line of code is executed.
+    start_time = now + delta
+    return start_time
+
+
+def initialize_controller_agent(public_key: str,
+                                oef_addr: str,
+                                oef_port: int,
+                                min_nb_agents: int,
+                                nb_goods: int,
+                                timeout: int) -> ControllerAgent:
+    """
+    Initialize the controller agent.
+    :param public_key: the public key of the controller agent.
+    :param oef_addr: the TCP/IP address of the OEF Node.
+    :param oef_port: the TCP/IP port of the OEF Node.
+    :param min_nb_agents: the minimum number of agents to run the competition.
+    :param nb_goods: the number of goods.
+    :param timeout: the timeout (in seconds) to wait until the competition starts.
+    :return: the controller agent.
+    """
+
+    start_time = _compute_competition_start_time(timeout)
+
+    tac_controller = ControllerAgent(public_key=public_key, oef_addr=oef_addr,
+                                     oef_port=oef_port, min_nb_agents=min_nb_agents,
+                                     nb_goods=nb_goods, start_time=start_time)
     tac_controller.connect()
     tac_controller.register()
     return tac_controller
 
 
-def run_baseline_agent(agent: BaselineAgent):
+def _make_id(id: int) -> str:
+    """
+    Make the public key for baseline agents from an integer identifier.
+    E.g. from '0' to 'tac_agent_00'.
+    :param id: a numerical identifier id of the agent.
+    :return: the string associated to the integer id.
+    """
+    return "tac_agent_{:02}".format(id)
+
+
+def initialize_baseline_agent(agent_pbk: str, oef_addr: str, oef_port: int) -> BaselineAgent:
+    """
+    Initialize one baseline agent.
+    :param agent_pbk: the public key of the Baseline agent.
+    :param oef_addr: IP address of the OEF Node.
+    :param oef_port: TCP port of the OEF Node.
+    :return: the baseline agent.
+    """
+
+    # Notice: we create a new asyncio loop, so we can run it in an independent thread.
+    return BaselineAgent(agent_pbk, oef_addr, oef_port, loop=asyncio.new_event_loop())
+
+
+def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port: int) -> List[BaselineAgent]:
+    """
+    Initialize a list of baseline agents.
+    :param nb_baseline_agents: number of agents to initialize.
+    :param oef_addr: IP address of the OEF Node.
+    :param oef_port: TCP port of the OEF Node.
+    :return: A list of baseline agents.
+    """
+    baseline_agents = [initialize_baseline_agent(_make_id(i), oef_addr, oef_port) for i in range(nb_baseline_agents)]
+    return baseline_agents
+
+
+def run_baseline_agent(agent: BaselineAgent) -> None:
+    """Run a baseline agent."""
     agent.connect()
-    agent.search_tac_agents()
+    agent.register_to_tac()
     agent.run()
 
 
-def run_controller(tac_controller: ControllerAgent):
+def run_controller(tac_controller: ControllerAgent) -> None:
+    """Run a controller agent."""
     tac_controller.run()
 
 
 def run(tac_controller: ControllerAgent, baseline_agents: List[BaselineAgent]):
+    """
+    Run the controller agent and all the baseline agents. More specifically:
+        - run a thread for every message processing loop (i.e. the one in `oef.core.OEFProxy.loop()`).
+        - start the countdown for the start of the competition.
+          See the method tac.agents.controller.ControllerAgent.timeout_competition()).
+
+    Returns only when all the jobs are completed (e.g. the timeout job) or stopped (e.g. the processing loop).
+    """
 
     # generate task for the controller
     controller_thread = Thread(target=run_controller, args=(tac_controller, ))
-    timeout_thread = Thread(target=tac_controller.timeout_competition, args=())
+    timeout_thread = Thread(target=tac_controller.game_handler.timeout_competition, args=())
 
     # generate tasks for baseline agents
     baseline_threads = [Thread(target=run_baseline_agent, args=(baseline_agent, ))for baseline_agent in baseline_agents]
 
+    # launch all thread.
     all_threads = [controller_thread, timeout_thread] + baseline_threads
     for thread in all_threads:
         thread.start()
 
+    # wait for every thread. This part is blocking.
     for thread in all_threads:
         thread.join()
 
@@ -99,14 +176,16 @@ if __name__ == '__main__':
     arguments = parse_arguments()
     try:
 
-        tac_controller = initialize_controller_agent(arguments)
-        baseline_agents = [BaselineAgent("tac_agent_{:02}".format(i), arguments.oef_addr, arguments.oef_port,
-                                         loop=asyncio.new_event_loop())
-                           for i in range(arguments.nb_baseline_agents)]
+        tac_controller = initialize_controller_agent("tac_controller", arguments.oef_addr, arguments.oef_port,
+                                                     arguments.nb_agents, arguments.nb_goods, arguments.timeout)
+        baseline_agents = initialize_baseline_agents(arguments.nb_baseline_agents, arguments.oef_addr, arguments.oef_port)
         run(tac_controller, baseline_agents)
 
     except KeyboardInterrupt:
         logger.debug("Simulation interrupted...")
+    except Exception:
+        logger.exception("Unexpected exception.")
+        exit(-1)
     finally:
         logger.debug("Saving simulation data...")
         tac_controller.dump(arguments.data_output_dir, arguments.experiment_id)
@@ -115,6 +194,5 @@ if __name__ == '__main__':
             plantuml_gen.dump(arguments.uml_out) if arguments.uml_out is not None else None
         if arguments.plot:
             logger.debug("Plotting data...")
-            game_stats = GameStats(tac_controller._current_game)
+            game_stats = GameStats(tac_controller.game_handler.current_game)
             game_stats.plot_score_history()
-

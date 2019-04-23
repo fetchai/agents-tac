@@ -1,0 +1,12 @@
+@startuml
+
+participant "TAC Agent"
+participant "OEF Node"
+participant "Controller"
+
+activate "Controller"
+
+"TAC Agent" -> "OEF Node": search_services("tac", version==1)
+"OEF Node" -> "TAC Agent": search result: ["Controller"]
+
+@enduml
