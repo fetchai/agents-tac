@@ -232,7 +232,7 @@ class Registered(Response):
 
 
 class Unregistered(Response):
-    """This response from the TAC Controller means that the agent has been unregistered to the TAC."""
+    """This response from the TAC Controller means that the agent has been unregistered from the TAC."""
 
     def to_pb(self) -> tac_pb2.TACController.Message:
         msg = tac_pb2.TACController.Unregistered()

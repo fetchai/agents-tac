@@ -35,8 +35,8 @@ from oef.proxy import OEFNetworkProxy
 from oef.query import Query, Constraint, GtEq
 from oef.schema import DataModel
 
-from tac.core import TacAgent
-from tac.game import GameState
+from tac.core import TACAgent
+from tac.game import AgentState
 from tac.helpers.misc import build_seller_datamodel, get_baseline_seller_description, TacError
 from tac.protocol import GameData, Error, TransactionConfirmation, Response, Register
 
@@ -79,7 +79,7 @@ class NegotiationAgent(DialogueAgent):
     def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, **kwargs) -> None:
         super().__init__(OEFNetworkProxy(public_key, oef_addr, oef_port, **kwargs))
         self.controller = None  # type: Optional[str]
-        self.game_state = None  # type: Optional[GameState]
+        self.agent_state = None  # type: Optional[AgentState]
 
         self.pending_search_ids = set()
         self.search_events = {} # type: Dict[int, asyncio.Event]
@@ -96,7 +96,7 @@ class NegotiationAgent(DialogueAgent):
                 callback = self.search_callbacks[search_id]
                 callback(self, agents)
 
-    def search(self, query: Query, callback: Optional[Callable[['TacAgent', Any], Any]] = None) -> Optional[List[str]]:
+    def search(self, query: Query, callback: Optional[Callable[['TACAgent', Any], Any]] = None) -> Optional[List[str]]:
         """
         Search for agents. It uses the SDK's search_services() method.
         The main purpose of this method is to implement a blocking call such that waits until the OEF answers with a list of agents.
@@ -192,7 +192,7 @@ class NegotiationAgent(DialogueAgent):
         :return: ``None``
         :raises AssertionError: if the agent is already registered.
         """
-        assert self.controller is None and self.game_state is None
+        assert self.controller is None and self.agent_state is None
         msg = Register(self.public_key).serialize()
         self.send_message(0, 0, tac_controller_pk, msg)
 
@@ -207,7 +207,7 @@ class BaselineAgentV2(NegotiationAgent):
 
     @property
     def seller_data_model(self) -> DataModel:
-        return build_seller_datamodel(self.game_state.nb_goods)
+        return build_seller_datamodel(self.agent_state.nb_goods)
 
     def on_start(self, game_data: GameData) -> None:
 
@@ -229,7 +229,7 @@ class BaselineAgentV2(NegotiationAgent):
         pass
 
     def _register_as_seller_for_excessing_goods(self) -> None:
-        desc = get_baseline_seller_description(self.game_state)
+        desc = get_baseline_seller_description(self.agent_state)
         self.register_service(0, desc)
 
 

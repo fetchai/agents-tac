@@ -24,8 +24,8 @@ Classes:
 
 - GameConfiguration: a class to hold the initial configuration of a game. Immutable.
 - Game: the class that manages an instance of a game (e.g. validate and settling transactions).
-- GameState: a data structure to hold the current state of a player, plus some he
-- GameTransaction: a class that keep information about a transaction in the game.
+- AgentState: a data structure to hold the current state of a player, plus some he
+- GameTransaction: a class that keeps information about a transaction in the game.
 
 """
 
@@ -36,7 +36,7 @@ from typing import List, Dict, Any, Optional, Set
 
 from tac.protocol import Transaction
 
-from tac.helpers.misc import compute_endowments, compute_instances_per_good, compute_random_preferences, from_iso_format
+from tac.helpers.misc import generate_initial_money_amounts, generate_endowments, generate_instances_per_good, generate_utilities, from_iso_format
 
 Endowment = List[int]  # an element e_i is the endowment for good i.
 Utilities = List[int]  # an element u_i is the utility value for good i.
@@ -46,7 +46,7 @@ class GameConfiguration:
 
     def __init__(self, initial_money_amounts: List[int],
                  endowments: List[Endowment],
-                 utilities: List[List[int]],
+                 utilities: List[Utilities],
                  fee: int,
                  agent_labels: Optional[List[str]] = None):
         """
@@ -116,9 +116,9 @@ class GameConfiguration:
         """
         return self._from_agent_pbk_to_agent_id[label]
 
-    def create_game_states(self) -> List['GameState']:
+    def create_agent_states(self) -> List['AgentState']:
         return [
-            GameState(self.initial_money_amounts[i], self.endowments[i], self.utilities[i])
+            AgentState(self.initial_money_amounts[i], self.endowments[i], self.utilities[i])
             for i in range(self.nb_agents)
         ]
 
@@ -187,7 +187,7 @@ class GameConfiguration:
 class Game:
     """
     >>> money_amounts = [20, 20, 20]
-    >>> endowment = [
+    >>> endowments = [
     ... [1, 1, 0],
     ... [1, 0, 0],
     ... [0, 1, 2]]
@@ -197,7 +197,7 @@ class Game:
     ... [40, 20, 60]]
     >>> game_configuration = GameConfiguration(
     ...     money_amounts,
-    ...     endowment,
+    ...     endowments,
     ...     utilities,
     ...     1
     ... )
@@ -216,40 +216,43 @@ class Game:
         self.configuration = configuration
         self.transactions = []  # type: List[GameTransaction]
 
-        # instantiate the game state for every agent.
-        self.game_states = [
-            GameState(
+        # instantiate the agent state for every agent.
+        self.agent_states = [
+            AgentState(
                 configuration.initial_money_amounts[i],
                 configuration.endowments[i],
                 configuration.utilities[i]
             )
-            for i in range(configuration.nb_agents)]  # type: List[GameState]
+            for i in range(configuration.nb_agents)]  # type: List[AgentState]
 
     @staticmethod
-    def generate_game(initial_money_amounts: List[int],
-                      scores: Set[int],
+    def generate_game(nb_agents: int,
+                      nb_goods: int,
+                      money_endowment: int,
                       fee: int,
-                      agent_ids: List[str] = None, g: int = 3) -> 'Game':
+                      agent_ids: List[str] = None) -> 'Game':
         """
-        Generate a game, sampling the endowments and the preferences.
-        :param initial_money_amounts: the initial amount of money for every agent.
-        :param scores: the scores values to generate the agents' preferences.
+        Generate a game, the endowments and the utilites.
+        :param nb_agents: the number of agents.
+        :param nb_goods: the number of goods.
+        :param money_endowment: the initial amount of money for every agent.
         :param fee: the fee to pay per transaction.
         :param agent_ids: the labels for the agents.
-        :param g:
         :return: a game.
         """
-        nb_agents = len(initial_money_amounts)
-        nb_goods = len(scores)
-        instances_per_good = compute_instances_per_good(nb_goods, nb_agents, g)
-        endowments = compute_endowments(nb_agents, instances_per_good)
-        preferences = compute_random_preferences(nb_agents, scores)
-        configuration = GameConfiguration(initial_money_amounts, endowments, preferences, fee, agent_ids)
+        a = nb_agents - round(nb_agents / 3.0)
+        b = nb_agents + round(nb_agents / 3.0)
+        scores = set(range(nb_goods))
+        initial_money_amounts = generate_initial_money_amounts(nb_agents, money_endowment)
+        instances_per_good = generate_instances_per_good(nb_goods, nb_agents, a, b)
+        endowments = generate_endowments(nb_agents, instances_per_good)
+        utilities = generate_utilities(nb_agents, scores)
+        configuration = GameConfiguration(initial_money_amounts, endowments, utilities, fee, agent_ids)
         return Game(configuration)
 
     def get_scores(self) -> List[int]:
         """Get the current scores for every agent."""
-        return [gs.get_score() for gs in self.game_states]
+        return [agent_state.get_score() for agent_state in self.agent_states]
 
     def agent_id_from_label(self, agent_label: str) -> int:
         """
@@ -259,13 +262,13 @@ class Game:
         """
         return self.configuration.agent_id_from_label(agent_label)
 
-    def get_game_data_from_agent_label(self, agent_label: str) -> 'GameState':
+    def get_game_data_from_agent_label(self, agent_label: str) -> 'AgentState':
         """
         Get game data from agent public key.
         :param agent_label: the agent's label.
-        :return: the game state of the agent.
+        :return: the agent state of the agent.
         """
-        return self.game_states[self.configuration.agent_id_from_label(agent_label)]
+        return self.agent_states[self.configuration.agent_id_from_label(agent_label)]
 
     def is_transaction_valid(self, tx: 'GameTransaction') -> bool:
         """
@@ -276,11 +279,11 @@ class Game:
         """
 
         # check if the buyer has enough balance to pay the transaction.
-        if self.game_states[tx.buyer_id].balance < tx.amount + self.configuration.fee:
+        if self.agent_states[tx.buyer_id].balance < tx.amount + self.configuration.fee:
             return False
 
         # check if we have enough instances of goods, for every good involved in the transaction.
-        seller_holdings = self.game_states[tx.seller_id].current_holdings
+        seller_holdings = self.agent_states[tx.seller_id].current_holdings
         for good_id, bought_quantity in tx.quantities_by_good_id.items():
             if seller_holdings[good_id] < bought_quantity:
                 return False
@@ -296,16 +299,16 @@ class Game:
         ... endowments = [[0, 0], [1, 1]],
         ... utilities = [[10, 20], [10, 20]],
         ... fee = 0))
-        >>> game_state_1 = game.game_states[0] # game state of player 1
-        >>> game_state_2 = game.game_states[1] # game state of player 2
-        >>> game_state_1.balance, game_state_1.current_holdings
+        >>> agent_state_1 = game.agent_states[0] # agent state of player 1
+        >>> agent_state_2 = game.agent_states[1] # agent state of player 2
+        >>> agent_state_1.balance, agent_state_1.current_holdings
         (20, [0, 0])
-        >>> game_state_2.balance, game_state_2.current_holdings
+        >>> agent_state_2.balance, agent_state_2.current_holdings
         (20, [1, 1])
         >>> game.settle_transaction(GameTransaction(0, 1, 20, {0: 1, 1: 1}))
-        >>> game_state_1.balance, game_state_1.current_holdings
+        >>> agent_state_1.balance, agent_state_1.current_holdings
         (0, [1, 1])
-        >>> game_state_2.balance, game_state_2.current_holdings
+        >>> agent_state_2.balance, agent_state_2.current_holdings
         (40, [0, 0])
 
         :param tx: the game transaction.
@@ -314,8 +317,8 @@ class Game:
         """
         assert self.is_transaction_valid(tx)
         self.transactions.append(tx)
-        buyer_state = self.game_states[tx.buyer_id]
-        seller_state = self.game_states[tx.seller_id]
+        buyer_state = self.agent_states[tx.buyer_id]
+        seller_state = self.agent_states[tx.seller_id]
 
         # update holdings
         for good_id, quantity in tx.quantities_by_good_id.items():
@@ -353,8 +356,8 @@ class Game:
         :return: a string representing the holdings for every agent.
         """
         result = ""
-        for i, game_state in enumerate(self.game_states):
-            result = result + "{:02d}".format(i) + " " + str(game_state.current_holdings) + "\n"
+        for i, agent_state in enumerate(self.agent_states):
+            result = result + "{:02d}".format(i) + " " + str(agent_state.current_holdings) + "\n"
         return result
 
     def to_dict(self) -> Dict[str, Any]:
@@ -380,14 +383,14 @@ class Game:
                 self.transactions == other.transactions
 
 
-class GameState:
+class AgentState:
     """Represent the state of an agent during the game."""
 
     def __init__(self, money: int, endowment: Endowment, utilities: Utilities):
         """
-        Instantiate a game state object.
+        Instantiate an agent state object.
 
-        :param money: the money of the game state.
+        :param money: the money of the agent in this state.
         :param endowment: the endowment for every good.
         :param utilities: the utility values for every good.
         """
@@ -406,16 +409,16 @@ class GameState:
         """
         Compute the score of the current state.
         The score is computed as:
-        sum of all the holdings with positive quantity, weighted with the associated good score,
+        the sum of all the utilities for the good holdings with positive quantity
         plus the money left.
         :return: the score.
         """
-        holdings_score = self.score_good_quantities(self.current_holdings)
+        goods_score = self.score_good_quantities(self.current_holdings)
         money_score = self.balance
-        score = holdings_score + money_score
+        score = goods_score + money_score
         return score
 
-    def score_good_quantity(self, good_id: int, quantity: int) -> int:
+    def _score_good_quantity(self, good_id: int, quantity: int) -> int:
         """
         Score a quantity for a specified good id.
         :param good_id: the good id associated with the quantity.
@@ -430,22 +433,22 @@ class GameState:
         """
         Score a vector of quantities.
         E.g.
-        >>> game_state = GameState(20, [0, 0, 0], [1, 2, 3])
-        >>> game_state.score_good_quantities([0, 1, 2])
-        5
+        >>> agent_state = AgentState(20, [0, 1, 2], [10, 0, 20])
+        >>> agent_state.score_good_quantities([0, 1, 2])
+        20
 
         :param quantities: the quantities to be scored.
         :return: the score.
         :raises: AssertionError: if the quantities have invalid values (g. invalid good id)
         """
-        return sum(self.score_good_quantity(good_id, quantities) for good_id, quantities in enumerate(quantities))
+        return sum(self._score_good_quantity(good_id, quantities) for good_id, quantities in enumerate(quantities))
 
     def get_excess_goods_quantities(self) -> List[int]:
         """
         Return the vector of good quantities in excess. A quantity for a good is in excess if it is more than 1.
         E.g. if an agent holds the good quantities [0, 2, 1], this function returns [0, 1, 0].
-        >>> game_state = GameState(20, [1, 2, 3], [20, 40, 60])
-        >>> game_state.get_excess_goods_quantities()
+        >>> agent_state = AgentState(20, [1, 2, 3], [20, 40, 60])
+        >>> agent_state.get_excess_goods_quantities()
         [0, 1, 2]
 
         :return: the vector of good quantities in excess.
@@ -467,18 +470,18 @@ class GameState:
         """
         Simulate a transaction and get the resulting score.
 
-        >>> game_state = GameState(20, [0, 1, 2], [20, 40, 60])
-        >>> game_state.get_score()  # gives: money + weighted_holdings = 20 * (0*20 + 1*40 + 1*60)
+        >>> agent_state = AgentState(20, [0, 1, 2], [20, 40, 60])
+        >>> agent_state.get_score()  # gives: money + utility from holdings = 20 * (0*20 + 1*40 + 1*60)
         120
-        >>> game_state.get_score_after_transaction(-10, {0: 1})  # add an holding for the first good and pay 10.
+        >>> agent_state.get_score_after_transaction(-10, {0: 1})  # add a holding for the first good and pay 10.
         130
 
         :param delta_money: the delta amount of money.
                             A negative value means that we pay money in the transaction.
                             A positive value means that we gain money from the transaction.
         :param delta_quantities_by_good_id: a map from good ids to delta quantities.
-                               A negative value ``q`` with key ``i`` means that we sold ``q`` instances of good ``i``.
-                               A positive value ``q`` with key``i`` means that we bought ``q`` instances of good ``i``.
+                               A negative value ``q`` with key ``i`` means that we sell ``q`` instances of good ``i``.
+                               A positive value ``q`` with key``i`` means that we buy ``q`` instances of good ``i``.
         :return: the score that we would get if the transaction is confirmed.
         :raises: AssertionError: if we cannot update the state with the proposed changes.
         """
@@ -491,7 +494,7 @@ class GameState:
 
     def update(self, tx: Transaction) -> None:
         """
-        Update the game state from a transaction request.
+        Update the agent state from a transaction request.
         :param tx: the transaction request message.
         :return: None
         """
@@ -502,7 +505,7 @@ class GameState:
 
     def _check_update(self, delta_money: int, delta_quantities_by_good_id: Dict[int, int]) -> None:
         """
-        Check if the update is consistent. E.g. check that the game state has enough money and enough holdings.
+        Check if the update is consistent. E.g. check that the agent state has enough money and enough holdings.
 
         :param delta_money: the difference of money between the new and the old balance.
         :param delta_quantities_by_good_id: a map from good ids to delta quantities.
@@ -519,14 +522,14 @@ class GameState:
             assert delta_quantity >= 0 or self.current_holdings[good_id] >= abs(delta_quantity), "Not enough good instances."
 
     def __str__(self):
-        return "GameState{}".format(pprint.pformat({
+        return "AgentState{}".format(pprint.pformat({
             "money": self.balance,
             "scores": self.utilities,
             "current_holdings": self.current_holdings
         }))
 
     def __eq__(self, other) -> bool:
-        return isinstance(other, GameState) and \
+        return isinstance(other, AgentState) and \
                self.balance == other.balance and \
                self.utilities == other.utilities and \
                self.current_holdings == other.current_holdings

@@ -28,7 +28,7 @@ from oef.proxy import OEFNetworkProxy
 from oef.query import Query, Constraint, GtEq
 from oef.schema import Description
 
-from tac.game import GameState
+from tac.game import AgentState
 from tac.helpers.misc import TacError
 from tac.helpers.plantuml import plantuml_gen
 from tac.protocol import Register, Response, GameData, TransactionConfirmation, Error, Transaction
@@ -36,7 +36,7 @@ from tac.protocol import Register, Response, GameData, TransactionConfirmation, 
 logger = logging.getLogger(__name__)
 
 
-class TacAgent(OEFAgent):
+class TACAgent(OEFAgent):
     def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, **kwargs) -> None:
         super().__init__(public_key, oef_addr, oef_port, **kwargs)
 
@@ -70,7 +70,7 @@ class NegotiationAgent(Agent):
 
         # data about the current game
         self._controller_pbk = None  # type: Optional[str]
-        self._game_state = None  # type: Optional[GameState]
+        self._agent_state = None  # type: Optional[AgentState]
         self._fee = None         # type: Optional[int]
 
         self._pending_transactions = {}  # type: Dict[str, Transaction]
@@ -80,7 +80,7 @@ class NegotiationAgent(Agent):
         Reset the agent to its initial condition.
         """
         self._controller_pbk = None
-        self._game_state = None
+        self._agent_state = None
         self._fee = None
         self._pending_transactions = {}
 
@@ -115,7 +115,7 @@ class NegotiationAgent(Agent):
 
         # populate data structures about the started competition
         self._controller_pbk = controller_public_key
-        self._game_state = GameState(game_data.money, game_data.endowment, game_data.preferences)
+        self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.preferences)
         self._fee = game_data.fee
 
         # dispatch the handling to the developer's implementation.
@@ -129,7 +129,7 @@ class NegotiationAgent(Agent):
         :return: ``None``
         """
         transaction = self._pending_transactions.pop(tx_confirmation.transaction_id)
-        self._game_state.update(transaction)
+        self._agent_state.update(transaction)
 
     @abstractmethod
     def on_tac_error(self, error: Error) -> None:
@@ -178,7 +178,7 @@ class NegotiationAgent(Agent):
         :return: ``None``
         :raises AssertionError: if the agent is already registered.
         """
-        assert self._controller_pbk is None and self._game_state is None
+        assert self._controller_pbk is None and self._agent_state is None
         msg = Register().serialize()
         self.send_message(0, 0, tac_controller_pk, msg)
 

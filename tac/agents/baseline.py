@@ -106,7 +106,7 @@ class BaselineAgent(NegotiationAgent):
                      .format(self.public_key, msg_id, dialogue_id, origin, target, query))
 
         seller_description = self.get_baseline_seller_description()
-        price = self._game_state.score_good_quantities(self._game_state.get_excess_goods_quantities())
+        price = self._agent_state.score_good_quantities(self._agent_state.get_excess_goods_quantities())
         seller_description.values["price"] = price
         if not query.check(seller_description):
             logger.debug("[{}]: Current holdings do not satisfy CFP query.".format(self.public_key))
@@ -157,8 +157,8 @@ class BaselineAgent(NegotiationAgent):
         proposal = proposals[0]
 
         price, quantity_by_good_id = self._extract_info_from_propose(proposal)
-        current_score = self._game_state.get_score()
-        after_score = self._game_state.get_score_after_transaction(-price, quantity_by_good_id)
+        current_score = self._agent_state.get_score()
+        after_score = self._agent_state.get_score_after_transaction(-price, quantity_by_good_id)
         proposal_delta_score = after_score - current_score
 
         if proposal_delta_score > price + self._fee:
@@ -229,7 +229,7 @@ class BaselineAgent(NegotiationAgent):
         """
         zero_quantity_goods_ids = set(map(lambda x: x[0],
                                           filter(lambda x: x[1] == 0,
-                                                 enumerate(self._game_state.current_holdings))))
+                                                 enumerate(self._agent_state.current_holdings))))
         return zero_quantity_goods_ids
 
     def build_tac_sellers_query(self) -> Optional[Query]:
@@ -241,7 +241,7 @@ class BaselineAgent(NegotiationAgent):
         if len(zero_quantity_goods_ids) == 0:
             return None
         else:
-            return _build_tac_sellers_query(zero_quantity_goods_ids, self._game_state.nb_goods)
+            return _build_tac_sellers_query(zero_quantity_goods_ids, self._agent_state.nb_goods)
 
     def _on_tac_seller_search_result(self, agents: List[str]) -> None:
         """
@@ -285,9 +285,9 @@ class BaselineAgent(NegotiationAgent):
 
         :return: the description to advertise on the Service Directory.
         """
-        seller_data_model = build_seller_datamodel(self._game_state.nb_goods)
+        seller_data_model = build_seller_datamodel(self._agent_state.nb_goods)
         desc = Description({"good_{:02d}".format(i): q
-                            for i, q in enumerate(self._game_state.get_excess_goods_quantities())},
+                            for i, q in enumerate(self._agent_state.get_excess_goods_quantities())},
                            data_model=seller_data_model)
         return desc
 
@@ -303,7 +303,7 @@ class BaselineAgent(NegotiationAgent):
         if price is not None:
             description_content["price"] = price
 
-        data_model = build_seller_datamodel(self._game_state.nb_goods)
+        data_model = build_seller_datamodel(self._agent_state.nb_goods)
         desc = Description(description_content, data_model=data_model)
         return desc
 

@@ -37,10 +37,10 @@ class GameStats:
 
     @classmethod
     def from_json(cls, d: Dict[str, Any]):
-        g = Game.from_dict(d)
-        return GameStats(g)
+        game = Game.from_dict(d)
+        return GameStats(game)
 
-    def score_history(self) -> np.ndarray:
+    def _score_history(self) -> np.ndarray:
         """
         Compute the history of the scores for every agent.
         To do so, we need to simulate the game again, by settling transactions one by one
@@ -74,7 +74,7 @@ class GameStats:
         :return: None
         """
 
-        history = self.score_history()
+        history = self._score_history()
 
         plt.plot(history)
         # labels = ["agent_{:02d}".format(idx) for idx in range(self.game.nb_agents)]

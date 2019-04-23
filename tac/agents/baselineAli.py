@@ -32,8 +32,8 @@ from oef.messages import CFP_TYPES, PROPOSE_TYPES, OEFErrorOperation
 from oef.query import Query, Constraint, GtEq, Or
 from oef.schema import DataModel, AttributeSchema, Description
 
-from tac.core import TacAgent
-from tac.game import GameState
+from tac.core import TACAgent
+from tac.game import AgentState
 from tac.helpers.misc import generate_transaction_id
 from tac.helpers.plantuml import plantuml_gen, PlantUMLGenerator
 from tac.protocol import Register, Response, GameData, Transaction, TransactionConfirmation
@@ -51,7 +51,7 @@ def parse_arguments():
     return parser.parse_args()
 
 
-class BaselineAgent(TacAgent):
+class BaselineAgent(TACAgent):
 
     SEARCH_TAC_CONTROLLER_ID = 0
     SEARCH_TAC_SELLER_ID = 1
@@ -61,7 +61,7 @@ class BaselineAgent(TacAgent):
         super().__init__(*args, **kwargs)
 
         self.controller = None  # type: Optional[str]
-        self.game_state = None  # type: Optional[GameState]
+        self.agent_state = None  # type: Optional[AgentState]
         self.seller_data_model = None  # type: Optional[DataModel]
         self.buyer_data_model = None  # type: Optional[DataModel]
 
@@ -87,13 +87,13 @@ class BaselineAgent(TacAgent):
         logger.debug("[{}]: Response from the TAC Controller '{}':\n{}".format(self.public_key, origin, str(msg)))
 
         if isinstance(msg, GameData):
-            assert self.game_state is None and self.controller is None
+            assert self.agent_state is None and self.controller is None
             self.controller = origin
-            self.game_state = GameState(self.public_key, msg.money, list(msg.endowment), list(msg.preference), list(msg.preferences))
-            logger.debug("[{}]: Score: {}".format(self.public_key, self.game_state.get_score()))
+            self.agent_state = AgentState(self.public_key, msg.money, list(msg.endowment), list(msg.preference), list(msg.preferences))
+            logger.debug("[{}]: Score: {}".format(self.public_key, self.agent_state.get_score()))
 
             goods_quantities_attributes = [AttributeSchema("good_{:02d}".format(i), int, True)
-                                           for i in range(self.game_state.nb_goods)]
+                                           for i in range(self.agent_state.nb_goods)]
             price_attribute = AttributeSchema("price", int, False)
             self.seller_data_model = DataModel("tac_seller", goods_quantities_attributes + [price_attribute])
             self.buyer_data_model = DataModel("tac_buyer", goods_quantities_attributes + [price_attribute])
@@ -104,7 +104,7 @@ class BaselineAgent(TacAgent):
             self.search_tac_sellers()
         if isinstance(msg, TransactionConfirmation):
             transaction = self.pending_transactions.pop(msg.transaction_id)
-            self.game_state.update(transaction.buyer, transaction.amount, transaction.good_ids, transaction.quantities)
+            self.agent_state.update(transaction.buyer, transaction.amount, transaction.good_ids, transaction.quantities)
 
     def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES):
         logger.debug("[{}]: on_cfp: msg_id={}, dialogue_id={}, origin={}, target={}, query={}"
@@ -114,7 +114,7 @@ class BaselineAgent(TacAgent):
         self.negotiation_as_seller.add((origin, dialogue_id))
 
         seller_description = self.get_baseline_seller_description()
-        price = self.game_state.score_good_quantities(self.game_state.get_excess_goods_quantities())
+        price = self.agent_state.score_good_quantities(self.agent_state.get_excess_goods_quantities())
         seller_description.values["price"] = price
         if not query.check(seller_description):
             self.send_decline(msg_id + 1, dialogue_id, origin, msg_id)
@@ -189,8 +189,8 @@ class BaselineAgent(TacAgent):
         proposal = proposals[0]
 
         price, good_ids, quantities = self._extract_info_from_propose(proposal)
-        current_score = self.game_state.get_score()
-        after_score = self.game_state.get_score_after_transaction(-price, quantities)
+        current_score = self.agent_state.get_score()
+        after_score = self.agent_state.get_score_after_transaction(-price, quantities)
         proposal_score = after_score - current_score
 
         if proposal_score > price:
@@ -235,12 +235,12 @@ class BaselineAgent(TacAgent):
         # transform every quantity greater or equal than 1 into 1, because we don't want more than one copy of the same good.
         new_quantities = [1 if q >= 1 else 0 for q in quantities]
         # if there is a score equal to 0 and the quantity of the associated good is > 0, just remove it
-        if any(s == 0 for s in self.game_state.utilities):
-            good_id_with_zero_score = self.game_state.utilities.index(0)
+        if any(s == 0 for s in self.agent_state.utilities):
+            good_id_with_zero_score = self.agent_state.utilities.index(0)
             new_quantities[good_id_with_zero_score] = 0
 
         # compute the proposal score
-        new_score = self.game_state.score_good_quantities(new_quantities)
+        new_score = self.agent_state.score_good_quantities(new_quantities)
         # use the seller's price if the price is lower than our estimate.
         new_price = price if new_score < price else price
 
@@ -285,7 +285,7 @@ class BaselineAgent(TacAgent):
     def _get_zero_quantity_goods_ids(self) -> Set[int]:
         zero_quantity_goods_ids = set(map(lambda x: x[0],
                                           filter(lambda x: x[1] == 0,
-                                                 enumerate(self.game_state.current_holdings))))
+                                                 enumerate(self.agent_state.current_holdings))))
         return zero_quantity_goods_ids
 
     def build_tac_sellers_query(self) -> Optional[Query]:
@@ -359,7 +359,7 @@ class BaselineAgent(TacAgent):
         :return: the description to advertise on the Service Directory.
         """
         desc = Description({"good_{:02d}".format(i): q
-                            for i, q in enumerate(self.game_state.get_excess_goods_quantities())},
+                            for i, q in enumerate(self.agent_state.get_excess_goods_quantities())},
                            data_model=self.seller_data_model)
         return desc
 

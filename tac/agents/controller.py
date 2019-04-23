@@ -37,7 +37,7 @@ from typing import Optional, Set
 
 from oef.schema import DataModel, Description, AttributeSchema
 
-from tac.core import TacAgent
+from tac.core import TACAgent
 from tac.game import Game, GameTransaction
 from tac.helpers.plantuml import plantuml_gen
 from tac.protocol import Response, Request, Register, Unregister, Error, GameData, \
@@ -277,10 +277,9 @@ class GameHandler:
 
         :return: a Game instance.
         """
-        scores = set(range(self.nb_goods))
         agents_ids = sorted(self.registered_agents)
         nb_agents = len(agents_ids)
-        game = Game.generate_game([self.money_endowment] * nb_agents, scores, self.fee, agent_ids=agents_ids)
+        game = Game.generate_game(nb_agents, self.nb_goods, self.money_endowment, self.fee, agent_ids=agents_ids)
         return game
 
     def _send_game_data_to_agents(self) -> None:
@@ -324,7 +323,7 @@ class GameHandler:
             return False
 
 
-class ControllerAgent(TacAgent):
+class ControllerAgent(TACAgent):
     CONTROLLER_DATAMODEL = DataModel("tac", [
         AttributeSchema("version", int, True, "Version number of the TAC Controller Agent."),
     ])
