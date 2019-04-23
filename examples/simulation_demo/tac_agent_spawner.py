@@ -136,7 +136,7 @@ def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port:
 def run_baseline_agent(agent: BaselineAgent) -> None:
     """Run a baseline agent."""
     agent.connect()
-    agent.search_tac_agents()
+    agent.register_to_tac()
     agent.run()
 
 
@@ -157,7 +157,7 @@ def run(tac_controller: ControllerAgent, baseline_agents: List[BaselineAgent]):
 
     # generate task for the controller
     controller_thread = Thread(target=run_controller, args=(tac_controller, ))
-    timeout_thread = Thread(target=tac_controller.timeout_competition, args=())
+    timeout_thread = Thread(target=tac_controller.game_handler.timeout_competition, args=())
 
     # generate tasks for baseline agents
     baseline_threads = [Thread(target=run_baseline_agent, args=(baseline_agent, ))for baseline_agent in baseline_agents]
@@ -194,5 +194,5 @@ if __name__ == '__main__':
             plantuml_gen.dump(arguments.uml_out) if arguments.uml_out is not None else None
         if arguments.plot:
             logger.debug("Plotting data...")
-            game_stats = GameStats(tac_controller._current_game)
+            game_stats = GameStats(tac_controller.game_handler.current_game)
             game_stats.plot_score_history()

@@ -20,11 +20,13 @@
 import datetime
 import logging
 import random
-from typing import List, Set
+from typing import List, Set, Optional
 
 import dateutil.parser
 import numpy as np
+from oef.query import Query, Constraint, GtEq, Or
 from oef.schema import AttributeSchema, DataModel, Description
+
 
 logger = logging.getLogger("tac")
 
@@ -133,7 +135,7 @@ def compute_random_preferences(nb_agents: int, scores: Set[int]) -> List[List[in
     return preferences
 
 
-def _build_seller_datamodel(nb_goods: int) -> DataModel:
+def build_seller_datamodel(nb_goods: int) -> DataModel:
     """
     Build a data model for sellers.
 
@@ -164,11 +166,36 @@ def get_baseline_seller_description(game_state: 'GameState') -> Description:
 
     :return: the description to advertise on the Service Directory.
     """
-    seller_data_model = _build_seller_datamodel(game_state.nb_goods)
+    seller_data_model = build_seller_datamodel(game_state.nb_goods)
     desc = Description({"good_{:02d}".format(i): q
                         for i, q in enumerate(game_state.get_excess_goods_quantities())},
                        data_model=seller_data_model)
     return desc
+
+
+def _build_tac_sellers_query(good_ids: Set[int], nb_goods: Optional[int] = None) -> Query:
+    """
+    Build the query that the buyer can send to look for goods.
+
+    In particular, if the needed good ids are {0, 2, 3}, the resulting constraint expression is:
+
+        good_00 >= 1 OR good_02 >= 1 OR good_03 >= 1
+
+    That is, the OEF will return all the sellers that have at least one of the good in the query
+    (assuming that the sellers are registered with the data model for baseline sellers.
+
+    :param good_ids: the good ids to put in the query.
+    :param nb_goods: the total number of goods (to build the data model, optional)
+    :return: the query.
+    """
+    data_model = None if nb_goods is None else build_seller_datamodel(nb_goods)
+    constraints = [Constraint("good_{:02d}".format(good_id), GtEq(1)) for good_id in good_ids]
+
+    if len(good_ids) > 1:
+        constraints = [Or(constraints)]
+
+    query = Query(constraints, model=data_model)
+    return query
 
 
 def from_iso_format(date_string: str) -> datetime.datetime:

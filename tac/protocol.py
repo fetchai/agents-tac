@@ -200,8 +200,8 @@ class Response(Message):
                 return Unregistered()
             elif case == "game_data":
                 return GameData(msg.game_data.money,
-                                msg.game_data.resources,
-                                msg.game_data.preferences,
+                                list(msg.game_data.resources),
+                                list(msg.game_data.preferences),
                                 msg.game_data.fee)
             elif case == "tx_confirmation":
                 return TransactionConfirmation(msg.tx_confirmation.transaction_id)

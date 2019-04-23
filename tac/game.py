@@ -34,6 +34,8 @@ import datetime
 import pprint
 from typing import List, Dict, Any, Optional, Set
 
+from tac.protocol import Transaction
+
 from tac.helpers.misc import compute_endowments, compute_instances_per_good, compute_random_preferences, from_iso_format
 
 Endowment = List[int]  # an element e_i is the endowment for good i.
@@ -92,7 +94,7 @@ class GameConfiguration:
 
     @property
     def nb_goods(self) -> int:
-        return len(self.utilities)
+        return len(self.endowments[0])
 
     @property
     def agent_labels(self) -> List[str]:
@@ -486,6 +488,17 @@ class GameState:
         new_holdings_score = self.score_good_quantities(new_holdings)
         new_money = self.balance + delta_money
         return new_holdings_score + new_money
+
+    def update(self, tx: Transaction) -> None:
+        """
+        Update the game state from a transaction request.
+        :param tx: the transaction request message.
+        :return: None
+        """
+        switch = -1 if tx.buyer else 1
+        self.balance += switch * tx.amount
+        for good_id, quantity in tx.quantities_by_good_id.items():
+            self.current_holdings[good_id] += -switch * quantity
 
     def _check_update(self, delta_money: int, delta_quantities_by_good_id: Dict[int, int]) -> None:
         """

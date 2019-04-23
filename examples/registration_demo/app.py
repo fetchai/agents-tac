@@ -44,7 +44,7 @@ class SimpleRegisteringAgent(TacAgent):
             return
 
         controller_pb_key = agents[0]
-        msg = Register(self.public_key)
+        msg = Register()
         msg_pb = msg.to_pb()
         msg_bytes = msg_pb.SerializeToString()
         logger.debug("Sending '{}' message to the TAC Controller {}"

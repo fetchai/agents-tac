@@ -19,20 +19,19 @@
 # ------------------------------------------------------------------------------
 import asyncio
 import logging
-import threading
 from abc import abstractmethod
-from typing import List, Dict, Any, Optional, Callable
+from typing import List, Dict, Optional, Callable
 
-from oef.agents import OEFAgent
-from oef.dialogue import DialogueAgent
+from oef.agents import OEFAgent, Agent
 from oef.messages import CFP_TYPES, PROPOSE_TYPES
 from oef.proxy import OEFNetworkProxy
-from oef.query import Query
+from oef.query import Query, Constraint, GtEq
 from oef.schema import Description
 
+from tac.game import GameState
 from tac.helpers.misc import TacError
 from tac.helpers.plantuml import plantuml_gen
-from tac.protocol import Register, Response, GameData, TransactionConfirmation, Error
+from tac.protocol import Register, Response, GameData, TransactionConfirmation, Error, Transaction
 
 logger = logging.getLogger(__name__)
 
@@ -62,56 +61,44 @@ class TacAgent(OEFAgent):
         plantuml_gen.send_propose(self.public_key, destination, dialogue_id, Description({}))
 
 
-# TODO ignore this class
-class NegotiationAgent(DialogueAgent):
+class NegotiationAgent(Agent):
+
+    TAC_CONTROLLER_SEARCH_ID = 1
 
     def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, **kwargs) -> None:
         super().__init__(OEFNetworkProxy(public_key, oef_addr, oef_port, **kwargs))
-        self.controller = None  # type: Optional[str]
-        self.game_state = None  # type: Optional[GameState]
 
-        self.pending_search_ids = set()
-        self.search_events = {} # type: Dict[int, asyncio.Event]
-        self.search_results = {}  # type: Dict[int, List[str]]
-        self.search_callbacks = {}  # type: Dict[int, Callable]
+        # data about the current game
+        self._controller = None  # type: Optional[str]
+        self._game_state = None  # type: Optional[GameState]
+        self._fee = None         # type: Optional[int]
+
+        self._pending_transactions = {}  # type: Dict[str, Transaction]
+
+    def reset(self):
+        """
+        Reset the agent to its initial condition.
+        """
+        self._controller = None
+        self._game_state = None
+        self._fee = None
+        self._pending_transactions = {}
 
     def on_search_result(self, search_id: int, agents: List[str]):
-        if search_id in self.pending_search_ids:
-            # check if the search operation has a callback or it does not.
-            if search_id in self.search_events:
-                self.search_results[search_id] = agents
-                self.search_events[search_id].set()
-            elif search_id in self.search_callbacks:
-                callback = self.search_callbacks[search_id]
-                callback(self, agents)
-
-    def search(self, query: Query, callback: Optional[Callable[['TacAgent', Any], Any]] = None) -> Optional[List[str]]:
-        """
-        Search for agents. It uses the SDK's search_services() method.
-        The main purpose of this method is to implement a blocking call such that waits until the OEF answers with a list of agents.
-        Or, specify a custom function callback that will be executed when the result arrives.
-
-        :param query: the query for the search.
-        :param callback: if None, the search operation is synchronous (that is, waits until the OEF answers with the result).
-                         The callbacks accepts 'self' as first argument and a list of strings as second argument.
-        :return: a list of agent's public keys. If a callback is provided, return None.
-        """
-        search_id = len(self.pending_search_ids)
-        self.pending_search_ids.add(search_id)
-        self.search_services(search_id, query)
-        if callback is not None:
-            # register a callback
-            self.search_callbacks[search_id] = callback
-            return None
+        """Handle search results."""
+        if search_id == self.TAC_CONTROLLER_SEARCH_ID:
+            # assuming the number of active controller is only one.
+            assert len(agents) == 1
+            controller_public_key = agents[0]
+            self.register(controller_public_key)
         else:
-            event = threading.Event()
-            self.search_events[search_id] = event
-            event.wait()
-            result = self.search_results[search_id]
-            self.pending_search_ids.remove(search_id)
-            self.search_events.pop(search_id)
-            self.search_results.pop(search_id)
-            return result
+            self.on_search_results(search_id, agents)
+
+    def on_search_results(self, search_id: int, agents: List[str]):
+        """Handle search results. To be implemented by the developer.
+
+        TODO this is different from the SDK's on_search_result,
+             because that one is used for low-level operations."""
 
     @abstractmethod
     def on_start(self, game_data: GameData) -> None:
@@ -122,6 +109,18 @@ class NegotiationAgent(DialogueAgent):
         :return: ``None``
         """
 
+    def _on_start(self, controller_public_key: str, game_data: GameData) -> None:
+        """The private handler for the on_start event. It is used to populate
+        data structures of the agent and remove the burden from the developer to do so."""
+
+        # populate data structures about the started competition
+        self._controller = controller_public_key
+        self._game_state = GameState(game_data.money, game_data.endowment, game_data.preferences)
+        self._fee = game_data.fee
+
+        # dispatch the handling to the developer's implementation.
+        self.on_start(game_data)
+
     @abstractmethod
     def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
         """
@@ -130,6 +129,8 @@ class NegotiationAgent(DialogueAgent):
         :param tx_confirmation: the data of the confirmed transaction.
         :return: ``None``
         """
+        transaction = self._pending_transactions.pop(tx_confirmation.transaction_id)
+        self._game_state.update(transaction)
 
     @abstractmethod
     def on_tac_error(self, error: Error) -> None:
@@ -139,24 +140,10 @@ class NegotiationAgent(DialogueAgent):
         :return: ``None``
         """
 
-    @abstractmethod
-    def on_new_cfp(self, msg_id: int, dialogue_id: int, from_: str, target: int, query: CFP_TYPES) -> None:
-        """
-        Handle the arrival of a CFP message.
-
-        :param msg_id: the message identifier for the dialogue.
-        :param dialogue_id: the identifier of the dialogue in which the message is sent.
-        :param from_: the identifier of the agent who sent the message.
-        :param target: the identifier of the message to whom this message is answering.
-        :param query: the query associated with the Call For Proposals.
-        :return: ``None``
-        """
-
-    def on_new_message(self, msg_id: int, dialogue_id: int, from_: str, content: bytes) -> None:
-        """TODO Temporarily assume we can receive simple messages only from the controller agent."""
-        # here we can get a new message either from any agent, including the controller.
+    def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
+        # here we can get a new message from any agent, including the controller.
         # however, the one from the controller should be handled in a different way.
-        # try to parse it as if it were a response from the Controller.
+        # try to parse it as if it were a response from the Controller Agent.
 
         response = None  # type: Optional[Response]
         try:
@@ -166,14 +153,25 @@ class NegotiationAgent(DialogueAgent):
             logger.exception(str(e))
 
         if isinstance(response, GameData):
-            self.on_start(response)
+            controller_public_key = origin
+            self._on_start(controller_public_key, response)
         elif isinstance(response, TransactionConfirmation):
             self.on_transaction_confirmed(response)
         elif isinstance(response, Error):
             self.on_tac_error(response)
         else:
-            # TODO revise.
             raise TacError("No correct message received.")
+
+    def register_to_tac(self):
+        """Search for active TAC Controller, and register to one of them.
+
+        We assume that the controller is registered as a service with the 'tac' data model
+        and with an attribute version = 1."""
+
+        query = Query([Constraint("version", GtEq(1))])
+        self.search_services(self.TAC_CONTROLLER_SEARCH_ID, query)
+        # when the search result arrives, the on_search_result method is executed and
+        # the actual registration request is sent.
 
     def register(self, tac_controller_pk: str) -> None:
         """Register to a competition.
@@ -181,10 +179,10 @@ class NegotiationAgent(DialogueAgent):
         :return: ``None``
         :raises AssertionError: if the agent is already registered.
         """
-        assert self.controller is None and self.game_state is None
-        msg = Register(self.public_key).serialize()
+        assert self._controller is None and self._game_state is None
+        msg = Register().serialize()
         self.send_message(0, 0, tac_controller_pk, msg)
 
-    def search_tac_controllers(self):
+    def submit_transaction(self, tx: Transaction):
         pass
 
