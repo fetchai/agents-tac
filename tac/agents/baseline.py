@@ -134,7 +134,7 @@ class BaselineAgent(NegotiationAgent):
             transaction_id = generate_transaction_id(origin, self.public_key, dialogue_id)
             price, quantity_by_good_id = self._extract_info_from_propose(proposals[0])
             candidate_transaction = Transaction(transaction_id, False, origin, price, quantity_by_good_id)
-            self.submit_transaction(candidate_transaction)
+            self.submit_transaction(candidate_transaction, only_store=True)
 
     def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES):
         """TODO Assume propose only when buyer."""

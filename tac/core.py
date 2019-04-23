@@ -182,8 +182,18 @@ class NegotiationAgent(Agent):
         msg = Register().serialize()
         self.send_message(0, 0, tac_controller_pk, msg)
 
-    def submit_transaction(self, tx: Transaction):
+    def submit_transaction(self, tx: Transaction, only_store=False):
+        """
+        Submit a transaction, that is:
+        - put in the local pool of pending transaction (waiting for confirmation)
+        - send the transaction request to the controller
+
+        :param tx: the transaction request.
+        :param only_store: TODO a debug parameter... True means: only store in the pool
+        :return: None
+        """
         self._pending_transactions[tx.transaction_id] = tx
-        dialogue_id = abs(hash(tx.transaction_id) % 2**31)
-        self.send_message(0, dialogue_id, self._controller_pbk, tx.serialize())
+        if not only_store:
+            dialogue_id = abs(hash(tx.transaction_id) % 2**31)
+            self.send_message(0, dialogue_id, self._controller_pbk, tx.serialize())
 
