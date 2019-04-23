@@ -20,6 +20,7 @@ This tutorial shows how to simulate a simple TAC.
 - `--uml-out` is the filepath where to store the activity of the simulation in PlantUML syntax.
 - `--data-output-dir` is the output directory to use for storing simulation data.
 - `--experiment-id` is the name to give to the simulation. The data will be stored in `${data_output_dir}/${experiment_id}`.
+- `--timeout` is the amount of time (in seconds) for the controller to wait for starting the competition.
 
 Example:
 

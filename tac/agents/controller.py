@@ -420,7 +420,7 @@ def main():
     agent.connect()
     agent.register()
 
-    logger.debug("Running agent...")
+    logger.debug("Running TAC dontroller agent...")
     agent.run()
 
 
