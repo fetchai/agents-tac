@@ -69,7 +69,7 @@ class NegotiationAgent(Agent):
         super().__init__(OEFNetworkProxy(public_key, oef_addr, oef_port, **kwargs))
 
         # data about the current game
-        self._controller = None  # type: Optional[str]
+        self._controller_pbk = None  # type: Optional[str]
         self._game_state = None  # type: Optional[GameState]
         self._fee = None         # type: Optional[int]
 
@@ -79,7 +79,7 @@ class NegotiationAgent(Agent):
         """
         Reset the agent to its initial condition.
         """
-        self._controller = None
+        self._controller_pbk = None
         self._game_state = None
         self._fee = None
         self._pending_transactions = {}
@@ -114,14 +114,13 @@ class NegotiationAgent(Agent):
         data structures of the agent and remove the burden from the developer to do so."""
 
         # populate data structures about the started competition
-        self._controller = controller_public_key
+        self._controller_pbk = controller_public_key
         self._game_state = GameState(game_data.money, game_data.endowment, game_data.preferences)
         self._fee = game_data.fee
 
         # dispatch the handling to the developer's implementation.
         self.on_start(game_data)
 
-    @abstractmethod
     def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
         """
         Handle the transaction confirmation.
@@ -179,10 +178,12 @@ class NegotiationAgent(Agent):
         :return: ``None``
         :raises AssertionError: if the agent is already registered.
         """
-        assert self._controller is None and self._game_state is None
+        assert self._controller_pbk is None and self._game_state is None
         msg = Register().serialize()
         self.send_message(0, 0, tac_controller_pk, msg)
 
     def submit_transaction(self, tx: Transaction):
-        pass
+        self._pending_transactions[tx.transaction_id] = tx
+        dialogue_id = abs(hash(tx.transaction_id) % 2**31)
+        self.send_message(0, dialogue_id, self._controller_pbk, tx.serialize())
 

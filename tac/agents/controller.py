@@ -235,7 +235,7 @@ class GameHandler:
         Check if an instance of a game is already set up.
         :return: Return True if there is a game running, False otherwise.
         """
-        return self.current_game is None
+        return self.current_game is not None
 
     def from_request_to_game_tx(self, transaction: Transaction, agent_label: str) -> GameTransaction:
         """
@@ -259,7 +259,7 @@ class GameHandler:
     def _start_competition(self):
         """Create a game and send the game setting to every registered agent."""
         # assert that there is no competition running.
-        assert self.is_game_running()
+        assert not self.is_game_running()
         self.current_game = self._create_game()
         self._send_game_data_to_agents()
 

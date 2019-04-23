@@ -130,11 +130,10 @@ class BaselineAgent(NegotiationAgent):
                                                                   })))
             self.send_propose(msg_id + 1, dialogue_id, origin, msg_id, proposals)
 
-            # add the proposal in the pending proposals.
             # transaction id: "${buyer}_${seller}_${dialogueId}
             transaction_id = generate_transaction_id(origin, self.public_key, dialogue_id)
-            price, good_ids, quantities = self._extract_info_from_propose(proposals[0])
-            candidate_transaction = Transaction(transaction_id, False, origin, price, dict(zip(good_ids, quantities)))
+            price, quantity_by_good_id = self._extract_info_from_propose(proposals[0])
+            candidate_transaction = Transaction(transaction_id, False, origin, price, quantity_by_good_id)
             self.submit_transaction(candidate_transaction)
 
     def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES):
@@ -148,14 +147,18 @@ class BaselineAgent(NegotiationAgent):
         """
         On Propose handler for baseline agents, when they take the role of a buyer.
 
-
+        1. parse the propose object
+        2. compute the score of the propose.
+            - if the proposed transaction increases the score,
+              send an accept and submit the transaction to the controller.
+            - otherwise, decline the propose.
         """
         assert len(proposals) == 1
         proposal = proposals[0]
 
-        price, good_ids, quantities = self._extract_info_from_propose(proposal)
+        price, quantity_by_good_id = self._extract_info_from_propose(proposal)
         current_score = self._game_state.get_score()
-        after_score = self._game_state.get_score_after_transaction(-price, quantities)
+        after_score = self._game_state.get_score_after_transaction(-price, quantity_by_good_id)
         proposal_delta_score = after_score - current_score
 
         if proposal_delta_score > price + self._fee:
@@ -168,15 +171,11 @@ class BaselineAgent(NegotiationAgent):
     def on_decline(self, msg_id: int, dialogue_id: int, origin: str, target: int):
         logger.debug("[{}]: on_decline: msg_id={}, dialogue_id={}, origin={}, target={}"
                      .format(self.public_key, msg_id, dialogue_id, origin, target))
-        dialogue_key = (origin, dialogue_id)
-        self.negotiation_as_seller.discard(dialogue_key)
 
     def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int):
         logger.debug("[{}]: on_accept: msg_id={}, dialogue_id={}, origin={}, target={}"
                      .format(self.public_key, msg_id, dialogue_id, origin, target))
         # TODO send transaction confirmation?
-        dialogue_key = (origin, dialogue_id)
-        self.negotiation_as_seller.discard(dialogue_key)
 
     def search_tac_sellers(self) -> None:
         query = self.build_tac_sellers_query()
@@ -186,31 +185,33 @@ class BaselineAgent(NegotiationAgent):
         else:
             self.search_services(TAC_SELLER_SEARCH_ID, query)
 
-
     def _on_propose_as_seller(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES):
         # TODO the seller always accept because he's trying to sell all the excesses. It might change.
         self._accept_propose(msg_id, dialogue_id, origin, target, proposals, False)
 
-    def _accept_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES, is_buyer: bool):
-        # TODO assuming proposals are just one, and of specific format.
+    def _accept_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES,
+                        is_buyer: bool) -> None:
+        """
+        Accept a propose.
+
+        msg_id, dialogue_id, origin, target and proposals are the same parameter of the `on_propose`.
+
+        :param is_buyer: whether the accept is sent as a buyer or as a seller.
+        :return: None
+        """
+        # TODO assuming `proposals` is a list with only one description, and
+        #   with the format {"good_01": quantity, ..., "price": price}
         assert len(proposals) == 1
         proposal = proposals[0]
-        price, good_ids, quantities = self._extract_info_from_propose(proposal)
+        price, quantity_by_good_id = self._extract_info_from_propose(proposal)
 
         buyer, seller = (self.public_key, origin) if is_buyer else (origin, self.public_key)
         transaction_id = generate_transaction_id(buyer, seller, dialogue_id)
-        transaction_request = Transaction(self.public_key, transaction_id, is_buyer, origin, price, good_ids, quantities)
-        self.pending_transactions[transaction_id] = transaction_request
-        self.send_message(0, 0, self.controller, transaction_request.serialize())
-        plantuml_gen.add_drawable(
-            PlantUMLGenerator.Transition(self.public_key, self.controller, str(transaction_request)))
-
-        logger.debug("[{}]: send accept to '{}'".format(self.public_key, origin))
+        transaction_request = Transaction(transaction_id, is_buyer, origin, price, quantity_by_good_id)
+        self.submit_transaction(transaction_request)
         self.send_accept(msg_id + 1, dialogue_id, origin, msg_id)
-        plantuml_gen.add_drawable(
-            PlantUMLGenerator.Transition(self.public_key, origin, "Accept({})".format(dialogue_id)))
 
-    def _extract_info_from_propose(self, proposal: Description) -> Tuple[int, List[int], List[int]]:
+    def _extract_info_from_propose(self, proposal: Description) -> Tuple[int, Dict[int, int]]:
         """
         From a propose (description), extract the price, the good ids and the quantities proposed.
         :param proposal: the description.
@@ -218,9 +219,8 @@ class BaselineAgent(NegotiationAgent):
         """
         data = copy.deepcopy(proposal.values)
         price = data.pop("price")
-        good_ids, quantities = zip(
-            *map(lambda x: (int(x[0][-2:]), x[1]), list(data.items())))  # type: List[int], List[int]
-        return price, good_ids, quantities
+        quantity_by_good_id = {int(key[-2:]): value for key, value in data.items()}
+        return price, quantity_by_good_id
 
     def _get_zero_quantity_goods_ids(self) -> Set[int]:
         """

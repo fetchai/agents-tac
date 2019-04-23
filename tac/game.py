@@ -564,7 +564,7 @@ class GameTransaction:
         assert self.buyer_id != self.seller_id
         assert self.amount > 0
         assert all(good_id >= 0 for good_id in self.quantities_by_good_id.keys())
-        assert all(quantity > 0 for quantity in self.quantities_by_good_id.values())
+        assert all(quantity >= 0 for quantity in self.quantities_by_good_id.values())
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -577,11 +577,14 @@ class GameTransaction:
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> 'GameTransaction':
+        # make the keys as integers
+        quantities_by_good_id = {int(k): v for k, v in d["quantities_by_good_id"].items()}
+
         return cls(
             buyer_id=d["buyer_id"],
             seller_id=d["seller_id"],
             amount=d["amount"],
-            quantities_by_good_id=d["quantities_by_good_id"],
+            quantities_by_good_id=quantities_by_good_id,
             timestamp=from_iso_format(d["timestamp"])
         )
 
