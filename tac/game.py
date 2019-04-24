@@ -397,7 +397,7 @@ class AgentState:
         :param money: the money of the agent in this state.
         :param endowment: the endowment for every good.
         :param utilities: the utility values for every good.
-        :param fee: the fee of a transaction (i.e. state transition)
+        :param tx_fee: the fee of a transaction (i.e. state transition)
         """
         assert len(endowment) == len(utilities)
         self.balance = money

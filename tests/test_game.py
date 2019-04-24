@@ -3,7 +3,7 @@ from typing import List, Set
 
 import pytest
 
-from tac.game import GameConfiguration, Game, GameTransaction, GameState
+from tac.game import GameConfiguration, Game, GameTransaction, AgentState
 
 
 class TestGameConfiguration:
@@ -54,30 +54,6 @@ class TestGameConfiguration:
         assert game_configuration.agent_id_from_label("agent_01") == 0
         assert game_configuration.agent_id_from_label("agent_02") == 1
 
-    def test_create_game_states(self):
-        """Test that the game states for every player are created as expected."""
-        money_amounts = [20, 20]
-        endowments = [
-            [0, 1],
-            [1, 0]
-        ]
-        utilities = [
-            [20, 40],
-            [40, 20]
-        ]
-        fee = 1
-        game_configuration = GameConfiguration(money_amounts, endowments, utilities, fee, ["agent_01", "agent_02"])
-
-        actual_game_states = game_configuration.create_game_states()
-
-        actual_game_state_0 = actual_game_states[0]
-        actual_game_state_1 = actual_game_states[1]
-
-        expected_game_state_0 = GameState(20, [0, 1], [20, 40])
-        expected_game_state_1 = GameState(20, [1, 0], [40, 20])
-
-        assert actual_game_state_0 == expected_game_state_0
-        assert actual_game_state_1 == expected_game_state_1
 
     def test_negative_money_raises_exception(self):
         """Test that if we try to instantiate a game with a negative amount of money, we raise an AssertionError."""
@@ -259,11 +235,14 @@ class TestGame:
     def test_generate_game(self):
         """Test the game generation algorithm."""
 
-        money_amounts = [20, 20, 20]  # type: List[int]
-        score_values = {20, 40, 60}  # type: Set[int]
+        nb_agents = 3
+        nb_goods = 3
+        money_endowment = 20
+        lower_bound_factor = 1
+        upper_bound_factor = 3
         fee = 1
 
-        game = Game.generate_game(money_amounts, score_values, fee)
+        game = Game.generate_game(nb_agents, nb_goods, money_endowment, fee, lower_bound_factor, upper_bound_factor)
 
         # please look at the assertions in tac.game.GameConfiguration._check_consistency()
 
@@ -283,11 +262,11 @@ class TestGame:
         game_configuration = GameConfiguration(money_amounts, endowments, utilities, fee, ["agent_01", "agent_02"])
         game = Game(game_configuration)
 
-        actual_game_state_0 = game.get_game_data_from_agent_label("agent_01")
-        actual_game_state_1 = game.get_game_data_from_agent_label("agent_02")
+        actual_game_state_0 = game.get_agent_state_from_agent_label("agent_01")
+        actual_game_state_1 = game.get_agent_state_from_agent_label("agent_02")
 
-        expected_game_state_0 = GameState(20, [0, 1], [20, 40])
-        expected_game_state_1 = GameState(20, [1, 0], [40, 20])
+        expected_game_state_0 = AgentState(20, [0, 1], [20, 40], 1)
+        expected_game_state_1 = AgentState(20, [1, 0], [40, 20], 1)
 
         assert actual_game_state_0 == expected_game_state_0
         assert actual_game_state_1 == expected_game_state_1
