@@ -17,6 +17,7 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+import os
 import pprint
 from abc import abstractmethod
 from typing import List
@@ -57,8 +58,18 @@ class PlantUMLGenerator:
     def add_drawable(self, dw: Drawable):
         self.drawables.append(dw)
 
-    def dump(self, file: str):
-        with open(file, "w") as fout:
+    def dump(self, directory: str, experiment_name: str) -> None:
+        """
+        Dump the uml file.
+
+        :param directory: the directory where experiments details are listed.
+        :param experiment_name: the name of the folder where the data about experiment will be saved.
+        :return: None.
+        """
+        experiment_dir = directory + "/" + experiment_name
+
+        os.makedirs(experiment_dir, exist_ok=True)
+        with open(os.path.join(experiment_dir, "diagram.uml"), "w") as fout:
             fout.writelines("@startuml\n")
             for d in self.drawables:
                 fout.write(d.draw())

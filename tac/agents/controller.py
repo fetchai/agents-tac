@@ -404,7 +404,7 @@ class ControllerAgent(TACAgent):
         logger.debug("Registering with {} data model".format(desc.data_model.name))
         self.register_service(0, desc)
 
-    def dump(self, directory: str = "data", experiment_name: Optional[str] = None) -> None:
+    def dump(self, directory: str, experiment_name: str) -> None:
         """
         Dump the details of the simulation.
 
@@ -412,7 +412,6 @@ class ControllerAgent(TACAgent):
         :param experiment_name: the name of the folder where the data about experiment will be saved.
         :return: None.
         """
-        experiment_name = experiment_name if experiment_name is not None else str(datetime.datetime.now()).replace(" ", "_")
         experiment_dir = directory + "/" + experiment_name
 
         if not self.game_handler.is_game_running():

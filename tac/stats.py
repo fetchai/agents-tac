@@ -22,6 +22,7 @@ from typing import Any, Dict, Optional
 import numpy as np
 import matplotlib
 matplotlib.use('agg')
+import os
 import pylab as plt
 
 from tac.game import Game
@@ -90,3 +91,13 @@ class GameStats:
         else:
             plt.savefig(output_path)
 
+    def dump(self, directory: str, experiment_name: str) -> None:
+        """
+        Dump the plot.
+
+        :param directory: the directory where experiments details are listed.
+        :param experiment_name: the name of the folder where the data about experiment will be saved.
+        :return: None.
+        """
+        experiment_dir = directory + "/" + experiment_name
+        self.plot_score_history(os.path.join(experiment_dir, "plot.png"))

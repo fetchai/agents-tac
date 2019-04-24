@@ -4,11 +4,11 @@ This tutorial shows how the registration to the Trading Agent Competition works.
 
 ## Demo
 
-- Be sure you're running an OEF Node on `localhost`. 
+- Ensure you are running an OEF Node on `localhost`. 
 
 - Run the controller:
 
-      python tac/controller.py
+      python tac/agents/controller.py
     
 - Run the baseline agent:
 
