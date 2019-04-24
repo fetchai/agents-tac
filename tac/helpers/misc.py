@@ -74,16 +74,18 @@ def compute_allocation(nb_agents: int, h: int) -> List[int]:
     return allocation
 
 
-def generate_instances_per_good(nb_goods: int, nb_agents: int, a: int, b: int) -> List[int]:
+def generate_instances_per_good(nb_goods: int, nb_agents: int, lower_bound_factor: int, upper_bound_factor: int) -> List[int]:
     """
     Compute the vector of good instances available in the game.
     An element of the vector at index j determines the number of instances of good j in the game.
     :param nb_goods: the number of goods.
     :param nb_agents: the number of agents.
-    :param a: the lower bound of the uniform distribution
-    :param b: the uper bound of the uniform distribution
+    :param lower_bound_factor: the lower bound factor of the uniform distribution
+    :param upper_bound_factor: the upper bound factor of the uniform distribution
     :return: the vector of good instances.
     """
+    a = nb_agents - round(nb_agents / float(lower_bound_factor))
+    b = nb_agents + round(nb_agents / float(upper_bound_factor))
     return [sample_good_instance(nb_agents, a, b) for _ in range(nb_goods)]
 
 
@@ -103,13 +105,14 @@ def generate_endowment_of_good(nb_agents: int, nb_instances: int) -> List[int]:
     return endowment
 
 
-def generate_endowments(nb_agents: int, instances_per_good: List[int]) -> List[List[int]]:
+def generate_endowments(nb_goods: int, nb_agents: int, lower_bound_factor: int, upper_bound_factor: int) -> List[List[int]]:
     """
     Compute endowments per agent. That is, a matrix of shape (nb_agents, nb_goods)
     :param nb_agents: the number of agents.
     :param instances_per_good: the number of goods.
     :return: the endowments matrix.
     """
+    instances_per_good = generate_instances_per_good(nb_goods, nb_agents, lower_bound_factor, upper_bound_factor) # type: List[int]
     # compute endowment matrix per good. The shape is (nb_goods, nb_agents).
     # Row i contains the holdings for every agent j.
     endowments_by_good = [generate_endowment_of_good(nb_agents, I_j) for I_j in instances_per_good] # type: List[List[int]]
@@ -118,7 +121,7 @@ def generate_endowments(nb_agents: int, instances_per_good: List[int]) -> List[L
     return endowments
 
 
-def generate_utilities(nb_agents: int, scores: Set[int]) -> List[List[int]]:
+def generate_utilities(nb_agents: int, nb_goods: int) -> List[List[int]]:
     """
     Compute the preference matrix. That is, a generic element e_ij is the utility of good j for agent i.
 
@@ -126,7 +129,7 @@ def generate_utilities(nb_agents: int, scores: Set[int]) -> List[List[int]]:
     :param scores: the set of scores values.
     :return: the preference matrix.
     """
-
+    scores = set(range(nb_goods)) # type: scores: Set[int]
     # matrix where each row is in the same order.
     temporary_matrix = [list(scores)] * nb_agents
     # compute random preferences (i.e. permute every preference list randomly).

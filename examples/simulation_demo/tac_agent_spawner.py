@@ -47,6 +47,8 @@ def parse_arguments():
     parser.add_argument("--data-output-dir", default="data", help="The output directory for the simulation data.")
     parser.add_argument("--experiment-id", default=None, help="The experiment ID.")
     parser.add_argument("--plot", default=False, type=bool, help="Plot sequence of transactions and the changes in scores.")
+    parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
+    parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
     parser.add_argument("--timeout", default=5, type=int, help="The amount of time (in seconds) to wait for starting the competition.")
 
     arguments = parser.parse_args()
@@ -76,6 +78,8 @@ def initialize_controller_agent(public_key: str,
                                 oef_port: int,
                                 min_nb_agents: int,
                                 nb_goods: int,
+                                lower_bound_factor: int,
+                                upper_bound_factor: int,
                                 timeout: int) -> ControllerAgent:
     """
     Initialize the controller agent.
@@ -84,6 +88,8 @@ def initialize_controller_agent(public_key: str,
     :param oef_port: the TCP/IP port of the OEF Node.
     :param min_nb_agents: the minimum number of agents to run the competition.
     :param nb_goods: the number of goods.
+    :param lower_bound_factor: the lower bound factor of a uniform distribution.
+    :param upper_bound_factor: the upper bound factor of a uniform distribution.
     :param timeout: the timeout (in seconds) to wait until the competition starts.
     :return: the controller agent.
     """
@@ -92,7 +98,8 @@ def initialize_controller_agent(public_key: str,
 
     tac_controller = ControllerAgent(public_key=public_key, oef_addr=oef_addr,
                                      oef_port=oef_port, min_nb_agents=min_nb_agents,
-                                     nb_goods=nb_goods, start_time=start_time)
+                                     nb_goods=nb_goods, lower_bound_factor=lower_bound_factor,
+                                     upper_bound_factor=upper_bound_factor,start_time=start_time)
     tac_controller.connect()
     tac_controller.register()
     return tac_controller
@@ -177,7 +184,8 @@ if __name__ == '__main__':
     try:
 
         tac_controller = initialize_controller_agent("tac_controller", arguments.oef_addr, arguments.oef_port,
-                                                     arguments.nb_agents, arguments.nb_goods, arguments.timeout)
+                                                     arguments.nb_agents, arguments.nb_goods, arguments.lower_bound_factor,
+                                                     arguments.upper_bound_factor, arguments.timeout)
         baseline_agents = initialize_baseline_agents(arguments.nb_baseline_agents, arguments.oef_addr, arguments.oef_port)
         run(tac_controller, baseline_agents)
 
