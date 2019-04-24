@@ -572,7 +572,7 @@ class GameTransaction:
         """
 
         assert self.buyer_id != self.seller_id
-        assert self.amount > 0
+        assert self.amount >= 0
         assert all(good_id >= 0 for good_id in self.quantities_by_good_id.keys())
         assert all(quantity >= 0 for quantity in self.quantities_by_good_id.values())
 

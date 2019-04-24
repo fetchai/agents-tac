@@ -1,9 +1,9 @@
 # tac-agents
-OEF Agents for Trading Agents Competition
+Agents for Trading Agents Competition
 
 ## Repository structure
 
-- `data/`: default folder for storage of the simulation data.
+- `data`: default folder for storage of the simulation data.
 - `docker-images`: submodule to the [docker-images](https://github.com/uvue-git/docker-images.git)
 - `docker-tac-develop`: Docker image for the development of TAC related stuff.  
 - `docs`: the docs for this project.
@@ -12,8 +12,8 @@ OEF Agents for Trading Agents Competition
 - `sandbox`: setup for using Docker compose.
 - `scripts`: list of scripts for different purposes (e.g. do data analysis)
 - `tac`: the main folder containing the Python package.
+- `tac-cpp`: submodule associated with the project.
 - `tests`: tests for the package.
-
 
 ## Dependencies
 
@@ -29,6 +29,5 @@ OEF Agents for Trading Agents Competition
 - Install the package:
 
       python3 setup.py install 
-
 
 - In a different terminal window launch an OEF Node. You can find out how to do it [here](https://fetchai.github.io/oef-sdk-python/user/oef-node.html).
