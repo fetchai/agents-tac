@@ -234,20 +234,19 @@ class BaselineAgent(NegotiationAgent):
         after_score = self._agent_state.get_score_after_transaction(-price, quantity_by_good_id)
         proposal_delta_score = after_score - current_score
 
-        if proposal_delta_score > price + self._fee:
+        if proposal_delta_score >= 0:
             logger.debug("Accepting propose: proposal_delta_score={}, price={}".format(proposal_delta_score, price))
             self._accept_propose(msg_id + 1, dialogue_id, origin, target, proposals, True)
-        else: 
-            counter_proposal = None #_improve_propose(price, quantity_by_good_id):
+        elif (proposal_delta_score < 0) & (price > 0):
+            counter_proposal = _improve_propose(price, quantity_by_good_id, current_score)
             if counter_proposal is not None:
-
                 logger.debug("[{}]: sending to {} a CounterPropose{}".format(self.public_key, origin,
                                                                   pprint.pformat({
                                                                       "msg_id": msg_id + 1,
                                                                       "dialogue_id": dialogue_id,
                                                                       "origin": origin,
                                                                       "target": target,
-                                                                      "propose": goods_for_sale_description.values
+                                                                      "propose": counter_proposal.values
                                                                   })))
                 self.send_propose(msg_id + 1, dialogue_id, origin, msg_id)
                 new_price, new_quantity_by_good_id = self._extract_info_from_propose(counter_proposal)
@@ -257,39 +256,29 @@ class BaselineAgent(NegotiationAgent):
             else:
                 logger.debug("Declining propose: proposal_delta_score={}, price={}".format(proposal_delta_score, price))
                 self.send_decline(msg_id + 1, dialogue_id, origin, msg_id)
+        else:
+            logger.debug("Declining propose: proposal_delta_score={}, price={}".format(proposal_delta_score, price))
+            self.send_decline(msg_id + 1, dialogue_id, origin, msg_id)
 
-    def _improve_propose(self, proposal: Description) -> Optional[Description]:
+    def _improve_propose(self, price: int, quantity_by_good_id: Dict[int, int], current_score: int) -> Optional[Description]:
         """
         TODO
         Improve a proposal, if it's possible.
-        :param proposal: the proposal to improve.
-        :return: A better proposal, the same proposal, or None if it cannot be improved.
+        :param price: the proposal to improve.
+        :param quantity_by_good_id: the quantities proposed for each good id.
+        :return: A counter proposal.
         """
-        price, good_ids, quantities = self._extract_info_from_propose(proposal)
+        proposal_delta_score = -1
+        new_price = price - 1
+        while (new_price >= 0) & (proposal_delta_score < 0):
+            after_score = self._agent_state.get_score_after_transaction(-new_price, quantity_by_good_id)
+            proposal_delta_score = after_score - current_score
+            new_price -= 1
 
-        # transform every quantity greater or equal than 1 into 1, because we don't want more than one copy of the same good.
-        new_quantities = [1 if q >= 1 else 0 for q in quantities]
-        # if there is a score equal to 0 and the quantity of the associated good is > 0, just remove it
-        if any(s == 0 for s in self.agent_state.utilities):
-            good_id_with_zero_score = self.agent_state.utilities.index(0)
-            new_quantities[good_id_with_zero_score] = 0
-
-        # compute the proposal score
-        new_score = self.agent_state.score_good_quantities(new_quantities)
-        # use the seller's price if the price is lower than our estimate.
-        new_price = price if new_score < price else price
-
-        # if all the new desired quantities are 0, return None - it's not possible to improve the current proposal
-        if all(q == 0 for q in new_quantities):
-            return None
-
-        # if both the price and the quantities are the same, return the same proposal
-        if new_quantities == quantities and new_price == price:
-            return proposal
-        # if the quantities or the price changed, build another proposal
+        if new_price >=0 & proposal_delta_score >= 0:
+            return self._build_description_from_quantities(quantity_by_good_id.values, price=new_price)
         else:
-            new_proposal = self._build_description_from_quantities(new_quantities, price=new_price)
-            return new_proposal
+            return None
 
     def _on_propose_as_seller(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES):
         # TODO the seller always accept because he's trying to sell all the excesses. It might change.

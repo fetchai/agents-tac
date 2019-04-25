@@ -494,7 +494,7 @@ class AgentState:
         # create a new (temporary) holdings
         new_holdings = self._apply_delta_quantitites(delta_quantities_by_good_id)
         new_holdings_score = self.score_good_quantities(new_holdings)
-        new_money = self.balance + delta_money
+        new_money = self.balance + delta_money - self.tx_fee
         return new_holdings_score + new_money
 
     def update(self, tx: Transaction) -> None:
