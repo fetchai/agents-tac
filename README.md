@@ -35,4 +35,5 @@ Agents for Trading Agents Competition
 ## Development
 
 - To run tests:
-	  tox -e py37
+
+      tox -e py37
