@@ -22,6 +22,7 @@ from typing import Any, Dict, Optional
 import numpy as np
 import matplotlib
 matplotlib.use('agg')
+import os
 import pylab as plt
 
 from tac.game import Game
@@ -37,10 +38,10 @@ class GameStats:
 
     @classmethod
     def from_json(cls, d: Dict[str, Any]):
-        g = Game.from_dict(d)
-        return GameStats(g)
+        game = Game.from_dict(d)
+        return GameStats(game)
 
-    def score_history(self) -> np.ndarray:
+    def _score_history(self) -> np.ndarray:
         """
         Compute the history of the scores for every agent.
         To do so, we need to simulate the game again, by settling transactions one by one
@@ -74,7 +75,7 @@ class GameStats:
         :return: None
         """
 
-        history = self.score_history()
+        history = self._score_history()
 
         plt.plot(history)
         # labels = ["agent_{:02d}".format(idx) for idx in range(self.game.nb_agents)]
@@ -90,3 +91,13 @@ class GameStats:
         else:
             plt.savefig(output_path)
 
+    def dump(self, directory: str, experiment_name: str) -> None:
+        """
+        Dump the plot.
+
+        :param directory: the directory where experiments details are listed.
+        :param experiment_name: the name of the folder where the data about experiment will be saved.
+        :return: None.
+        """
+        experiment_dir = directory + "/" + experiment_name
+        self.plot_score_history(os.path.join(experiment_dir, "plot.png"))

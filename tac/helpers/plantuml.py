@@ -17,6 +17,7 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+import os
 import pprint
 from abc import abstractmethod
 from typing import List
@@ -57,8 +58,18 @@ class PlantUMLGenerator:
     def add_drawable(self, dw: Drawable):
         self.drawables.append(dw)
 
-    def dump(self, file: str):
-        with open(file, "w") as fout:
+    def dump(self, directory: str, experiment_name: str) -> None:
+        """
+        Dump the uml file.
+
+        :param directory: the directory where experiments details are listed.
+        :param experiment_name: the name of the folder where the data about experiment will be saved.
+        :return: None.
+        """
+        experiment_dir = directory + "/" + experiment_name
+
+        os.makedirs(experiment_dir, exist_ok=True)
+        with open(os.path.join(experiment_dir, "diagram.uml"), "w") as fout:
             fout.writelines("@startuml\n")
             for d in self.drawables:
                 fout.write(d.draw())
@@ -82,10 +93,10 @@ class PlantUMLGenerator:
     def start_competition(self, public_key, current_game):
         agent_pbk_to_id = current_game.configuration._from_agent_pbk_to_agent_id
         agent_id_to_pbk = dict(map(reversed, agent_pbk_to_id.items()))
-        for agent_id, game_state in enumerate(current_game.game_states):
+        for agent_id, agent_state in enumerate(current_game.agent_states):
             agent_pbk = agent_id_to_pbk[agent_id]
-            self.add_drawable(PlantUMLGenerator.Note("{} game state: \n".format(agent_pbk) + str(game_state) +
-                                                     "\nScore: {}".format(game_state.get_score()),
+            self.add_drawable(PlantUMLGenerator.Note("{} game state: \n".format(agent_pbk) + str(agent_state) +
+                                                     "\nScore: {}".format(agent_state.get_score()),
                                                      public_key))
             self.add_drawable(PlantUMLGenerator.Transition(public_key, agent_pbk,
                                                            "GameData(money, endowments, preferences, scores, fee)"))
@@ -97,7 +108,7 @@ class PlantUMLGenerator:
                                                  public_key))
         self.add_drawable(PlantUMLGenerator.Note("Details:\n" + "\n"
                                                  .join(["score={}, money={}".format(g.get_score(), g.balance)
-                                                        for g in _current_game.game_states]),
+                                                        for g in _current_game.agent_states]),
                                                  public_key))
 
         self.add_drawable(PlantUMLGenerator.Transition(

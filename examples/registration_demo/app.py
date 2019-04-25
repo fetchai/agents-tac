@@ -28,12 +28,12 @@ from oef.query import Query, GtEq, Constraint
 
 from tac.protocol import Register, Response
 
-from tac.core import TacAgent
+from tac.core import TACAgent
 
 logger = logging.getLogger("tac")
 
 
-class SimpleRegisteringAgent(TacAgent):
+class SimpleRegisteringAgent(TACAgent):
 
     def on_search_result(self, search_id: int, agents: List[str]):
         logger.debug("Agents found: {}".format(pprint.pformat(agents)))

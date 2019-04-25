@@ -1,15 +1,15 @@
-## GUIs
+## GUIs		
 
-This package contains GUI tools to interact with the TAC project (e.g. data visualization).
+This package contains GUI tools to interact with the TAC project (e.g. data visualization).		
 
-### Tools
+### Tools		
 
-- Load a JSON file describing a game simulation 
-  (like the one described in [this section](../../examples/simulation_demo#other-parameters)) and
-  show some details:
+- Load a JSON file describing a game simulation 		
+(like the one described in [this section](../../examples/simulation_demo#other-parameters)) and		
+show some details:		
 
-    python display_data.py
-  
-- Screenshot:
-  
+    python display_data.py		
+
+- Screenshot:		
+
   ![](../../docs/misc/screenshot_gui.png)

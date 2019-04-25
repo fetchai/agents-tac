@@ -42,15 +42,15 @@
       </tr>
     </thead>
     <tbody>
-      {% for idx, game_state in idx_game_states %}
+      {% for idx, agent_state in idx_agent_states %}
         <tr>
           <th>{{ game.configuration.agent_labels[idx] }}</th>
-          <th>{{ game_state.score_good_quantities(game.configuration.endowments[idx]) + game.configuration.initial_money_amounts[idx]}}</th>
+          <th>{{ agent_state.score_good_quantities(game.configuration.endowments[idx]) + game.configuration.initial_money_amounts[idx]}}</th>
           <th>{{ game.configuration.endowments[idx] }}</th>
           <th>{{ game.configuration.utilities[idx] }}</th>
-          <th>{{ game_state.current_holdings }}</th>
-          <th>{{ game_state.balance }}</th>
-          <th>{{ game_state.get_score() }}</th>
+          <th>{{ agent_state.current_holdings }}</th>
+          <th>{{ agent_state.balance }}</th>
+          <th>{{ agent_state.get_score() }}</th>
         </tr>
       {% endfor %}
     </tbody>

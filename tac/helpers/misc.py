@@ -49,77 +49,79 @@ def generate_transaction_id(seller, buyer, dialogue_id):
     return transaction_id
 
 
-def sample_good_instance(n, g) -> int:
+def sample_good_instance(nb_agents: int, a: int, b: int) -> int:
     """Sample the number of instances for a good.
     :param n: the number of agents
-    :param g: the tuning parameter
+    :param a: the lower bound of the uniform distribution
+    :param b: the uper bound of the uniform distribution
     :return the number of instances I sampled.
     """
-    delta = n/g
-    a = n - delta
-    b = n + delta
     # Return random integer in range [a, b]
     nb_instances = round(np.random.uniform(a, b))
     return nb_instances
 
 
-def compute_allocation(n: int, h: int) -> List[int]:
+def compute_allocation(nb_agents: int, h: int) -> List[int]:
     """
     Compute an allocation (defined above).
-    :param n: the number of agents.
+    :param nb_agents: the number of agents.
     :param h: the number of instances to allocate.
     :return: the allocation (a vector of 0s and 1s
     """
-    allocation = [0] * n
-    for i in random.sample(range(n), h):
+    allocation = [0] * nb_agents
+    for i in random.sample(range(nb_agents), h):
         allocation[i] = 1
     return allocation
 
 
-def compute_instances_per_good(nb_goods: int, nb_agents: int, g: int) -> List[int]:
+def generate_instances_per_good(nb_goods: int, nb_agents: int, lower_bound_factor: int, upper_bound_factor: int) -> List[int]:
     """
     Compute the vector of good instances available in the game.
     An element of the vector at index j determines the number of instances of good j in the game.
     :param nb_goods: the number of goods.
     :param nb_agents: the number of agents.
-    :param g: tuning parameter
+    :param lower_bound_factor: the lower bound factor of the uniform distribution
+    :param upper_bound_factor: the upper bound factor of the uniform distribution
     :return: the vector of good instances.
     """
-    return [sample_good_instance(nb_agents, g) for _ in range(nb_goods)]
+    a = nb_agents - round(nb_agents / float(lower_bound_factor))
+    b = nb_agents + round(nb_agents / float(upper_bound_factor))
+    return [sample_good_instance(nb_agents, a, b) for _ in range(nb_goods)]
 
 
-def compute_endowment_of_good(n, nb_instances) -> List[int]:
+def generate_endowment_of_good(nb_agents: int, nb_instances: int) -> List[int]:
     """
     Compute the allocation for all the agent of a single good.
-    :param n: the number of agents.
+    :param nb_agents: the number of agents.
     :param nb_instances: the number of instances of the good.
     :return: the endowment of good j for all the agents.
     """
     I_j = nb_instances
     h_1, h_2 = (I_j // 2, I_j // 2) if I_j % 2 == 0 else (I_j // 2, I_j // 2 + 1)
-    a_1, a_2 = [compute_allocation(n, h_1), compute_allocation(n, h_2)]
+    a_1, a_2 = [compute_allocation(nb_agents, h_1), compute_allocation(nb_agents, h_2)]
 
-    endowment = [a_1[idx] + a_2[idx] for idx in range(n)]
+    endowment = [a_1[idx] + a_2[idx] for idx in range(nb_agents)]
 
     return endowment
 
 
-def compute_endowments(nb_agents: int, instances_per_good: List[int]) -> List[List[int]]:
+def generate_endowments(nb_goods: int, nb_agents: int, lower_bound_factor: int, upper_bound_factor: int) -> List[List[int]]:
     """
     Compute endowments per agent. That is, a matrix of shape (nb_agents, nb_goods)
     :param nb_agents: the number of agents.
     :param instances_per_good: the number of goods.
     :return: the endowments matrix.
     """
+    instances_per_good = generate_instances_per_good(nb_goods, nb_agents, lower_bound_factor, upper_bound_factor) # type: List[int]
     # compute endowment matrix per good. The shape is (nb_goods, nb_agents).
     # Row i contains the holdings for every agent j.
-    endowments_by_good = [compute_endowment_of_good(nb_agents, I_j) for I_j in instances_per_good] # type: List[List[int]]
+    endowments_by_good = [generate_endowment_of_good(nb_agents, I_j) for I_j in instances_per_good] # type: List[List[int]]
     # transpose the matrix.
     endowments = np.asarray(endowments_by_good).T.tolist()
     return endowments
 
 
-def compute_random_preferences(nb_agents: int, scores: Set[int]) -> List[List[int]]:
+def generate_utilities(nb_agents: int, nb_goods: int) -> List[List[int]]:
     """
     Compute the preference matrix. That is, a generic element e_ij is the utility of good j for agent i.
 
@@ -127,13 +129,22 @@ def compute_random_preferences(nb_agents: int, scores: Set[int]) -> List[List[in
     :param scores: the set of scores values.
     :return: the preference matrix.
     """
-
+    scores = set(range(nb_goods)) # type: scores: Set[int]
     # matrix where each row is in the same order.
     temporary_matrix = [list(scores)] * nb_agents
     # compute random preferences (i.e. permute every preference list randomly).
     preferences = list(map(lambda x: random.sample(x, len(x)), temporary_matrix))
     return preferences
 
+def generate_initial_money_amounts(nb_agents: int, money_endowment: int) -> List[int]:
+    """
+    Compute the initial money amounts for each agent.
+
+    :param nb_agents: number of agents.
+    :param money_endowment: money endowment per agent.
+    :return: the list of initial money amounts.
+    """
+    return [money_endowment] * nb_agents
 
 def build_seller_datamodel(nb_goods: int) -> DataModel:
     """
@@ -148,7 +159,7 @@ def build_seller_datamodel(nb_goods: int) -> DataModel:
     return data_model
 
 
-def get_baseline_seller_description(game_state: 'GameState') -> Description:
+def get_baseline_seller_description(agent_state: 'AgentState') -> Description:
     """
     Get the TAC seller description, following a baseline policy.
     That is, a description with the following structure:
@@ -166,9 +177,9 @@ def get_baseline_seller_description(game_state: 'GameState') -> Description:
 
     :return: the description to advertise on the Service Directory.
     """
-    seller_data_model = build_seller_datamodel(game_state.nb_goods)
+    seller_data_model = build_seller_datamodel(agent_state.nb_goods)
     desc = Description({"good_{:02d}".format(i): q
-                        for i, q in enumerate(game_state.get_excess_goods_quantities())},
+                        for i, q in enumerate(agent_state.get_excess_goods_quantities())},
                        data_model=seller_data_model)
     return desc
 

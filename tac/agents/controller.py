@@ -37,7 +37,7 @@ from typing import Optional, Set
 
 from oef.schema import DataModel, Description, AttributeSchema
 
-from tac.core import TacAgent
+from tac.core import TACAgent
 from tac.game import Game, GameTransaction
 from tac.helpers.plantuml import plantuml_gen
 from tac.protocol import Response, Request, Register, Unregister, Error, GameData, \
@@ -54,6 +54,8 @@ def parse_arguments():
     parser.add_argument("--money",    default=20,   help="Money endowment for TAC agents.")
     parser.add_argument("--nb-agents", default=5, type=int, help="Number of goods")
     parser.add_argument("--nb-goods", default=5, type=int, help="Number of goods")
+    parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
+    parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
     parser.add_argument("--fee", default=1, type=int, help="Number of goods")
     # parser.add_argument("--gui", action="store_true", help="Show the GUI.")
 
@@ -206,13 +208,17 @@ class GameHandler:
                  money_endowment: int,
                  nb_goods: int,
                  fee: int,
+                 lower_bound_factor: int,
+                 upper_bound_factor: int,
                  start_time: datetime.datetime = None):
         """
         :param controller_agent: the controller agent the handler is associated with.
-        :param min_nb_agents: the number of agents to wait for the registration.
+        :param min_nb_agents: the number of agents to wait for during registration and before starting the game.
         :param money_endowment: the initial amount of money to assign to every agent.
         :param nb_goods: the number of goods in the competition.
         :param fee: the fee for a transaction.
+        :param lower_bound_factor: the lower bound factor of a uniform distribution.
+        :param upper_bound_factor: the upper bound factor of a uniform distribution.
         :param start_time: the time when the competition will start.
         """
         self.controller_agent = controller_agent
@@ -220,6 +226,8 @@ class GameHandler:
         self.money_endowment = money_endowment
         self.nb_goods = nb_goods
         self.fee = fee
+        self.lower_bound_factor = lower_bound_factor
+        self.upper_bound_factor = upper_bound_factor
         self.start_time = start_time if start_time is not None else datetime.datetime.now() + datetime.timedelta(0, 5)
 
         self.registered_agents = set()  # type: Set[str]
@@ -277,10 +285,9 @@ class GameHandler:
 
         :return: a Game instance.
         """
-        scores = set(range(self.nb_goods))
         agents_ids = sorted(self.registered_agents)
         nb_agents = len(agents_ids)
-        game = Game.generate_game([self.money_endowment] * nb_agents, scores, self.fee, agent_ids=agents_ids)
+        game = Game.generate_game(nb_agents, self.nb_goods, self.money_endowment, self.fee, self.lower_bound_factor, self.upper_bound_factor, agent_ids=agents_ids)
         return game
 
     def _send_game_data_to_agents(self) -> None:
@@ -291,7 +298,7 @@ class GameHandler:
         :return: None.
         """
         for public_key in self.current_game.configuration.agent_labels:
-            game_data = self.current_game.get_game_data_from_agent_label(public_key)
+            game_data = self.current_game.get_agent_state_from_agent_label(public_key)
             game_data_response = GameData(
                 game_data.balance,
                 game_data.current_holdings,
@@ -324,7 +331,7 @@ class GameHandler:
             return False
 
 
-class ControllerAgent(TacAgent):
+class ControllerAgent(TACAgent):
     CONTROLLER_DATAMODEL = DataModel("tac", [
         AttributeSchema("version", int, True, "Version number of the TAC Controller Agent."),
     ])
@@ -332,7 +339,8 @@ class ControllerAgent(TacAgent):
 
     def __init__(self, public_key="controller", oef_addr="127.0.0.1", oef_port=3333,
                  min_nb_agents: int = 5, money_endowment: int = 20, nb_goods: int = 5,
-                 fee: int = 1, version: int = 1, start_time: datetime.datetime = None, **kwargs):
+                 fee: int = 1, lower_bound_factor: int = 1, upper_bound_factor: int = 1,
+                 version: int = 1, start_time: datetime.datetime = None, **kwargs):
         """
         Initialize a Controller Agent for TAC.
         :param public_key: The public key of the OEF Agent.
@@ -342,6 +350,8 @@ class ControllerAgent(TacAgent):
         :param money_endowment: the initial amount of money to assign to every agent.
         :param nb_goods: the number of goods in the competition.
         :param fee: the fee for a transaction.
+        :param lower_bound_factor: the lower bound factor of a uniform distribution.
+        :param upper_bound_factor: the upper bound factor of a uniform distribution.
         :param version: the version of the TAC controller.
         :param start_time: the time when the competition will start.
         """
@@ -354,11 +364,13 @@ class ControllerAgent(TacAgent):
             "money_endowment": money_endowment,
             "nb_goods": nb_goods,
             "fee": fee,
+            "lower_bound_factor": lower_bound_factor,
+            "upper_bound_factor": upper_bound_factor,
             "version": version,
             "start_time": str(start_time)
         })))
 
-        self.game_handler = GameHandler(self, min_nb_agents, money_endowment, nb_goods, fee, start_time)
+        self.game_handler = GameHandler(self, min_nb_agents, money_endowment, nb_goods, fee, lower_bound_factor, upper_bound_factor, start_time)
         self.handler = ControllerHandler(self)
         self.version = version
 
@@ -392,7 +404,7 @@ class ControllerAgent(TacAgent):
         logger.debug("Registering with {} data model".format(desc.data_model.name))
         self.register_service(0, desc)
 
-    def dump(self, directory: str = "data", experiment_name: Optional[str] = None) -> None:
+    def dump(self, directory: str, experiment_name: str) -> None:
         """
         Dump the details of the simulation.
 
@@ -400,7 +412,6 @@ class ControllerAgent(TacAgent):
         :param experiment_name: the name of the folder where the data about experiment will be saved.
         :return: None.
         """
-        experiment_name = experiment_name if experiment_name is not None else str(datetime.datetime.now()).replace(" ", "_")
         experiment_dir = directory + "/" + experiment_name
 
         if not self.game_handler.is_game_running():
@@ -421,7 +432,7 @@ def main():
     agent.connect()
     agent.register()
 
-    logger.debug("Running agent...")
+    logger.debug("Running TAC controller agent...")
     agent.run()
 
 

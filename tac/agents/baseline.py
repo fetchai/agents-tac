@@ -48,54 +48,124 @@ def parse_arguments():
     return parser.parse_args()
 
 
-# this is the search ID to be used to execute the search query.
+# these are the search IDs to be used to execute the search queries.
 TAC_SELLER_SEARCH_ID = 2
+TAC_BUYER_SEARCH_ID = 3
 
 
 class BaselineAgent(NegotiationAgent):
+    """The baseline agent simply tries to buy goods it does not currently have and sell goods it already has more than once.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.tac_search_id = set()
 
-    def on_search_results(self, search_id: int, agents: List[str]):
-
-        logger.debug("[{}]: search result: {} {}".format(self.public_key, search_id, agents))
-        if search_id == TAC_SELLER_SEARCH_ID:
-            self._on_tac_seller_search_result(agents)
-            return
-        else:
-            raise Exception("Shouldn't be here.")
-
     def on_start(self, game_data: GameData) -> None:
         """
         Handle the 'start' event (baseline agent):
 
-        - Register to the OEF as a seller, offering the duplicate good instances.
+        - Register to the OEF as a seller, offering all excess good instances.
         - Search for the goods needed, and eventually start a negotiation as the buyer.
         """
         self._register_as_seller()
         time.sleep(1.0)
-        self.search_tac_sellers()
+        self._search_for_sellers()
 
     def _register_as_seller(self) -> None:
         """
         Register to the Service Directory as a seller, offering the good instances in excess.
         :return: None
         """
-        desc = self.get_baseline_seller_description()
-        self.register_service(0, desc)
+        goods_for_sale_description = self._get_goods_for_sale_description()
+        self.register_service(0, goods_for_sale_description)
 
-    def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
-        pass
+    def _get_goods_for_sale_description(self) -> Description:
+        """
+        Get the description of the goods for sale, following a baseline policy.
+        That is, a description with the following structure:
+        >>> description = {
+        ...     "good_01": 1,
+        ...     "good_02": 0,
+        ...     #...
+        ...
+        ... }
+        >>>
+        where the keys indicate the good and the values the quantity that the seller wants to sell.
 
-    def on_tac_error(self, error: Error) -> None:
-        logger.error("[{}]: Received error from the controller. error_msg={}".format(self.public_key, error.error_msg))
+        The baseline agent's policy is to sell all the goods in excess, hence keeping at least one instance for every good.
+
+        :return: the description (to advertise on the Service Directory).
+        """
+        seller_data_model = build_seller_datamodel(self._agent_state.nb_goods)
+        desc = Description({"good_{:02d}".format(i): q
+                            for i, q in enumerate(self._agent_state.get_excess_goods_quantities())},
+                           data_model=seller_data_model)
+        return desc
+
+    def _search_for_sellers(self) -> None:
+        """
+        Search on OEF core for sellers and their offering.
+        """
+        query = self._build_sellers_query()
+        if query is None:
+            logger.warning("Not sending the query to the OEF because the agent already has all the goods.")
+            return None
+        else:
+            self.search_services(TAC_SELLER_SEARCH_ID, query)
+
+    def _build_sellers_query(self) -> Optional[Query]:
+        """Build the query to look for the needed goods (that is, the ones with zero count)
+
+        :return the Query, or None if the agent already has at least one instance for every good."""
+        zero_quantity_goods_ids = self._get_zero_quantity_goods_ids()
+
+        if len(zero_quantity_goods_ids) == 0:
+            return None
+        else:
+            return _build_tac_sellers_query(zero_quantity_goods_ids, self._agent_state.nb_goods)
+
+    def on_search_results(self, search_id: int, agents: List[str]):
+        """
+        Handle the 'search_results' event (baseline agent):
+
+        """
+        logger.debug("[{}]: search result: {} {}".format(self.public_key, search_id, agents))
+        if search_id == TAC_SELLER_SEARCH_ID:
+            self._on_seller_search_result(agents)
+            return
+        else:
+            raise Exception("Shouldn't be here.")
+
+    def _on_seller_search_result(self, agents: List[str]) -> None:
+        """
+        Callback of the search result for seller agents.
+
+        The actions are:
+        - build a CFP query to identify if any more goods are needed and which ones
+        - send a CFP to every agent found
+
+        if there is no need for any good, do nothing.
+
+        :param: agents: a list of agent public keys.
+
+        :return: None
+        """
+
+        logger.debug("[{}]: Found potential sellers: {}".format(self.public_key, agents))
+
+        query = self._build_sellers_query()
+        if query is None:
+            logger.debug("[{}]: No need for any more good...".format(self.public_key))
+            return
+        for seller in agents:
+            dialogue_id = random.randint(0, 100000)
+            self.send_cfp(1, dialogue_id, seller, 0, query)
 
     def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES):
         """
-        On CFP handler for a baseline agent.
+        On CFP handler for a baseline agent (i.e. receiving agent in role as buyer).
 
         - If the current holdings do not satisfy the CFP query, answer with a Decline
         - Otherwise, make a trivial proposal including all the goods in excess.
@@ -105,12 +175,14 @@ class BaselineAgent(NegotiationAgent):
         logger.debug("[{}]: on_cfp: msg_id={}, dialogue_id={}, origin={}, target={}, query={}"
                      .format(self.public_key, msg_id, dialogue_id, origin, target, query))
 
-        seller_description = self.get_baseline_seller_description()
-        price = self._game_state.score_good_quantities(self._game_state.get_excess_goods_quantities())
-        seller_description.values["price"] = price
-        if not query.check(seller_description):
+        goods_for_sale_description = self._get_goods_for_sale_description()
+        # Note: the below comment is not correct! The utility of excess goods is zero by default! However,
+        # a smart agent would still want to set a price different from zero most of the time to exploit her market power.
+        # utility_of_excess_goods = self._agent_state.score_good_quantities(self._agent_state.get_excess_goods_quantities())
+        utility_of_excess_goods = 0
+        goods_for_sale_description.values["price"] = utility_of_excess_goods # random.randint(0, 2) 
+        if not query.check(goods_for_sale_description):
             logger.debug("[{}]: Current holdings do not satisfy CFP query.".format(self.public_key))
-            self.send_decline(msg_id + 1, dialogue_id, origin, msg_id)
             logger.debug("[{}]: sending to {} a Decline{}".format(self.public_key, origin,
                                                                   pprint.pformat({
                                                                       "msg_id": msg_id + 1,
@@ -118,15 +190,16 @@ class BaselineAgent(NegotiationAgent):
                                                                       "origin": origin,
                                                                       "target": target
                                                                   })))
+            self.send_decline(msg_id + 1, dialogue_id, origin, msg_id)
         else:
-            proposals = [seller_description]
+            proposals = [goods_for_sale_description]
             logger.debug("[{}]: sending to {} a Propose{}".format(self.public_key, origin,
                                                                   pprint.pformat({
                                                                       "msg_id": msg_id + 1,
                                                                       "dialogue_id": dialogue_id,
                                                                       "origin": origin,
                                                                       "target": target,
-                                                                      "propose": seller_description.values
+                                                                      "propose": goods_for_sale_description.values
                                                                   })))
             self.send_propose(msg_id + 1, dialogue_id, origin, msg_id, proposals)
 
@@ -157,16 +230,59 @@ class BaselineAgent(NegotiationAgent):
         proposal = proposals[0]
 
         price, quantity_by_good_id = self._extract_info_from_propose(proposal)
-        current_score = self._game_state.get_score()
-        after_score = self._game_state.get_score_after_transaction(-price, quantity_by_good_id)
+        current_score = self._agent_state.get_score()
+        after_score = self._agent_state.get_score_after_transaction(-price, quantity_by_good_id)
         proposal_delta_score = after_score - current_score
 
-        if proposal_delta_score > price + self._fee:
+        if proposal_delta_score >= 0:
             logger.debug("Accepting propose: proposal_delta_score={}, price={}".format(proposal_delta_score, price))
             self._accept_propose(msg_id + 1, dialogue_id, origin, target, proposals, True)
+        elif False: #(proposal_delta_score < 0) & (price > 0):
+            counter_proposal = _improve_propose(price, quantity_by_good_id, current_score)
+            if counter_proposal is not None:
+                logger.debug("[{}]: sending to {} a CounterPropose{}".format(self.public_key, origin,
+                                                                  pprint.pformat({
+                                                                      "msg_id": msg_id + 1,
+                                                                      "dialogue_id": dialogue_id,
+                                                                      "origin": origin,
+                                                                      "target": target,
+                                                                      "propose": counter_proposal.values
+                                                                  })))
+                self.send_propose(msg_id + 1, dialogue_id, origin, msg_id)
+                new_price, new_quantity_by_good_id = self._extract_info_from_propose(counter_proposal)
+                transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id)
+                candidate_transaction = Transaction(transaction_id, False, origin, new_price, new_quantity_by_good_id)
+                self.submit_transaction(candidate_transaction, only_store=True)
+            else:
+                logger.debug("Declining propose: proposal_delta_score={}, price={}".format(proposal_delta_score, price))
+                self.send_decline(msg_id + 1, dialogue_id, origin, msg_id)
         else:
             logger.debug("Declining propose: proposal_delta_score={}, price={}".format(proposal_delta_score, price))
             self.send_decline(msg_id + 1, dialogue_id, origin, msg_id)
+
+    def _improve_propose(self, price: int, quantity_by_good_id: Dict[int, int], current_score: int) -> Optional[Description]:
+        """
+        TODO
+        Improve a proposal, if it's possible.
+        :param price: the proposal to improve.
+        :param quantity_by_good_id: the quantities proposed for each good id.
+        :return: A counter proposal.
+        """
+        proposal_delta_score = -1
+        new_price = price - 1
+        while (new_price >= 0) & (proposal_delta_score < 0):
+            after_score = self._agent_state.get_score_after_transaction(-new_price, quantity_by_good_id)
+            proposal_delta_score = after_score - current_score
+            new_price -= 1
+
+        if new_price >=0 & proposal_delta_score >= 0:
+            return self._build_description_from_quantities(quantity_by_good_id.values, price=new_price)
+        else:
+            return None
+
+    def _on_propose_as_seller(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES):
+        # TODO the seller always accept because he's trying to sell all the excesses. It might change.
+        self._accept_propose(msg_id, dialogue_id, origin, target, proposals, False)
 
     def on_decline(self, msg_id: int, dialogue_id: int, origin: str, target: int):
         logger.debug("[{}]: on_decline: msg_id={}, dialogue_id={}, origin={}, target={}"
@@ -176,18 +292,6 @@ class BaselineAgent(NegotiationAgent):
         logger.debug("[{}]: on_accept: msg_id={}, dialogue_id={}, origin={}, target={}"
                      .format(self.public_key, msg_id, dialogue_id, origin, target))
         # TODO send transaction confirmation?
-
-    def search_tac_sellers(self) -> None:
-        query = self.build_tac_sellers_query()
-        if query is None:
-            logger.warning("Not sending the query to the OEF because the agent already have all the goods.")
-            return None
-        else:
-            self.search_services(TAC_SELLER_SEARCH_ID, query)
-
-    def _on_propose_as_seller(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES):
-        # TODO the seller always accept because he's trying to sell all the excesses. It might change.
-        self._accept_propose(msg_id, dialogue_id, origin, target, proposals, False)
 
     def _accept_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES,
                         is_buyer: bool) -> None:
@@ -229,67 +333,8 @@ class BaselineAgent(NegotiationAgent):
         """
         zero_quantity_goods_ids = set(map(lambda x: x[0],
                                           filter(lambda x: x[1] == 0,
-                                                 enumerate(self._game_state.current_holdings))))
+                                                 enumerate(self._agent_state.current_holdings))))
         return zero_quantity_goods_ids
-
-    def build_tac_sellers_query(self) -> Optional[Query]:
-        """Build the query to look for the needed goods (that is, the ones with zero count)
-
-        :return the Query, or None if the agent already have at least one instance for every good."""
-        zero_quantity_goods_ids = self._get_zero_quantity_goods_ids()
-
-        if len(zero_quantity_goods_ids) == 0:
-            return None
-        else:
-            return _build_tac_sellers_query(zero_quantity_goods_ids, self._game_state.nb_goods)
-
-    def _on_tac_seller_search_result(self, agents: List[str]) -> None:
-        """
-        Callback of the search result for seller agents.
-
-        The actions are:
-        - build a CFP query to search for the needed goods
-        - send a CFP to every agent found
-
-        if there is no need for any good, do nothing.
-
-        :param: agents: a list of agent public keys.
-
-        :return: None
-        """
-
-        logger.debug("[{}]: Found potential sellers: {}".format(self.public_key, agents))
-
-        query = self.build_tac_sellers_query()
-        if query is None:
-            logger.debug("[{}]: No need for any more good...".format(self.public_key))
-            return
-        for seller in agents:
-            dialogue_id = random.randint(0, 100000)
-            self.send_cfp(1, dialogue_id, seller, 0, query)
-
-    def get_baseline_seller_description(self) -> Description:
-        """
-        Get the TAC seller description, following a baseline policy.
-        That is, a description with the following structure:
-        >>> description = {
-        ...     "good_01": 1,
-        ...     "good_02": 0,
-        ...     #...
-        ...
-        ... }
-        >>>
-         where the keys indicate the good and the values the quantity that the seller wants to sell.
-
-         The baseline's policy is to sell all the goods in excess, hence keeping at least one instance for every good.
-
-        :return: the description to advertise on the Service Directory.
-        """
-        seller_data_model = build_seller_datamodel(self._game_state.nb_goods)
-        desc = Description({"good_{:02d}".format(i): q
-                            for i, q in enumerate(self._game_state.get_excess_goods_quantities())},
-                           data_model=seller_data_model)
-        return desc
 
     def _build_description_from_quantities(self, quantities: List[int], price: Optional[int] = None) -> Description:
         """
@@ -303,9 +348,15 @@ class BaselineAgent(NegotiationAgent):
         if price is not None:
             description_content["price"] = price
 
-        data_model = build_seller_datamodel(self._game_state.nb_goods)
+        data_model = build_seller_datamodel(self._agent_state.nb_goods)
         desc = Description(description_content, data_model=data_model)
         return desc
+
+    def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
+        pass
+
+    def on_tac_error(self, error: Error) -> None:
+        logger.error("[{}]: Received error from the controller. error_msg={}".format(self.public_key, error.error_msg))
 
 
 def main():

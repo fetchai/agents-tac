@@ -38,8 +38,6 @@ services:
       - "172.28.1.1"
       - "--oef-port"
       - "3333"
-      - "--uml-out"
-      - "out.uml"
 
 networks:
     main_net:
