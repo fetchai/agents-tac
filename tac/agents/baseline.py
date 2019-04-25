@@ -237,7 +237,7 @@ class BaselineAgent(NegotiationAgent):
         if proposal_delta_score >= 0:
             logger.debug("Accepting propose: proposal_delta_score={}, price={}".format(proposal_delta_score, price))
             self._accept_propose(msg_id + 1, dialogue_id, origin, target, proposals, True)
-        elif (proposal_delta_score < 0) & (price > 0):
+        elif False: #(proposal_delta_score < 0) & (price > 0):
             counter_proposal = _improve_propose(price, quantity_by_good_id, current_score)
             if counter_proposal is not None:
                 logger.debug("[{}]: sending to {} a CounterPropose{}".format(self.public_key, origin,

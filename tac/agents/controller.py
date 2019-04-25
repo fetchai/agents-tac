@@ -432,7 +432,7 @@ def main():
     agent.connect()
     agent.register()
 
-    logger.debug("Running TAC dontroller agent...")
+    logger.debug("Running TAC controller agent...")
     agent.run()
 
 

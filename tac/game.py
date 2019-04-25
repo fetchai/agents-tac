@@ -478,8 +478,8 @@ class AgentState:
         >>> agent_state = AgentState(20, [0, 1, 2], [20, 40, 60], 1)
         >>> agent_state.get_score()  # gives: money + utility from holdings = 20 * (0*20 + 1*40 + 1*60)
         120
-        >>> agent_state.get_score_after_transaction(-10, {0: 1})  # add a holding for the first good and pay 10.
-        130
+        >>> agent_state.get_score_after_transaction(-10, {0: 1})  # add a holding for the first good and pay 10 and a fee of 1.
+        129
 
         :param delta_money: the delta amount of money.
                             A negative value means that we pay money in the transaction.

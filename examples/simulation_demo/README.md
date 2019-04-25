@@ -21,7 +21,7 @@ This tutorial shows how to simulate a simple TAC.
 - `--experiment-id` is the name to give to the simulation.
 - `--plot` specifies whether to plot a summary of the game.
 - `--lower-bound-factor` is the lower bound factor of a uniform distribution used for generating good instances.
-- `--upper-bound-factor` is the lower bound factor of a uniform distribution used for generating good instances.
+- `--upper-bound-factor` is the upper bound factor of a uniform distribution used for generating good instances.
 - `--fee` is the transaction fee.
 - `--timeout` is the amount of time (in seconds) for the controller to wait for starting the competition.
 
@@ -42,7 +42,7 @@ Example:
           --fee 1
           --timeout 5
       
-It generates a `game.json` file in `data/my_experiment/` folder that looks like:
+It generates a `game.json` file in the `${data_output_dir}/${experiment_id}` folder that looks like:
 
 ```
 {'fee': 1,

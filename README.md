@@ -28,6 +28,6 @@ Agents for Trading Agents Competition
 
 - Install the package:
 
-      python3 setup.py install 
+      python3 setup.py install
 
 - In a different terminal window launch an OEF Node. You can find out how to do it [here](https://fetchai.github.io/oef-sdk-python/user/oef-node.html).
