@@ -1,0 +1,39 @@
+on_start
+	> _register_as_seller
+		> _get_goods_supplied_description
+			> _get_supplied_goods_quantities
+		> _register_service
+	> _register_as_buyer
+		> _get_goods_demanded_description
+			> _get_demanded_goods_quantities
+		> _register_service	
+	> _search_for_sellers
+		> _build_sellers_query
+			> _get_demanded_goods_ids
+		> _search_services
+	> _search_for_buyers
+		> _build_buyers_query
+			> _get_supplied_goods_ids
+		> _search_services
+
+on_search_results
+	> _on_seller_search_result
+		> _build_sellers_query
+		> send_cfp
+	> _on_buyer_search_result
+		> _build_sellers_query()
+
+on_cfp
+
+on_propose
+	_on_propose_as_buyer
+	_on_propose_as_seller
+
+on_decline
+
+on_accept
+	_on_accept
+
+on_transaction_confirmed
+
+on_tac_error

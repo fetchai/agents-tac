@@ -146,16 +146,18 @@ def generate_initial_money_amounts(nb_agents: int, money_endowment: int) -> List
     """
     return [money_endowment] * nb_agents
 
-def build_seller_datamodel(nb_goods: int) -> DataModel:
+def build_datamodel(nb_goods: int, seller: bool) -> DataModel:
     """
-    Build a data model for sellers.
+    Build a data model for buyers or sellers.
 
     :param nb_goods: the number of goods.
-    :return: the seller data model.
+    :param seller: bool indicating whether a seller or buyer data model
+    :return: the data model.
     """
     goods_quantities_attributes = [AttributeSchema("good_{:02d}".format(i), int, True) for i in range(nb_goods)]
     price_attribute = AttributeSchema("price", int, False)
-    data_model = DataModel("tac_seller", goods_quantities_attributes + [price_attribute])
+    description = "tac_seller" if seller else "tac_buyer"
+    data_model = DataModel(description, goods_quantities_attributes + [price_attribute])
     return data_model
 
 
@@ -177,14 +179,14 @@ def get_baseline_seller_description(agent_state: 'AgentState') -> Description:
 
     :return: the description to advertise on the Service Directory.
     """
-    seller_data_model = build_seller_datamodel(agent_state.nb_goods)
+    seller_data_model = build_datamodel(agent_state.nb_goods, seller=True)
     desc = Description({"good_{:02d}".format(i): q
                         for i, q in enumerate(agent_state.get_excess_goods_quantities())},
                        data_model=seller_data_model)
     return desc
 
 
-def _build_tac_sellers_query(good_ids: Set[int], nb_goods: Optional[int] = None) -> Query:
+def build_query(good_ids: Set[int], seller: bool, nb_goods: Optional[int] = None) -> Query:
     """
     Build the query that the buyer can send to look for goods.
 
@@ -196,10 +198,11 @@ def _build_tac_sellers_query(good_ids: Set[int], nb_goods: Optional[int] = None)
     (assuming that the sellers are registered with the data model for baseline sellers.
 
     :param good_ids: the good ids to put in the query.
+    :param seller: bool indicating whether it's a seller or buyer query
     :param nb_goods: the total number of goods (to build the data model, optional)
     :return: the query.
     """
-    data_model = None if nb_goods is None else build_seller_datamodel(nb_goods)
+    data_model = None if nb_goods is None else build_datamodel(nb_goods, seller)
     constraints = [Constraint("good_{:02d}".format(good_id), GtEq(1)) for good_id in good_ids]
 
     if len(good_ids) > 1:
