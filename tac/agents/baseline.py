@@ -231,10 +231,10 @@ class BaselineAgent(NegotiationAgent):
 
     def _on_seller_search_result(self, agents: List[str]) -> None:
         """
-        Callback of the search result for seller agents.
+        Callback of the search result for agents which sell goods.
 
         The actions are:
-        - build a CFP query to identify if any more goods are needed and which ones
+        - build a CFP query to identify if any more goods are demanded and which ones
         - send a CFP to every agent found
 
         if there is no need for any good, do nothing.
@@ -248,34 +248,72 @@ class BaselineAgent(NegotiationAgent):
 
         query = self._build_sellers_query()
         if query is None:
-            logger.debug("[{}]: No need for any more good...".format(self.public_key))
+            logger.debug("[{}]: No more goods are demanded...".format(self.public_key))
             return
         for seller in agents:
             dialogue_id = random.randint(0, 100000)
-            self.send_cfp(1, dialogue_id, seller, 0, query)
+            self.send_cfp(1, dialogue_id, seller, 0, query) # TODO what identifies that this is a seller cfp? )?
 
     def _on_buyer_search_result(self, agents: List[str]) -> None:
-        pass
+        """
+        Callback of the search result for agents which buy goods.
+
+        The actions are:
+        - build a CFP query to identify if any more goods are supplied and which ones
+        - send a CFP to every agent found
+
+        if there is no need for any good, do nothing.
+
+        :param: agents: a list of agent public keys.
+
+        :return: None
+        """
+
+        logger.debug("[{}]: Found potential sellers: {}".format(self.public_key, agents))
+
+        query = self._build_buyers_query()
+        if query is None:
+            logger.debug("[{}]: No more goods are supplied...".format(self.public_key))
+            return
+        for buyer in agents:
+            dialogue_id = random.randint(0, 100000)
+            self.send_cfp(1, dialogue_id, buyer, 0, query)
 
     def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES):
         """
-        On CFP handler for a baseline agent (i.e. receiving agent in role as buyer).
+        On CFP handler.
 
         - If the current holdings do not satisfy the CFP query, answer with a Decline
         - Otherwise, make a trivial proposal including all the goods in excess.
 
         """
-
         logger.debug("[{}]: on_cfp: msg_id={}, dialogue_id={}, origin={}, target={}, query={}"
                      .format(self.public_key, msg_id, dialogue_id, origin, target, query))
+        # TODO
+        if True:
+            self._on_cfp_as_seller(msg_id, dialogue_id, origin, target, query)
+            return
+        elif False:
+            self._on_cfp_as_buyer(msg_id, dialogue_id, origin, target, query)
+            return
+        else:
+            raise Exception("This role is not specified.")
 
-        goods_for_sale_description = self._get_goods_supplied_description()
+    def _on_cfp_as_seller(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES):
+        """
+        On CFP handler for seller.
+
+        - If the current holdings do not satisfy the CFP query, answer with a Decline
+        - Otherwise, make a trivial proposal including all the goods supplied.
+
+        """
+        goods_supplied_description = self._get_goods_supplied_description()
         # Note: the below comment is not correct! The utility of excess goods is zero by default! However,
         # a smart agent would still want to set a price different from zero most of the time to exploit her market power.
         # utility_of_excess_goods = self._agent_state.score_good_quantities(self._agent_state.get_excess_goods_quantities())
         utility_of_excess_goods = 0 # random.randint(0, 9)
-        goods_for_sale_description.values["price"] = utility_of_excess_goods
-        if not query.check(goods_for_sale_description):
+        goods_supplied_description.values["price"] = utility_of_excess_goods
+        if not query.check(goods_supplied_description):
             logger.debug("[{}]: Current holdings do not satisfy CFP query.".format(self.public_key))
             logger.debug("[{}]: sending to {} a Decline{}".format(self.public_key, origin,
                                                                   pprint.pformat({
@@ -286,14 +324,14 @@ class BaselineAgent(NegotiationAgent):
                                                                   })))
             self.send_decline(msg_id + 1, dialogue_id, origin, msg_id)
         else:
-            proposals = [goods_for_sale_description]
+            proposals = [goods_supplied_description]
             logger.debug("[{}]: sending to {} a Propose{}".format(self.public_key, origin,
                                                                   pprint.pformat({
                                                                       "msg_id": msg_id + 1,
                                                                       "dialogue_id": dialogue_id,
                                                                       "origin": origin,
                                                                       "target": target,
-                                                                      "propose": goods_for_sale_description.values
+                                                                      "propose": goods_supplied_description.values
                                                                   })))
             self.send_propose(msg_id + 1, dialogue_id, origin, msg_id, proposals)
 
@@ -302,6 +340,15 @@ class BaselineAgent(NegotiationAgent):
             price, quantity_by_good_id = self._extract_info_from_propose(proposals[0])
             candidate_transaction = Transaction(transaction_id, False, origin, price, quantity_by_good_id)
             self.submit_transaction(candidate_transaction, only_store=True)
+
+    def _on_cfp_as_buyer(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES ):
+        """
+        On CFP handler for buyer.
+
+        - If the current demand does not satisfy the CFP query, answer with a Decline
+        - Otherwise, make a trivial proposal including all the goods demanded.
+        """
+        pass
 
     def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES):
         """TODO Assume propose only when buyer."""
