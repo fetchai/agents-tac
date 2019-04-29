@@ -27,38 +27,47 @@ on_search_results
 on_cfp
 	> _on_cfp_as_seller
 		> _get_goods_supplied_description
-		> send_decline
+		> send_decline (as seller)
 		> send_propose (as seller)
 	> _on_cfp_as_buyer
 		> _get_goods_demanded_description
-		> send_decline
+		> send_decline (as buyer)
 		> send_propose (as buyer)
 
 on_propose
 	> _on_propose_as_buyer
-		> _accept_propose (as buyer)
-			> start_lock (as buyer)
-			> submit_transaction
+		> _accept_propose_as_buyer
+			> start_lock_as_buyer
 			> send_accept (as buyer)
 		> send_decline (as buyer)
 	> _on_propose_as_seller
-		> _accept_propose (as seller)
-			> start_lock
-			> submit_transaction
-			> send_accept (as buyer)
-		> send_decline
+		> _accept_propose_as_seller
+			> start_lock_as_seller
+			> send_accept (as seller)
+		> send_decline (as seller)
 
 on_decline
 
 on_accept
 	> _on_accept_as_seller
-
+		> start_lock_as_seller
+		> submit_transaction (as seller)
+		> match_accept (as seller)
 	> _on_accept_as_buyer
-		> start_lock (as buyer)
-		> submit_transaction
+		> start_lock_as_buyer
+		> submit_transaction (as buyer)
 		> match_accept (as buyer)
 
+on_match_accept
+	> _on_match_accept_as_buyer
+		> submit_transaction (as buyer)
+	> _on_match_accept_as_seller
+		> submit_transaction (as seller)
 
 on_transaction_confirmed
+	> _on_confirmed_as_seller
+		> end_lock_as_seller
+	> _on_confirmed_as_buyer
+		> end_lock_as_buyer
 
 on_tac_error
