@@ -17,22 +17,47 @@ on_start
 		> _search_services
 
 on_search_results
-	> _on_seller_search_result
+	> _on_sellers_search_result
 		> _build_sellers_query
-		> send_cfp
-	> _on_buyer_search_result
-		> _build_sellers_query()
+		> send_cfp (as buyer)
+	> _on_buyers_search_result
+		> _build_buyers_query
+		> send_cfp (as seller)
 
 on_cfp
+	> _on_cfp_as_seller
+		> _get_goods_supplied_description
+		> send_decline
+		> send_propose (as seller)
+	> _on_cfp_as_buyer
+		> _get_goods_demanded_description
+		> send_decline
+		> send_propose (as buyer)
 
 on_propose
-	_on_propose_as_buyer
-	_on_propose_as_seller
+	> _on_propose_as_buyer
+		> _accept_propose (as buyer)
+			> start_lock (as buyer)
+			> submit_transaction
+			> send_accept (as buyer)
+		> send_decline (as buyer)
+	> _on_propose_as_seller
+		> _accept_propose (as seller)
+			> start_lock
+			> submit_transaction
+			> send_accept (as buyer)
+		> send_decline
 
 on_decline
 
 on_accept
-	_on_accept
+	> _on_accept_as_seller
+
+	> _on_accept_as_buyer
+		> start_lock (as buyer)
+		> submit_transaction
+		> match_accept (as buyer)
+
 
 on_transaction_confirmed
 
