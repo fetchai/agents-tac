@@ -117,3 +117,8 @@ tac/gui/static/tmp/*
 *.sqlite3
 data/*
 !data/.gitkeep
+
+notebooks/.ipynb_checkpoints
+
+.DS_Store
+*/.DS_Store
