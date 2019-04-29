@@ -37,7 +37,7 @@ from oef.schema import DataModel
 
 from tac.core import TACAgent
 from tac.game import AgentState
-from tac.helpers.misc import build_seller_datamodel, get_baseline_seller_description, TacError
+from tac.helpers.misc import build_datamodel, get_baseline_seller_description, TacError
 from tac.protocol import GameData, Error, TransactionConfirmation, Response, Register
 
 logger = logging.getLogger(__name__)
@@ -207,7 +207,7 @@ class BaselineAgentV2(NegotiationAgent):
 
     @property
     def seller_data_model(self) -> DataModel:
-        return build_seller_datamodel(self.agent_state.nb_goods)
+        return build_datamodel(self.agent_state.nb_goods, seller=True)
 
     def on_start(self, game_data: GameData) -> None:
 

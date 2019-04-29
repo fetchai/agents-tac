@@ -460,6 +460,38 @@ class AgentState:
         """
         return [q - 1 if q > 1 else 0 for q in self.current_holdings]
 
+    def get_requested_quantities(self) -> Set[int]:
+        """
+        Return the vector of requested quantities. A quantity for a good is in requested if the agent does not currently have it.
+        E.g. if an agent holds the good quantities [0, 2, 1], this function returns [1, 0, 0].
+        >>> agent_state = AgentState(20, [0, 2, 3], [20, 40, 60], 1)
+        >>> agent_state.get_requested_quantities()
+        [1, 0, 0]
+
+        :return: the vector of good quantities requested.
+        """
+        return [1 if q == 0 else 0 for q in self.current_holdings]
+
+    def get_zero_quantity_goods_ids(self) -> Set[int]:
+        """
+        Get the set of good ids for which we only have a quantity equal to zero.
+        :return: a set of good ids.
+        """
+        zero_quantity_goods_ids = set(map(lambda x: x[0],
+                                          filter(lambda x: x[1] == 0,
+                                                 enumerate(self.current_holdings))))
+        return zero_quantity_goods_ids
+
+    def get_excess_quantity_goods_ids(self) -> Set[int]:
+        """
+        Get the set of good ids for which we have a quantity in excess of 1.
+        :return: a set of good ids.
+        """
+        excess_quantity_goods_ids = set(map(lambda x: x[0],
+                                          filter(lambda x: x[1] > 1,
+                                                 enumerate(self.current_holdings))))
+        return excess_quantity_goods_ids
+
     def _apply_delta_quantitites(self, delta_quantities_by_good_id: Dict[int, int]) -> List[int]:
         """
         Return the new holdings, after applied the variation of quantities provided in input.
