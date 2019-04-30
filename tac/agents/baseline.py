@@ -214,7 +214,7 @@ class BaselineAgent(NegotiationAgent):
 
         :return the Query, or None.
         """
-        demanded_goods_ids = self._get_demanded_goods_ids(apply_locks=True)
+        demanded_goods_ids = self._get_demanded_goods_ids(apply_locks=False)
 
         if len(demanded_goods_ids) == 0:
             return None
@@ -231,7 +231,7 @@ class BaselineAgent(NegotiationAgent):
         if apply_locks is False:
             return self._agent_state.get_zero_quantity_goods_ids()
         else:
-            # update the holdings with the buyer's lock
+            # update the holdings with the locks as buyer
             current_holdings = self._agent_state.current_holdings
             for tx_id, transaction in self._locks_as_buyer.items():
                 for good_id, quantity in transaction.quantities_by_good_id.items():
@@ -263,9 +263,9 @@ class BaselineAgent(NegotiationAgent):
         if apply_locks is False:
             return self._agent_state.get_excess_quantity_goods_ids()
         else:
-            # update the holdings with the seller's lock
+            # update the holdings with the locks as seller
             current_holdings = self._agent_state.current_holdings
-            for tx_id, transaction in self._locks_as_buyer.items():
+            for tx_id, transaction in self._locks_as_seller.items():
                 for good_id, quantity in transaction.quantities_by_good_id.items():
                     current_holdings[good_id] -= quantity
 
@@ -382,7 +382,7 @@ class BaselineAgent(NegotiationAgent):
 
         :return: None
         """
-        self._register_dialogue_id_as_seller(origin, dialogue_id)
+        self._save_dialogue_id_as_seller(origin, dialogue_id)
         goods_supplied_description = self._get_goods_supplied_description()
         utility_of_excess_goods = 0  # The utility of excess goods is zero by default. TODO to be fixed.
         goods_supplied_description.values["price"] = utility_of_excess_goods  # This is a naive strategy.
@@ -525,7 +525,7 @@ class BaselineAgent(NegotiationAgent):
         else:
             logger.debug("[{}]: Declining propose".format(self.public_key))
             self.send_decline(msg_id + 1, dialogue_id, origin, msg_id)
-            self._unregister_dialogue_id(origin, dialogue_id)
+            self._delete_dialogue_id(origin, dialogue_id)
 
     # def _on_propose_as_seller(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES) -> None:
     #     """
@@ -659,7 +659,7 @@ class BaselineAgent(NegotiationAgent):
         transaction_id = generate_transaction_id(buyer_pbk, seller_pbk, dialogue_id)
         self.remove_lock(transaction_id)
 
-        self._unregister_dialogue_id(origin, dialogue_id)
+        self._delete_dialogue_id(origin, dialogue_id)
 
     def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
         logger.debug("[{}]: on_accept: msg_id={}, dialogue_id={}, origin={}, target={}"
@@ -769,15 +769,17 @@ class BaselineAgent(NegotiationAgent):
         self._all_dialogues.add(dialogue_label)
         self._dialogues_as_buyer.add(dialogue_label)
 
-    def _register_dialogue_id_as_seller(self, origin: str, dialogue_id: int):
+    def _save_dialogue_id_as_seller(self, origin: str, dialogue_id: int):
         dialogue_label = (origin, dialogue_id)
+        logger.debug("[{}]: saving dialogue {}".format(self.public_key, dialogue_label))
         assert dialogue_label not in self._all_dialogues
         assert dialogue_label not in self._dialogues_as_seller
         self._all_dialogues.add(dialogue_label)
         self._dialogues_as_seller.add(dialogue_label)
 
-    def _unregister_dialogue_id(self, origin: str, dialogue_id: int):
+    def _delete_dialogue_id(self, origin: str, dialogue_id: int):
         dialogue_label = (origin, dialogue_id)
+        logger.debug("[{}]: deleting dialogue {}".format(self.public_key, dialogue_label))
         assert dialogue_label in self._all_dialogues
         assert dialogue_label in self._dialogues_as_buyer or dialogue_label in self._dialogues_as_seller
 
