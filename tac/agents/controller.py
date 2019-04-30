@@ -33,7 +33,7 @@ import logging
 import os
 import pprint
 import time
-from typing import Optional, Set
+from typing import Optional, Set, Dict
 
 from oef.schema import DataModel, Description, AttributeSchema
 
@@ -74,6 +74,8 @@ class ControllerHandler(object):
         self.controller_agent = controller_agent
         self.game_handler = controller_agent.game_handler
 
+        self._pending_transaction_requests = {}  # type: Dict[str, Transaction]
+
     def handle(self, msg: bytes, public_key: str) -> Response:
         """Handle a simple message coming from an agent.
         :param msg: the Protobuf message.
@@ -99,6 +101,7 @@ class ControllerHandler(object):
             elif isinstance(request, Unregister):
                 return self.handle_unregister(request, public_key)
             elif isinstance(request, Transaction):
+                request.sender = public_key
                 return self.handle_transaction(request, public_key)
             else:
                 error_msg = "Request not recognized"
@@ -161,11 +164,23 @@ class ControllerHandler(object):
         :return: an Error response if an error occurred, else None (no response to send back).
         """
         logger.debug("Handling transaction: {}".format(request))
-        tx = self.game_handler.from_request_to_game_tx(request, public_key)
-        if self.game_handler.current_game.is_transaction_valid(tx):
-            return self._handle_valid_transaction(request, public_key)
+
+        if request.transaction_id not in self._pending_transaction_requests:
+            self._pending_transaction_requests[request.transaction_id] = request
         else:
-            return self._handle_invalid_transaction()
+            # TODO how to handle failures in matching transaction?
+            #   that is, should the pending txs be removed from the pool?
+            #       if yes, should the senders be notified and how?
+            #  don't care for now, because assuming only baseline agents.
+            pending_tx = self._pending_transaction_requests.pop(request.transaction_id)
+            if request.matches(pending_tx):
+                tx = self.game_handler.from_request_to_game_tx(request, public_key)
+                if self.game_handler.current_game.is_transaction_valid(tx):
+                    return self._handle_valid_transaction(request, public_key)
+                else:
+                    return self._handle_invalid_transaction()
+            else:
+                return self._handle_non_matching_transaction()
 
     def _handle_valid_transaction(self, request: Transaction, public_key: str) -> None:
         """
@@ -196,6 +211,10 @@ class ControllerHandler(object):
     def _handle_invalid_transaction(self) -> Response:
         """Handle an invalid transaction."""
         return Error("Error in checking transaction.")
+
+    def _handle_non_matching_transaction(self) -> Response:
+        """Handle non-matching transaction."""
+        return Error("The transaction request does not match with a previous transaction request with the same id.")
 
 
 class GameHandler:
@@ -231,7 +250,7 @@ class GameHandler:
         self.start_time = start_time if start_time is not None else datetime.datetime.now() + datetime.timedelta(0, 5)
 
         self.registered_agents = set()  # type: Set[str]
-        self.current_game = None  # type: Optional[Game]
+        self.current_game = None  # type: Optional[Game]]
 
     def reset(self) -> None:
         """Reset the game."""

@@ -17,10 +17,9 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
-import asyncio
 import logging
 from abc import abstractmethod
-from typing import List, Dict, Optional, Callable
+from typing import List, Dict, Optional
 
 from oef.agents import OEFAgent, Agent
 from oef.messages import CFP_TYPES, PROPOSE_TYPES
@@ -182,7 +181,7 @@ class NegotiationAgent(Agent):
         msg = Register().serialize()
         self.send_message(0, 0, tac_controller_pk, msg)
 
-    def submit_transaction(self, tx: Transaction, only_store=False):
+    def submit_transaction(self, tx: Transaction):
         """
         Submit a transaction, that is:
         - put in the local pool of pending transaction (waiting for confirmation)
@@ -193,7 +192,6 @@ class NegotiationAgent(Agent):
         :return: None
         """
         self._pending_transactions[tx.transaction_id] = tx
-        if not only_store:
-            dialogue_id = abs(hash(tx.transaction_id) % 2**31)
-            self.send_message(0, dialogue_id, self._controller_pbk, tx.serialize())
+        dialogue_id = abs(hash(tx.transaction_id) % 2**31)
+        self.send_message(0, dialogue_id, self._controller_pbk, tx.serialize())
 

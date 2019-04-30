@@ -460,7 +460,7 @@ class AgentState:
         """
         return [q - 1 if q > 1 else 0 for q in self.current_holdings]
 
-    def get_requested_quantities(self) -> Set[int]:
+    def get_requested_quantities(self) -> List[int]:
         """
         Return the vector of requested quantities. A quantity for a good is in requested if the agent does not currently have it.
         E.g. if an agent holds the good quantities [0, 2, 1], this function returns [1, 0, 0].

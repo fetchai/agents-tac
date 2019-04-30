@@ -22,7 +22,7 @@
 import logging
 import pprint
 from abc import ABC, abstractmethod
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from google.protobuf.message import DecodeError
 
@@ -123,12 +123,13 @@ class Unregister(Request):
 class Transaction(Request):
 
     def __init__(self, transaction_id: str, buyer: bool, counterparty: str,
-                 amount: int, quantities_by_good_id: Dict[int, int]):
+                 amount: int, quantities_by_good_id: Dict[int, int], sender: Optional[str] = None):
         """
         A transaction request.
 
         :param transaction_id: the id of the transaction.
         :param buyer: whether the transaction request is sent by a buyer.
+        :param sender: the sender of the transaction request.
         :param counterparty: the counterparty of the transaction.
         :param amount: the amount of money involved.
         :param quantities_by_good_id: a map from good id to the quantity of that good involved in the transaction.
@@ -138,6 +139,8 @@ class Transaction(Request):
         self.counterparty = counterparty
         self.amount = amount
         self.quantities_by_good_id = quantities_by_good_id
+
+        self.sender = sender
 
     def to_pb(self) -> tac_pb2.TACAgent.Message:
         msg = tac_pb2.TACAgent.Transaction()
@@ -167,6 +170,29 @@ class Transaction(Request):
                            msg.transaction.counterparty,
                            msg.transaction.amount,
                            quantities_per_good_id)
+
+    def matches(self, other: 'Transaction') -> bool:
+        """
+        Check if the transaction matches with another transaction request.
+
+        Two transaction requests do match if:
+        - the transaction id is the same;
+        - one of them is from a buyer and the other one is from a seller
+        - the counterparty and the origin field are consistent.
+        - the amount and the quantities are equal.
+
+        :param other: the other transaction to match.
+        :return: True if the two
+        """
+        result = True
+        result = result and self.transaction_id == other.transaction_id
+        result = result and self.buyer != other.buyer
+        result = result and self.counterparty == other.sender
+        result = result and other.counterparty == self.sender
+        result = result and self.amount == other.amount
+        result = result and self.quantities_by_good_id == other.quantities_by_good_id
+
+        return result
 
     def __str__(self):
         return self._build_str(
