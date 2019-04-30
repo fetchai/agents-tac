@@ -166,19 +166,20 @@ class ControllerHandler(object):
         logger.debug("Handling transaction: {}".format(request))
 
         if request.transaction_id not in self._pending_transaction_requests:
+            logger.debug("Put transaction request in the pool: {}".format(request.transaction_id))
             self._pending_transaction_requests[request.transaction_id] = request
         else:
             # TODO how to handle failures in matching transaction?
             #   that is, should the pending txs be removed from the pool?
             #       if yes, should the senders be notified and how?
-            #  don't care for now, because assuming only baseline agents.
+            #  don't care for now, because assuming only (properly implemented) baseline agents.
             pending_tx = self._pending_transaction_requests.pop(request.transaction_id)
             if request.matches(pending_tx):
                 tx = self.game_handler.from_request_to_game_tx(request, public_key)
                 if self.game_handler.current_game.is_transaction_valid(tx):
                     return self._handle_valid_transaction(request, public_key)
                 else:
-                    return self._handle_invalid_transaction()
+                    return self._handle_invalid_transaction(request.transaction_id)
             else:
                 return self._handle_non_matching_transaction()
 
@@ -191,6 +192,7 @@ class ControllerHandler(object):
         :param public_key: the public key of the sender.
         :return: None
         """
+        logger.debug("Handling valid transaction: {}".format(request.transaction_id))
 
         # update the game state.
         tx = self.game_handler.from_request_to_game_tx(request, public_key)
@@ -208,9 +210,9 @@ class ControllerHandler(object):
 
         return None
 
-    def _handle_invalid_transaction(self) -> Response:
+    def _handle_invalid_transaction(self, transaction_id: str) -> Response:
         """Handle an invalid transaction."""
-        return Error("Error in checking transaction.")
+        return Error("Error in checking transaction: {}".format(transaction_id))
 
     def _handle_non_matching_transaction(self) -> Response:
         """Handle non-matching transaction."""
@@ -320,7 +322,7 @@ class GameHandler:
             game_data = self.current_game.get_agent_state_from_agent_label(public_key)
             game_data_response = GameData(
                 game_data.balance,
-                game_data.current_holdings,
+                game_data._current_holdings,
                 game_data.utilities,
                 self.fee,
             )

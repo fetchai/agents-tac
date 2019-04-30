@@ -72,8 +72,6 @@ class NegotiationAgent(Agent):
         self._agent_state = None  # type: Optional[AgentState]
         self._fee = None         # type: Optional[int]
 
-        self._pending_transactions = {}  # type: Dict[str, Transaction]
-
     def reset(self):
         """
         Reset the agent to its initial condition.
@@ -81,7 +79,6 @@ class NegotiationAgent(Agent):
         self._controller_pbk = None
         self._agent_state = None
         self._fee = None
-        self._pending_transactions = {}
 
     def on_search_result(self, search_id: int, agents: List[str]):
         """Handle search results."""
@@ -120,6 +117,7 @@ class NegotiationAgent(Agent):
         # dispatch the handling to the developer's implementation.
         self.on_start(game_data)
 
+    @abstractmethod
     def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
         """
         Handle the transaction confirmation.
@@ -127,8 +125,6 @@ class NegotiationAgent(Agent):
         :param tx_confirmation: the data of the confirmed transaction.
         :return: ``None``
         """
-        transaction = self._pending_transactions.pop(tx_confirmation.transaction_id)
-        self._agent_state.update(transaction)
 
     @abstractmethod
     def on_tac_error(self, error: Error) -> None:
@@ -188,10 +184,8 @@ class NegotiationAgent(Agent):
         - send the transaction request to the controller
 
         :param tx: the transaction request.
-        :param only_store: TODO a debug parameter... True means: only store in the pool
         :return: None
         """
-        self._pending_transactions[tx.transaction_id] = tx
         dialogue_id = abs(hash(tx.transaction_id) % 2**31)
         self.send_message(0, dialogue_id, self._controller_pbk, tx.serialize())
 

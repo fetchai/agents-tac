@@ -47,7 +47,7 @@ def callback(fut):
         raise e
 
 
-def generate_transaction_id(seller, buyer, dialogue_id):
+def generate_transaction_id(buyer, seller, dialogue_id):
     transaction_id = "{}_{}_{}".format(buyer, seller, dialogue_id)
     return transaction_id
 
@@ -174,7 +174,7 @@ def generate_utilities(nb_agents: int, nb_goods: int) -> List[List[int]]:
     :param nb_goods: the number of goods.
     :return: the preference matrix.
     """
-    scores = set(range(nb_goods))  # type: Set[int]
+    scores = set(map(lambda x: x * 2, range(nb_goods)))  # type: Set[int]
     # matrix where each row is in the same order.
     temporary_matrix = [list(scores)] * nb_agents
     # compute random preferences (i.e. permute every preference list randomly).
@@ -232,8 +232,8 @@ def get_goods_quantities_description(good_quantities: List[int], is_seller: bool
      ...    "good_0": 0,
      ...    "good_1": 0,
      ...    "good_2": 1,
-     ...    "good_3": 2,
-     ...}
+     ...    "good_3": 2}
+     ...
      True
 
     :param good_quantities: the quantities per good.

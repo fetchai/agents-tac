@@ -37,7 +37,7 @@ from oef.schema import DataModel
 
 from tac.core import TACAgent
 from tac.game import AgentState
-from tac.helpers.misc import build_datamodel, get_baseline_seller_description, TacError
+from tac.helpers.misc import build_datamodel, TacError
 from tac.protocol import GameData, Error, TransactionConfirmation, Response, Register
 
 logger = logging.getLogger(__name__)
@@ -229,8 +229,9 @@ class BaselineAgentV2(NegotiationAgent):
         pass
 
     def _register_as_seller_for_excessing_goods(self) -> None:
-        desc = get_baseline_seller_description(self.agent_state)
-        self.register_service(0, desc)
+        # desc = get_baseline_seller_description(self.agent_state)
+        # self.register_service(0, desc)
+        pass
 
 
 async def main():
