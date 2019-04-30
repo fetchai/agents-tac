@@ -77,6 +77,7 @@ class BaselineAgent(NegotiationAgent):
 
         self._pending_proposals = defaultdict(lambda: {})  # type: Dict[DIALOGUE_LABEL, Dict[MESSAGE_ID, Transaction]]
         self._pending_acceptances = defaultdict(lambda: {})  # type: Dict[DIALOGUE_LABEL, Dict[MESSAGE_ID, Transaction]]
+
         self._locks = {}  # type: Dict[str, Transaction]
         self._locks_as_buyer = {}  # type: Dict[str, Transaction]
         self._locks_as_seller = {}  # type: Dict[str, Transaction]
@@ -589,20 +590,16 @@ class BaselineAgent(NegotiationAgent):
                                                         transaction_id=transaction_id,
                                                         is_buyer=True,
                                                         counterparty=origin)
-        # check if the transaction is good.
-        if self.is_good_transaction_as_buyer(transaction):
-            # lock state
-            self._lock_state_as_buyer(transaction)
+        # lock state
+        logger.debug("[{}]: Locking the current state (buyer).".format(self.public_key))
+        self._lock_state_as_buyer(transaction)
 
-            # add to pending acceptances
-            acceptance_id = msg_id + 1
-            self._pending_acceptances[dialogue_label][acceptance_id] = transaction
+        # add to pending acceptances
+        acceptance_id = msg_id + 1
+        self._pending_acceptances[dialogue_label][acceptance_id] = transaction
 
-            # send accept
-            self.send_accept(acceptance_id, dialogue_id, origin, msg_id)
-        else:
-            logger.debug("[{}]: Decline the propose.".format(self.public_key))
-            self.send_decline(msg_id + 1, dialogue_id, origin, msg_id)
+        # send accept
+        self.send_accept(acceptance_id, dialogue_id, origin, msg_id)
 
     # def _accept_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES,
     #                     is_buyer: bool) -> None:
@@ -656,6 +653,12 @@ class BaselineAgent(NegotiationAgent):
     def on_decline(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
         logger.debug("[{}]: on_decline: msg_id={}, dialogue_id={}, origin={}, target={}"
                      .format(self.public_key, msg_id, dialogue_id, origin, target))
+
+        buyer_pbk, seller_pbk = (self.public_key, origin) if dialogue_id in self._dialogues_as_buyer \
+            else (origin, self.public_key)
+        transaction_id = generate_transaction_id(buyer_pbk, seller_pbk, dialogue_id)
+        self.remove_lock(transaction_id)
+
         self._unregister_dialogue_id(origin, dialogue_id)
 
     def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
@@ -709,7 +712,7 @@ class BaselineAgent(NegotiationAgent):
         transaction = self._pending_proposals[dialogue_label].pop(proposal_id)
 
         if self.is_good_transaction_as_seller(transaction):
-            logger.debug("[{}]: transaction checked. Locking the current state.".format(self.public_key))
+            logger.debug("[{}]: Locking the current state (seller).".format(self.public_key))
             # lock state
             self._lock_state_as_seller(transaction)
 
@@ -739,6 +742,11 @@ class BaselineAgent(NegotiationAgent):
         transaction = self._locks[tx_confirmation.transaction_id]
         self._agent_state.update(transaction)
         self.remove_lock(tx_confirmation.transaction_id)
+
+        logger.debug("[{}]: update service directory and search for sellers.".format(self.public_key))
+        self._register_as_seller()
+        time.sleep(1.0)
+        self._search_for_sellers()
 
     def on_tac_error(self, error: Error) -> None:
         logger.error("[{}]: Received error from the controller. error_msg={}".format(self.public_key, error.error_msg))
@@ -803,20 +811,19 @@ class BaselineAgent(NegotiationAgent):
         :param transaction: the transaction
         :return: True if the transaction is good (as stated above), False otherwise.
         """
-        current_score = self._agent_state.get_score()
-
         # compute the future state after the locks - that is, assuming that all the pending transactions will be successful.
         buyer_locks = list(self._locks_as_buyer.values())
-        new_state = self._agent_state.apply(buyer_locks)
+        state_after_locks = self._agent_state.apply(buyer_locks)
 
-        if not new_state.check_transaction(transaction):
+        if not state_after_locks.check_transaction(transaction):
             return False
 
-        next_score = new_state.get_score_after_transaction(transaction)
+        current_score = state_after_locks.get_score()
+        next_score = state_after_locks.get_score_after_transaction(transaction)
         proposal_delta_score = next_score - current_score
 
-        logger.debug("[{}] is good proposal for buyer? delta_score={}, current_score={}, next_score={}"
-                     .format(self.public_key, proposal_delta_score, current_score, next_score))
+        logger.debug("[{}] is good proposal for buyer? tx_id={}, delta_score={}, current_score={}, next_score={}"
+                     .format(self.public_key, transaction.transaction_id, proposal_delta_score, current_score, next_score))
         return proposal_delta_score > transaction.amount
 
     def is_good_transaction_as_seller(self, transaction: Transaction) -> bool:
@@ -829,7 +836,6 @@ class BaselineAgent(NegotiationAgent):
         :param transaction: the transaction
         :return: True if the transaction is good (as stated above), False otherwise.
         """
-        current_score = self._agent_state.get_score()
 
         # compute the future state after the locks - that is, assuming that all the pending transactions will be successful.
         seller_locks = list(self._locks_as_seller.values())
@@ -840,11 +846,12 @@ class BaselineAgent(NegotiationAgent):
             return False
 
         # check if we gain score with the transaction.
+        current_score = state_after_locks.get_score()
         next_score = state_after_locks.get_score_after_transaction(transaction)
         proposal_delta_score = next_score - current_score
 
-        logger.debug("[{}] is good proposal for seller? delta_score={}, current_score={}, next_score={}"
-                     .format(self.public_key, proposal_delta_score, current_score, next_score))
+        logger.debug("[{}] is good proposal for seller? tx_id={}, delta_score={}, current_score={}, next_score={}"
+                     .format(self.public_key, transaction.transaction_id, proposal_delta_score, current_score, next_score))
 
         # TODO notice the equality: we allow sellers to sell quantities with profit=0.
         return proposal_delta_score >= transaction.amount
@@ -859,7 +866,7 @@ class BaselineAgent(NegotiationAgent):
     def _lock_state_as_buyer(self, transaction: Transaction) -> None:
         """
         Lock the state as buyer (assuming that the transaction is valid)
-        That is, save the locking proposal. This step is needed to finalize the commit.
+        That is, save the locking proposal. This step is needed to finalize the commit later.
 
         :param transaction: the transaction used to lock the state.
         :return: None
@@ -870,7 +877,7 @@ class BaselineAgent(NegotiationAgent):
     def _lock_state_as_seller(self, transaction: Transaction) -> None:
         """
         Lock the state as seller (assuming that the transaction is valid)
-        That is, save the locking proposal. This step is needed to finalize the commit.
+        That is, save the locking proposal. This step is needed to finalize the commit later.
 
         :param transaction: the transaction used to lock the state.
         :return: None
@@ -879,9 +886,12 @@ class BaselineAgent(NegotiationAgent):
         self._locks_as_seller[transaction.transaction_id] = transaction
 
     def remove_lock(self, transaction_id: str):
-        self._locks.pop(transaction_id)
-        # the lock is either in the locks as buyer or as seller.
-        assert transaction_id in self._locks_as_buyer or transaction_id in self._locks_as_seller
+        """
+        Try to remove a lock, given its id.
+        :param transaction_id: the transaction id.
+        :return: None
+        """
+        self._locks.pop(transaction_id, None)
         self._locks_as_buyer.pop(transaction_id, None)
         self._locks_as_seller.pop(transaction_id, None)
 
