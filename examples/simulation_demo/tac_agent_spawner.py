@@ -152,7 +152,7 @@ def run_baseline_agent(agent: BaselineAgent) -> None:
 
 def run_controller(tac_controller: ControllerAgent) -> None:
     """Run a controller agent."""
-    tac_controller.run()
+    tac_controller.run_controller()
 
 
 def run(tac_controller: ControllerAgent, baseline_agents: List[BaselineAgent]):
