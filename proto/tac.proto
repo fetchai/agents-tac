@@ -1,0 +1,68 @@
+syntax = "proto2";
+
+package fetch.oef.pb;
+
+message IntPair {
+    required int32 key = 1;
+    required int32 value = 2;
+}
+
+message Dictionary{
+    repeated IntPair pairs = 1;
+}
+
+message TACController {
+
+    message Registered {
+    }
+    message Unregistered {
+    }
+    message Error {
+        required string error_msg = 1;
+    }
+    message Message {
+        oneof msg {
+            Registered registered = 1;
+            Unregistered unregistered = 2;
+            Error error = 3;
+            GameData game_data = 4;
+            TransactionConfirmation tx_confirmation = 5;
+        }
+    }
+
+    message GameData {
+        required int32 money = 1;
+        repeated int32 resources = 2;
+        repeated int32 preferences = 3;
+        required int32 fee = 4;
+    }
+
+    message TransactionConfirmation {
+        required string transaction_id = 1;
+    }
+}
+
+message TACAgent {
+
+    message Register {
+    }
+    message Unregister {
+    }
+
+    message Transaction{
+        required string transaction_id = 1;
+        required bool buyer = 2;  // is the sender of this message a buyer?
+        required string counterparty = 3;
+        required int32 amount = 4;
+        required Dictionary quantities = 5;
+    }
+
+    message Message {
+        oneof msg {
+            Register register = 1;
+            Unregister unregister = 2;
+            Transaction transaction = 3;
+        }
+    }
+
+}

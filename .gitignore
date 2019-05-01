@@ -105,7 +105,6 @@ venv.bak/
 
 .idea/*
 ignore
-tac/*_pb2.py
 log*.txt
 out.uml
 out.png
