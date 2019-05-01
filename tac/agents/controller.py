@@ -43,7 +43,7 @@ from tac.core import TACAgent
 from tac.game import Game, GameTransaction
 from tac.helpers.plantuml import plantuml_gen
 from tac.protocol import Response, Request, Register, Unregister, Error, GameData, \
-    Transaction, TransactionConfirmation
+    Transaction, TransactionConfirmation, ErrorCode
 
 if __name__ != "__main__":
     logger = logging.getLogger(__name__)
@@ -110,11 +110,11 @@ class ControllerHandler(object):
             else:
                 error_msg = "Request not recognized"
                 logger.error(error_msg)
-                return Error(error_msg)
+                return Error(ErrorCode.REQUEST_NOT_VALID, error_msg)
         except Exception as e:
             error_msg = "Unexpected error."
             logger.exception(error_msg)
-            return Error(error_msg)
+            return Error(ErrorCode.GENERIC_ERROR, error_msg)
 
     def decode(self, msg: bytes, public_key: str) -> Request:
         """From bytes to a Response message"""
@@ -134,7 +134,7 @@ class ControllerHandler(object):
         if public_key in self.controller_agent.game_handler.registered_agents:
             error_msg = "Agent already registered: '{}'".format(public_key)
             logger.error(error_msg)
-            return Error(error_msg)
+            return Error(ErrorCode.AGENT_ALREADY_REGISTERED, error_msg)
         else:
             logger.debug("Agent registered: '{}'".format(public_key))
             self.controller_agent.game_handler.registered_agents.add(public_key)
@@ -152,7 +152,7 @@ class ControllerHandler(object):
         if public_key not in self.controller_agent.game_handler.registered_agents:
             error_msg = "Agent not registered: '{}'".format(public_key)
             logger.error(error_msg)
-            return Error(error_msg)
+            return Error(ErrorCode.AGENT_NOT_REGISTERED, error_msg)
         else:
             logger.debug("Agent unregistered: '{}'".format(public_key))
             self.controller_agent.game_handler.registered_agents.remove(public_key)
@@ -202,7 +202,7 @@ class ControllerHandler(object):
 
     def _handle_invalid_transaction(self) -> Response:
         """Handle an invalid transaction."""
-        return Error("Error in checking transaction.")
+        return Error(ErrorCode.TRANSACTION_NOT_VALID, "Error in checking transaction.")
 
 
 class GameHandler:

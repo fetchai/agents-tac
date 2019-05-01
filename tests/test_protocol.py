@@ -1,5 +1,7 @@
+import pytest
+
 from tac.protocol import Register, Unregister, Transaction, Registered, Unregistered, TransactionConfirmation, Error, \
-    GameData, Request, Response
+    GameData, Request, Response, ErrorCode
 
 
 class TestRequest:
@@ -54,9 +56,10 @@ class TestResponse:
 
     class TestError:
 
-        def test_serialization_deserialization(self):
+        @pytest.mark.parametrize("error_code", list(ErrorCode))
+        def test_serialization_deserialization(self, error_code):
             """Test that serialization and deserialization gives the same result."""
-            expected_msg = Error("this is an error message.")
+            expected_msg = Error(error_code, "this is an error message.")
             actual_msg = Response.from_pb(expected_msg.serialize())
 
             assert expected_msg == actual_msg

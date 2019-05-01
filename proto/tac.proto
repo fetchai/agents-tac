@@ -18,7 +18,16 @@ message TACController {
     message Unregistered {
     }
     message Error {
-        required string error_msg = 1;
+        enum ErrorCode {
+            GENERIC_ERROR = 0;
+            REQUEST_NOT_VALID = 1;
+            AGENT_ALREADY_REGISTERED = 2;
+            AGENT_NOT_REGISTERED = 3;
+            TRANSACTION_NOT_VALID = 4;
+        }
+
+        required ErrorCode error_code = 1;
+        required string error_msg = 2;
     }
     message Message {
         oneof msg {

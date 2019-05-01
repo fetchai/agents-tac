@@ -22,6 +22,7 @@
 import logging
 import pprint
 from abc import ABC, abstractmethod
+from enum import Enum
 from typing import List, Dict
 
 from google.protobuf.message import DecodeError
@@ -43,6 +44,14 @@ def _make_int_pair(key: int, value: int) -> tac_pb2.IntPair:
     pair.key = key
     pair.value = value
     return pair
+
+
+class ErrorCode(Enum):
+    GENERIC_ERROR = 0
+    REQUEST_NOT_VALID = 1
+    AGENT_ALREADY_REGISTERED = 2
+    AGENT_NOT_REGISTERED = 3
+    TRANSACTION_NOT_VALID = 4
 
 
 class Message(ABC):
@@ -206,8 +215,9 @@ class Response(Message):
             elif case == "tx_confirmation":
                 return TransactionConfirmation(msg.tx_confirmation.transaction_id)
             elif case == "error":
+                error_code = ErrorCode(msg.error.error_code)
                 error_msg = msg.error.error_msg
-                return Error(error_msg)
+                return Error(error_code, error_msg)
             else:
                 raise TacError("Unrecognized type of Response.")
         except DecodeError as e:
@@ -244,11 +254,13 @@ class Unregistered(Response):
 class Error(Response):
     """This response means that something bad happened while processing a request."""
 
-    def __init__(self, error_msg: str):
+    def __init__(self, error_code: ErrorCode, error_msg: str):
+        self.error_code = error_code
         self.error_msg = error_msg
 
     def to_pb(self) -> tac_pb2.TACController.Message:
         msg = tac_pb2.TACController.Error()
+        msg.error_code = self.error_code.value
         msg.error_msg = self.error_msg
         envelope = tac_pb2.TACController.Message()
         envelope.error.CopyFrom(msg)
