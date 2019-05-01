@@ -17,26 +17,7 @@ message TACController {
     }
     message Unregistered {
     }
-    message Error {
-        enum ErrorCode {
-            GENERIC_ERROR = 0;
-            REQUEST_NOT_VALID = 1;
-            AGENT_ALREADY_REGISTERED = 2;
-            AGENT_NOT_REGISTERED = 3;
-            TRANSACTION_NOT_VALID = 4;
-        }
-
-        required ErrorCode error_code = 1;
-        required string error_msg = 2;
-    }
-    message Message {
-        oneof msg {
-            Registered registered = 1;
-            Unregistered unregistered = 2;
-            Error error = 3;
-            GameData game_data = 4;
-            TransactionConfirmation tx_confirmation = 5;
-        }
+    message Cancelled{
     }
 
     message GameData {
@@ -49,6 +30,32 @@ message TACController {
     message TransactionConfirmation {
         required string transaction_id = 1;
     }
+
+    message Error {
+        enum ErrorCode {
+            GENERIC_ERROR = 0;
+            REQUEST_NOT_VALID = 1;
+            AGENT_ALREADY_REGISTERED = 2;
+            AGENT_NOT_REGISTERED = 3;
+            TRANSACTION_NOT_VALID = 4;
+        }
+
+        required ErrorCode error_code = 1;
+        required string error_msg = 2;
+    }
+
+
+    message Message {
+        oneof msg {
+            Registered registered = 1;
+            Unregistered unregistered = 2;
+            Cancelled cancelled = 3;
+            GameData game_data = 4;
+            TransactionConfirmation tx_confirmation = 5;
+            Error error = 6;
+        }
+    }
+
 }
 
 message TACAgent {

@@ -204,7 +204,7 @@ if __name__ == '__main__':
         if arguments.uml:
             logger.debug("Generating transition diagram...")
             plantuml_gen.dump(arguments.data_output_dir, experiment_name)
-        if arguments.plot:
+        if arguments.plot and tac_controller.game_handler.is_game_running():
             logger.debug("Plotting data...")
             game_stats = GameStats(tac_controller.game_handler.current_game)
             game_stats.dump(arguments.data_output_dir, experiment_name)

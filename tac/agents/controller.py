@@ -43,7 +43,7 @@ from tac.core import TACAgent
 from tac.game import Game, GameTransaction
 from tac.helpers.plantuml import plantuml_gen
 from tac.protocol import Response, Request, Register, Unregister, Error, GameData, \
-    Transaction, TransactionConfirmation, ErrorCode
+    Transaction, TransactionConfirmation, ErrorCode, Cancelled
 
 if __name__ != "__main__":
     logger = logging.getLogger(__name__)
@@ -335,7 +335,13 @@ class GameHandler:
         else:
             logger.debug("[{}]: Not enough agents to start TAC. Registered agents: {}, minimum number of agents: {}."
                          .format(self.controller_agent.public_key, len(self.registered_agents), self.min_nb_agents))
+            self.notify_tac_cancelled()
+            self.controller_agent.terminate()
             return False
+
+    def notify_tac_cancelled(self):
+        for tac_agent in self.registered_agents:
+            self.controller_agent.send_message(0, 0, tac_agent, Cancelled().serialize())
 
 
 class ControllerAgent(TACAgent):
@@ -397,6 +403,8 @@ class ControllerAgent(TACAgent):
         self._message_processing_task = None
         self._inactivity_checker_task = None
 
+        self._terminated = False
+
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
         """
         Handle a simple message.
@@ -450,10 +458,10 @@ class ControllerAgent(TACAgent):
 
     def terminate(self) -> None:
         """
-        Terminate the controller agent.
-        If a game is running, send a notification to all the registered/playing agents.
+        Terminate the controller agent
         :return: None
         """
+        self._terminated = True
         self._loop.call_soon_threadsafe(self._task.cancel)
 
     def check_inactivity(self, rate: Optional[float] = 2.0) -> None:
@@ -465,6 +473,8 @@ class ControllerAgent(TACAgent):
         logger.debug("Started job to check for inactivity of {} seconds. Checking rate: {}"
                      .format(self._inactivity_countdown.total_seconds(), rate))
         while True:
+            if self._terminated is True:
+                return
             time.sleep(rate)
             current_time = datetime.datetime.now()
             if current_time - self._last_activity > self._inactivity_countdown:

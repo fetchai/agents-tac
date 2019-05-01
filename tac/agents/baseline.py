@@ -83,6 +83,10 @@ class BaselineAgent(NegotiationAgent):
         self._search_for_sellers()
         # self._search_for_buyers() # TODO
 
+    def on_cancelled(self):
+        logger.debug("[{}]: Received cancellation from the controller. Stopping...".format(self.public_key))
+        self.stop()
+
     def _register_as_seller(self) -> None:
         """
         Register to the Service Directory as a seller, listing the goods supplied.

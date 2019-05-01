@@ -207,6 +207,8 @@ class Response(Message):
                 return Registered()
             elif case == "unregistered":
                 return Unregistered()
+            elif case == "cancelled":
+                return Cancelled()
             elif case == "game_data":
                 return GameData(msg.game_data.money,
                                 list(msg.game_data.resources),
@@ -248,6 +250,16 @@ class Unregistered(Response):
         msg = tac_pb2.TACController.Unregistered()
         envelope = tac_pb2.TACController.Message()
         envelope.unregistered.CopyFrom(msg)
+        return envelope
+
+
+class Cancelled(Response):
+    """This response means that the competition to which the agent was registered has been cancelled."""
+
+    def to_pb(self) -> tac_pb2.TACController.Message:
+        msg = tac_pb2.TACController.Cancelled()
+        envelope = tac_pb2.TACController.Message()
+        envelope.cancelled.CopyFrom(msg)
         return envelope
 
 
