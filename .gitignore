@@ -105,7 +105,6 @@ venv.bak/
 
 .idea/*
 ignore
-tac/*_pb2.py
 log*.txt
 out.uml
 out.png
@@ -117,3 +116,8 @@ tac/gui/static/tmp/*
 *.sqlite3
 data/*
 !data/.gitkeep
+
+notebooks/.ipynb_checkpoints
+
+.DS_Store
+*/.DS_Store

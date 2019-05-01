@@ -31,7 +31,7 @@ from setuptools.command.build_py import build_py as _build_py
 from setuptools.command.develop import develop as _develop
 
 
-PACKAGE_NAME="tac"
+PACKAGE_NAME = "tac"
 
 
 class protoc(Command):
@@ -39,7 +39,7 @@ class protoc(Command):
 
     description = "Generate Python Protobuf modules from protobuf files specifications."
     user_options = [
-        ("--proto_path", None, "Path to the `oef-core-protocol` folder.")
+        ("proto-path", None, "Path to the `oef-core-protocol` folder.")
     ]
 
     def run(self):
@@ -53,12 +53,11 @@ class protoc(Command):
 
     def initialize_options(self):
         """Set default values for options."""
-        self.proto_path = os.path.join("tac-cpp", "proto")
+        self.proto_path = os.path.join("proto")
 
     def finalize_options(self):
         """Post-process options."""
-        assert os.path.exists(self.proto_path), (
-                'Directory %s does not exist.' % self.proto_path)
+        assert os.path.exists(self.proto_path), ('Directory %s does not exist.' % self.proto_path)
 
     def _find_protoc_executable_path(self):
         result = shutil.which("protoc")
@@ -91,22 +90,6 @@ class protoc(Command):
             print(line, end="")
 
 
-class build_py(_build_py):
-    """Custom build_py command."""
-
-    def run(self):
-        self.run_command("protoc")
-        _build_py.run(self)
-
-
-class develop(_develop):
-    """Custom develop command."""
-
-    def run(self):
-        self.run_command("protoc")
-        _develop.run(self)
-
-
 here = os.path.abspath(os.path.dirname(__file__))
 about = {}
 with open(os.path.join(here, PACKAGE_NAME, '__version__.py'), 'r') as f:
@@ -126,8 +109,6 @@ setup(
     packages=find_packages(),
     cmdclass={
         'protoc': protoc,
-        'build_py': build_py,
-        'develop': develop,
     },
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',

@@ -30,7 +30,7 @@ from oef.schema import Description
 from tac.game import AgentState
 from tac.helpers.misc import TacError
 from tac.helpers.plantuml import plantuml_gen
-from tac.protocol import Register, Response, GameData, TransactionConfirmation, Error, Transaction
+from tac.protocol import Register, Response, GameData, TransactionConfirmation, Error, Transaction, Cancelled
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +105,21 @@ class NegotiationAgent(Agent):
         :return: ``None``
         """
 
+    @abstractmethod
+    def on_tac_error(self, error: Error) -> None:
+        """
+        Handle error messages from the TAC controller.
+
+        :return: ``None``
+        """
+
+    @abstractmethod
+    def on_cancelled(self):
+        """
+        Handle the cancellation of the competition from the TAC controller.
+        :return: ``None``
+        """
+
     def _on_start(self, controller_public_key: str, game_data: GameData) -> None:
         """The private handler for the on_start event. It is used to populate
         data structures of the agent and remove the burden from the developer to do so."""
@@ -126,14 +141,6 @@ class NegotiationAgent(Agent):
         :return: ``None``
         """
 
-    @abstractmethod
-    def on_tac_error(self, error: Error) -> None:
-        """
-        Handle error messages from the TAC controller.
-
-        :return: ``None``
-        """
-
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
         # here we can get a new message from any agent, including the controller.
         # however, the one from the controller should be handled in a different way.
@@ -151,6 +158,8 @@ class NegotiationAgent(Agent):
             self._on_start(controller_public_key, response)
         elif isinstance(response, TransactionConfirmation):
             self.on_transaction_confirmed(response)
+        elif isinstance(response, Cancelled):
+            self.on_cancelled()
         elif isinstance(response, Error):
             self.on_tac_error(response)
         else:

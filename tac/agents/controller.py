@@ -33,17 +33,22 @@ import logging
 import os
 import pprint
 import time
-from typing import Optional, Set, Dict
+from threading import Thread
+from typing import Dict
+from typing import Optional, Set
 
-from oef.schema import DataModel, Description, AttributeSchema
+from oef.schema import Description, DataModel, AttributeSchema
 
 from tac.core import TACAgent
 from tac.game import Game, GameTransaction
 from tac.helpers.plantuml import plantuml_gen
 from tac.protocol import Response, Request, Register, Unregister, Error, GameData, \
-    Transaction, TransactionConfirmation
+    Transaction, TransactionConfirmation, ErrorCode, Cancelled
 
-logger = logging.getLogger(__name__)
+if __name__ != "__main__":
+    logger = logging.getLogger(__name__)
+else:
+    logger = logging.getLogger("tac.agents.controller")
 
 
 def parse_arguments():
@@ -57,6 +62,8 @@ def parse_arguments():
     parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
     parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
     parser.add_argument("--fee", default=1, type=int, help="Number of goods")
+    parser.add_argument("--inactivity-countdown", default=30, type=int, help="Timeout of inactivity.")
+    parser.add_argument("--verbose", default=False, action="store_true", help="Log debug messages.")
     # parser.add_argument("--gui", action="store_true", help="Show the GUI.")
 
     return parser.parse_args()
@@ -106,11 +113,11 @@ class ControllerHandler(object):
             else:
                 error_msg = "Request not recognized"
                 logger.error(error_msg)
-                return Error(error_msg)
+                return Error(ErrorCode.REQUEST_NOT_VALID, error_msg)
         except Exception as e:
             error_msg = "Unexpected error."
             logger.exception(error_msg)
-            return Error(error_msg)
+            return Error(ErrorCode.GENERIC_ERROR, error_msg)
 
     def decode(self, msg: bytes, public_key: str) -> Request:
         """From bytes to a Response message"""
@@ -130,7 +137,7 @@ class ControllerHandler(object):
         if public_key in self.controller_agent.game_handler.registered_agents:
             error_msg = "Agent already registered: '{}'".format(public_key)
             logger.error(error_msg)
-            return Error(error_msg)
+            return Error(ErrorCode.AGENT_ALREADY_REGISTERED, error_msg)
         else:
             logger.debug("Agent registered: '{}'".format(public_key))
             self.controller_agent.game_handler.registered_agents.add(public_key)
@@ -148,7 +155,7 @@ class ControllerHandler(object):
         if public_key not in self.controller_agent.game_handler.registered_agents:
             error_msg = "Agent not registered: '{}'".format(public_key)
             logger.error(error_msg)
-            return Error(error_msg)
+            return Error(ErrorCode.AGENT_NOT_REGISTERED, error_msg)
         else:
             logger.debug("Agent unregistered: '{}'".format(public_key))
             self.controller_agent.game_handler.registered_agents.remove(public_key)
@@ -212,11 +219,12 @@ class ControllerHandler(object):
 
     def _handle_invalid_transaction(self, transaction_id: str) -> Response:
         """Handle an invalid transaction."""
-        return Error("Error in checking transaction: {}".format(transaction_id))
+        return Error(ErrorCode.TRANSACTION_NOT_VALID, "Error in checking transaction: {}".format(transaction_id))
 
     def _handle_non_matching_transaction(self) -> Response:
         """Handle non-matching transaction."""
-        return Error("The transaction request does not match with a previous transaction request with the same id.")
+        return Error(ErrorCode.TRANSACTION_NOT_VALID,
+                     "The transaction request does not match with a previous transaction request with the same id.")
 
 
 class GameHandler:
@@ -231,7 +239,7 @@ class GameHandler:
                  fee: int,
                  lower_bound_factor: int,
                  upper_bound_factor: int,
-                 start_time: datetime.datetime = None):
+                 start_time: Optional[datetime.datetime] = None):
         """
         :param controller_agent: the controller agent the handler is associated with.
         :param min_nb_agents: the number of agents to wait for during registration and before starting the game.
@@ -252,7 +260,7 @@ class GameHandler:
         self.start_time = start_time if start_time is not None else datetime.datetime.now() + datetime.timedelta(0, 5)
 
         self.registered_agents = set()  # type: Set[str]
-        self.current_game = None  # type: Optional[Game]]
+        self.current_game = None  # type: Optional[Game]
 
     def reset(self) -> None:
         """Reset the game."""
@@ -349,7 +357,13 @@ class GameHandler:
         else:
             logger.debug("[{}]: Not enough agents to start TAC. Registered agents: {}, minimum number of agents: {}."
                          .format(self.controller_agent.public_key, len(self.registered_agents), self.min_nb_agents))
+            self.notify_tac_cancelled()
+            self.controller_agent.terminate()
             return False
+
+    def notify_tac_cancelled(self):
+        for tac_agent in self.registered_agents:
+            self.controller_agent.send_message(0, 0, tac_agent, Cancelled().serialize())
 
 
 class ControllerAgent(TACAgent):
@@ -358,10 +372,19 @@ class ControllerAgent(TACAgent):
     ])
     # TODO need at least one attribute in the search Query to the OEF.
 
-    def __init__(self, public_key="controller", oef_addr="127.0.0.1", oef_port=3333,
-                 min_nb_agents: int = 5, money_endowment: int = 20, nb_goods: int = 5,
-                 fee: int = 1, lower_bound_factor: int = 1, upper_bound_factor: int = 1,
-                 version: int = 1, start_time: datetime.datetime = None, **kwargs):
+    def __init__(self, public_key="controller",
+                 oef_addr="127.0.0.1",
+                 oef_port=3333,
+                 min_nb_agents: int = 5,
+                 money_endowment: int = 20,
+                 nb_goods: int = 5,
+                 fee: int = 1,
+                 lower_bound_factor: int = 1,
+                 upper_bound_factor: int = 1,
+                 version: int = 1,
+                 start_time: datetime.datetime = None,
+                 inactivity_countdown: Optional[datetime.timedelta] = None,
+                 **kwargs):
         """
         Initialize a Controller Agent for TAC.
         :param public_key: The public key of the OEF Agent.
@@ -375,6 +398,7 @@ class ControllerAgent(TACAgent):
         :param upper_bound_factor: the upper bound factor of a uniform distribution.
         :param version: the version of the TAC controller.
         :param start_time: the time when the competition will start.
+        :param inactivity_countdown: the time when the competition will start.
         """
         super().__init__(public_key, oef_addr, oef_port, **kwargs)
         logger.debug("Initialized Controller Agent :\n{}".format(pprint.pformat({
@@ -395,6 +419,14 @@ class ControllerAgent(TACAgent):
         self.handler = ControllerHandler(self)
         self.version = version
 
+        self._last_activity = datetime.datetime.now()
+        self._inactivity_countdown = inactivity_countdown if inactivity_countdown is not None else datetime.timedelta(seconds=15)
+
+        self._message_processing_task = None
+        self._inactivity_checker_task = None
+
+        self._terminated = False
+
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
         """
         Handle a simple message.
@@ -412,6 +444,7 @@ class ControllerAgent(TACAgent):
         """
         logger.debug("[ControllerAgent] on_message: msg_id={}, dialogue_id={}, origin={}"
                      .format(msg_id, dialogue_id, origin))
+        self._update_last_activity()
         response = self.handler.handle(content, origin)  # type: Optional[Response]
         if response is not None:
             self.send_message(msg_id, dialogue_id, origin, response.serialize())
@@ -445,16 +478,63 @@ class ControllerAgent(TACAgent):
         with open(os.path.join(experiment_dir, "game.json"), "w") as f:
             json.dump(game_dict, f)
 
+    def terminate(self) -> None:
+        """
+        Terminate the controller agent
+        :return: None
+        """
+        logger.debug("[{}]: terminating the controller...".format(self.public_key))
+        self._terminated = True
+        self.game_handler.notify_tac_cancelled()
+        self._loop.call_soon_threadsafe(self._task.cancel)
+
+    def check_inactivity(self, rate: Optional[float] = 2.0) -> None:
+        """
+        Check periodically if the timeout for inactivity expired.
+        :param: rate: at which rate (in seconds) the frequency of the check.
+        :return: None
+        """
+        logger.debug("Started job to check for inactivity of {} seconds. Checking rate: {}"
+                     .format(self._inactivity_countdown.total_seconds(), rate))
+        while True:
+            if self._terminated is True:
+                return
+            time.sleep(rate)
+            current_time = datetime.datetime.now()
+            if current_time - self._last_activity > self._inactivity_countdown:
+                logger.debug("[{}]: Inactivity timeout expired. Terminating...".format(self.public_key))
+                self.terminate()
+                return
+
+    def _update_last_activity(self):
+        self._last_activity = datetime.datetime.now()
+
+    def run_controller(self) -> None:
+        self._message_processing_task = Thread(target=self.run)
+        self._inactivity_checker_task = Thread(target=self.check_inactivity)
+
+        logger.debug("Running TAC controller agent...")
+        self._message_processing_task.start()
+        self._inactivity_checker_task.start()
+
+        self._message_processing_task.join()
+        self._inactivity_checker_task.join()
+
 
 def main():
     args = parse_arguments()
+
+    if args.verbose:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
+
     agent = ControllerAgent(public_key=args.public_key, oef_addr=args.oef_addr, oef_port=args.oef_port)
 
     agent.connect()
     agent.register()
 
-    logger.debug("Running TAC controller agent...")
-    agent.run()
+    agent.run_controller()
 
 
 if __name__ == '__main__':

@@ -33,8 +33,8 @@ class GameStats:
     A class to query statistics about a game.
     """
 
-    def __init__(self, game: Game):
-        self.game = game
+    def __init__(self, game: Optional[Game]):
+        self.game = game  # type: Optional[Game]
 
     @classmethod
     def from_json(cls, d: Dict[str, Any]):
