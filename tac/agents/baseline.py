@@ -86,10 +86,10 @@ class BaselineAgent(NegotiationAgent):
         """
         Handle the 'start' event (baseline agent):
 
-        - Register to the OEF as a seller, offering all excess good instances.
-        - Register to the OEF as a buyer, demanding all missing good instances.
-        - Search for the goods needed, and eventually start a negotiation as the buyer.
-        - Search for the goods requested, and eventually start a negotiation as the seller.
+        - Register to the OEF as a seller of the supplied goods.
+        - Register to the OEF as a buyer of the demanded goods.
+        - Search for the goods offered by other agents, and eventually start a negotiation as the buyer.
+        - Search for the goods requested by other agents, and eventually start a negotiation as the seller.
 
         :param game_data: the game data
 
@@ -153,6 +153,7 @@ class BaselineAgent(NegotiationAgent):
         """
         result = self._agent_state.get_excess_goods_quantities()
         # set the positive quantities at one - duplicates doesn't count
+        # TODO think about it when we move to the next version of the utility function.
         result = [1 if q >= 1 else 0 for q in result]
         return result
 
@@ -715,7 +716,7 @@ class BaselineAgent(NegotiationAgent):
         assert dialogue_label in self._pending_proposals and target in self._pending_proposals[dialogue_label]
         transaction = self._pending_proposals[dialogue_label].pop(proposal_id)
 
-        if self.is_good_transaction_as_seller(transaction):
+        if self.is_profitable_transaction_as_seller(transaction):
             logger.debug("[{}]: Locking the current state (seller).".format(self.public_key))
             # lock state
             self._lock_state_as_seller(transaction)
@@ -832,7 +833,7 @@ class BaselineAgent(NegotiationAgent):
                      .format(self.public_key, transaction.transaction_id, proposal_delta_score, current_score, next_score))
         return proposal_delta_score > transaction.amount
 
-    def is_good_transaction_as_seller(self, transaction: Transaction) -> bool:
+    def is_profitable_transaction_as_seller(self, transaction: Transaction) -> bool:
         """
         Is a good transaction for a seller?
         - apply all the locks as seller.

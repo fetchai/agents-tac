@@ -6,7 +6,6 @@ clean-build:
 	rm -fr .eggs/
 	find . -name '*.egg-info' -exec rm -fr {} +
 	find . -name '*.egg' -exec rm -fr {} +
-	rm -f tac/*_pb2.py
 
 clean-pyc:
 	find . -name '*.pyc' -exec rm -f {} +
