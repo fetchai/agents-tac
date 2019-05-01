@@ -17,10 +17,9 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
-import asyncio
 import logging
 from abc import abstractmethod
-from typing import List, Dict, Optional, Callable
+from typing import List, Dict, Optional
 
 from oef.agents import OEFAgent, Agent
 from oef.messages import CFP_TYPES, PROPOSE_TYPES
@@ -73,8 +72,6 @@ class NegotiationAgent(Agent):
         self._agent_state = None  # type: Optional[AgentState]
         self._fee = None         # type: Optional[int]
 
-        self._pending_transactions = {}  # type: Dict[str, Transaction]
-
     def reset(self):
         """
         Reset the agent to its initial condition.
@@ -82,7 +79,6 @@ class NegotiationAgent(Agent):
         self._controller_pbk = None
         self._agent_state = None
         self._fee = None
-        self._pending_transactions = {}
 
     def on_search_result(self, search_id: int, agents: List[str]):
         """Handle search results."""
@@ -136,6 +132,7 @@ class NegotiationAgent(Agent):
         # dispatch the handling to the developer's implementation.
         self.on_start(game_data)
 
+    @abstractmethod
     def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
         """
         Handle the transaction confirmation.
@@ -143,8 +140,6 @@ class NegotiationAgent(Agent):
         :param tx_confirmation: the data of the confirmed transaction.
         :return: ``None``
         """
-        transaction = self._pending_transactions.pop(tx_confirmation.transaction_id)
-        self._agent_state.update(transaction)
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
         # here we can get a new message from any agent, including the controller.
@@ -191,18 +186,15 @@ class NegotiationAgent(Agent):
         msg = Register().serialize()
         self.send_message(0, 0, tac_controller_pk, msg)
 
-    def submit_transaction(self, tx: Transaction, only_store=False):
+    def submit_transaction(self, tx: Transaction):
         """
         Submit a transaction, that is:
         - put in the local pool of pending transaction (waiting for confirmation)
         - send the transaction request to the controller
 
         :param tx: the transaction request.
-        :param only_store: TODO a debug parameter... True means: only store in the pool
         :return: None
         """
-        self._pending_transactions[tx.transaction_id] = tx
-        if not only_store:
-            dialogue_id = abs(hash(tx.transaction_id) % 2**31)
-            self.send_message(0, dialogue_id, self._controller_pbk, tx.serialize())
+        dialogue_id = abs(hash(tx.transaction_id) % 2**31)
+        self.send_message(0, dialogue_id, self._controller_pbk, tx.serialize())
 

@@ -41,7 +41,31 @@ class GameStats:
         game = Game.from_dict(d)
         return GameStats(game)
 
-    def _score_history(self) -> np.ndarray:
+    def holdings_history(self):
+        """
+        Compute the history of holdings.
+
+        :return: a matrix of shape (nb_transactions, nb_agents, nb_goods). i=0 is the initial endowment matrix.
+        """
+        nb_transactions = len(self.game.transactions)
+        nb_agents = self.game.configuration.nb_agents
+        nb_goods = self.game.configuration.nb_goods
+        result = np.zeros((nb_transactions + 1, nb_agents, nb_goods), dtype=np.int32)
+
+        temp_game = Game(self.game.configuration)
+
+        # initial holdings
+        result[0, :] = np.asarray(temp_game.configuration.endowments, dtype=np.int32)
+
+        # compute the partial scores for every agent after every transaction
+        # (remember that indexes of the transaction start from one, because index 0 is reserved for the initial scores)
+        for idx, tx in enumerate(self.game.transactions):
+            temp_game.settle_transaction(tx)
+            result[idx + 1, :] = np.asarray(temp_game.get_holdings_matrix(), dtype=np.int32)
+
+        return result
+
+    def score_history(self) -> np.ndarray:
         """
         Compute the history of the scores for every agent.
         To do so, we need to simulate the game again, by settling transactions one by one
@@ -75,8 +99,9 @@ class GameStats:
         :return: None
         """
 
-        history = self._score_history()
+        history = self.score_history()
 
+        plt.clf()
         plt.plot(history)
         # labels = ["agent_{:02d}".format(idx) for idx in range(self.game.nb_agents)]
         labels = self.game.configuration.agent_labels

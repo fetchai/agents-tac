@@ -27,7 +27,6 @@ The methods are split in three classes:
 """
 
 import argparse
-import asyncio
 import datetime
 import json
 import logging
@@ -35,9 +34,10 @@ import os
 import pprint
 import time
 from threading import Thread
+from typing import Dict
 from typing import Optional, Set
 
-from oef.schema import DataModel, Description, AttributeSchema
+from oef.schema import Description, DataModel, AttributeSchema
 
 from tac.core import TACAgent
 from tac.game import Game, GameTransaction
@@ -81,6 +81,8 @@ class ControllerHandler(object):
         self.controller_agent = controller_agent
         self.game_handler = controller_agent.game_handler
 
+        self._pending_transaction_requests = {}  # type: Dict[str, Transaction]
+
     def handle(self, msg: bytes, public_key: str) -> Response:
         """Handle a simple message coming from an agent.
         :param msg: the Protobuf message.
@@ -106,6 +108,7 @@ class ControllerHandler(object):
             elif isinstance(request, Unregister):
                 return self.handle_unregister(request, public_key)
             elif isinstance(request, Transaction):
+                request.sender = public_key
                 return self.handle_transaction(request, public_key)
             else:
                 error_msg = "Request not recognized"
@@ -168,11 +171,24 @@ class ControllerHandler(object):
         :return: an Error response if an error occurred, else None (no response to send back).
         """
         logger.debug("Handling transaction: {}".format(request))
-        tx = self.game_handler.from_request_to_game_tx(request, public_key)
-        if self.game_handler.current_game.is_transaction_valid(tx):
-            return self._handle_valid_transaction(request, public_key)
+
+        if request.transaction_id not in self._pending_transaction_requests:
+            logger.debug("Put transaction request in the pool: {}".format(request.transaction_id))
+            self._pending_transaction_requests[request.transaction_id] = request
         else:
-            return self._handle_invalid_transaction()
+            # TODO how to handle failures in matching transaction?
+            #   that is, should the pending txs be removed from the pool?
+            #       if yes, should the senders be notified and how?
+            #  don't care for now, because assuming only (properly implemented) baseline agents.
+            pending_tx = self._pending_transaction_requests.pop(request.transaction_id)
+            if request.matches(pending_tx):
+                tx = self.game_handler.from_request_to_game_tx(request, public_key)
+                if self.game_handler.current_game.is_transaction_valid(tx):
+                    return self._handle_valid_transaction(request, public_key)
+                else:
+                    return self._handle_invalid_transaction(request.transaction_id)
+            else:
+                return self._handle_non_matching_transaction()
 
     def _handle_valid_transaction(self, request: Transaction, public_key: str) -> None:
         """
@@ -183,6 +199,7 @@ class ControllerHandler(object):
         :param public_key: the public key of the sender.
         :return: None
         """
+        logger.debug("Handling valid transaction: {}".format(request.transaction_id))
 
         # update the game state.
         tx = self.game_handler.from_request_to_game_tx(request, public_key)
@@ -200,9 +217,14 @@ class ControllerHandler(object):
 
         return None
 
-    def _handle_invalid_transaction(self) -> Response:
+    def _handle_invalid_transaction(self, transaction_id: str) -> Response:
         """Handle an invalid transaction."""
-        return Error(ErrorCode.TRANSACTION_NOT_VALID, "Error in checking transaction.")
+        return Error(ErrorCode.TRANSACTION_NOT_VALID, "Error in checking transaction: {}".format(transaction_id))
+
+    def _handle_non_matching_transaction(self) -> Response:
+        """Handle non-matching transaction."""
+        return Error(ErrorCode.TRANSACTION_NOT_VALID,
+                     "The transaction request does not match with a previous transaction request with the same id.")
 
 
 class GameHandler:
@@ -308,7 +330,7 @@ class GameHandler:
             game_data = self.current_game.get_agent_state_from_agent_label(public_key)
             game_data_response = GameData(
                 game_data.balance,
-                game_data.current_holdings,
+                game_data._current_holdings,
                 game_data.utilities,
                 self.fee,
             )
@@ -398,7 +420,7 @@ class ControllerAgent(TACAgent):
         self.version = version
 
         self._last_activity = datetime.datetime.now()
-        self._inactivity_countdown = inactivity_countdown if inactivity_countdown is not None else datetime.timedelta(seconds=30)
+        self._inactivity_countdown = inactivity_countdown if inactivity_countdown is not None else datetime.timedelta(seconds=15)
 
         self._message_processing_task = None
         self._inactivity_checker_task = None
@@ -461,7 +483,9 @@ class ControllerAgent(TACAgent):
         Terminate the controller agent
         :return: None
         """
+        logger.debug("[{}]: terminating the controller...".format(self.public_key))
         self._terminated = True
+        self.game_handler.notify_tac_cancelled()
         self._loop.call_soon_threadsafe(self._task.cancel)
 
     def check_inactivity(self, rate: Optional[float] = 2.0) -> None:

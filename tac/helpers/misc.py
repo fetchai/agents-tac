@@ -23,12 +23,15 @@ import random
 from typing import List, Set, Optional
 
 import dateutil.parser
+import math
 import numpy as np
 from oef.query import Query, Constraint, GtEq, Or
 from oef.schema import AttributeSchema, DataModel, Description
 
 
 logger = logging.getLogger("tac")
+TAC_SELLER_DATAMODEL_NAME = "tac_seller"
+TAC_BUYER_DATAMODEL_NAME = "tac_buyer"
 
 
 class TacError(Exception):
@@ -44,14 +47,53 @@ def callback(fut):
         raise e
 
 
-def generate_transaction_id(seller, buyer, dialogue_id):
+def generate_transaction_id(buyer, seller, dialogue_id):
     transaction_id = "{}_{}_{}".format(buyer, seller, dialogue_id)
     return transaction_id
 
 
-def sample_good_instance(nb_agents: int, a: int, b: int) -> int:
+def format_good_attribute_name(good_id: int, nb_goods: int) -> str:
+    """Format the name of the attribute associated to a good id.
+
+    E.g.:
+
+    >>> format_good_attribute_name(2, 10)
+    'good_2'
+    >>> format_good_attribute_name(2, 100)
+    'good_02'
+    >>> format_good_attribute_name(2, 101)
+    'good_002'
+
+    :param good_id: the good id.
+    :param nb_goods: the overall number of goods.
+    :return: the formatted name.
+    """
+    max_number_of_digits = math.ceil(math.log10(nb_goods))
+    string_format = "good_{:0" + str(max_number_of_digits) + "}"
+    result = string_format.format(good_id)
+    return result
+
+
+def from_good_attribute_name_to_good_id(good_id_str: str) -> 1:
+    """
+    From 'good_[0-9]+' to the associated good id.
+
+    >>> from_good_attribute_name_to_good_id("good_001")
+    1
+    >>> from_good_attribute_name_to_good_id("good_9999")
+    9999
+
+
+    :param good_id_str: the good id in the format for attribute names.
+    :return: the good id.
+    """
+    offset = len("good_")
+    return int(good_id_str[offset:])
+
+
+def sample_good_instance(a: int, b: int) -> int:
     """Sample the number of instances for a good.
-    :param n: the number of agents
+
     :param a: the lower bound of the uniform distribution
     :param b: the uper bound of the uniform distribution
     :return the number of instances I sampled.
@@ -86,7 +128,7 @@ def generate_instances_per_good(nb_goods: int, nb_agents: int, lower_bound_facto
     """
     a = nb_agents - round(nb_agents / float(lower_bound_factor))
     b = nb_agents + round(nb_agents / float(upper_bound_factor))
-    return [sample_good_instance(nb_agents, a, b) for _ in range(nb_goods)]
+    return [sample_good_instance(a, b) for _ in range(nb_goods)]
 
 
 def generate_endowment_of_good(nb_agents: int, nb_instances: int) -> List[int]:
@@ -108,8 +150,11 @@ def generate_endowment_of_good(nb_agents: int, nb_instances: int) -> List[int]:
 def generate_endowments(nb_goods: int, nb_agents: int, lower_bound_factor: int, upper_bound_factor: int) -> List[List[int]]:
     """
     Compute endowments per agent. That is, a matrix of shape (nb_agents, nb_goods)
+
+    :param nb_goods: the number of goods.
     :param nb_agents: the number of agents.
-    :param instances_per_good: the number of goods.
+    :param lower_bound_factor: the lower bound of the uniform distribution for the sampling of the good instance number.
+    :param upper_bound_factor: the upper bound of the uniform distribution for the sampling of the good instance number.
     :return: the endowments matrix.
     """
     instances_per_good = generate_instances_per_good(nb_goods, nb_agents, lower_bound_factor, upper_bound_factor) # type: List[int]
@@ -125,16 +170,17 @@ def generate_utilities(nb_agents: int, nb_goods: int) -> List[List[int]]:
     """
     Compute the preference matrix. That is, a generic element e_ij is the utility of good j for agent i.
 
-    :param nb_agents: number of agents.
-    :param scores: the set of scores values.
+    :param nb_agents: the number of agents.
+    :param nb_goods: the number of goods.
     :return: the preference matrix.
     """
-    scores = set(range(nb_goods)) # type: scores: Set[int]
+    scores = set(map(lambda x: x * 2, range(nb_goods)))  # type: Set[int]
     # matrix where each row is in the same order.
     temporary_matrix = [list(scores)] * nb_agents
     # compute random preferences (i.e. permute every preference list randomly).
     preferences = list(map(lambda x: random.sample(x, len(x)), temporary_matrix))
     return preferences
+
 
 def generate_initial_money_amounts(nb_agents: int, money_endowment: int) -> List[int]:
     """
@@ -146,6 +192,7 @@ def generate_initial_money_amounts(nb_agents: int, money_endowment: int) -> List
     """
     return [money_endowment] * nb_agents
 
+
 def build_datamodel(nb_goods: int, seller: bool) -> DataModel:
     """
     Build a data model for buyers or sellers.
@@ -154,14 +201,15 @@ def build_datamodel(nb_goods: int, seller: bool) -> DataModel:
     :param seller: bool indicating whether a seller or buyer data model
     :return: the data model.
     """
-    goods_quantities_attributes = [AttributeSchema("good_{:02d}".format(i), int, True) for i in range(nb_goods)]
+    goods_quantities_attributes = [AttributeSchema(format_good_attribute_name(i, nb_goods), int, False)
+                                   for i in range(nb_goods)]
     price_attribute = AttributeSchema("price", int, False)
-    description = "tac_seller" if seller else "tac_buyer"
+    description = TAC_SELLER_DATAMODEL_NAME if seller else TAC_BUYER_DATAMODEL_NAME
     data_model = DataModel(description, goods_quantities_attributes + [price_attribute])
     return data_model
 
 
-def get_baseline_seller_description(agent_state: 'AgentState') -> Description:
+def get_goods_quantities_description(good_quantities: List[int], is_seller: bool) -> Description:
     """
     Get the TAC seller description, following a baseline policy.
     That is, a description with the following structure:
@@ -177,12 +225,25 @@ def get_baseline_seller_description(agent_state: 'AgentState') -> Description:
 
      The baseline agent decides to sell everything in excess, but keeping the goods that
 
+     >>> desc = get_goods_quantities_description([0, 0, 1, 2], True)
+     >>> desc.data_model.name == TAC_SELLER_DATAMODEL_NAME
+     True
+     >>> desc.values == {
+     ...    "good_0": 0,
+     ...    "good_1": 0,
+     ...    "good_2": 1,
+     ...    "good_3": 2}
+     ...
+     True
+
+    :param good_quantities: the quantities per good.
+    :param is_seller: True if the description is of a seller, False if it's of a buyer.
     :return: the description to advertise on the Service Directory.
     """
-    seller_data_model = build_datamodel(agent_state.nb_goods, seller=True)
-    desc = Description({"good_{:02d}".format(i): q
-                        for i, q in enumerate(agent_state.get_excess_goods_quantities())},
-                       data_model=seller_data_model)
+    nb_goods = len(good_quantities)
+    data_model = build_datamodel(nb_goods, seller=is_seller)
+    desc = Description({format_good_attribute_name(i, nb_goods): q for i, q in enumerate(good_quantities)},
+                       data_model=data_model)
     return desc
 
 
@@ -192,7 +253,7 @@ def build_query(good_ids: Set[int], seller: bool, nb_goods: Optional[int] = None
 
     In particular, if the needed good ids are {0, 2, 3}, the resulting constraint expression is:
 
-        good_00 >= 1 OR good_02 >= 1 OR good_03 >= 1
+        good_0 >= 1 OR good_2 >= 1 OR good_3 >= 1
 
     That is, the OEF will return all the sellers that have at least one of the good in the query
     (assuming that the sellers are registered with the data model for baseline sellers.
@@ -203,7 +264,7 @@ def build_query(good_ids: Set[int], seller: bool, nb_goods: Optional[int] = None
     :return: the query.
     """
     data_model = None if nb_goods is None else build_datamodel(nb_goods, seller)
-    constraints = [Constraint("good_{:02d}".format(good_id), GtEq(1)) for good_id in good_ids]
+    constraints = [Constraint(format_good_attribute_name(good_id, nb_goods), GtEq(1)) for good_id in good_ids]
 
     if len(good_ids) > 1:
         constraints = [Or(constraints)]

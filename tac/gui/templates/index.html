@@ -29,7 +29,8 @@
 <div align="center">
   <img src="{{saved_plot_figure}}">
   <br>
-  <table border="1" cellpadding="10">
+
+  <table border="1" cellpadding="5" style="margin: 10px">
     <thead>
       <tr>
         <th>agent id</th>
@@ -55,6 +56,46 @@
       {% endfor %}
     </tbody>
   </table>
+
+  <br>
+
+  <table border="1" cellpadding="5" style="margin: 10px">
+    <thead>
+      <tr>
+        <th>id</th>
+        <th>buyer</th>
+        <th>seller</th>
+        <th>amount</th>
+        <th>B prev. holdings</th>
+        <th>B prev. score</th>
+        <th>S prev. holdings</th>
+        <th>S prev. score</th>
+        <th>B cur. holdings</th>
+        <th>B cur. score</th>
+        <th>S cur. holdings</th>
+        <th>S cur. score</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for idx, game_transaction in idx_transactions %}
+        <tr>
+          <th>{{ idx }}</th>
+          <th>{{ game.configuration.agent_labels[game_transaction.buyer_id]}}</th>
+          <th>{{ game.configuration.agent_labels[game_transaction.seller_id]}}</th>
+          <th>{{ game_transaction.amount }}</th>
+          <th>{{ holdings_history[idx][game_transaction.buyer_id] }}</th>
+          <th>{{ score_history[idx][game_transaction.buyer_id] }}</th>
+          <th>{{ holdings_history[idx][game_transaction.seller_id] }}</th>
+          <th>{{ score_history[idx][game_transaction.seller_id] }}</th>
+          <th>{{ holdings_history[idx + 1][game_transaction.buyer_id] }}</th>
+          <th>{{ score_history[idx + 1][game_transaction.buyer_id] }}</th>
+          <th>{{ holdings_history[idx + 1][game_transaction.seller_id] }}</th>
+          <th>{{ score_history[idx + 1][game_transaction.seller_id] }}</th>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
 </div>
 
 {% endblock %}

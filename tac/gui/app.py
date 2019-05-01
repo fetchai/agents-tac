@@ -62,9 +62,12 @@ def upload():
     game_stats = GameStats(game)
     output_filepath = os.path.join("static", "tmp", "tmp.png")
     full_output_path = os.path.join(THIS_DIR, output_filepath)
+
+    holdings_history = game_stats.holdings_history()
+    score_history = game_stats.score_history()
     game_stats.plot_score_history(output_path=full_output_path)
 
-    g= game.agent_states[0]
+    g = game.agent_states[0]
 
     return render_template("index.html",
                            nb_agents=game.configuration.nb_agents,
@@ -75,7 +78,10 @@ def upload():
                            game=game,
                            nb_transactions=len(game.transactions),
                            saved_plot_figure=output_filepath,
-                           agent_states=game.agent_states)
+                           agent_states=game.agent_states,
+                           idx_transactions=enumerate(game.transactions),
+                           holdings_history=holdings_history,
+                           score_history=score_history)
 
 
 if __name__ == '__main__':
