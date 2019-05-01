@@ -28,6 +28,7 @@ import time
 from collections import defaultdict
 from typing import List, Optional, Dict, Set, Tuple
 
+import math
 from oef.messages import CFP_TYPES, PROPOSE_TYPES
 from oef.query import Query
 from oef.schema import Description
@@ -35,7 +36,7 @@ from oef.schema import Description
 from tac.core import NegotiationAgent
 from tac.helpers.misc import generate_transaction_id, build_query, get_goods_quantities_description, \
     TAC_BUYER_DATAMODEL_NAME, from_good_attribute_name_to_good_id, TAC_SELLER_DATAMODEL_NAME
-from tac.protocol import GameData, Transaction, TransactionConfirmation, Error
+from tac.protocol import GameData, Transaction, TransactionConfirmation, Error, ErrorCode
 
 logger = logging.getLogger(__name__)
 
@@ -219,31 +220,27 @@ class BaselineAgent(NegotiationAgent):
 
         :return the Query, or None.
         """
-        demanded_goods_ids = self._get_demanded_goods_ids(apply_locks=False)
+        demanded_goods_ids = self._get_demanded_goods_ids()
 
         if len(demanded_goods_ids) == 0:
             return None
         else:
             return build_query(demanded_goods_ids, True, self._agent_state.nb_goods)
 
-    def _get_demanded_goods_ids(self, apply_locks: bool = False) -> Set[int]:
+    def _get_demanded_goods_ids(self) -> Set[int]:
         """
         Wraps the function which determines demand.
 
-        :param apply_locks: whether the locks as buyer must be taken into consideration.
         :return: a list of demanded good ids
         """
-        if apply_locks is False:
-            return self._agent_state.get_zero_quantity_goods_ids()
-        else:
-            # update the holdings with the locks as buyer
-            current_holdings = self._agent_state.current_holdings
-            for tx_id, transaction in self._locks_as_buyer.items():
-                for good_id, quantity in transaction.quantities_by_good_id.items():
-                    current_holdings[good_id] += quantity
+        # update the holdings with the locks as buyer
+        transactions = list(self._locks_as_buyer.values())
+        state_after_locks = self._agent_state.apply(transactions)
 
-            zero_quantity_good_ids = set(good_id for good_id, quantity in enumerate(current_holdings) if quantity == 0)
-            return zero_quantity_good_ids
+        demanded_quantity_good_ids = {good_id for good_id, quantity in enumerate(state_after_locks.current_holdings)
+                                      if True}  # TODO temporarily including all the goods
+
+        return demanded_quantity_good_ids
 
     # def _build_buyers_query(self) -> Optional[Query]:
     #     """
@@ -258,24 +255,19 @@ class BaselineAgent(NegotiationAgent):
     #     else:
     #         return build_query(supplied_goods_ids, False, self._agent_state.nb_goods)
 
-    def _get_supplied_goods_ids(self, apply_locks: bool = False) -> Set[int]:
+    def _get_supplied_goods_ids(self) -> Set[int]:
         """
         Wraps the function which determines supply.
 
-        :param apply_locks: whether the locks as seller must be taken into consideration.
         :return: a list of supplied good ids
         """
-        if apply_locks is False:
-            return self._agent_state.get_excess_quantity_goods_ids()
-        else:
-            # update the holdings with the locks as seller
-            current_holdings = self._agent_state.current_holdings
-            for tx_id, transaction in self._locks_as_seller.items():
-                for good_id, quantity in transaction.quantities_by_good_id.items():
-                    current_holdings[good_id] -= quantity
+        # update the holdings with the locks as seller
+        transactions = list(self._locks_as_seller.values())
+        state_after_locks = self._agent_state.apply(transactions)
 
-            excess_quantity_good_ids = set(good_id for good_id, quantity in enumerate(current_holdings) if quantity > 1)
-            return excess_quantity_good_ids
+        excess_quantity_good_ids = {good_id for good_id, quantity in enumerate(state_after_locks.current_holdings)
+                                    if quantity > 1}
+        return excess_quantity_good_ids
 
     def on_search_results(self, search_id: int, agents: List[str]) -> None:
         """
@@ -315,6 +307,7 @@ class BaselineAgent(NegotiationAgent):
             logger.debug("[{}]: No longer demanding any goods...".format(self.public_key))
             return
         for seller in sellers:
+            if seller == self.public_key: continue
             dialogue_id = random.randint(0, 2 ** 31)
             logger.debug("[{}]: send_cfp_as_buyer: msg_id={}, dialogue_id={}, destination={}, target={}, query={}"
                          .format(self.public_key, STARTING_MESSAGE_ID, dialogue_id, seller, STARTING_MESSAGE_REF, query))
@@ -343,6 +336,7 @@ class BaselineAgent(NegotiationAgent):
     #         logger.debug("[{}]: No longer supplying any goods...".format(self.public_key))
     #         return
     #     for buyer in buyers:
+    #         if buyer == self.public_key: continue
     #         dialogue_id = random.randint(0, 2 ** 31)
     #         logger.debug("[{}]: send_cfp_as_seller: msg_id={}, dialogue_id={}, destination={}, target={}, query={}"
     #                      .format(self.public_key, STARTING_MESSAGE_ID, dialogue_id, buyer, STARTING_MESSAGE_REF, query))
@@ -389,8 +383,8 @@ class BaselineAgent(NegotiationAgent):
         """
         self._save_dialogue_id_as_seller(origin, dialogue_id)
         goods_supplied_description = self._get_goods_supplied_description()
-        utility_of_excess_goods = 0  # The utility of excess goods is zero by default. TODO to be fixed.
-        goods_supplied_description.values["price"] = utility_of_excess_goods  # This is a naive strategy.
+        utility_of_excess_goods = 0  # TODO to fix.
+        goods_supplied_description.values["price"] = utility_of_excess_goods
         new_msg_id = msg_id + 1
         if not query.check(goods_supplied_description):
             logger.debug("[{}]: Current holdings do not satisfy CFP query.".format(self.public_key))
@@ -523,7 +517,7 @@ class BaselineAgent(NegotiationAgent):
                                                         transaction_id,
                                                         is_buyer=True,
                                                         counterparty=origin)
-        if self.is_good_transaction_as_buyer(transaction):
+        if self.is_profitable_transaction_as_buyer(transaction):
             logger.debug("[{}]: Accepting propose.".format(self.public_key))
             self._accept_propose_as_buyer(msg_id, dialogue_id, origin, target, proposals)
         # TODO skip counter-propose
@@ -755,17 +749,14 @@ class BaselineAgent(NegotiationAgent):
 
     def on_tac_error(self, error: Error) -> None:
         logger.error("[{}]: Received error from the controller. error_msg={}".format(self.public_key, error.error_msg))
-        # TODO string comparison on error messages is extremely harmful.
-        #  Error codes MUST BE used. To fix the protobuf file asap, just used temporarily to make things work.
-        if re.match(error.error_msg, "Error in checking transaction: .*"):
+        if error.error_code == ErrorCode.TRANSACTION_NOT_VALID:
             # if error in checking transaction, remove it from the pending transactions.
             start_idx_of_tx_id = len("Error in checking transaction: ")
             transaction_id = error.error_msg[start_idx_of_tx_id:]
             if transaction_id in self._locks:
                 self.remove_lock(transaction_id)
             else:
-                # TODO in the simple case, we shouldn't receive a transaction error defined on unknown transaction id.
-                assert False
+                logger.warning("[{}]: Received error on unknown transaction id: {}".format(self.public_key, transaction_id))
 
     def _register_dialogue_id_as_buyer(self, origin: str, dialogue_id: int):
         dialogue_label = (origin, dialogue_id)
@@ -808,9 +799,9 @@ class BaselineAgent(NegotiationAgent):
         quantity_by_good_id = {from_good_attribute_name_to_good_id(key): value for key, value in data.items()}
         return price, quantity_by_good_id
 
-    def is_good_transaction_as_buyer(self, transaction: Transaction) -> bool:
+    def is_profitable_transaction_as_buyer(self, transaction: Transaction) -> bool:
         """
-        Is a good transaction for a buyer?
+        Is a profitable transaction for a buyer?
         - apply all the locks as buyer.
         - check if the transaction is consistent with the locks (enough money/holdings)
         - check that we gain score.
@@ -829,13 +820,22 @@ class BaselineAgent(NegotiationAgent):
         next_score = state_after_locks.get_score_after_transaction(transaction)
         proposal_delta_score = next_score - current_score
 
-        logger.debug("[{}] is good proposal for buyer? tx_id={}, delta_score={}, current_score={}, next_score={}"
-                     .format(self.public_key, transaction.transaction_id, proposal_delta_score, current_score, next_score))
+        logger.debug("[{}] is good proposal for buyer? tx_id={}, "
+                     "delta_score={}, "
+                     "current_score={}, "
+                     "next_score={}, "
+                     "amount={}"
+                     .format(self.public_key,
+                             transaction.transaction_id,
+                             proposal_delta_score,
+                             current_score,
+                             next_score,
+                             transaction.amount))
         return proposal_delta_score > transaction.amount
 
     def is_profitable_transaction_as_seller(self, transaction: Transaction) -> bool:
         """
-        Is a good transaction for a seller?
+        Is a profitable transaction for a seller?
         - apply all the locks as seller.
         - check if the transaction is consistent with the locks (enough money/holdings)
         - check that we gain score.

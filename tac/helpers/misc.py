@@ -147,26 +147,30 @@ def generate_endowment_of_good(nb_agents: int, nb_instances: int) -> List[int]:
     return endowment
 
 
-def generate_endowments(nb_goods: int, nb_agents: int, lower_bound_factor: int, upper_bound_factor: int) -> List[List[int]]:
+def generate_endowments(nb_goods: int, nb_agents: int, uniform_lower_bound_factor: int, uniform_upper_bound_factor: int) -> List[List[int]]:
     """
     Compute endowments per agent. That is, a matrix of shape (nb_agents, nb_goods)
 
     :param nb_goods: the number of goods.
     :param nb_agents: the number of agents.
-    :param lower_bound_factor: the lower bound of the uniform distribution for the sampling of the good instance number.
-    :param upper_bound_factor: the upper bound of the uniform distribution for the sampling of the good instance number.
+    :param uniform_lower_bound_factor: the lower bound of the uniform distribution for the sampling of the good instance number.
+    :param uniform_upper_bound_factor: the upper bound of the uniform distribution for the sampling of the good instance number.
     :return: the endowments matrix.
     """
-    instances_per_good = generate_instances_per_good(nb_goods, nb_agents, lower_bound_factor, upper_bound_factor) # type: List[int]
-    # compute endowment matrix per good. The shape is (nb_goods, nb_agents).
-    # Row i contains the holdings for every agent j.
-    endowments_by_good = [generate_endowment_of_good(nb_agents, I_j) for I_j in instances_per_good] # type: List[List[int]]
-    # transpose the matrix.
-    endowments = np.asarray(endowments_by_good).T.tolist()
+    # sample good instances
+    instances_per_good = _sample_good_instances(nb_agents, nb_goods,
+                                                uniform_lower_bound_factor, uniform_upper_bound_factor)
+    # each agent receives at least one good
+    endowments = [[1] * nb_goods for _ in range(nb_agents)]
+    # randomly assign additional goods to create differences
+    for good_id in range(nb_goods):
+        for _ in range(instances_per_good[good_id] - nb_agents):
+            agent_id = random.randint(0, nb_agents - 1)
+            endowments[agent_id][good_id] += 1
     return endowments
 
 
-def generate_utilities(nb_agents: int, nb_goods: int) -> List[List[int]]:
+def generate_utilities(nb_agents: int, nb_goods: int) -> List[List[float]]:
     """
     Compute the preference matrix. That is, a generic element e_ij is the utility of good j for agent i.
 
@@ -174,12 +178,43 @@ def generate_utilities(nb_agents: int, nb_goods: int) -> List[List[int]]:
     :param nb_goods: the number of goods.
     :return: the preference matrix.
     """
-    scores = set(map(lambda x: x * 2, range(nb_goods)))  # type: Set[int]
-    # matrix where each row is in the same order.
-    temporary_matrix = [list(scores)] * nb_agents
-    # compute random preferences (i.e. permute every preference list randomly).
-    preferences = list(map(lambda x: random.sample(x, len(x)), temporary_matrix))
-    return preferences
+    utilities = _sample_utility_function_params(nb_goods, nb_agents)
+    return utilities
+
+
+def _sample_utility_function_params(nb_goods: int, nb_agents: int) -> List[List[float]]:
+    """
+    Sample utility function params for each agent.
+    :param nb_goods: the number of goods
+    :param nb_agents: the number of agents
+    :return: a matrix with utility function params for each agent
+    """
+    decimals = 4 if nb_goods < 100 else 8
+    utility_function_params = []
+    for i in range(nb_agents):
+        random_integers = [random.randint(1, 101) for _ in range(nb_goods)]
+        total = sum(random_integers)
+        normalized_fractions = [ round(i / float(total), decimals) for i in random_integers]
+        if not sum(normalized_fractions) == 1.0:
+            normalized_fractions[-1] = round(1.0 - sum(normalized_fractions[0:-1]), decimals)
+        utility_function_params.append(normalized_fractions)
+    return utility_function_params
+
+
+def _sample_good_instances(nb_agents: int, nb_goods: int,
+                           uniform_lower_bound_factor: int, uniform_upper_bound_factor: int) -> List[int]:
+    """
+    Sample the number of instances for a good.
+    :param nb_agents: the number of agents
+    :param uniform_lower_bound_factor: the lower bound factor of a uniform distribution
+    :param uniform_upper_bound_factor: the upper bound factor of a uniform distribution
+    :return: the number of instances I sampled.
+    """
+    a = nb_agents + nb_agents * uniform_lower_bound_factor
+    b = nb_agents + nb_agents * uniform_upper_bound_factor
+    # Return random integer in range [a, b]
+    nb_instances = [round(np.random.uniform(a, b)) for _ in range(nb_goods)]
+    return nb_instances
 
 
 def generate_initial_money_amounts(nb_agents: int, money_endowment: int) -> List[int]:
@@ -191,6 +226,18 @@ def generate_initial_money_amounts(nb_agents: int, money_endowment: int) -> List
     :return: the list of initial money amounts.
     """
     return [money_endowment] * nb_agents
+
+
+def logarithmic_utility(utility_function_params: List[float], good_bundle: List[int]) -> float:
+    """
+    Compute agent's utility given her utility function params and a good bundle.
+    :param utility_function_params: utility function params of the agent
+    :param good_bundle: a bundle of goods with the quantity for each good
+    :return: utility value
+    """
+    goodwise_utility = [param * math.log(quantity) if quantity > 0 else 0
+                        for param, quantity in zip(utility_function_params, good_bundle)]
+    return sum(goodwise_utility)
 
 
 def build_datamodel(nb_goods: int, seller: bool) -> DataModel:

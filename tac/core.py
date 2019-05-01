@@ -126,7 +126,7 @@ class NegotiationAgent(Agent):
 
         # populate data structures about the started competition
         self._controller_pbk = controller_public_key
-        self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.preferences, game_data.fee)
+        self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utilities, game_data.fee)
         self._fee = game_data.fee
 
         # dispatch the handling to the developer's implementation.

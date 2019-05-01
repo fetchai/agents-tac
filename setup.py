@@ -79,7 +79,7 @@ class protoc(Command):
         return arguments
 
     def _fix_import_statements_in_all_protobuf_modules(self):
-        generated_protobuf_python_modules = glob.glob(os.path.join("oef", "*_pb2.py"))
+        generated_protobuf_python_modules = glob.glob(os.path.join("tac", "*_pb2.py"))
         for filepath in generated_protobuf_python_modules:
             self._fix_import_statements_in_protobuf_module(filepath)
 

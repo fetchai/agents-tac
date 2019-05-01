@@ -330,7 +330,7 @@ class GameHandler:
             game_data = self.current_game.get_agent_state_from_agent_label(public_key)
             game_data_response = GameData(
                 game_data.balance,
-                game_data._current_holdings,
+                game_data.current_holdings,
                 game_data.utilities,
                 self.fee,
             )
@@ -483,7 +483,7 @@ class ControllerAgent(TACAgent):
         Terminate the controller agent
         :return: None
         """
-        logger.debug("[{}]: terminating the controller...".format(self.public_key))
+        logger.debug("[{}]: Terminating the controller...".format(self.public_key))
         self._terminated = True
         self.game_handler.notify_tac_cancelled()
         self._loop.call_soon_threadsafe(self._task.cancel)
