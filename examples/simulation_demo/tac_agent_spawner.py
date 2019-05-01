@@ -28,6 +28,8 @@ import pprint
 from threading import Thread
 from typing import List
 
+import math
+
 from tac.agents.baseline import BaselineAgent
 from tac.agents.controller import ControllerAgent
 from tac.helpers.plantuml import plantuml_gen
@@ -108,14 +110,29 @@ def initialize_controller_agent(public_key: str,
     return tac_controller
 
 
-def _make_id(id: int) -> str:
+def _make_id(agent_id: int, nb_agents: int) -> str:
     """
     Make the public key for baseline agents from an integer identifier.
     E.g. from '0' to 'tac_agent_00'.
-    :param id: a numerical identifier id of the agent.
+
+    E.g.:
+
+    >>> _make_id(2, 10)
+    'agent_2'
+    >>> _make_id(2, 100)
+    'agent_02'
+    >>> _make_id(2, 101)
+    'agent_002'
+
+    :param agent_id: the agent id.
+    :param nb_agents: the overall number of agents.
+    :return: the formatted name.
     :return: the string associated to the integer id.
     """
-    return "tac_agent_{:02}".format(id)
+    max_number_of_digits = math.ceil(math.log10(nb_agents))
+    string_format = "tac_agent_{:0" + str(max_number_of_digits) + "}"
+    result = string_format.format(agent_id)
+    return result
 
 
 def initialize_baseline_agent(agent_pbk: str, oef_addr: str, oef_port: int) -> BaselineAgent:
@@ -139,7 +156,8 @@ def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port:
     :param oef_port: TCP port of the OEF Node.
     :return: A list of baseline agents.
     """
-    baseline_agents = [initialize_baseline_agent(_make_id(i), oef_addr, oef_port) for i in range(nb_baseline_agents)]
+    baseline_agents = [initialize_baseline_agent(_make_id(i, nb_baseline_agents), oef_addr, oef_port)
+                       for i in range(nb_baseline_agents)]
     return baseline_agents
 
 
