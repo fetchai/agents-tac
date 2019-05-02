@@ -429,7 +429,7 @@ class AgentState:
 
     def score_good_quantities(self, quantities: List[int]) -> float:
         """
-        Score a vector of quantities.
+        Score a vector of quantities. The quantities are scored in terms of gain of utility.
         E.g.
         >>> agent_state = AgentState(20, [0, 1, 2], [10.0, 0.0, 20.0], 1)
         >>> score = agent_state.score_good_quantities([0, 1, 2])
@@ -438,10 +438,10 @@ class AgentState:
 
         :param quantities: the quantities to be scored.
         :return: the score.
-        :raises: AssertionError: if the quantities have invalid values (g. invalid good id)
         """
         current_score = logarithmic_utility(self.utilities, self.current_holdings)
         new_quantities = [cur_q + new_q for cur_q, new_q in zip(self.current_holdings, quantities)]
+        # compute the future utilities if we had those goods
         utility = logarithmic_utility(self.utilities, new_quantities)
         return utility - current_score
 
@@ -455,7 +455,7 @@ class AgentState:
 
         :return: the vector of good quantities in excess.
         """
-        result = [q - 1 if q > 1 else 0 for q in self._current_holdings]
+        result = [q if q > 2 else 0 for q in self._current_holdings]
         return result
 
     def get_requested_quantities(self) -> List[int]:
@@ -468,7 +468,8 @@ class AgentState:
 
         :return: the vector of good quantities requested.
         """
-        return [1 if q == 0 else 0 for q in self._current_holdings]
+        # TODO temporarily look for all ones.
+        return [1 for _ in self._current_holdings]
 
     def get_zero_quantity_goods_ids(self) -> Set[int]:
         """

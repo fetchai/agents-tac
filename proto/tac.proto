@@ -19,10 +19,10 @@ message TACController {
     }
 
     message GameData {
-        int32 money = 1;
+        double money = 1;
         repeated int32 endowment = 2;
         repeated double utilities = 3;
-        int32 fee = 4;
+        double fee = 4;
     }
 
     message TransactionConfirmation {
@@ -68,7 +68,7 @@ message TACAgent {
         string transaction_id = 1;
         bool buyer = 2;  // is the sender of this message a buyer?
         string counterparty = 3;
-        int32 amount = 4;
+        double amount = 4;
         repeated IntPair quantities = 5;
     }
 

@@ -182,11 +182,12 @@ def generate_utilities(nb_agents: int, nb_goods: int) -> List[List[float]]:
     return utilities
 
 
-def _sample_utility_function_params(nb_goods: int, nb_agents: int) -> List[List[float]]:
+def _sample_utility_function_params(nb_goods: int, nb_agents: int, scaling_factor: float = 1.0) -> List[List[float]]:
     """
     Sample utility function params for each agent.
     :param nb_goods: the number of goods
     :param nb_agents: the number of agents
+    :param scaling_factor: a scaling factor for all the utilities generated.
     :return: a matrix with utility function params for each agent
     """
     decimals = 4 if nb_goods < 100 else 8
@@ -194,10 +195,16 @@ def _sample_utility_function_params(nb_goods: int, nb_agents: int) -> List[List[
     for i in range(nb_agents):
         random_integers = [random.randint(1, 101) for _ in range(nb_goods)]
         total = sum(random_integers)
-        normalized_fractions = [ round(i / float(total), decimals) for i in random_integers]
+        normalized_fractions = [round(i / float(total), decimals) for i in random_integers]
         if not sum(normalized_fractions) == 1.0:
             normalized_fractions[-1] = round(1.0 - sum(normalized_fractions[0:-1]), decimals)
         utility_function_params.append(normalized_fractions)
+
+    # scale the utilities
+    for i in range(len(utility_function_params)):
+        for j in range(len(utility_function_params[i])):
+            utility_function_params[i][j] *= scaling_factor
+
     return utility_function_params
 
 
@@ -235,7 +242,7 @@ def logarithmic_utility(utility_function_params: List[float], good_bundle: List[
     :param good_bundle: a bundle of goods with the quantity for each good
     :return: utility value
     """
-    goodwise_utility = [param * math.log(quantity) if quantity > 0 else 0
+    goodwise_utility = [param * math.log(quantity) if quantity > 0 else -10000
                         for param, quantity in zip(utility_function_params, good_bundle)]
     return sum(goodwise_utility)
 
@@ -250,7 +257,7 @@ def build_datamodel(nb_goods: int, seller: bool) -> DataModel:
     """
     goods_quantities_attributes = [AttributeSchema(format_good_attribute_name(i, nb_goods), int, False)
                                    for i in range(nb_goods)]
-    price_attribute = AttributeSchema("price", int, False)
+    price_attribute = AttributeSchema("price", float, False)
     description = TAC_SELLER_DATAMODEL_NAME if seller else TAC_BUYER_DATAMODEL_NAME
     data_model = DataModel(description, goods_quantities_attributes + [price_attribute])
     return data_model

@@ -35,7 +35,7 @@ from oef.schema import Description
 
 from tac.core import NegotiationAgent
 from tac.helpers.misc import generate_transaction_id, build_query, get_goods_quantities_description, \
-    TAC_BUYER_DATAMODEL_NAME, from_good_attribute_name_to_good_id, TAC_SELLER_DATAMODEL_NAME
+    TAC_BUYER_DATAMODEL_NAME, from_good_attribute_name_to_good_id, TAC_SELLER_DATAMODEL_NAME, logarithmic_utility
 from tac.protocol import GameData, Transaction, TransactionConfirmation, Error, ErrorCode
 
 logger = logging.getLogger(__name__)
@@ -152,10 +152,8 @@ class BaselineAgent(NegotiationAgent):
 
         :return: a list of demanded quantities
         """
-        result = self._agent_state.get_excess_goods_quantities()
-        # set the positive quantities at one - duplicates doesn't count
-        # TODO think about it when we move to the next version of the utility function.
-        result = [1 if q >= 1 else 0 for q in result]
+        result = [min(1, q) for q in self._agent_state.current_holdings]
+        # result = self._agent_state.current_holdings
         return result
 
     def _get_goods_demanded_description(self) -> Description:
@@ -231,14 +229,16 @@ class BaselineAgent(NegotiationAgent):
         """
         Wraps the function which determines demand.
 
+        If there are locks as buyer, apply them.
+
         :return: a list of demanded good ids
         """
         # update the holdings with the locks as buyer
         transactions = list(self._locks_as_buyer.values())
         state_after_locks = self._agent_state.apply(transactions)
 
-        demanded_quantity_good_ids = {good_id for good_id, quantity in enumerate(state_after_locks.current_holdings)
-                                      if True}  # TODO temporarily including all the goods
+        # TODO temporarily including all the goods ids
+        demanded_quantity_good_ids = {good_id for good_id, quantity in enumerate(state_after_locks.current_holdings)}
 
         return demanded_quantity_good_ids
 
@@ -383,7 +383,7 @@ class BaselineAgent(NegotiationAgent):
         """
         self._save_dialogue_id_as_seller(origin, dialogue_id)
         goods_supplied_description = self._get_goods_supplied_description()
-        utility_of_excess_goods = 0  # TODO to fix.
+        utility_of_excess_goods = logarithmic_utility(self._agent_state.utilities, self._get_supplied_goods_quantities())
         goods_supplied_description.values["price"] = utility_of_excess_goods
         new_msg_id = msg_id + 1
         if not query.check(goods_supplied_description):
@@ -742,10 +742,10 @@ class BaselineAgent(NegotiationAgent):
         self._agent_state.update(transaction)
         self.remove_lock(tx_confirmation.transaction_id)
 
-        logger.debug("[{}]: update service directory and search for sellers.".format(self.public_key))
-        self._register_as_seller()
-        time.sleep(1.0)
-        self._search_for_sellers()
+        # logger.debug("[{}]: update service directory and search for sellers.".format(self.public_key))
+        # self._register_as_seller()
+        # time.sleep(1.0)
+        # self._search_for_sellers()
 
     def on_tac_error(self, error: Error) -> None:
         logger.error("[{}]: Received error from the controller. error_msg={}".format(self.public_key, error.error_msg))
@@ -814,24 +814,27 @@ class BaselineAgent(NegotiationAgent):
         state_after_locks = self._agent_state.apply(buyer_locks)
 
         if not state_after_locks.check_transaction(transaction):
+            logger.debug("[{}]: the proposed transaction is not valid.".format(self.public_key))
             return False
 
         current_score = state_after_locks.get_score()
         next_score = state_after_locks.get_score_after_transaction(transaction)
         proposal_delta_score = next_score - current_score
 
-        logger.debug("[{}] is good proposal for buyer? tx_id={}, "
+        result = proposal_delta_score > transaction.amount
+        logger.debug("[{}]: is good proposal for buyer? {}: tx_id={}, "
                      "delta_score={}, "
                      "current_score={}, "
                      "next_score={}, "
                      "amount={}"
                      .format(self.public_key,
+                             result,
                              transaction.transaction_id,
                              proposal_delta_score,
                              current_score,
                              next_score,
                              transaction.amount))
-        return proposal_delta_score > transaction.amount
+        return result
 
     def is_profitable_transaction_as_seller(self, transaction: Transaction) -> bool:
         """
@@ -850,6 +853,7 @@ class BaselineAgent(NegotiationAgent):
 
         # if the transaction is not valid wrt the state after the locks, then it's not good
         if not state_after_locks.check_transaction(transaction):
+            logger.debug("[{}]: the proposed transaction is not valid.".format(self.public_key))
             return False
 
         # check if we gain score with the transaction.
@@ -857,11 +861,15 @@ class BaselineAgent(NegotiationAgent):
         next_score = state_after_locks.get_score_after_transaction(transaction)
         proposal_delta_score = next_score - current_score
 
-        logger.debug("[{}] is good proposal for seller? tx_id={}, delta_score={}, current_score={}, next_score={}"
-                     .format(self.public_key, transaction.transaction_id, proposal_delta_score, current_score, next_score))
+        result = transaction.amount >= -proposal_delta_score
+
+        logger.debug("[{}]: is good proposal for seller? {}: tx_id={}, delta_score={}, current_score={}, "
+                     "next_score={}, amount={}"
+                     .format(self.public_key, result, transaction.transaction_id,
+                             proposal_delta_score, current_score, next_score, transaction.amount))
 
         # TODO notice the equality: we allow sellers to sell quantities with profit=0.
-        return proposal_delta_score >= transaction.amount
+        return result
 
     def from_proposal_to_transaction(self, proposal: Description, transaction_id: str,
                                      is_buyer: bool, counterparty: str) -> Transaction:
