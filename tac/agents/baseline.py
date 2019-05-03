@@ -84,6 +84,7 @@ class BaselineAgent(NegotiationAgent):
         self._locks = {}  # type: Dict[str, Transaction]
         self._locks_as_buyer = {}  # type: Dict[str, Transaction]
         self._locks_as_seller = {}  # type: Dict[str, Transaction]
+        self._register_supply = True
 
     def on_start(self, game_data: GameData) -> None:
         """
@@ -93,9 +94,8 @@ class BaselineAgent(NegotiationAgent):
         - Register to the OEF as a buyer of the demanded goods.
         - Search for the goods offered by other agents, and eventually start a negotiation as the buyer.
         - Search for the goods requested by other agents, and eventually start a negotiation as the seller.
-
+        
         :param game_data: the game data
-
         :return: None
         """
         self._start_loop()
@@ -106,11 +106,15 @@ class BaselineAgent(NegotiationAgent):
         :return: None
         """
         logger.debug("[{}]: Updating service directory and searching for sellers.".format(self.public_key))
-        self._register_as_seller()
-        # self._register_as_buyer() TODO include the symmetry, eventually.
+        if self._register_supply:
+            self._register_as_seller()
+        else:
+            self._register_as_buyer()
         time.sleep(1.0)
-        self._search_for_sellers()
-        # self._search_for_buyers() TODO include the symmetry, eventually.
+        if self._register_supply:
+            self._search_for_sellers()
+        else:
+            self._search_for_buyers()
 
     def on_cancelled(self):
         logger.debug("[{}]: Received cancellation from the controller. Stopping...".format(self.public_key))
@@ -280,7 +284,7 @@ class BaselineAgent(NegotiationAgent):
             logger.debug("[{}]: send_cfp_as_seller: msg_id={}, dialogue_id={}, destination={}, target={}, query={}"
                          .format(self.public_key, STARTING_MESSAGE_ID, dialogue_id, buyer, STARTING_MESSAGE_REF, query))
             self.send_cfp(STARTING_MESSAGE_ID, dialogue_id, buyer, STARTING_MESSAGE_REF, query)
-            self._register_dialogue_id_as_seller(buyer, dialogue_id)
+            self._save_dialogue_id_as_seller(buyer, dialogue_id)
 
     def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES) -> None:
         """
@@ -382,7 +386,7 @@ class BaselineAgent(NegotiationAgent):
                                                                   })))
             self.send_decline(new_msg_id, dialogue_id, origin, msg_id)
         else:
-            proposals = [random.shuffle(self._get_buyer_proposals())[0]]
+            proposals = [random.choice(self._get_buyer_proposals())] # ToDo use all!
             dialogue_label = (origin, dialogue_id)
             for proposal in proposals:
                 proposal_id = new_msg_id # TODO fix if more than one proposal!
@@ -398,7 +402,7 @@ class BaselineAgent(NegotiationAgent):
                                                                       "dialogue_id": dialogue_id,
                                                                       "origin": origin,
                                                                       "target": msg_id,
-                                                                      "propose": goods_demanded_description.values
+                                                                      "propose": proposals[0].values
                                                                   })))
             self.send_propose(new_msg_id, dialogue_id, origin, msg_id, proposals)
 
@@ -562,7 +566,7 @@ class BaselineAgent(NegotiationAgent):
 
         self._delete_dialogue_id(origin, dialogue_id)
 
-        #self._start_loop()
+        self._start_loop()
 
     def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
         logger.debug("[{}]: on_accept: msg_id={}, dialogue_id={}, origin={}, target={}"
@@ -592,7 +596,7 @@ class BaselineAgent(NegotiationAgent):
         Handles accept of buyer.
         :return: None
         """
-        transaction = self._recover_pending_proposal(dialogue_id, origin, proposal_id)
+        transaction = self._recover_pending_proposal(dialogue_id, origin, target)
         if self._is_profitable_transaction_as_buyer(transaction):
             logger.debug("[{}]: Locking the current state (buyer).".format(self.public_key))
             self._lock_state_as_buyer(transaction)
@@ -608,7 +612,7 @@ class BaselineAgent(NegotiationAgent):
         Handles accept of seller.
         :return: None
         """
-        transaction = self._recover_pending_proposal(dialogue_id, origin, proposal_id)
+        transaction = self._recover_pending_proposal(dialogue_id, origin, target)
         if self._is_profitable_transaction_as_seller(transaction):
             logger.debug("[{}]: Locking the current state (seller).".format(self.public_key))
             self._lock_state_as_seller(transaction)
@@ -654,7 +658,7 @@ class BaselineAgent(NegotiationAgent):
         self._agent_state.update(transaction)
         self._remove_lock(tx_confirmation.transaction_id)
 
-        #self._start_loop()
+        self._start_loop()
 
     def on_tac_error(self, error: Error) -> None:
         logger.error("[{}]: Received error from the controller. error_msg={}".format(self.public_key, error.error_msg))
@@ -894,11 +898,10 @@ class BaselineAgent(NegotiationAgent):
             l[good_id] = 1
             desc = get_goods_quantities_description(l, True)
             state_after_locks = self._state_after_locks_as_seller()
-            delta_holdings = l * -1
+            delta_holdings = [i * -1 for i in l]
             marginal_utility_from_single_good = marginal_utility(state_after_locks.utilities, state_after_locks.current_holdings, delta_holdings) * -1
-            desc.values["price"] = round(marginal_utility_from_single_good, 2) + 0.01
+            desc.values["price"] = round(marginal_utility_from_single_good, 2) + 0.01 # to avoid rounding down issues
             proposals.append(desc)
-        # logger.debug("[{}]: ISSUE{}, {}".format(self.public_key, pprint.pformat(quantities), pprint.pformat(proposals)))
         return proposals
 
     def _get_buyer_proposals(self) -> List[Description]:
@@ -912,9 +915,9 @@ class BaselineAgent(NegotiationAgent):
             l[good_id] = 1
             desc = get_goods_quantities_description(l, True)
             state_after_locks = self._state_after_locks_as_buyer()
-            delta_holdings = l * +1
+            delta_holdings = l
             marginal_utility_from_single_good = marginal_utility(state_after_locks.utilities, state_after_locks.current_holdings, delta_holdings)
-            desc.values["price"] = round(marginal_utility_from_single_good, 2) + 0.01
+            desc.values["price"] = round(marginal_utility_from_single_good, 2) + 0.01 # to avoid rounding down issues
             proposals.append(desc)
         return proposals
         

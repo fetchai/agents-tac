@@ -43,6 +43,7 @@ def parse_arguments():
     parser.add_argument("--nb-agents", type=int, default=10, help="(minimum) number of TAC agent to wait for the competition.")
     parser.add_argument("--nb-goods",   type=int, default=10, help="Number of TAC agent to run.")
     parser.add_argument("--nb-baseline-agents", type=int, default=10, help="Number of baseline agent to run. Defaults to the number of agents of the competition.")
+    parser.add_argument("--registers-supply", type=bool, default=True, help="A boolean indicating whether the baseline agent registers supply or demand on the oef.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
     parser.add_argument("--uml", default=True, help="Plot uml file")
@@ -142,7 +143,7 @@ def _make_id(agent_id: int, nb_agents: int) -> str:
     return result
 
 
-def initialize_baseline_agent(agent_pbk: str, oef_addr: str, oef_port: int) -> BaselineAgent:
+def initialize_baseline_agent(agent_pbk: str, oef_addr: str, oef_port: int, registers_supply: bool) -> BaselineAgent:
     """
     Initialize one baseline agent.
     :param agent_pbk: the public key of the Baseline agent.
@@ -152,10 +153,10 @@ def initialize_baseline_agent(agent_pbk: str, oef_addr: str, oef_port: int) -> B
     """
 
     # Notice: we create a new asyncio loop, so we can run it in an independent thread.
-    return BaselineAgent(agent_pbk, oef_addr, oef_port, loop=asyncio.new_event_loop())
+    return BaselineAgent(agent_pbk, oef_addr, oef_port, loop=asyncio.new_event_loop()) #, registers_supply=registers_supply)
 
 
-def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port: int) -> List[BaselineAgent]:
+def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port: int, registers_supply: bool) -> List[BaselineAgent]:
     """
     Initialize a list of baseline agents.
     :param nb_baseline_agents: number of agents to initialize.
@@ -163,7 +164,7 @@ def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port:
     :param oef_port: TCP port of the OEF Node.
     :return: A list of baseline agents.
     """
-    baseline_agents = [initialize_baseline_agent(_make_id(i, nb_baseline_agents), oef_addr, oef_port)
+    baseline_agents = [initialize_baseline_agent(_make_id(i, nb_baseline_agents), oef_addr, oef_port, registers_supply)
                        for i in range(nb_baseline_agents)]
     return baseline_agents
 
@@ -214,7 +215,7 @@ if __name__ == '__main__':
         tac_controller = initialize_controller_agent("tac_controller", arguments.oef_addr, arguments.oef_port,
                                                      arguments.nb_agents, arguments.nb_goods, arguments.fee, arguments.lower_bound_factor,
                                                      arguments.upper_bound_factor, arguments.registration_timeout, arguments.inactivity_timeout, arguments.competition_timeout)
-        baseline_agents = initialize_baseline_agents(arguments.nb_baseline_agents, arguments.oef_addr, arguments.oef_port)
+        baseline_agents = initialize_baseline_agents(arguments.nb_baseline_agents, arguments.oef_addr, arguments.oef_port, arguments.registers_supply)
         run(tac_controller, baseline_agents)
 
     except KeyboardInterrupt:
