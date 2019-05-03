@@ -399,7 +399,7 @@ class ControllerAgent(TACAgent):
         :param upper_bound_factor: the upper bound factor of a uniform distribution.
         :param version: the version of the TAC controller.
         :param start_time: the time when the competition will start.
-        :param start_time: the time when the competition will end.
+        :param end_time: the time when the competition will end.
         :param inactivity_countdown: the time when the competition will start.
         """
         super().__init__(public_key, oef_addr, oef_port, **kwargs)
@@ -424,6 +424,7 @@ class ControllerAgent(TACAgent):
 
         self._last_activity = datetime.datetime.now()
         self._inactivity_countdown = datetime.timedelta(seconds=inactivity_countdown) if inactivity_countdown is not None else datetime.timedelta(seconds=15)
+        self._end_time = end_time
 
         self._message_processing_task = None
         self._inactivity_checker_task = None
@@ -499,12 +500,13 @@ class ControllerAgent(TACAgent):
         """
         logger.debug("Started job to check for inactivity of {} seconds. Checking rate: {}"
                      .format(self._inactivity_countdown.total_seconds(), rate))
+        end_date = datetime.datetime.now() + self._end_time
         while True:
             if self._terminated is True:
                 return
             time.sleep(rate)
             current_time = datetime.datetime.now()
-            if current_time - self._last_activity > self._inactivity_countdown:
+            if (current_time - self._last_activity > self._inactivity_countdown) or (current_time > end_time):
                 logger.debug("[{}]: Inactivity timeout expired. Terminating...".format(self.public_key))
                 self.terminate()
                 return

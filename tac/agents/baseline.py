@@ -98,6 +98,14 @@ class BaselineAgent(NegotiationAgent):
 
         :return: None
         """
+        self._start_loop()
+
+    def _start_loop(self) -> None:
+        """
+        Start loop.
+        :return: None
+        """
+        logger.debug("[{}]: Updating service directory and searching for sellers.".format(self.public_key))
         self._register_as_seller()
         # self._register_as_buyer() TODO include the symmetry, eventually.
         time.sleep(1.0)
@@ -159,7 +167,7 @@ class BaselineAgent(NegotiationAgent):
         # offer all holdings in state after locks
 
         
-        return self.get_offered_quantities()
+        return self._get_offered_quantities()
 
     def _get_goods_demanded_description(self) -> Description:
         """
@@ -187,7 +195,7 @@ class BaselineAgent(NegotiationAgent):
 
         :return: a list of demanded quantities
         """
-        return self._agent_state.get_requested_quantities()
+        return self._get_requested_quantities()
 
     def _search_for_sellers(self) -> None:
         """
@@ -312,7 +320,7 @@ class BaselineAgent(NegotiationAgent):
             logger.debug("[{}]: send_cfp_as_buyer: msg_id={}, dialogue_id={}, destination={}, target={}, query={}"
                          .format(self.public_key, STARTING_MESSAGE_ID, dialogue_id, seller, STARTING_MESSAGE_REF, query))
             self.send_cfp(STARTING_MESSAGE_ID, dialogue_id, seller, STARTING_MESSAGE_REF, query)
-            self._register_dialogue_id_as_buyer(seller, dialogue_id)
+            self._save_dialogue_id_as_buyer(seller, dialogue_id)
 
     # def _on_buyers_search_result(self, buyers: List[str]) -> None:
     #     """
@@ -419,7 +427,7 @@ class BaselineAgent(NegotiationAgent):
                 dialogue_label = (origin, dialogue_id)
                 proposal_id = new_msg_id
                 transaction_id = generate_transaction_id(origin, self.public_key, dialogue_id)
-                transaction = self.from_proposal_to_transaction(proposal=single_good_supplied_description,
+                transaction = self._from_proposal_to_transaction(proposal=single_good_supplied_description,
                                                                 transaction_id=transaction_id,
                                                                 is_buyer=False,
                                                                 counterparty=origin)
@@ -472,7 +480,7 @@ class BaselineAgent(NegotiationAgent):
     #
     #     :return: None
     #     """
-    #     self._register_dialogue_id_as_buyer(origin, dialogue_id)
+    #     self._save_dialogue_id_as_buyer(origin, dialogue_id)
     #     goods_demanded_description = self._get_goods_demanded_description()
     #     utility_of_missing_goods = 0  # TODO to be fixed.
     #     goods_demanded_description.values["price"] = utility_of_missing_goods
@@ -549,11 +557,11 @@ class BaselineAgent(NegotiationAgent):
         logger.debug("[{}]: on propose as buyer.".format(self.public_key))
         proposal = proposals[0]
         transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id)
-        transaction = self.from_proposal_to_transaction(proposal,
+        transaction = self._from_proposal_to_transaction(proposal,
                                                         transaction_id,
                                                         is_buyer=True,
                                                         counterparty=origin)
-        if self.is_profitable_transaction_as_buyer(transaction):
+        if self._is_profitable_transaction_as_buyer(transaction):
             logger.debug("[{}]: Accepting propose.".format(self.public_key))
             self._accept_propose_as_buyer(msg_id, dialogue_id, origin, target, proposals)
         # TODO skip counter-propose
@@ -584,7 +592,7 @@ class BaselineAgent(NegotiationAgent):
     #     # The seller needs to check whether she still has the good in excess!
     #     proposal = proposals[0]
     #     transaction_id = generate_transaction_id(origin, self.public_key, dialogue_id)
-    #     transaction = self.from_proposal_to_transaction(proposal,
+    #     transaction = self._from_proposal_to_transaction(proposal,
     #                                                     transaction_id,
     #                                                     is_buyer=False,
     #                                                     counterparty=origin)
@@ -621,7 +629,7 @@ class BaselineAgent(NegotiationAgent):
         proposal = proposals[0]
         dialogue_label = (origin, dialogue_id)
         transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id)
-        transaction = self.from_proposal_to_transaction(proposal=proposal,
+        transaction = self._from_proposal_to_transaction(proposal=proposal,
                                                         transaction_id=transaction_id,
                                                         is_buyer=True,
                                                         counterparty=origin)
@@ -692,9 +700,11 @@ class BaselineAgent(NegotiationAgent):
         buyer_pbk, seller_pbk = (self.public_key, origin) if dialogue_id in self._dialogues_as_buyer \
             else (origin, self.public_key)
         transaction_id = generate_transaction_id(buyer_pbk, seller_pbk, dialogue_id)
-        self.remove_lock(transaction_id)
+        self._remove_lock(transaction_id)
 
         self._delete_dialogue_id(origin, dialogue_id)
+
+        self._start_loop()
 
     def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
         logger.debug("[{}]: on_accept: msg_id={}, dialogue_id={}, origin={}, target={}"
@@ -703,7 +713,7 @@ class BaselineAgent(NegotiationAgent):
         dialogue_label = (origin, dialogue_id)  # type: DIALOGUE_LABEL
         acceptance_id = target
         if dialogue_label in self._pending_acceptances and acceptance_id in self._pending_acceptances[dialogue_label]:
-            self.on_match_accept(msg_id, dialogue_id, origin, target)
+            self._on_match_accept(msg_id, dialogue_id, origin, target)
         else:
             self._on_accept(msg_id, dialogue_id, origin, target)
 
@@ -740,48 +750,57 @@ class BaselineAgent(NegotiationAgent):
     #     self.send_accept(msg_id + 1, dialogue_id, origin, msg_id)
 
     def _on_accept_as_seller(self, msg_id: int, dialogue_id: int, origin: str, target: int):
-        # recover the pending proposal
-        dialogue_label = (origin, dialogue_id)
-        proposal_id = target
-        assert dialogue_label in self._pending_proposals and target in self._pending_proposals[dialogue_label]
-        transaction = self._pending_proposals[dialogue_label].pop(proposal_id)
-
-        if self.is_profitable_transaction_as_seller(transaction):
+        """
+        Handles accept of seller.
+        :return: None
+        """
+        transaction = self._recover_pending_proposal(dialogue_id, origin, proposal_id)
+        if self._is_profitable_transaction_as_seller(transaction):
             logger.debug("[{}]: Locking the current state (seller).".format(self.public_key))
-            # lock state
             self._lock_state_as_seller(transaction)
-
-            # submit transaction
             self.submit_transaction(transaction)
-
-            # send accept
             self.send_accept(msg_id + 1, dialogue_id, origin, msg_id)
         else:
             logger.debug("[{}]: Decline the accept.".format(self.public_key))
             self.send_decline(msg_id + 1, dialogue_id, origin, msg_id)
 
-    def on_match_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int):
+    def _recover_pending_proposal(self, dialogue_id: int, origin: str, proposal_id: int) -> Transaction:
+        """
+        Recovers pending transaction proposal.
+        :return: Transaction
+        """
+        dialogue_label = (origin, dialogue_id)
+        assert dialogue_label in self._pending_proposals and proposal_id in self._pending_proposals[dialogue_label]
+        transaction = self._pending_proposals[dialogue_label].pop(proposal_id)
+        return transaction
+
+    def _on_match_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int):
+        """
+        Handles match accept.
+        :return: None
+        """
         logger.debug("[{}]: on match accept".format(self.public_key))
 
-        # recover pending transaction
-        dialogue_label = (origin, dialogue_id)  # type: DIALOGUE_LABEL
-        acceptance_id = target
+        transaction = self._recover_pending_acceptance(dialogue_id, origin, target)
+        self.submit_transaction(transaction)
+
+    def _recover_pending_acceptance(self, dialogue_id: int, origin: str, acceptance_id: int) -> Transaction:
+        """
+        Recovers pending transaction acceptance.
+        :return: Transaction
+        """
+        dialogue_label = (origin, dialogue_id)
         assert dialogue_label in self._pending_acceptances and acceptance_id in self._pending_acceptances[dialogue_label]
         transaction = self._pending_acceptances[dialogue_label].pop(acceptance_id)
-
-        # submit transaction
-        self.submit_transaction(transaction)
+        return transaction
 
     def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
         logger.debug("[{}]: on transaction confirmed.".format(self.public_key))
         transaction = self._locks[tx_confirmation.transaction_id]
         self._agent_state.update(transaction)
-        self.remove_lock(tx_confirmation.transaction_id)
+        self._remove_lock(tx_confirmation.transaction_id)
 
-        logger.debug("[{}]: update service directory and search for sellers.".format(self.public_key))
-        self._register_as_seller()
-        time.sleep(1.0)
-        self._search_for_sellers()
+        self._start_loop()
 
     def on_tac_error(self, error: Error) -> None:
         logger.error("[{}]: Received error from the controller. error_msg={}".format(self.public_key, error.error_msg))
@@ -790,11 +809,11 @@ class BaselineAgent(NegotiationAgent):
             start_idx_of_tx_id = len("Error in checking transaction: ")
             transaction_id = error.error_msg[start_idx_of_tx_id:]
             if transaction_id in self._locks:
-                self.remove_lock(transaction_id)
+                self._remove_lock(transaction_id)
             else:
                 logger.warning("[{}]: Received error on unknown transaction id: {}".format(self.public_key, transaction_id))
 
-    def _register_dialogue_id_as_buyer(self, origin: str, dialogue_id: int):
+    def _save_dialogue_id_as_buyer(self, origin: str, dialogue_id: int):
         dialogue_label = (origin, dialogue_id)
         assert dialogue_label not in self._all_dialogues
         assert dialogue_label not in self._dialogues_as_buyer
@@ -835,7 +854,7 @@ class BaselineAgent(NegotiationAgent):
         quantity_by_good_id = {from_good_attribute_name_to_good_id(key): value for key, value in data.items()}
         return price, quantity_by_good_id
 
-    def is_profitable_transaction_as_buyer(self, transaction: Transaction) -> bool:
+    def _is_profitable_transaction_as_buyer(self, transaction: Transaction) -> bool:
         """
         Is a profitable transaction for a buyer?
         - apply all the locks as buyer.
@@ -865,7 +884,7 @@ class BaselineAgent(NegotiationAgent):
                              transaction.amount))
         return result
 
-    def is_profitable_transaction_as_seller(self, transaction: Transaction) -> bool:
+    def _is_profitable_transaction_as_seller(self, transaction: Transaction) -> bool:
         """
         Is a profitable transaction for a seller?
         - apply all the locks as seller.
@@ -890,7 +909,7 @@ class BaselineAgent(NegotiationAgent):
                              proposal_delta_score, transaction.amount))
         return result
 
-    def from_proposal_to_transaction(self, proposal: Description, transaction_id: str,
+    def _from_proposal_to_transaction(self, proposal: Description, transaction_id: str,
                                      is_buyer: bool, counterparty: str) -> Transaction:
         price, quantity_by_good_id = self._extract_info_from_propose(proposal)
         transaction = Transaction(transaction_id, is_buyer, counterparty, price, quantity_by_good_id,
@@ -940,7 +959,7 @@ class BaselineAgent(NegotiationAgent):
         state_after_locks = self._agent_state.apply(transactions)
         return state_after_locks
 
-    def get_offered_quantities(self) -> List[int]:
+    def _get_offered_quantities(self) -> List[int]:
         """
         Return the vector of good quantities on offer.
         An agent in principle offers any of her quantities.
@@ -953,7 +972,7 @@ class BaselineAgent(NegotiationAgent):
         state_after_locks = self._state_after_locks_as_seller()
         return [q for q in state_after_locks.current_holdings]
 
-    def get_requested_quantities(self) -> List[int]:
+    def _get_requested_quantities(self) -> List[int]:
         """
         Return the vector of good quantities requested.
         An agent in principle requests any good once.
@@ -965,7 +984,7 @@ class BaselineAgent(NegotiationAgent):
         """
         return [1 for _ in self._agent_state.current_holdings]
 
-    def remove_lock(self, transaction_id: str):
+    def _remove_lock(self, transaction_id: str):
         """
         Try to remove a lock, given its id.
         :param transaction_id: the transaction id.

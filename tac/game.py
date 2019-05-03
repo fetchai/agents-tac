@@ -38,7 +38,7 @@ from typing import List, Dict, Any, Optional, Set
 from tac.protocol import Transaction
 
 from tac.helpers.misc import generate_initial_money_amounts, generate_endowments, generate_utilities, from_iso_format, \
-    logarithmic_utility
+    logarithmic_utility, marginal_utility
 
 Endowment = List[int]  # an element e_j is the endowment of good j.
 Utilities = List[float]  # an element u_j is the utility value of good j.
@@ -220,6 +220,16 @@ class Game:
             )
             for i in range(configuration.nb_agents)]  # type: List[AgentState]
 
+        # instantiate the initial agent state for every agent.
+        self.initial_agent_states = [
+            AgentState(
+                configuration.initial_money_amounts[i],
+                configuration.endowments[i],
+                configuration.utilities[i],
+                configuration.fee
+            )
+            for i in range(configuration.nb_agents)]  # type: List[AgentState]
+
     @staticmethod
     def generate_game(nb_agents: int,
                       nb_goods: int,
@@ -244,6 +254,10 @@ class Game:
         utilities = generate_utilities(nb_agents, nb_goods)
         configuration = GameConfiguration(initial_money_amounts, endowments, utilities, fee, agent_ids)
         return Game(configuration)
+
+    def get_initial_scores(self) -> List[float]:
+        """Get the initial scores for every agent."""
+        return [agent_state.get_score() for agent_state in self.initial_agent_states]
 
     def get_scores(self) -> List[float]:
         """Get the current scores for every agent."""
@@ -422,7 +436,7 @@ class AgentState:
         with positive quantity plus the money left.
         :return: the score.
         """
-        goods_score = logarithmic_utility(self.utilities, self._current_holdings)
+        goods_score = logarithmic_utility(self.utilities, self.current_holdings)
         money_score = self.balance
         score = goods_score + money_score
         return score
@@ -438,7 +452,7 @@ class AgentState:
         new_score = new_state.get_score()
         return new_score - current_score
 
-    def score_good_quantities(self, quantities: List[int]) -> float:
+    def get_marginal_utility(self, delta_quantities: List[int]) -> float:
         """
         Score a vector of quantities. The quantities are scored in terms of gain of utility.
         E.g.
@@ -447,14 +461,10 @@ class AgentState:
         >>> round(score, 4)
         13.8629
 
-        :param quantities: the quantities to be scored.
+        :param delta_quantities: the  quantities to be scored.
         :return: the score.
         """
-        current_score = logarithmic_utility(self.utilities, self.current_holdings)
-        new_quantities = [cur_q + new_q for cur_q, new_q in zip(self.current_holdings, quantities)]
-        # compute the future utilities if we had those goods
-        utility = logarithmic_utility(self.utilities, new_quantities)
-        return utility - current_score
+        return marginal_utility(self.utilities, self.current_holdings, delta_quantities)
 
     def get_zero_quantity_goods_ids(self) -> Set[int]:
         """
