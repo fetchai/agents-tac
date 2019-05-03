@@ -153,7 +153,11 @@ class BaselineAgent(NegotiationAgent):
 
         :return: a list of supplied quantities
         """
-        result = [q for q in self._agent_state.current_holdings]
+        # project forward the holdings with the locks as seller
+        transactions = list(self._locks_as_seller.values())
+        state_after_locks = self._agent_state.apply(transactions)
+
+        result = [q for q in state_after_locks.current_holdings]
         # result = self._agent_state.current_holdings
         return result
 

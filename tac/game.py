@@ -468,7 +468,6 @@ class AgentState:
 
         :return: the vector of good quantities requested.
         """
-        # TODO temporarily look for all ones.
         return [1 for _ in self._current_holdings]
 
     def get_zero_quantity_goods_ids(self) -> Set[int]:
