@@ -503,12 +503,15 @@ class AgentState:
         :param tx: the transaction request message.
         :return: None
         """
-        switch = -1 if tx.buyer else 1
+        if tx.buyer:
+            fees = tx.amount + self.tx_fee
+            self.balance -= fees
+        else:
+            self.balance += tx.amount
 
-        fee = self.tx_fee if tx.buyer else 0
-        self.balance += switch * tx.amount + fee
         for good_id, quantity in tx.quantities_by_good_id.items():
-            self._current_holdings[good_id] += -switch * quantity
+            quantity_delta = quantity if tx.buyer else - quantity
+            self._current_holdings[good_id] += quantity_delta
 
     def restore(self, tx: Transaction) -> None:
         """
@@ -529,13 +532,13 @@ class AgentState:
         or enough holdings if it is a seller.
         :return: True if the transaction is legal wrt the current state, false otherwise.
         """
-        result = True
 
         if tx.buyer:
             # check if we have the money.
-            result = result and (self.balance >= tx.amount + self.tx_fee)
+            result = self.balance >= tx.amount + self.tx_fee
         else:
             # check if we have the goods.
+            result = True
             for good_id, quantity in tx.quantities_by_good_id.items():
                 result = result and (self._current_holdings[good_id] >= quantity)
         return result

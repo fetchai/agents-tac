@@ -704,7 +704,7 @@ class BaselineAgent(NegotiationAgent):
 
         self._delete_dialogue_id(origin, dialogue_id)
 
-        self._start_loop()
+        #self._start_loop()
 
     def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
         logger.debug("[{}]: on_accept: msg_id={}, dialogue_id={}, origin={}, target={}"
@@ -800,7 +800,7 @@ class BaselineAgent(NegotiationAgent):
         self._agent_state.update(transaction)
         self._remove_lock(tx_confirmation.transaction_id)
 
-        self._start_loop()
+        #self._start_loop()
 
     def on_tac_error(self, error: Error) -> None:
         logger.error("[{}]: Received error from the controller. error_msg={}".format(self.public_key, error.error_msg))

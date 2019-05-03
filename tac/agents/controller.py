@@ -376,7 +376,7 @@ class ControllerAgent(TACAgent):
                  oef_addr="127.0.0.1",
                  oef_port=3333,
                  min_nb_agents: int = 5,
-                 money_endowment: int = 20,
+                 money_endowment: int = 200,
                  nb_goods: int = 5,
                  fee: int = 1,
                  lower_bound_factor: int = 1,
@@ -384,7 +384,7 @@ class ControllerAgent(TACAgent):
                  version: int = 1,
                  start_time: datetime.datetime = None,
                  end_time: datetime.datetime = None,
-                 inactivity_countdown: Optional[datetime.timedelta] = None,
+                 inactivity_timeout: Optional[datetime.timedelta] = None,
                  **kwargs):
         """
         Initialize a Controller Agent for TAC.
@@ -400,7 +400,7 @@ class ControllerAgent(TACAgent):
         :param version: the version of the TAC controller.
         :param start_time: the time when the competition will start.
         :param end_time: the time when the competition will end.
-        :param inactivity_countdown: the time when the competition will start.
+        :param inactivity_timeout: the time when the competition will start.
         """
         super().__init__(public_key, oef_addr, oef_port, **kwargs)
         logger.debug("Initialized Controller Agent :\n{}".format(pprint.pformat({
@@ -423,7 +423,7 @@ class ControllerAgent(TACAgent):
         self.version = version
 
         self._last_activity = datetime.datetime.now()
-        self._inactivity_countdown = datetime.timedelta(seconds=inactivity_countdown) if inactivity_countdown is not None else datetime.timedelta(seconds=15)
+        self._inactivity_timeout = datetime.timedelta(seconds=inactivity_timeout) if inactivity_timeout is not None else datetime.timedelta(seconds=15)
         self._end_time = end_time
 
         self._message_processing_task = None
@@ -499,17 +499,18 @@ class ControllerAgent(TACAgent):
         :return: None
         """
         logger.debug("Started job to check for inactivity of {} seconds. Checking rate: {}"
-                     .format(self._inactivity_countdown.total_seconds(), rate))
+                     .format(self._inactivity_timeout.total_seconds(), rate))
         while True:
             if self._terminated is True:
                 return
             time.sleep(rate)
             current_time = datetime.datetime.now()
-            if current_time - self._last_activity > self._inactivity_countdown:
+            inactivity_duration = current_time - self._last_activity
+            if inactivity_duration > self._inactivity_timeout:
                 logger.debug("[{}]: Inactivity timeout expired. Terminating...".format(self.public_key))
                 self.terminate()
                 return
-            if current_time > self._end_time:
+            elif current_time > self._end_time:
                 logger.debug("[{}]: Competition timeout expired. Terminating...".format(self.public_key))
                 self.terminate()
                 return

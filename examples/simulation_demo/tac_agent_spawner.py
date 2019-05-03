@@ -111,7 +111,7 @@ def initialize_controller_agent(public_key: str,
     tac_controller = ControllerAgent(public_key=public_key, oef_addr=oef_addr,
                                      oef_port=oef_port, min_nb_agents=min_nb_agents,
                                      nb_goods=nb_goods, fee=fee, lower_bound_factor=lower_bound_factor,
-                                     upper_bound_factor=upper_bound_factor, start_time=start_time, end_time=end_time, inactivity_countdown=inactivity_timeout)
+                                     upper_bound_factor=upper_bound_factor, start_time=start_time, end_time=end_time, inactivity_timeout=inactivity_timeout)
     tac_controller.connect()
     tac_controller.register()
     return tac_controller
