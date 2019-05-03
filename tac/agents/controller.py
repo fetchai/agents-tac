@@ -427,7 +427,7 @@ class ControllerAgent(TACAgent):
         self._end_time = end_time
 
         self._message_processing_task = None
-        self._inactivity_checker_task = None
+        self._timeout_checker_task = None
 
         self._terminated = False
 
@@ -492,22 +492,25 @@ class ControllerAgent(TACAgent):
         self.game_handler.notify_tac_cancelled()
         self._loop.call_soon_threadsafe(self._task.cancel)
 
-    def check_inactivity(self, rate: Optional[float] = 2.0) -> None:
+    def check_timeout(self, rate: Optional[float] = 2.0) -> None:
         """
-        Check periodically if the timeout for inactivity expired.
+        Check periodically if the timeout for inactivity or competition expired.
         :param: rate: at which rate (in seconds) the frequency of the check.
         :return: None
         """
         logger.debug("Started job to check for inactivity of {} seconds. Checking rate: {}"
                      .format(self._inactivity_countdown.total_seconds(), rate))
-        end_date = datetime.datetime.now() + self._end_time
         while True:
             if self._terminated is True:
                 return
             time.sleep(rate)
             current_time = datetime.datetime.now()
-            if (current_time - self._last_activity > self._inactivity_countdown) or (current_time > end_time):
+            if current_time - self._last_activity > self._inactivity_countdown:
                 logger.debug("[{}]: Inactivity timeout expired. Terminating...".format(self.public_key))
+                self.terminate()
+                return
+            if current_time > self._end_time:
+                logger.debug("[{}]: Competition timeout expired. Terminating...".format(self.public_key))
                 self.terminate()
                 return
 
@@ -516,14 +519,14 @@ class ControllerAgent(TACAgent):
 
     def run_controller(self) -> None:
         self._message_processing_task = Thread(target=self.run)
-        self._inactivity_checker_task = Thread(target=self.check_inactivity)
+        self._timeout_checker_task = Thread(target=self.check_timeout)
 
         logger.debug("Running TAC controller agent...")
         self._message_processing_task.start()
-        self._inactivity_checker_task.start()
+        self._timeout_checker_task.start()
 
         self._message_processing_task.join()
-        self._inactivity_checker_task.join()
+        self._timeout_checker_task.join()
 
 
 def main():

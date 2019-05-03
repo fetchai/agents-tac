@@ -53,7 +53,7 @@ def parse_arguments():
     parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
     parser.add_argument("--fee", default=1, type=int, help="The transaction fee.")
     parser.add_argument("--registration-timeout", default=10, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
-    parser.add_argument("--inactivity-timeout", default=20, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
+    parser.add_argument("--inactivity-timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
     parser.add_argument("--competition-timeout", default=120, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
 
     arguments = parser.parse_args()

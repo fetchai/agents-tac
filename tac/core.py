@@ -81,7 +81,9 @@ class NegotiationAgent(Agent):
         self._fee = None
 
     def on_search_result(self, search_id: int, agents: List[str]):
-        """Handle search results."""
+        """
+        Handle search results.
+        """
         if search_id == self.TAC_CONTROLLER_SEARCH_ID:
             # assuming the number of active controller is only one.
             assert len(agents) == 1
