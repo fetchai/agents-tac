@@ -182,12 +182,12 @@ class Game:
     >>> money_amounts = [20, 20, 20]
     >>> endowments = [
     ... [1, 1, 1],
-    ... [2, 1, 0],
-    ... [0, 1, 2]]
+    ... [2, 1, 1],
+    ... [1, 1, 2]]
     >>> utilities = [
-    ... [20.0, 40.0, 60.0],
-    ... [20.0, 60.0, 40.0],
-    ... [40.0, 20.0, 60.0]]
+    ... [20.0, 40.0, 40.0],
+    ... [10.0, 50.0, 40.0],
+    ... [40.0, 30.0, 30.0]]
     >>> fee = 1
     >>> game_configuration = GameConfiguration(
     ...     money_amounts,
@@ -292,7 +292,7 @@ class Game:
         >>> game = Game(GameConfiguration(
         ... initial_money_amounts = [20, 20],
         ... endowments = [[0, 0], [1, 1]],
-        ... utilities = [[10.0, 20.0], [10.0, 20.0]],
+        ... utilities = [[80.0, 20.0], [10.0, 90.0]],
         ... fee = 0))
         >>> agent_state_1 = game.agent_states[0] # agent state of player 1
         >>> agent_state_2 = game.agent_states[1] # agent state of player 2
@@ -342,9 +342,9 @@ class Game:
         ... [1, 0, 0],
         ... [0, 1, 2]]
         >>> utilities = [
-        ... [20.0, 40.0, 60.0],
-        ... [20.0, 60.0, 40.0],
-        ... [40.0, 20.0, 60.0]]
+        ... [20.0, 20.0, 60.0],
+        ... [10.0, 50.0, 40.0],
+        ... [30.0, 20.0, 50.0]]
         >>> fee = 1
         >>> game_configuration = GameConfiguration(
         ... money_amounts,
@@ -455,7 +455,7 @@ class AgentState:
 
         :return: the vector of good quantities in excess.
         """
-        result = [q if q > 2 else 0 for q in self._current_holdings]
+        result = [1 for _ in self._current_holdings]
         return result
 
     def get_requested_quantities(self) -> List[int]:

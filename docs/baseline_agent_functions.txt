@@ -26,6 +26,7 @@ on_search_results
 
 on_cfp
 	> _on_cfp_as_seller
+		> _save_dialogue_id_as_seller
 		> _get_goods_supplied_description
 		> send_decline (as seller)
 		> send_propose (as seller)

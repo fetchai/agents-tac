@@ -35,7 +35,8 @@ from oef.schema import Description
 
 from tac.core import NegotiationAgent
 from tac.helpers.misc import generate_transaction_id, build_query, get_goods_quantities_description, \
-    TAC_BUYER_DATAMODEL_NAME, from_good_attribute_name_to_good_id, TAC_SELLER_DATAMODEL_NAME, logarithmic_utility
+    TAC_BUYER_DATAMODEL_NAME, from_good_attribute_name_to_good_id, TAC_SELLER_DATAMODEL_NAME, logarithmic_utility, \
+    marginal_utility
 from tac.protocol import GameData, Transaction, TransactionConfirmation, Error, ErrorCode
 
 logger = logging.getLogger(__name__)
@@ -150,9 +151,9 @@ class BaselineAgent(NegotiationAgent):
         """
         Wraps the function which determines supplied quantities.
 
-        :return: a list of demanded quantities
+        :return: a list of supplied quantities
         """
-        result = [min(1, q) for q in self._agent_state.current_holdings]
+        result = [q for q in self._agent_state.current_holdings]
         # result = self._agent_state.current_holdings
         return result
 
@@ -233,11 +234,10 @@ class BaselineAgent(NegotiationAgent):
 
         :return: a list of demanded good ids
         """
-        # update the holdings with the locks as buyer
+        # project forward the holdings with the locks as buyer
         transactions = list(self._locks_as_buyer.values())
         state_after_locks = self._agent_state.apply(transactions)
 
-        # TODO temporarily including all the goods ids
         demanded_quantity_good_ids = {good_id for good_id, quantity in enumerate(state_after_locks.current_holdings)}
 
         return demanded_quantity_good_ids
@@ -261,13 +261,13 @@ class BaselineAgent(NegotiationAgent):
 
         :return: a list of supplied good ids
         """
-        # update the holdings with the locks as seller
+        # project forward the holdings with the locks as seller
         transactions = list(self._locks_as_seller.values())
         state_after_locks = self._agent_state.apply(transactions)
 
-        excess_quantity_good_ids = {good_id for good_id, quantity in enumerate(state_after_locks.current_holdings)
+        supplied_quantity_good_ids = {good_id for good_id, quantity in enumerate(state_after_locks.current_holdings)
                                     if quantity > 1}
-        return excess_quantity_good_ids
+        return supplied_quantity_good_ids
 
     def on_search_results(self, search_id: int, agents: List[str]) -> None:
         """
@@ -383,8 +383,6 @@ class BaselineAgent(NegotiationAgent):
         """
         self._save_dialogue_id_as_seller(origin, dialogue_id)
         goods_supplied_description = self._get_goods_supplied_description()
-        utility_of_excess_goods = logarithmic_utility(self._agent_state.utilities, self._get_supplied_goods_quantities())
-        goods_supplied_description.values["price"] = utility_of_excess_goods
         new_msg_id = msg_id + 1
         if not query.check(goods_supplied_description):
             logger.debug("[{}]: Current holdings do not satisfy CFP query.".format(self.public_key))
@@ -397,29 +395,66 @@ class BaselineAgent(NegotiationAgent):
                                                                   })))
             self.send_decline(new_msg_id, dialogue_id, origin, msg_id)
         else:
-            proposals = [goods_supplied_description]
-            logger.debug("[{}]: sending to {} a Propose{}".format(self.public_key, origin,
-                                                                  pprint.pformat({
-                                                                      "msg_id": new_msg_id,
-                                                                      "dialogue_id": dialogue_id,
-                                                                      "origin": origin,
-                                                                      "target": msg_id,
-                                                                      "propose": goods_supplied_description.values
-                                                                  })))
+            single_good_supplied_descriptions, single_good_supplied_lists = self._get_single_good_supplied_descriptions()
+            # TODO currently due to dialogue ids we can only send one random propose
+            random_id = random.randint(0, len(single_good_supplied_lists))
+            count = 0
+            for single_good_supplied_description, single_good_supplied_list in zip(single_good_supplied_descriptions, single_good_supplied_lists):
+                if not count == random_id: continue
+                marginal_utility_of_single_good = marginal_utility(self._agent_state.utilities, self._agent_state.current_holdings, single_good_supplied_list)
+                # TODO ensure proper rounding up on second decimal
+                single_good_supplied_description.values["price"] = round(marginal_utility_of_single_good, 2) + 0.01
+                proposals = [single_good_supplied_description]
+                logger.debug("[{}]: sending to {} a Propose{}".format(self.public_key, origin,
+                                                                      pprint.pformat({
+                                                                          "msg_id": new_msg_id,
+                                                                          "dialogue_id": dialogue_id,
+                                                                          "origin": origin,
+                                                                          "target": msg_id,
+                                                                          "propose": single_good_supplied_description.values
+                                                                      })))
 
-            # store the proposed transaction in the pool of pending proposals.
-            dialogue_label = (origin, dialogue_id)
-            proposal_id = new_msg_id
-            transaction_id = generate_transaction_id(origin, self.public_key, dialogue_id)
-            transaction = self.from_proposal_to_transaction(proposal=goods_supplied_description,
-                                                            transaction_id=transaction_id,
-                                                            is_buyer=False,
-                                                            counterparty=origin)
-            self._pending_proposals[dialogue_label][proposal_id] = transaction
+                # store the proposed transaction in the pool of pending proposals.
+                dialogue_label = (origin, dialogue_id)
+                proposal_id = new_msg_id
+                transaction_id = generate_transaction_id(origin, self.public_key, dialogue_id)
+                transaction = self.from_proposal_to_transaction(proposal=single_good_supplied_description,
+                                                                transaction_id=transaction_id,
+                                                                is_buyer=False,
+                                                                counterparty=origin)
+                self._pending_proposals[dialogue_label][proposal_id] = transaction
 
-            # send the propose
-            self.send_propose(new_msg_id, dialogue_id, origin, msg_id, proposals)
+                # send the propose
+                self.send_propose(new_msg_id, dialogue_id, origin, msg_id, proposals)
 
+    def _get_single_good_supplied_descriptions(self) -> [List[Description], List]:
+        """
+        Get the description of the supplied goods, following a baseline policy.
+        That is, a description with the following structure:
+        >>> description = {
+        ...     "good_01": 1,
+        ...     "good_02": 0,
+        ...     #...
+        ...
+        ... }
+        >>>
+        where the keys indicate the good and the values the quantity that the agent wants to sell.
+
+        The baseline agent's policy is to offer for sale one unit of each of the goods.
+
+        :return: a list of the descriptions (to advertise on the Service Directory).
+        """
+        self._get_supplied_goods_quantities()
+        descriptions = []
+        lists = []
+        zeroslist = [0] * len(self._agent_state.current_holdings)
+        for good_id in self._agent_state.current_holdings:
+            l = copy.deepcopy(zeroslist)
+            l[good_id] = 1
+            desc = get_goods_quantities_description(l, True)
+            descriptions.append(desc)
+            lists.append(l)
+        return descriptions, lists
 
     # def _on_cfp_as_buyer(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES) -> None:
     #     """
