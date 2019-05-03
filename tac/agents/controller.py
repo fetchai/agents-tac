@@ -420,7 +420,7 @@ class ControllerAgent(TACAgent):
         self.version = version
 
         self._last_activity = datetime.datetime.now()
-        self._inactivity_countdown = inactivity_countdown if inactivity_countdown is not None else datetime.timedelta(seconds=15)
+        self._inactivity_countdown = datetime.timedelta(seconds=inactivity_countdown) if inactivity_countdown is not None else datetime.timedelta(seconds=15)
 
         self._message_processing_task = None
         self._inactivity_checker_task = None

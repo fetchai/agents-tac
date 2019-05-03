@@ -52,8 +52,8 @@ def parse_arguments():
     parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
     parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
     parser.add_argument("--fee", default=1, type=int, help="The transaction fee.")
-    parser.add_argument("--timeout", default=5, type=int, help="The amount of time (in seconds) to wait for starting the competition.")
-    parser.add_argument("--inactivity-timeout", default=5, type=int, help="The amount of inactivity time (in seconds) to wait until the cancellation of the competition.")
+    parser.add_argument("--registration-timeout", default=5, type=int, help="The amount of time (in seconds) to wait for starting the competition.")
+    parser.add_argument("--inactivity-timeout", default=5, type=int, help="The amount of inactivity time (in seconds) to wait until the termination of the competition.")
 
     arguments = parser.parse_args()
     logger.debug("Arguments: {}".format(pprint.pformat(arguments.__dict__)))
@@ -85,7 +85,8 @@ def initialize_controller_agent(public_key: str,
                                 fee: int,
                                 lower_bound_factor: int,
                                 upper_bound_factor: int,
-                                timeout: int) -> ControllerAgent:
+                                registration_timeout: int,
+                                inactivity_timeout: int) -> ControllerAgent:
     """
     Initialize the controller agent.
     :param public_key: the public key of the controller agent.
@@ -96,16 +97,16 @@ def initialize_controller_agent(public_key: str,
     :param fee: the transaction fee.
     :param lower_bound_factor: the lower bound factor of a uniform distribution.
     :param upper_bound_factor: the upper bound factor of a uniform distribution.
-    :param timeout: the timeout (in seconds) to wait until the competition starts.
+    :param registration-timeout: the timeout (in seconds) to wait until the competition starts.
     :return: the controller agent.
     """
 
-    start_time = _compute_competition_start_time(timeout)
+    start_time = _compute_competition_start_time(registration_timeout)
 
     tac_controller = ControllerAgent(public_key=public_key, oef_addr=oef_addr,
                                      oef_port=oef_port, min_nb_agents=min_nb_agents,
                                      nb_goods=nb_goods, fee=fee, lower_bound_factor=lower_bound_factor,
-                                     upper_bound_factor=upper_bound_factor, start_time=start_time)
+                                     upper_bound_factor=upper_bound_factor, start_time=start_time, inactivity_countdown=inactivity_timeout)
     tac_controller.connect()
     tac_controller.register()
     return tac_controller
@@ -207,7 +208,7 @@ if __name__ == '__main__':
 
         tac_controller = initialize_controller_agent("tac_controller", arguments.oef_addr, arguments.oef_port,
                                                      arguments.nb_agents, arguments.nb_goods, arguments.fee, arguments.lower_bound_factor,
-                                                     arguments.upper_bound_factor, arguments.timeout)
+                                                     arguments.upper_bound_factor, arguments.registration_timeout, arguments.inactivity_timeout)
         baseline_agents = initialize_baseline_agents(arguments.nb_baseline_agents, arguments.oef_addr, arguments.oef_port)
         run(tac_controller, baseline_agents)
 

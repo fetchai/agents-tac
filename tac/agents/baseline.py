@@ -157,8 +157,8 @@ class BaselineAgent(NegotiationAgent):
         transactions = list(self._locks_as_seller.values())
         state_after_locks = self._agent_state.apply(transactions)
 
+        # offer all holdings in state after locks
         result = [q for q in state_after_locks.current_holdings]
-        # result = self._agent_state.current_holdings
         return result
 
     def _get_goods_demanded_description(self) -> Description:
@@ -402,9 +402,8 @@ class BaselineAgent(NegotiationAgent):
             single_good_supplied_descriptions, single_good_supplied_lists = self._get_single_good_supplied_descriptions()
             # TODO currently due to dialogue ids we can only send one random propose
             random_id = random.randint(0, len(single_good_supplied_lists))
-            count = 0
-            for single_good_supplied_description, single_good_supplied_list in zip(single_good_supplied_descriptions, single_good_supplied_lists):
-                if not count == random_id: continue
+            for i, (single_good_supplied_description, single_good_supplied_list) in enumerate(zip(single_good_supplied_descriptions, single_good_supplied_lists)):
+                if not i == random_id: continue
                 marginal_utility_of_single_good = marginal_utility(self._agent_state.utilities, self._agent_state.current_holdings, single_good_supplied_list)
                 # TODO ensure proper rounding up on second decimal
                 single_good_supplied_description.values["price"] = round(marginal_utility_of_single_good, 2) + 0.01
@@ -781,10 +780,10 @@ class BaselineAgent(NegotiationAgent):
         self._agent_state.update(transaction)
         self.remove_lock(tx_confirmation.transaction_id)
 
-        # logger.debug("[{}]: update service directory and search for sellers.".format(self.public_key))
-        # self._register_as_seller()
-        # time.sleep(1.0)
-        # self._search_for_sellers()
+        logger.debug("[{}]: update service directory and search for sellers.".format(self.public_key))
+        self._register_as_seller()
+        time.sleep(1.0)
+        self._search_for_sellers()
 
     def on_tac_error(self, error: Error) -> None:
         logger.error("[{}]: Received error from the controller. error_msg={}".format(self.public_key, error.error_msg))
