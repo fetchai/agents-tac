@@ -562,59 +562,76 @@ class BaselineAgent(NegotiationAgent):
                                                         is_buyer=True,
                                                         counterparty=origin)
         if self._is_profitable_transaction_as_buyer(transaction):
-            logger.debug("[{}]: Accepting propose.".format(self.public_key))
+            logger.debug("[{}]: Accepting propose (as buyer).".format(self.public_key))
             self._accept_propose_as_buyer(msg_id, dialogue_id, origin, target, proposals)
         # TODO skip counter-propose
         else:
-            logger.debug("[{}]: Declining propose".format(self.public_key))
+            logger.debug("[{}]: Declining propose (as buyer).".format(self.public_key))
             self.send_decline(msg_id + 1, dialogue_id, origin, msg_id)
             self._delete_dialogue_id(origin, dialogue_id)
 
-    # def _on_propose_as_seller(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES) -> None:
-    #     """
-    #     On Propose handler for seller.
-    #
-    #     1. parse the propose object
-    #     2. compute the score of the propose.
-    #         - if the proposed transaction increases the score,
-    #           send an accept and lock the state waiting for the matched accept.
-    #         - otherwise, decline the propose.
-    #
-    #     :param msg_id: the message id
-    #     :param dialogue_id: the dialogue id
-    #     :param origin: the public key of the message sender.
-    #     :param target: the targeted message id to which this message is a response.
-    #     :param proposals: the proposals associated with the message.
-    #
-    #     :return: None
-    #     """
-    #     logger.debug("[{}]: on propose as seller".format(self.public_key))
-    #     # The seller needs to check whether she still has the good in excess!
-    #     proposal = proposals[0]
-    #     transaction_id = generate_transaction_id(origin, self.public_key, dialogue_id)
-    #     transaction = self._from_proposal_to_transaction(proposal,
-    #                                                     transaction_id,
-    #                                                     is_buyer=False,
-    #                                                     counterparty=origin)
-    #     if self.is_good_transaction_as_seller(transaction):
-    #         self._accept_propose_as_seller(msg_id, dialogue_id, origin, target, proposals)
-    #
-    # def _accept_propose_as_seller(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES) -> None:
-    #     """
-    #     Accept a propose as a seller.
-    #     The parameters are the same of the main 'on_propose' methods.
-    #
-    #     :return: None
-    #     """
-    #     logger.debug("[{}]: accept propose as seller".format(self.public_key))
-    #
-    #     # send accept
-    #     acceptance_message_id = msg_id + 1
-    #     dialogue_label = (origin, dialogue_id)
-    #     acceptance_id = (dialogue_label, acceptance_message_id)
-    #     self._pending_acceptances[acceptance_id] = proposals[0]
-    #
-    #     self.send_accept(acceptance_message_id, dialogue_id, origin, msg_id)
+    def _on_propose_as_seller(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES) -> None:
+        """
+        On Propose handler for seller.
+    
+        1. parse the propose object
+        2. compute the score of the propose.
+            - if the proposed transaction increases the score,
+              send an accept and lock the state waiting for the matched accept.
+            - otherwise, decline the propose.
+    
+        :param msg_id: the message id
+        :param dialogue_id: the dialogue id
+        :param origin: the public key of the message sender.
+        :param target: the targeted message id to which this message is a response.
+        :param proposals: the proposals associated with the message.
+    
+        :return: None
+        """
+        logger.debug("[{}]: on propose as seller.".format(self.public_key))
+        proposal = proposals[0]
+        transaction_id = generate_transaction_id(origin, self.public_key, dialogue_id)
+        transaction = self._from_proposal_to_transaction(proposal,
+                                                        transaction_id,
+                                                        is_buyer=False,
+                                                        counterparty=origin)
+        if self._is_profitable_transaction_as_seller(transaction):
+            logger.debug("[{}]: Accepting propose (as seller).".format(self.public_key))
+            self._accept_propose_as_seller(msg_id, dialogue_id, origin, target, proposals)
+        # TODO skip counter-propose
+        else:
+            logger.debug("[{}]: Declining propose (as seller)".format(self.public_key))
+            self.send_decline(msg_id + 1, dialogue_id, origin, msg_id)
+            self._delete_dialogue_id(origin, dialogue_id)
+
+    def _accept_propose_as_seller(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES) -> None:
+        """
+        Accept a propose as a buyer.
+        The parameters are the same of the main 'on_propose' methods.
+
+        :return: None
+        """
+        logger.debug("[{}]: accept propose as seller".format(self.public_key))
+
+        # compute the transaction request from the propose.
+        proposal = proposals[0]
+        dialogue_label = (origin, dialogue_id)
+        transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id)
+        transaction = self._from_proposal_to_transaction(proposal=proposal,
+                                                        transaction_id=transaction_id,
+                                                        is_buyer=False,
+                                                        counterparty=origin)
+        # lock state
+        logger.debug("[{}]: Locking the current state (as seller).".format(self.public_key))
+        self._lock_state_as_buyer(transaction)
+
+        # add to pending acceptances
+        acceptance_id = msg_id + 1
+        self._pending_acceptances[dialogue_label][acceptance_id] = transaction
+
+        # send accept
+        self.send_accept(acceptance_id, dialogue_id, origin, msg_id)
+
 
     def _accept_propose_as_buyer(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES) -> None:
         """
@@ -634,7 +651,7 @@ class BaselineAgent(NegotiationAgent):
                                                         is_buyer=True,
                                                         counterparty=origin)
         # lock state
-        logger.debug("[{}]: Locking the current state (buyer).".format(self.public_key))
+        logger.debug("[{}]: Locking the current state (as buyer).".format(self.public_key))
         self._lock_state_as_buyer(transaction)
 
         # add to pending acceptances
@@ -644,27 +661,7 @@ class BaselineAgent(NegotiationAgent):
         # send accept
         self.send_accept(acceptance_id, dialogue_id, origin, msg_id)
 
-    # def _accept_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES,
-    #                     is_buyer: bool) -> None:
-    #     """
-    #     Accept a propose.
-    #
-    #     msg_id, dialogue_id, origin, target and proposals are the same parameter of the `on_propose`.
-    #
-    #     :param is_buyer: whether the accept is sent as a buyer or as a seller.
-    #     :return: None
-    #     """
-    #     # TODO assuming `proposals` is a list with only one description, and
-    #     #   with the format {"good_01": quantity, ..., "price": price}
-    #     assert len(proposals) == 1
-    #     proposal = proposals[0]
-    #     price, quantity_by_good_id = self._extract_info_from_propose(proposal)
-    #
-    #     buyer, seller = (self.public_key, origin) if is_buyer else (origin, self.public_key)
-    #     transaction_id = generate_transaction_id(buyer, seller, dialogue_id)
-    #     transaction_request = Transaction(transaction_id, is_buyer, origin, price, quantity_by_good_id)
-    #     self.submit_transaction(transaction_request)
-    #     self.send_accept(msg_id + 1, dialogue_id, origin, msg_id)
+
     #
     # def _improve_propose(self, price: int, quantity_by_good_id: Dict[int, int], current_score: int) -> Optional[Description]:
     #     """
@@ -722,32 +719,28 @@ class BaselineAgent(NegotiationAgent):
         is_buyer = dialogue_label in self._dialogues_as_buyer
         is_seller = dialogue_label in self._dialogues_as_seller
         if is_buyer:
-            assert False  # TODO only accept as seller.
-            # self._on_accept_as_buyer(msg_id, dialogue_id, origin, target)
+            self._on_accept_as_buyer(msg_id, dialogue_id, origin, target)
         elif is_seller:
             self._on_accept_as_seller(msg_id, dialogue_id, origin, target)
         else:
             raise Exception("This dialogue id is not specified.")
 
-    # def _on_accept_as_buyer(self, msg_id: int, dialogue_id: int, origin: str, target: int):
-    #     # TODO lock as buyer
-    #     # TODO remove code redundancy
-    #
-    #     # recover the pending proposal
-    #     dialogue_label = (origin, dialogue_id)
-    #     proposal_id = (dialogue_label, target)
-    #     assert proposal_id in self._pending_proposals
-    #     proposal = self._pending_proposals.pop(proposal_id)
-    #     price, quantity_by_good_id = self._extract_info_from_propose(proposal)
-    #
-    #     # generate transaction
-    #     # transaction id: "${buyer}_${seller}_${dialogueId}
-    #     is_buyer = dialogue_label in self._dialogues_as_buyer
-    #     buyer_pbk, seller_pbk = (self.public_key, origin) if is_buyer else (origin, self.public_key)
-    #     transaction_id = generate_transaction_id(buyer_pbk, seller_pbk, dialogue_id)
-    #     candidate_transaction = Transaction(transaction_id, is_buyer, origin, price, quantity_by_good_id, sender=self.public_key)
-    #     self.submit_transaction(candidate_transaction)
-    #     self.send_accept(msg_id + 1, dialogue_id, origin, msg_id)
+
+    def _on_accept_as_buyer(self, msg_id: int, dialogue_id: int, origin: str, target: int):
+        """
+        Handles accept of buyer.
+        :return: None
+        """
+        transaction = self._recover_pending_proposal(dialogue_id, origin, proposal_id)
+        if self._is_profitable_transaction_as_buyer(transaction):
+            logger.debug("[{}]: Locking the current state (buyer).".format(self.public_key))
+            self._lock_state_as_buyer(transaction)
+            self.submit_transaction(transaction)
+            self.send_accept(msg_id + 1, dialogue_id, origin, msg_id)
+        else:
+            logger.debug("[{}]: Decline the accept (as buyer).".format(self.public_key))
+            self.send_decline(msg_id + 1, dialogue_id, origin, msg_id)
+
 
     def _on_accept_as_seller(self, msg_id: int, dialogue_id: int, origin: str, target: int):
         """
@@ -761,7 +754,7 @@ class BaselineAgent(NegotiationAgent):
             self.submit_transaction(transaction)
             self.send_accept(msg_id + 1, dialogue_id, origin, msg_id)
         else:
-            logger.debug("[{}]: Decline the accept.".format(self.public_key))
+            logger.debug("[{}]: Decline the accept (as seller).".format(self.public_key))
             self.send_decline(msg_id + 1, dialogue_id, origin, msg_id)
 
     def _recover_pending_proposal(self, dialogue_id: int, origin: str, proposal_id: int) -> Transaction:
