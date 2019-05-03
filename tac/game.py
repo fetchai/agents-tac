@@ -452,67 +452,6 @@ class AgentState:
         new_score = new_state.get_score()
         return new_score - current_score
 
-    def get_marginal_utility(self, delta_quantities: List[int]) -> float:
-        """
-        Score a vector of quantities. The quantities are scored in terms of gain of utility.
-        E.g.
-        >>> agent_state = AgentState(20, [0, 1, 2], [10.0, 0.0, 20.0], 1)
-        >>> score = agent_state.score_good_quantities([0, 1, 2])
-        >>> round(score, 4)
-        13.8629
-
-        :param delta_quantities: the  quantities to be scored.
-        :return: the score.
-        """
-        return marginal_utility(self.utilities, self.current_holdings, delta_quantities)
-
-    def get_zero_quantity_goods_ids(self) -> Set[int]:
-        """
-        Get the set of good ids for which we only have a quantity equal to zero.
-        :return: a set of good ids.
-        """
-        zero_quantity_goods_ids = set(map(lambda x: x[0],
-                                          filter(lambda x: x[1] == 0,
-                                                 enumerate(self._current_holdings))))
-        return zero_quantity_goods_ids
-
-    def get_excess_quantity_goods_ids(self) -> Set[int]:
-        """
-        Get the set of good ids for which we have a quantity in excess of 1.
-        :return: a set of good ids.
-        """
-        excess_quantity_goods_ids = set(map(lambda x: x[0],
-                                            filter(lambda x: x[1] > 1,
-                                                   enumerate(self._current_holdings))))
-        return excess_quantity_goods_ids
-
-    def _apply_delta_quantities(self, delta_quantities_by_good_id: Dict[int, int]) -> List[int]:
-        """
-        Return the new holdings, after applied the variation of quantities provided in input.
-        :param delta_quantities_by_good_id:
-        :return: the new vector of holdings.
-        """
-        new_holdings = copy.copy(self._current_holdings)
-        for good_id, delta_quantity in delta_quantities_by_good_id.items():
-            new_holdings[good_id] += delta_quantity
-        return new_holdings
-
-    def update(self, tx: Transaction) -> None:
-        """
-        Update the agent state from a transaction request.
-        :param tx: the transaction request message.
-        :return: None
-        """
-        if tx.buyer:
-            fees = tx.amount + self.tx_fee
-            self.balance -= fees
-        else:
-            self.balance += tx.amount
-
-        for good_id, quantity in tx.quantities_by_good_id.items():
-            quantity_delta = quantity if tx.buyer else - quantity
-            self._current_holdings[good_id] += quantity_delta
-
     def restore(self, tx: Transaction) -> None:
         """
         Apply the transaction to the state, but backwards.
@@ -522,7 +461,7 @@ class AgentState:
         switch = 1 if tx.buyer else -1
 
         fee = self.tx_fee if not tx.buyer else 0
-        self.balance += switch * tx.amount + fee
+        self.balance += switch * (tx.amount + fee)
         for good_id, quantity in tx.quantities_by_good_id.items():
             self._current_holdings[good_id] += -switch * quantity
 
@@ -555,6 +494,22 @@ class AgentState:
             new_state.update(tx)
 
         return new_state
+
+    def update(self, tx: Transaction) -> None:
+        """
+        Update the agent state from a transaction request.
+        :param tx: the transaction request message.
+        :return: None
+        """
+        if tx.buyer:
+            fees = tx.amount + self.tx_fee
+            self.balance -= fees
+        else:
+            self.balance += tx.amount
+
+        for good_id, quantity in tx.quantities_by_good_id.items():
+            quantity_delta = quantity if tx.buyer else -quantity
+            self._current_holdings[good_id] += quantity_delta
 
     def __copy__(self):
         return AgentState(self.balance, self.current_holdings, self.utilities, self.tx_fee)
