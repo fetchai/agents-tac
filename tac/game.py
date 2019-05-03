@@ -427,6 +427,17 @@ class AgentState:
         score = goods_score + money_score
         return score
 
+    def get_score_diff_from_transaction(self, tx: Transaction) -> float:
+        """
+        Simulate a transaction and get the resulting score (taking into account the fee)
+        :param tx: a transaction object.
+        :return: the score.
+        """
+        current_score = self.get_score()
+        new_state = self.apply([tx])
+        new_score = new_state.get_score()
+        return new_score - current_score
+
     def score_good_quantities(self, quantities: List[int]) -> float:
         """
         Score a vector of quantities. The quantities are scored in terms of gain of utility.
@@ -444,31 +455,6 @@ class AgentState:
         # compute the future utilities if we had those goods
         utility = logarithmic_utility(self.utilities, new_quantities)
         return utility - current_score
-
-    def get_excess_goods_quantities(self) -> List[int]:
-        """
-        Return the vector of good quantities in excess. A quantity for a good is in excess if it is more than 1.
-        E.g. if an agent holds the good quantities [0, 2, 1], this function returns [0, 1, 0].
-        >>> agent_state = AgentState(20, [1, 2, 3], [20.0, 40.0, 60.0], 1)
-        >>> agent_state.get_excess_goods_quantities()
-        [0, 1, 2]
-
-        :return: the vector of good quantities in excess.
-        """
-        result = [1 for _ in self._current_holdings]
-        return result
-
-    def get_requested_quantities(self) -> List[int]:
-        """
-        Return the vector of requested quantities. A quantity for a good is in requested if the agent does not currently have it.
-        E.g. if an agent holds the good quantities [0, 2, 1], this function returns [1, 0, 0].
-        >>> agent_state = AgentState(20, [0, 2, 3], [20.0, 40.0, 60.0], 1)
-        >>> agent_state.get_requested_quantities()
-        [1, 0, 0]
-
-        :return: the vector of good quantities requested.
-        """
-        return [1 for _ in self._current_holdings]
 
     def get_zero_quantity_goods_ids(self) -> Set[int]:
         """
@@ -501,17 +487,6 @@ class AgentState:
             new_holdings[good_id] += delta_quantity
         return new_holdings
 
-    def get_score_after_transaction(self, tx: Transaction) -> float:
-        """
-        Simulate a transaction and get the resulting score (taking into account the fee)
-        :param tx: a transaction object.
-        :return: the score.
-        """
-
-        new_state = self.apply([tx])
-        score = new_state.get_score()
-        return score
-
     def update(self, tx: Transaction) -> None:
         """
         Update the agent state from a transaction request.
@@ -538,41 +513,21 @@ class AgentState:
         for good_id, quantity in tx.quantities_by_good_id.items():
             self._current_holdings[good_id] += -switch * quantity
 
-    def check_transaction(self, tx: Transaction) -> bool:
+    def check_transaction_is_consistent(self, tx: Transaction) -> bool:
         """
-        Check if the transaction is consistent. E.g. check that the agent state has enough money and enough holdings.
-        :param tx: the transaction.
+        Check if the transaction is consistent.  E.g. check that the agent state has enough money if it is a buyer 
+        or enough holdings if it is a seller.
         :return: True if the transaction is legal wrt the current state, false otherwise.
         """
-        switch = -1 if tx.buyer else 1
-        delta_money = switch * tx.amount
-        delta_quantities_by_good_id = {good_id: - switch * quantity
-                                       for good_id, quantity in tx.quantities_by_good_id.items()}
-        return self.check_update(delta_money, delta_quantities_by_good_id, tx.buyer)
-
-    def check_update(self, delta_money: int, delta_quantities_by_good_id: Dict[int, int], is_buyer: bool) -> bool:
-        """
-        Check if the update is consistent. E.g. check that the agent state has enough money and enough holdings.
-
-        :param delta_money: the difference of money between the new and the old balance.
-        :param delta_quantities_by_good_id: a map from good ids to delta quantities.
-        :param is_buyer: True if the role in the transaction is the buyer, False if it's the seller
-        :return: True if the transaction is valid, False otherwise.
-        """
-
         result = True
 
-        # the transaction fee is zero if the update is made as seller.
-        tx_fee = self.tx_fee if is_buyer else 0
-
-        # check if we have enough money.
-        result = result and (delta_money >= 0 or self.balance >= abs(delta_money) + tx_fee)
-
-        # check if we have enough good instances.
-        for good_id, delta_quantity in delta_quantities_by_good_id.items():
-            # if the delta is negative, check that we have enough good instances for the transaction.
-            result = result and (delta_quantity >= 0 or self._current_holdings[good_id] >= abs(delta_quantity))
-
+        if tx.buyer:
+            # check if we have the money.
+            result = result and (self.balance >= tx.amount + self.tx_fee)
+        else:
+            # check if we have the goods.
+            for good_id, quantity in tx.quantities_by_good_id.items():
+                result = result and (self._current_holdings[good_id] >= quantity)
         return result
 
     def apply(self, transactions: List[Transaction]) -> 'AgentState':

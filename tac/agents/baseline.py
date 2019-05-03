@@ -65,7 +65,8 @@ MESSAGE_ID = int
 
 class BaselineAgent(NegotiationAgent):
     """
-    The baseline agent simply tries to buy goods it does not currently have and sell goods it already has more than once.
+    The baseline agent simply tries to improve its utility by selling good bundles at a price equal
+    to their marginal utility and buying goods at a price plus fee equal or below their marginal utility.
     """
 
     def __init__(self, *args, **kwargs):
@@ -153,13 +154,12 @@ class BaselineAgent(NegotiationAgent):
 
         :return: a list of supplied quantities
         """
-        # project forward the holdings with the locks as seller
-        transactions = list(self._locks_as_seller.values())
-        state_after_locks = self._agent_state.apply(transactions)
+        state_after_locks = self._state_after_locks_as_seller()
 
         # offer all holdings in state after locks
-        result = [q for q in state_after_locks.current_holdings]
-        return result
+
+        
+        return self.get_offered_quantities()
 
     def _get_goods_demanded_description(self) -> Description:
         """
@@ -238,9 +238,7 @@ class BaselineAgent(NegotiationAgent):
 
         :return: a list of demanded good ids
         """
-        # project forward the holdings with the locks as buyer
-        transactions = list(self._locks_as_buyer.values())
-        state_after_locks = self._agent_state.apply(transactions)
+        state_after_locks = self._state_after_locks_as_buyer()
 
         demanded_quantity_good_ids = {good_id for good_id, quantity in enumerate(state_after_locks.current_holdings)}
 
@@ -265,9 +263,7 @@ class BaselineAgent(NegotiationAgent):
 
         :return: a list of supplied good ids
         """
-        # project forward the holdings with the locks as seller
-        transactions = list(self._locks_as_seller.values())
-        state_after_locks = self._agent_state.apply(transactions)
+        state_after_locks = self._state_after_locks_as_seller()
 
         supplied_quantity_good_ids = {good_id for good_id, quantity in enumerate(state_after_locks.current_holdings)
                                     if quantity > 1}
@@ -404,7 +400,9 @@ class BaselineAgent(NegotiationAgent):
             random_id = random.randint(0, len(single_good_supplied_lists))
             for i, (single_good_supplied_description, single_good_supplied_list) in enumerate(zip(single_good_supplied_descriptions, single_good_supplied_lists)):
                 if not i == random_id: continue
-                marginal_utility_of_single_good = marginal_utility(self._agent_state.utilities, self._agent_state.current_holdings, single_good_supplied_list)
+                state_after_locks = self._state_after_locks_as_seller()
+                delta_holdings = single_good_supplied_list * -1
+                marginal_utility_of_single_good = marginal_utility(state_after_locks.utilities, state_after_locks.current_holdings, delta_holdings) * -1
                 # TODO ensure proper rounding up on second decimal
                 single_good_supplied_description.values["price"] = round(marginal_utility_of_single_good, 2) + 0.01
                 proposals = [single_good_supplied_description]
@@ -847,30 +845,23 @@ class BaselineAgent(NegotiationAgent):
         :param transaction: the transaction
         :return: True if the transaction is good (as stated above), False otherwise.
         """
-        # compute the future state after the locks - that is, assuming that all the pending transactions will be successful.
-        buyer_locks = list(self._locks_as_buyer.values())
-        state_after_locks = self._agent_state.apply(buyer_locks)
 
-        if not state_after_locks.check_transaction(transaction):
-            logger.debug("[{}]: the proposed transaction is not valid.".format(self.public_key))
+        state_after_locks = self._state_after_locks_as_buyer()
+
+        if not state_after_locks.check_transaction_is_consistent(transaction):
+            logger.debug("[{}]: the proposed transaction is not consistent with the state after locks.".format(self.public_key))
             return False
 
-        current_score = state_after_locks.get_score()
-        next_score = state_after_locks.get_score_after_transaction(transaction)
-        proposal_delta_score = next_score - current_score
+        proposal_delta_score = state_after_locks.get_score_diff_from_transaction(transaction)
 
-        result = proposal_delta_score > transaction.amount
+        result = proposal_delta_score >= 0
         logger.debug("[{}]: is good proposal for buyer? {}: tx_id={}, "
                      "delta_score={}, "
-                     "current_score={}, "
-                     "next_score={}, "
                      "amount={}"
                      .format(self.public_key,
                              result,
                              transaction.transaction_id,
                              proposal_delta_score,
-                             current_score,
-                             next_score,
                              transaction.amount))
         return result
 
@@ -885,28 +876,18 @@ class BaselineAgent(NegotiationAgent):
         :return: True if the transaction is good (as stated above), False otherwise.
         """
 
-        # compute the future state after the locks - that is, assuming that all the pending transactions will be successful.
-        seller_locks = list(self._locks_as_seller.values())
-        state_after_locks = self._agent_state.apply(seller_locks)
+        state_after_locks = self._state_after_locks_as_seller()
 
-        # if the transaction is not valid wrt the state after the locks, then it's not good
-        if not state_after_locks.check_transaction(transaction):
-            logger.debug("[{}]: the proposed transaction is not valid.".format(self.public_key))
+        if not state_after_locks.check_transaction_is_consistent(transaction):
+            logger.debug("[{}]: the proposed transaction is not consistent with the state after locks.".format(self.public_key))
             return False
 
-        # check if we gain score with the transaction.
-        current_score = state_after_locks.get_score()
-        next_score = state_after_locks.get_score_after_transaction(transaction)
-        proposal_delta_score = next_score - current_score
+        proposal_delta_score = state_after_locks.get_score_diff_from_transaction(transaction)
 
-        result = transaction.amount >= -proposal_delta_score
-
-        logger.debug("[{}]: is good proposal for seller? {}: tx_id={}, delta_score={}, current_score={}, "
-                     "next_score={}, amount={}"
+        result = proposal_delta_score >= 0
+        logger.debug("[{}]: is good proposal for seller? {}: tx_id={}, delta_score={}, amount={}"
                      .format(self.public_key, result, transaction.transaction_id,
-                             proposal_delta_score, current_score, next_score, transaction.amount))
-
-        # TODO notice the equality: we allow sellers to sell quantities with profit=0.
+                             proposal_delta_score, transaction.amount))
         return result
 
     def from_proposal_to_transaction(self, proposal: Description, transaction_id: str,
@@ -937,6 +918,52 @@ class BaselineAgent(NegotiationAgent):
         """
         self._locks[transaction.transaction_id] = transaction
         self._locks_as_seller[transaction.transaction_id] = transaction
+
+    def _state_after_locks_as_seller(self):
+        """
+        Apply all the locks to the current state of the seller. That is, assuming all
+        the locked transactions will be successful.
+
+        :return: the agent state with the locks applied to current state
+        """
+        transactions = list(self._locks_as_seller.values())
+        state_after_locks = self._agent_state.apply(transactions)
+        return state_after_locks
+
+    def _state_after_locks_as_buyer(self):
+        """
+        Apply all the locks to the current state of the seller.
+
+        :return: the agent state with the locks applied to current state
+        """
+        transactions = list(self._locks_as_buyer.values())
+        state_after_locks = self._agent_state.apply(transactions)
+        return state_after_locks
+
+    def get_offered_quantities(self) -> List[int]:
+        """
+        Return the vector of good quantities on offer.
+        An agent in principle offers any of her quantities.
+        >>> agent_state = AgentState(20, [1, 2, 3], [20.0, 40.0, 60.0], 1)
+        >>> agent_state.get_offered_quantities()
+        [1, 2, 3]
+
+        :return: the vector of good quantities offered.
+        """
+        state_after_locks = self._state_after_locks_as_seller()
+        return [q for q in state_after_locks.current_holdings]
+
+    def get_requested_quantities(self) -> List[int]:
+        """
+        Return the vector of good quantities requested.
+        An agent in principle requests any good once.
+        >>> agent_state = AgentState(20, [1, 2, 3], [20.0, 40.0, 60.0], 1)
+        >>> agent_state.get_requested_quantities()
+        [1, 1, 1]
+
+        :return: the vector of good quantities requested.
+        """
+        return [1 for _ in self._agent_state.current_holdings]
 
     def remove_lock(self, transaction_id: str):
         """

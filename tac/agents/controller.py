@@ -383,6 +383,7 @@ class ControllerAgent(TACAgent):
                  upper_bound_factor: int = 1,
                  version: int = 1,
                  start_time: datetime.datetime = None,
+                 end_time: datetime.datetime = None,
                  inactivity_countdown: Optional[datetime.timedelta] = None,
                  **kwargs):
         """
@@ -398,6 +399,7 @@ class ControllerAgent(TACAgent):
         :param upper_bound_factor: the upper bound factor of a uniform distribution.
         :param version: the version of the TAC controller.
         :param start_time: the time when the competition will start.
+        :param start_time: the time when the competition will end.
         :param inactivity_countdown: the time when the competition will start.
         """
         super().__init__(public_key, oef_addr, oef_port, **kwargs)
@@ -412,7 +414,8 @@ class ControllerAgent(TACAgent):
             "lower_bound_factor": lower_bound_factor,
             "upper_bound_factor": upper_bound_factor,
             "version": version,
-            "start_time": str(start_time)
+            "start_time": str(start_time),
+            "end_time": str(end_time)
         })))
 
         self.game_handler = GameHandler(self, min_nb_agents, money_endowment, nb_goods, fee, lower_bound_factor, upper_bound_factor, start_time)

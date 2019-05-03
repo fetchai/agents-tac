@@ -23,7 +23,9 @@ This tutorial shows how to simulate a simple TAC.
 - `--lower-bound-factor` is the lower bound factor of a uniform distribution used for generating good instances.
 - `--upper-bound-factor` is the upper bound factor of a uniform distribution used for generating good instances.
 - `--fee` is the transaction fee.
-- `--timeout` is the amount of time (in seconds) for the controller to wait for starting the competition.
+- `--registration-timeout` is the amount of time (in seconds) to wait for agents to register before attempting to start the competition.
+- `--inactivity-timeout` is the amount of time (in seconds) to wait during inactivity until the termination of the competition.
+- `--competition-timeout` is the amount of time (in seconds) to wait from the start of the competition until the termination of the competition.
 
 Example:
 
@@ -40,32 +42,11 @@ Example:
           --lower-bound-factor 1
           --upper-bound-factor 1
           --fee 1
-          --timeout 5
+          --registration-timeout 10
+          --inactivity-timeout 20
+          --competition-timeout 120
       
-It generates a `game.json` file in the `${data_output_dir}/${experiment_id}` folder that looks like:
-
-```
-{'fee': 1,
- 'initial_endowments': [[1, 0, 2, 2, 2], [1, 2, 0, 0, 0]],
- 'initial_money_amount': 20,
- 'instances_per_good': 2,
- 'nb_agents': 2,
- 'nb_goods': 5,
- 'preferences': [[4, 0, 1, 3, 2], [3, 4, 2, 0, 1]],
- 'scores': [4, 3, 2, 1, 0],
- 'transactions': [{'amount': 3,
-                   'buyer_id': 1,
-                   'good_ids': [0, 1, 2, 3, 4],
-                   'quantities': [0, 0, 1, 1, 1],
-                   'seller_id': 0,
-                   'timestamp': '2019-04-03 15:25:25.240885'},
-                  {'amount': 3,
-                   'buyer_id': 0,
-                   'good_ids': [0, 1, 2, 3, 4],
-                   'quantities': [0, 1, 0, 0, 0],
-                   'seller_id': 1,
-                   'timestamp': '2019-04-03 15:25:25.242052'}]}
-```
+It generates a `game.json` file in the `${data_output_dir}/${experiment_id}` that can be inspected with a GUI (see `tac/gui`).
 
 ### Display UML transition diagram
 

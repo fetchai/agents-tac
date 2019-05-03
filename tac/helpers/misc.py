@@ -246,18 +246,18 @@ def logarithmic_utility(utility_function_params: List[float], good_bundle: List[
                         for param, quantity in zip(utility_function_params, good_bundle)]
     return sum(goodwise_utility)
 
-def marginal_utility(utility_function_params: List[float], current_good_bundle: List[int], diff_good_bundle: List[int]) -> float:
+def marginal_utility(utility_function_params: List[float], current_holdings: List[int], delta_holdings: List[int]) -> float:
     """
     Compute agent's utility given her utility function params and a good bundle.
     :param utility_function_params: utility function params of the agent
-    :param good_bundle: a bundle of goods with the quantity for each good
-    :param diff_good_bundle: a bundle of goods with the quantity for each good (can be positive or negative)
-    :return: utility difference between projected and current utility
+    :param current_holdings: a list of goods with the quantity for each good
+    :param delta_holdings: a list of goods with the quantity for each good (can be positive or negative)
+    :return: utility difference between new and current utility
     """
-    current_utility = logarithmic_utility(utility_function_params, current_good_bundle)
-    projected_good_bundle = [sum(x) for x in zip(current_good_bundle, diff_good_bundle)]
-    projected_utility = logarithmic_utility(utility_function_params, projected_good_bundle)
-    return projected_utility - current_utility
+    current_utility = logarithmic_utility(utility_function_params, current_holdings)
+    new_holdings = [sum(x) for x in zip(current_holdings, delta_holdings)]
+    new_utility = logarithmic_utility(utility_function_params, new_holdings)
+    return new_utility - current_utility
 
 def build_datamodel(nb_goods: int, seller: bool) -> DataModel:
     """

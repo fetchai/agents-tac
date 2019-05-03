@@ -52,8 +52,9 @@ def parse_arguments():
     parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
     parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
     parser.add_argument("--fee", default=1, type=int, help="The transaction fee.")
-    parser.add_argument("--registration-timeout", default=5, type=int, help="The amount of time (in seconds) to wait for starting the competition.")
-    parser.add_argument("--inactivity-timeout", default=5, type=int, help="The amount of inactivity time (in seconds) to wait until the termination of the competition.")
+    parser.add_argument("--registration-timeout", default=10, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
+    parser.add_argument("--inactivity-timeout", default=20, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
+    parser.add_argument("--competition-timeout", default=120, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
 
     arguments = parser.parse_args()
     logger.debug("Arguments: {}".format(pprint.pformat(arguments.__dict__)))
@@ -61,20 +62,21 @@ def parse_arguments():
     return arguments
 
 
-def _compute_competition_start_time(timeout: int) -> datetime.datetime:
+def _compute_competition_start_and_end_time(registration_timeout: int, competition_timeout: int) -> [datetime.datetime, datetime.datetime]:
     """
     Compute the start time of the competition.
-    It just sums N seconds from 'now'.
-    :param timeout: seconds to wait from 'now'.
-    :return: the date time of the start of the competition.
+    :param registration_timeout: seconds to wait for registration timeout.
+    :param competition_timeout: seconds to wait for competition timeout.
+    :return: list with the datetime of the start and end of the competition.
     """
-    delta = datetime.timedelta(0, timeout)
+    delta_now_to_start = datetime.timedelta(0, registration_timeout)
+    delta_start_to_end = datetime.timedelta(0, competition_timeout)
     now = datetime.datetime.now()
 
-    # the start time of the competition is NOW  plus N seconds in the future, where N is in the 'timeout' variable.
     # TODO the "now" might have different meaning depending on where the following line of code is executed.
-    start_time = now + delta
-    return start_time
+    start_time = now + delta_now_to_start
+    end_time = start_time + delta_start_to_end
+    return start_time, end_time
 
 
 def initialize_controller_agent(public_key: str,
@@ -86,7 +88,8 @@ def initialize_controller_agent(public_key: str,
                                 lower_bound_factor: int,
                                 upper_bound_factor: int,
                                 registration_timeout: int,
-                                inactivity_timeout: int) -> ControllerAgent:
+                                inactivity_timeout: int,
+                                competition_timeout: int) -> ControllerAgent:
     """
     Initialize the controller agent.
     :param public_key: the public key of the controller agent.
@@ -97,16 +100,18 @@ def initialize_controller_agent(public_key: str,
     :param fee: the transaction fee.
     :param lower_bound_factor: the lower bound factor of a uniform distribution.
     :param upper_bound_factor: the upper bound factor of a uniform distribution.
-    :param registration-timeout: the timeout (in seconds) to wait until the competition starts.
+    :param registration_timeout: the amount of time (in seconds) to wait for agents to register before attempting to start the competition.
+    :param inactivity_timeout: the amount of time (in seconds) to wait during inactivity until the termination of the competition.
+    :param competition_timeout: the amount of time (in seconds) to wait from the start of the competition until the termination of the competition.
     :return: the controller agent.
     """
 
-    start_time = _compute_competition_start_time(registration_timeout)
+    start_time, end_time = _compute_competition_start_and_end_time(registration_timeout, competition_timeout)
 
     tac_controller = ControllerAgent(public_key=public_key, oef_addr=oef_addr,
                                      oef_port=oef_port, min_nb_agents=min_nb_agents,
                                      nb_goods=nb_goods, fee=fee, lower_bound_factor=lower_bound_factor,
-                                     upper_bound_factor=upper_bound_factor, start_time=start_time, inactivity_countdown=inactivity_timeout)
+                                     upper_bound_factor=upper_bound_factor, start_time=start_time, end_time=end_time, inactivity_countdown=inactivity_timeout)
     tac_controller.connect()
     tac_controller.register()
     return tac_controller
@@ -208,7 +213,7 @@ if __name__ == '__main__':
 
         tac_controller = initialize_controller_agent("tac_controller", arguments.oef_addr, arguments.oef_port,
                                                      arguments.nb_agents, arguments.nb_goods, arguments.fee, arguments.lower_bound_factor,
-                                                     arguments.upper_bound_factor, arguments.registration_timeout, arguments.inactivity_timeout)
+                                                     arguments.upper_bound_factor, arguments.registration_timeout, arguments.inactivity_timeout, arguments.competition_timeout)
         baseline_agents = initialize_baseline_agents(arguments.nb_baseline_agents, arguments.oef_addr, arguments.oef_port)
         run(tac_controller, baseline_agents)
 
