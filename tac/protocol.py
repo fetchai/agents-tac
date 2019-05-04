@@ -28,7 +28,6 @@ from typing import Optional
 
 import google
 from google.protobuf.message import DecodeError
-from google.protobuf.struct_pb2 import Struct
 
 import tac.tac_pb2 as tac_pb2
 from tac.helpers.misc import TacError
@@ -352,10 +351,10 @@ class GameData(Response):
 
     def __eq__(self, other):
         return super().__eq__(other) and \
-               self.money == other.money and \
-               self.endowment == other.endowment and \
-               self.utilities == other.utilities and \
-               self.fee == other.fee
+            self.money == other.money and \
+            self.endowment == other.endowment and \
+            self.utilities == other.utilities and \
+            self.fee == other.fee
 
 
 class TransactionConfirmation(Response):

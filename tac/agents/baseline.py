@@ -23,20 +23,17 @@ import copy
 import logging
 import pprint
 import random
-import re
 import time
 from collections import defaultdict
 from typing import List, Optional, Dict, Set, Tuple
 
-import math
 from oef.messages import CFP_TYPES, PROPOSE_TYPES
 from oef.query import Query
 from oef.schema import Description
 
 from tac.core import NegotiationAgent
 from tac.helpers.misc import generate_transaction_id, build_query, get_goods_quantities_description, \
-    TAC_BUYER_DATAMODEL_NAME, from_good_attribute_name_to_good_id, TAC_SELLER_DATAMODEL_NAME, logarithmic_utility, \
-    marginal_utility
+    from_good_attribute_name_to_good_id, TAC_SELLER_DATAMODEL_NAME, marginal_utility
 from tac.protocol import GameData, Transaction, TransactionConfirmation, Error, ErrorCode
 
 logger = logging.getLogger(__name__)
@@ -94,7 +91,7 @@ class BaselineAgent(NegotiationAgent):
         - Register to the OEF as a buyer of the demanded goods.
         - Search for the goods offered by other agents, and eventually start a negotiation as the buyer.
         - Search for the goods requested by other agents, and eventually start a negotiation as the seller.
-        
+
         :param game_data: the game data
         :return: None
         """
@@ -175,7 +172,7 @@ class BaselineAgent(NegotiationAgent):
     def _search_for_buyers(self) -> None:
         """
         Search on OEF core for buyers and their demand.
-    
+
         :return: None
         """
         query = self._build_buyers_query()
@@ -202,11 +199,11 @@ class BaselineAgent(NegotiationAgent):
     def _build_buyers_query(self) -> Optional[Query]:
         """
         Build the query to look for agents which demand the agent's supplied goods.
-    
+
         :return the Query, or None.
         """
         supplied_goods_ids = self._get_supplied_goods_ids()
-    
+
         if len(supplied_goods_ids) == 0:
             return None
         else:
@@ -260,20 +257,19 @@ class BaselineAgent(NegotiationAgent):
     def _on_buyers_search_result(self, buyers: List[str]) -> None:
         """
         Callback of the search result for agents which buy the goods the agent supplies.
-    
+
         The actions are:
         - build a CFP query to identify if any more goods are supplied and which ones
         - send a CFP to every agent found
-    
         if there is no need for any good, do nothing.
-    
+
         :param: buyers: a list of agent public keys.
-    
+
         :return: None
         """
-    
+
         logger.debug("[{}]: Found potential buyers: {}".format(self.public_key, buyers))
-    
+
         query = self._build_buyers_query()
         if query is None:
             logger.debug("[{}]: No longer supplying any goods...".format(self.public_key))
@@ -336,16 +332,16 @@ class BaselineAgent(NegotiationAgent):
                                                                   })))
             self.send_decline(new_msg_id, dialogue_id, origin, msg_id)
         else:
-            proposals = [random.choice(self._get_seller_proposals())] # ToDo use all!
+            proposals = [random.choice(self._get_seller_proposals())]  # ToDo check proposal is consistent with query. (e.g. select the subset of proposals which match the query)
             # store the proposed transaction in the pool of pending proposals.
             dialogue_label = (origin, dialogue_id)
             for proposal in proposals:
-                proposal_id = new_msg_id # TODO fix if more than one proposal!
-                transaction_id = generate_transaction_id(origin, self.public_key, dialogue_id) # TODO fix if more than one proposal!
+                proposal_id = new_msg_id  # TODO fix if more than one proposal!
+                transaction_id = generate_transaction_id(origin, self.public_key, dialogue_id)  # TODO fix if more than one proposal!
                 transaction = self._from_proposal_to_transaction(proposal=proposal,
-                                                                transaction_id=transaction_id,
-                                                                is_buyer=False,
-                                                                counterparty=origin)
+                                                                 transaction_id=transaction_id,
+                                                                 is_buyer=False,
+                                                                 counterparty=origin)
                 self._pending_proposals[dialogue_label][proposal_id] = transaction
             logger.debug("[{}]: sending to {} a Propose{}".format(self.public_key, origin,
                                                                   pprint.pformat({
@@ -353,23 +349,23 @@ class BaselineAgent(NegotiationAgent):
                                                                       "dialogue_id": dialogue_id,
                                                                       "origin": origin,
                                                                       "target": msg_id,
-                                                                      "propose": proposals[0].values # TODO fix if more than one proposal!
+                                                                      "propose": proposals[0].values  # TODO fix if more than one proposal!
                                                                   })))
             self.send_propose(new_msg_id, dialogue_id, origin, msg_id, proposals)
 
     def _on_cfp_as_buyer(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES) -> None:
         """
         On CFP handler for buyer.
-    
+
         - If the current demand does not satisfy the CFP query, answer with a Decline
         - Otherwise, make a proposal.
-    
+
         :param msg_id: the message id
         :param dialogue_id: the dialogue id
         :param origin: the public key of the message sender.
         :param target: the targeted message id to which this message is a response.
         :param query: the query associated with the cfp.
-    
+
         :return: None
         """
         self._save_dialogue_id_as_buyer(origin, dialogue_id)
@@ -386,15 +382,15 @@ class BaselineAgent(NegotiationAgent):
                                                                   })))
             self.send_decline(new_msg_id, dialogue_id, origin, msg_id)
         else:
-            proposals = [random.choice(self._get_buyer_proposals())] # ToDo use all!
+            proposals = [random.choice(self._get_buyer_proposals())]  # ToDo use all! # ToDo check proposal is consistent with query.  (e.g. select the subset of proposals which match the query)
             dialogue_label = (origin, dialogue_id)
             for proposal in proposals:
-                proposal_id = new_msg_id # TODO fix if more than one proposal!
-                transaction_id = generate_transaction_id(origin, self.public_key, dialogue_id) # TODO fix if more than one proposal!
+                proposal_id = new_msg_id  # TODO fix if more than one proposal!
+                transaction_id = generate_transaction_id(origin, self.public_key, dialogue_id)  # TODO fix if more than one proposal!
                 transaction = self._from_proposal_to_transaction(proposal=proposal,
-                                                                transaction_id=transaction_id,
-                                                                is_buyer=True,
-                                                                counterparty=origin)
+                                                                 transaction_id=transaction_id,
+                                                                 is_buyer=True,
+                                                                 counterparty=origin)
                 self._pending_proposals[dialogue_label][proposal_id] = transaction
             logger.debug("[{}]: sending to {} a Propose{}".format(self.public_key, origin,
                                                                   pprint.pformat({
@@ -452,9 +448,9 @@ class BaselineAgent(NegotiationAgent):
         proposal = proposals[0]
         transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id)
         transaction = self._from_proposal_to_transaction(proposal,
-                                                        transaction_id,
-                                                        is_buyer=True,
-                                                        counterparty=origin)
+                                                         transaction_id,
+                                                         is_buyer=True,
+                                                         counterparty=origin)
         if self._is_profitable_transaction_as_buyer(transaction):
             logger.debug("[{}]: Accepting propose (as buyer).".format(self.public_key))
             self._accept_propose_as_buyer(msg_id, dialogue_id, origin, target, proposals)
@@ -467,28 +463,28 @@ class BaselineAgent(NegotiationAgent):
     def _on_propose_as_seller(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES) -> None:
         """
         On Propose handler for seller.
-    
+
         1. parse the propose object
         2. compute the score of the propose.
             - if the proposed transaction increases the score,
               send an accept and lock the state waiting for the matched accept.
             - otherwise, decline the propose.
-    
+
         :param msg_id: the message id
         :param dialogue_id: the dialogue id
         :param origin: the public key of the message sender.
         :param target: the targeted message id to which this message is a response.
         :param proposals: the proposals associated with the message.
-    
+
         :return: None
         """
         logger.debug("[{}]: on propose as seller.".format(self.public_key))
         proposal = proposals[0]
         transaction_id = generate_transaction_id(origin, self.public_key, dialogue_id)
         transaction = self._from_proposal_to_transaction(proposal,
-                                                        transaction_id,
-                                                        is_buyer=False,
-                                                        counterparty=origin)
+                                                         transaction_id,
+                                                         is_buyer=False,
+                                                         counterparty=origin)
         if self._is_profitable_transaction_as_seller(transaction):
             logger.debug("[{}]: Accepting propose (as seller).".format(self.public_key))
             self._accept_propose_as_seller(msg_id, dialogue_id, origin, target, proposals)
@@ -512,9 +508,9 @@ class BaselineAgent(NegotiationAgent):
         dialogue_label = (origin, dialogue_id)
         transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id)
         transaction = self._from_proposal_to_transaction(proposal=proposal,
-                                                        transaction_id=transaction_id,
-                                                        is_buyer=False,
-                                                        counterparty=origin)
+                                                         transaction_id=transaction_id,
+                                                         is_buyer=False,
+                                                         counterparty=origin)
         # lock state
         logger.debug("[{}]: Locking the current state (as seller).".format(self.public_key))
         self._lock_state_as_seller(transaction)
@@ -525,7 +521,6 @@ class BaselineAgent(NegotiationAgent):
 
         # send accept
         self.send_accept(acceptance_id, dialogue_id, origin, msg_id)
-
 
     def _accept_propose_as_buyer(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES) -> None:
         """
@@ -541,9 +536,9 @@ class BaselineAgent(NegotiationAgent):
         dialogue_label = (origin, dialogue_id)
         transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id)
         transaction = self._from_proposal_to_transaction(proposal=proposal,
-                                                        transaction_id=transaction_id,
-                                                        is_buyer=True,
-                                                        counterparty=origin)
+                                                         transaction_id=transaction_id,
+                                                         is_buyer=True,
+                                                         counterparty=origin)
         # lock state
         logger.debug("[{}]: Locking the current state (as buyer).".format(self.public_key))
         self._lock_state_as_buyer(transaction)
@@ -590,7 +585,6 @@ class BaselineAgent(NegotiationAgent):
         else:
             raise Exception("This dialogue id is not specified.")
 
-
     def _on_accept_as_buyer(self, msg_id: int, dialogue_id: int, origin: str, target: int):
         """
         Handles accept of buyer.
@@ -605,7 +599,6 @@ class BaselineAgent(NegotiationAgent):
         else:
             logger.debug("[{}]: Decline the accept (as buyer).".format(self.public_key))
             self.send_decline(msg_id + 1, dialogue_id, origin, msg_id)
-
 
     def _on_accept_as_seller(self, msg_id: int, dialogue_id: int, origin: str, target: int):
         """
@@ -768,7 +761,7 @@ class BaselineAgent(NegotiationAgent):
         return result
 
     def _from_proposal_to_transaction(self, proposal: Description, transaction_id: str,
-                                     is_buyer: bool, counterparty: str) -> Transaction:
+                                      is_buyer: bool, counterparty: str) -> Transaction:
         """
         Create a transaction from a proposal.
 
@@ -837,7 +830,7 @@ class BaselineAgent(NegotiationAgent):
         self._locks_as_seller.pop(transaction_id, None)
 
     #####
-    ## STRATEGY
+    # STRATEGY
     #####
 
     def _get_supplied_goods_quantities(self) -> List[int]:
@@ -894,13 +887,13 @@ class BaselineAgent(NegotiationAgent):
         zeroslist = [0] * len(quantities)
         for good_id in range(len(quantities)):
             if quantities[good_id] == 0: continue
-            l = copy.deepcopy(zeroslist)
-            l[good_id] = 1
-            desc = get_goods_quantities_description(l, True)
+            lis = copy.deepcopy(zeroslist)
+            lis[good_id] = 1
+            desc = get_goods_quantities_description(lis, True)
             state_after_locks = self._state_after_locks_as_seller()
-            delta_holdings = [i * -1 for i in l]
+            delta_holdings = [i * -1 for i in lis]
             marginal_utility_from_single_good = marginal_utility(state_after_locks.utilities, state_after_locks.current_holdings, delta_holdings) * -1
-            desc.values["price"] = round(marginal_utility_from_single_good, 2) + 0.01 # to avoid rounding down issues
+            desc.values["price"] = round(marginal_utility_from_single_good, 2) + 0.01  # to avoid rounding down issues
             proposals.append(desc)
         return proposals
 
@@ -911,16 +904,16 @@ class BaselineAgent(NegotiationAgent):
         proposals = []
         zeroslist = [0] * len(quantities)
         for good_id in range(len(quantities)):
-            l = copy.deepcopy(zeroslist)
-            l[good_id] = 1
-            desc = get_goods_quantities_description(l, True)
+            lis = copy.deepcopy(zeroslist)
+            lis[good_id] = 1
+            desc = get_goods_quantities_description(lis, True)
             state_after_locks = self._state_after_locks_as_buyer()
-            delta_holdings = l
+            delta_holdings = lis
             marginal_utility_from_single_good = marginal_utility(state_after_locks.utilities, state_after_locks.current_holdings, delta_holdings)
-            desc.values["price"] = round(marginal_utility_from_single_good, 2) + 0.01 # to avoid rounding down issues
+            desc.values["price"] = round(marginal_utility_from_single_good, 2) + 0.01  # to avoid rounding down issues
             proposals.append(desc)
         return proposals
-        
+
 
 def main():
     args = parse_arguments()
@@ -935,4 +928,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

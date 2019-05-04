@@ -95,8 +95,7 @@ class PlantUMLGenerator:
         agent_id_to_pbk = dict(map(reversed, agent_pbk_to_id.items()))
         for agent_id, agent_state in enumerate(current_game.agent_states):
             agent_pbk = agent_id_to_pbk[agent_id]
-            self.add_drawable(PlantUMLGenerator.Note("{} game state: \n".format(agent_pbk) + str(agent_state) +
-                                                     "\nScore: {}".format(agent_state.get_score()),
+            self.add_drawable(PlantUMLGenerator.Note("{} game state: \n".format(agent_pbk) + str(agent_state) + "\nScore: {}".format(agent_state.get_score()),
                                                      public_key))
             self.add_drawable(PlantUMLGenerator.Transition(public_key, agent_pbk,
                                                            "GameData(money, endowments, preferences, scores, fee)"))

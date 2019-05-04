@@ -56,7 +56,7 @@ def parse_arguments():
     parser.add_argument("--public-key", default="controller", help="Public key of the agent.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
-    parser.add_argument("--money",    default=20,   help="Money endowment for TAC agents.")
+    parser.add_argument("--money", default=20, help="Money endowment for TAC agents.")
     parser.add_argument("--nb-agents", default=5, type=int, help="Number of goods")
     parser.add_argument("--nb-goods", default=5, type=int, help="Number of goods")
     parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
@@ -548,4 +548,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

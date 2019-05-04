@@ -67,7 +67,7 @@ def upload():
     score_history = game_stats.score_history()
     game_stats.plot_score_history(output_path=full_output_path)
 
-    g = game.agent_states[0]
+    # g = game.agent_states[0]
 
     return render_template("index.html",
                            nb_agents=game.configuration.nb_agents,

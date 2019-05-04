@@ -190,6 +190,7 @@ def logarithmic_utility(utility_function_params: List[float], good_bundle: List[
                         for param, quantity in zip(utility_function_params, good_bundle)]
     return sum(goodwise_utility)
 
+
 def marginal_utility(utility_function_params: List[float], current_holdings: List[int], delta_holdings: List[int]) -> float:
     """
     Compute agent's utility given her utility function params and a good bundle.
@@ -202,6 +203,7 @@ def marginal_utility(utility_function_params: List[float], current_holdings: Lis
     new_holdings = [sum(x) for x in zip(current_holdings, delta_holdings)]
     new_utility = logarithmic_utility(utility_function_params, new_holdings)
     return new_utility - current_utility
+
 
 def build_datamodel(nb_goods: int, is_seller: bool) -> DataModel:
     """

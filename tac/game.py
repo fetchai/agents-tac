@@ -33,12 +33,12 @@ import copy
 import datetime
 import logging
 import pprint
-from typing import List, Dict, Any, Optional, Set
+from typing import List, Dict, Any, Optional
 
 from tac.protocol import Transaction
 
 from tac.helpers.misc import generate_initial_money_amounts, generate_endowments, generate_utilities, from_iso_format, \
-    logarithmic_utility, marginal_utility
+    logarithmic_utility
 
 Endowment = List[int]  # an element e_j is the endowment of good j.
 Utilities = List[float]  # an element u_j is the utility value of good j.
@@ -397,8 +397,8 @@ class Game:
 
     def __eq__(self, other):
         return isinstance(other, Game) and \
-                self.configuration == other.configuration and \
-                self.transactions == other.transactions
+            self.configuration == other.configuration and \
+            self.transactions == other.transactions
 
 
 class AgentState:
@@ -467,7 +467,7 @@ class AgentState:
 
     def check_transaction_is_consistent(self, tx: Transaction) -> bool:
         """
-        Check if the transaction is consistent.  E.g. check that the agent state has enough money if it is a buyer 
+        Check if the transaction is consistent.  E.g. check that the agent state has enough money if it is a buyer
         or enough holdings if it is a seller.
         :return: True if the transaction is legal wrt the current state, false otherwise.
         """
@@ -524,9 +524,9 @@ class AgentState:
 
     def __eq__(self, other) -> bool:
         return isinstance(other, AgentState) and \
-               self.balance == other.balance and \
-               self.utilities == other.utilities and \
-               self._current_holdings == other._current_holdings
+            self.balance == other.balance and \
+            self.utilities == other.utilities and \
+            self._current_holdings == other._current_holdings
 
 
 class GameTransaction:
@@ -587,8 +587,8 @@ class GameTransaction:
 
     def __eq__(self, other) -> bool:
         return isinstance(other, GameTransaction) and \
-               self.buyer_id == other.buyer_id and \
-               self.seller_id == other.seller_id and \
-               self.amount == other.amount and \
-               self.quantities_by_good_id == other.quantities_by_good_id and \
-               self.timestamp == other.timestamp
+            self.buyer_id == other.buyer_id and \
+            self.seller_id == other.seller_id and \
+            self.amount == other.amount and \
+            self.quantities_by_good_id == other.quantities_by_good_id and \
+            self.timestamp == other.timestamp

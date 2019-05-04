@@ -26,4 +26,3 @@ __build__ = 0x000100
 __author__ = 'Fetch.AI Limited'
 __license__ = 'Apache 2.0'
 __copyright__ = '2018 Fetch.AI Limited'
-
