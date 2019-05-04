@@ -56,7 +56,7 @@ def parse_arguments():
     parser.add_argument("--public-key", default="controller", help="Public key of the agent.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
-    parser.add_argument("--money",    default=20,   help="Money endowment for TAC agents.")
+    parser.add_argument("--money", default=20, help="Money endowment for TAC agents.")
     parser.add_argument("--nb-agents", default=5, type=int, help="Number of goods")
     parser.add_argument("--nb-goods", default=5, type=int, help="Number of goods")
     parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
@@ -330,7 +330,7 @@ class GameHandler:
             game_data = self.current_game.get_agent_state_from_agent_label(public_key)
             game_data_response = GameData(
                 game_data.balance,
-                game_data._current_holdings,
+                game_data.current_holdings,
                 game_data.utilities,
                 self.fee,
             )
@@ -376,14 +376,15 @@ class ControllerAgent(TACAgent):
                  oef_addr="127.0.0.1",
                  oef_port=3333,
                  min_nb_agents: int = 5,
-                 money_endowment: int = 20,
+                 money_endowment: int = 200,
                  nb_goods: int = 5,
                  fee: int = 1,
                  lower_bound_factor: int = 1,
                  upper_bound_factor: int = 1,
                  version: int = 1,
                  start_time: datetime.datetime = None,
-                 inactivity_countdown: Optional[datetime.timedelta] = None,
+                 end_time: datetime.datetime = None,
+                 inactivity_timeout: Optional[datetime.timedelta] = None,
                  **kwargs):
         """
         Initialize a Controller Agent for TAC.
@@ -398,7 +399,8 @@ class ControllerAgent(TACAgent):
         :param upper_bound_factor: the upper bound factor of a uniform distribution.
         :param version: the version of the TAC controller.
         :param start_time: the time when the competition will start.
-        :param inactivity_countdown: the time when the competition will start.
+        :param end_time: the time when the competition will end.
+        :param inactivity_timeout: the time when the competition will start.
         """
         super().__init__(public_key, oef_addr, oef_port, **kwargs)
         logger.debug("Initialized Controller Agent :\n{}".format(pprint.pformat({
@@ -412,7 +414,8 @@ class ControllerAgent(TACAgent):
             "lower_bound_factor": lower_bound_factor,
             "upper_bound_factor": upper_bound_factor,
             "version": version,
-            "start_time": str(start_time)
+            "start_time": str(start_time),
+            "end_time": str(end_time)
         })))
 
         self.game_handler = GameHandler(self, min_nb_agents, money_endowment, nb_goods, fee, lower_bound_factor, upper_bound_factor, start_time)
@@ -420,10 +423,11 @@ class ControllerAgent(TACAgent):
         self.version = version
 
         self._last_activity = datetime.datetime.now()
-        self._inactivity_countdown = inactivity_countdown if inactivity_countdown is not None else datetime.timedelta(seconds=15)
+        self._inactivity_timeout = datetime.timedelta(seconds=inactivity_timeout) if inactivity_timeout is not None else datetime.timedelta(seconds=15)
+        self._end_time = end_time
 
         self._message_processing_task = None
-        self._inactivity_checker_task = None
+        self._timeout_checker_task = None
 
         self._terminated = False
 
@@ -483,26 +487,31 @@ class ControllerAgent(TACAgent):
         Terminate the controller agent
         :return: None
         """
-        logger.debug("[{}]: terminating the controller...".format(self.public_key))
+        logger.debug("[{}]: Terminating the controller...".format(self.public_key))
         self._terminated = True
         self.game_handler.notify_tac_cancelled()
         self._loop.call_soon_threadsafe(self._task.cancel)
 
-    def check_inactivity(self, rate: Optional[float] = 2.0) -> None:
+    def check_timeout(self, rate: Optional[float] = 2.0) -> None:
         """
-        Check periodically if the timeout for inactivity expired.
+        Check periodically if the timeout for inactivity or competition expired.
         :param: rate: at which rate (in seconds) the frequency of the check.
         :return: None
         """
         logger.debug("Started job to check for inactivity of {} seconds. Checking rate: {}"
-                     .format(self._inactivity_countdown.total_seconds(), rate))
+                     .format(self._inactivity_timeout.total_seconds(), rate))
         while True:
             if self._terminated is True:
                 return
             time.sleep(rate)
             current_time = datetime.datetime.now()
-            if current_time - self._last_activity > self._inactivity_countdown:
+            inactivity_duration = current_time - self._last_activity
+            if inactivity_duration > self._inactivity_timeout:
                 logger.debug("[{}]: Inactivity timeout expired. Terminating...".format(self.public_key))
+                self.terminate()
+                return
+            elif current_time > self._end_time:
+                logger.debug("[{}]: Competition timeout expired. Terminating...".format(self.public_key))
                 self.terminate()
                 return
 
@@ -511,14 +520,14 @@ class ControllerAgent(TACAgent):
 
     def run_controller(self) -> None:
         self._message_processing_task = Thread(target=self.run)
-        self._inactivity_checker_task = Thread(target=self.check_inactivity)
+        self._timeout_checker_task = Thread(target=self.check_timeout)
 
         logger.debug("Running TAC controller agent...")
         self._message_processing_task.start()
-        self._inactivity_checker_task.start()
+        self._timeout_checker_task.start()
 
         self._message_processing_task.join()
-        self._inactivity_checker_task.join()
+        self._timeout_checker_task.join()
 
 
 def main():
@@ -539,4 +548,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

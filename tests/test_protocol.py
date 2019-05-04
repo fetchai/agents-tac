@@ -77,7 +77,7 @@ class TestResponse:
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
-            expected_msg = GameData(10, [0, 1, 2], [20, 40, 60], 1)
+            expected_msg = GameData(10, [1, 1, 2], [0.04, 0.80, 0.16], 1)
             actual_msg = Response.from_pb(expected_msg.serialize())
 
             assert expected_msg == actual_msg

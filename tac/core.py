@@ -19,7 +19,7 @@
 # ------------------------------------------------------------------------------
 import logging
 from abc import abstractmethod
-from typing import List, Dict, Optional
+from typing import List, Optional
 
 from oef.agents import OEFAgent, Agent
 from oef.messages import CFP_TYPES, PROPOSE_TYPES
@@ -51,7 +51,7 @@ class TACAgent(OEFAgent):
         plantuml_gen.on_search_result(self.public_key, agents)
 
     def send_cfp(self, msg_id: int, dialogue_id: int, destination: str, target: int, query: CFP_TYPES) -> None:
-        super().send_cfp(msg_id, dialogue_id, destination, target,query)
+        super().send_cfp(msg_id, dialogue_id, destination, target, query)
         plantuml_gen.send_cfp(self.public_key, destination, dialogue_id, "")
 
     def send_propose(self, msg_id: int, dialogue_id: int, destination: str, target: int,
@@ -81,7 +81,9 @@ class NegotiationAgent(Agent):
         self._fee = None
 
     def on_search_result(self, search_id: int, agents: List[str]):
-        """Handle search results."""
+        """
+        Handle search results.
+        """
         if search_id == self.TAC_CONTROLLER_SEARCH_ID:
             # assuming the number of active controller is only one.
             assert len(agents) == 1
@@ -126,7 +128,7 @@ class NegotiationAgent(Agent):
 
         # populate data structures about the started competition
         self._controller_pbk = controller_public_key
-        self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.preferences, game_data.fee)
+        self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utilities, game_data.fee)
         self._fee = game_data.fee
 
         # dispatch the handling to the developer's implementation.
@@ -197,4 +199,3 @@ class NegotiationAgent(Agent):
         """
         dialogue_id = abs(hash(tx.transaction_id) % 2**31)
         self.send_message(0, dialogue_id, self._controller_pbk, tx.serialize())
-

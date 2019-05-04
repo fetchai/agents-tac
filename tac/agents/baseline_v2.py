@@ -35,7 +35,6 @@ from oef.proxy import OEFNetworkProxy
 from oef.query import Query, Constraint, GtEq
 from oef.schema import DataModel
 
-from tac.core import TACAgent
 from tac.game import AgentState
 from tac.helpers.misc import build_datamodel, TacError
 from tac.protocol import GameData, Error, TransactionConfirmation, Response, Register
@@ -82,7 +81,7 @@ class NegotiationAgent(DialogueAgent):
         self.agent_state = None  # type: Optional[AgentState]
 
         self.pending_search_ids = set()
-        self.search_events = {} # type: Dict[int, asyncio.Event]
+        self.search_events = {}  # type: Dict[int, asyncio.Event]
         self.search_results = {}  # type: Dict[int, List[str]]
         self.search_callbacks = {}  # type: Dict[int, Callable]
 
@@ -241,7 +240,7 @@ async def main():
                             start_time=start_time)
 
     await agent.async_connect()
-    agent_task = asyncio.ensure_future(agent.async_run())
+    # agent_task = asyncio.ensure_future(agent.async_run())
 
     # result = await agent.search(Query([Constraint("version", GtEq(1))]), callback=lambda x, y: print(y))
     result = await agent.search(Query([Constraint("version", GtEq(1))]), callback=agent.on_start)
@@ -253,4 +252,3 @@ async def main():
 
 if __name__ == '__main__':
     asyncio.get_event_loop().run_until_complete(main())
-

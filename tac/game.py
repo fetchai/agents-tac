@@ -33,16 +33,18 @@ import copy
 import datetime
 import logging
 import pprint
-from typing import List, Dict, Any, Optional, Set
+from typing import List, Dict, Any, Optional
 
 from tac.protocol import Transaction
 
-from tac.helpers.misc import generate_initial_money_amounts, generate_endowments, generate_utilities, from_iso_format
+from tac.helpers.misc import generate_initial_money_amounts, generate_endowments, generate_utilities, from_iso_format, \
+    logarithmic_utility
 
 Endowment = List[int]  # an element e_j is the endowment of good j.
-Utilities = List[int]  # an element u_j is the utility value of good j.
+Utilities = List[float]  # an element u_j is the utility value of good j.
 
 logger = logging.getLogger(__name__)
+
 
 class GameConfiguration:
 
@@ -119,12 +121,6 @@ class GameConfiguration:
         """
         return self._from_agent_pbk_to_agent_id[agent_label]
 
-    # def create_agent_states(self) -> List['AgentState']:
-    #     return [
-    #         AgentState(self.initial_money_amounts[i], self.endowments[i], self.utilities[i], self.fee)
-    #         for i in range(self.nb_agents)
-    #     ]
-
     def _check_consistency(self):
         """
         Check the consistency of the game configuration.
@@ -150,12 +146,6 @@ class GameConfiguration:
         assert all(self.nb_goods == len(row) for row in self.utilities)
 
         assert len(set(self.agent_labels)) == self.nb_agents, "Labels must be unique."
-
-        # check that all the rows of the utility matrix have the same elements and no duplicates
-        utilities_values = list(map(set, self.utilities))  # List[Set[int]]
-        first_value = utilities_values[0]  # type: Set[int]
-        assert len(first_value) == self.nb_goods
-        assert all(first_value == value for value in utilities_values)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -191,13 +181,13 @@ class Game:
     """
     >>> money_amounts = [20, 20, 20]
     >>> endowments = [
-    ... [1, 1, 0],
-    ... [1, 0, 0],
-    ... [0, 1, 2]]
+    ... [1, 1, 1],
+    ... [2, 1, 1],
+    ... [1, 1, 2]]
     >>> utilities = [
-    ... [20, 40, 60],
-    ... [20, 60, 40],
-    ... [40, 20, 60]]
+    ... [20.0, 40.0, 40.0],
+    ... [10.0, 50.0, 40.0],
+    ... [40.0, 30.0, 30.0]]
     >>> fee = 1
     >>> game_configuration = GameConfiguration(
     ...     money_amounts,
@@ -209,7 +199,7 @@ class Game:
 
     Get the scores:
     >>> game.get_scores()
-    [80, 40, 100]
+    [20.0, 33.86294361119891, 61.58883083359672]
     """
 
     def __init__(self, configuration: GameConfiguration):
@@ -222,6 +212,16 @@ class Game:
 
         # instantiate the agent state for every agent.
         self.agent_states = [
+            AgentState(
+                configuration.initial_money_amounts[i],
+                configuration.endowments[i],
+                configuration.utilities[i],
+                configuration.fee
+            )
+            for i in range(configuration.nb_agents)]  # type: List[AgentState]
+
+        # instantiate the initial agent state for every agent.
+        self.initial_agent_states = [
             AgentState(
                 configuration.initial_money_amounts[i],
                 configuration.endowments[i],
@@ -255,7 +255,11 @@ class Game:
         configuration = GameConfiguration(initial_money_amounts, endowments, utilities, fee, agent_ids)
         return Game(configuration)
 
-    def get_scores(self) -> List[int]:
+    def get_initial_scores(self) -> List[float]:
+        """Get the initial scores for every agent."""
+        return [agent_state.get_score() for agent_state in self.initial_agent_states]
+
+    def get_scores(self) -> List[float]:
         """Get the current scores for every agent."""
         return [agent_state.get_score() for agent_state in self.agent_states]
 
@@ -288,7 +292,7 @@ class Game:
             return False
 
         # check if we have enough instances of goods, for every good involved in the transaction.
-        seller_holdings = self.agent_states[tx.seller_id]._current_holdings
+        seller_holdings = self.agent_states[tx.seller_id].current_holdings
         for good_id, bought_quantity in tx.quantities_by_good_id.items():
             if seller_holdings[good_id] < bought_quantity:
                 return False
@@ -297,12 +301,12 @@ class Game:
 
     def settle_transaction(self, tx: 'GameTransaction') -> None:
         """
-        Settle a transaction.
+        Settle a valid transaction.
 
         >>> game = Game(GameConfiguration(
         ... initial_money_amounts = [20, 20],
         ... endowments = [[0, 0], [1, 1]],
-        ... utilities = [[10, 20], [10, 20]],
+        ... utilities = [[80.0, 20.0], [10.0, 90.0]],
         ... fee = 0))
         >>> agent_state_1 = game.agent_states[0] # agent state of player 1
         >>> agent_state_2 = game.agent_states[1] # agent state of player 2
@@ -352,9 +356,9 @@ class Game:
         ... [1, 0, 0],
         ... [0, 1, 2]]
         >>> utilities = [
-        ... [20, 40, 60],
-        ... [20, 60, 40],
-        ... [40, 20, 60]]
+        ... [20.0, 20.0, 60.0],
+        ... [10.0, 50.0, 40.0],
+        ... [30.0, 20.0, 50.0]]
         >>> fee = 1
         >>> game_configuration = GameConfiguration(
         ... money_amounts,
@@ -393,8 +397,8 @@ class Game:
 
     def __eq__(self, other):
         return isinstance(other, Game) and \
-                self.configuration == other.configuration and \
-                self.transactions == other.transactions
+            self.configuration == other.configuration and \
+            self.transactions == other.transactions
 
 
 class AgentState:
@@ -425,161 +429,28 @@ class AgentState:
     def utilities(self) -> Utilities:
         return copy.copy(self._utilities)
 
-    def get_score(self) -> int:
+    def get_score(self) -> float:
         """
         Compute the score of the current state.
         The score is computed as the sum of all the utilities for the good holdings
         with positive quantity plus the money left.
         :return: the score.
         """
-        goods_score = self.score_good_quantities(self._current_holdings)
+        goods_score = logarithmic_utility(self.utilities, self.current_holdings)
         money_score = self.balance
         score = goods_score + money_score
         return score
 
-    def _score_good_quantity(self, good_id: int, quantity: int) -> int:
-        """
-        Score a quantity for a specified good id.
-        :param good_id: the good id associated with the quantity.
-        :param quantity: the quantity to be scored.
-        :return: the score of the quantity.
-        """
-        assert 0 <= good_id < self.nb_goods
-        assert 0 <= quantity
-        return self.utilities[good_id] * (1 if quantity >= 1 else 0)
-
-    def score_good_quantities(self, quantities: List[int]) -> int:
-        """
-        Score a vector of quantities.
-        E.g.
-        >>> agent_state = AgentState(20, [0, 1, 2], [10, 0, 20], 1)
-        >>> agent_state.score_good_quantities([0, 1, 2])
-        20
-
-        :param quantities: the quantities to be scored.
-        :return: the score.
-        :raises: AssertionError: if the quantities have invalid values (g. invalid good id)
-        """
-        return sum(self._score_good_quantity(good_id, quantities) for good_id, quantities in enumerate(quantities))
-
-    def get_excess_goods_quantities(self) -> List[int]:
-        """
-        Return the vector of good quantities in excess. A quantity for a good is in excess if it is more than 1.
-        E.g. if an agent holds the good quantities [0, 2, 1], this function returns [0, 1, 0].
-        >>> agent_state = AgentState(20, [1, 2, 3], [20, 40, 60], 1)
-        >>> agent_state.get_excess_goods_quantities()
-        [0, 1, 2]
-
-        :return: the vector of good quantities in excess.
-        """
-        result = [q - 1 if q > 1 else 0 for q in self._current_holdings]
-        return result
-
-    def get_requested_quantities(self) -> List[int]:
-        """
-        Return the vector of requested quantities. A quantity for a good is in requested if the agent does not currently have it.
-        E.g. if an agent holds the good quantities [0, 2, 1], this function returns [1, 0, 0].
-        >>> agent_state = AgentState(20, [0, 2, 3], [20, 40, 60], 1)
-        >>> agent_state.get_requested_quantities()
-        [1, 0, 0]
-
-        :return: the vector of good quantities requested.
-        """
-        return [1 if q == 0 else 0 for q in self._current_holdings]
-
-    def get_zero_quantity_goods_ids(self) -> Set[int]:
-        """
-        Get the set of good ids for which we only have a quantity equal to zero.
-        :return: a set of good ids.
-        """
-        zero_quantity_goods_ids = set(map(lambda x: x[0],
-                                          filter(lambda x: x[1] == 0,
-                                                 enumerate(self._current_holdings))))
-        return zero_quantity_goods_ids
-
-    def get_excess_quantity_goods_ids(self) -> Set[int]:
-        """
-        Get the set of good ids for which we have a quantity in excess of 1.
-        :return: a set of good ids.
-        """
-        excess_quantity_goods_ids = set(map(lambda x: x[0],
-                                            filter(lambda x: x[1] > 1,
-                                                   enumerate(self._current_holdings))))
-        return excess_quantity_goods_ids
-
-    def _apply_delta_quantities(self, delta_quantities_by_good_id: Dict[int, int]) -> List[int]:
-        """
-        Return the new holdings, after applied the variation of quantities provided in input.
-        :param delta_quantities_by_good_id:
-        :return: the new vector of holdings.
-        """
-        new_holdings = copy.copy(self._current_holdings)
-        for good_id, delta_quantity in delta_quantities_by_good_id.items():
-            new_holdings[good_id] += delta_quantity
-        return new_holdings
-
-    def get_score_after_transaction(self, tx: Transaction) -> int:
+    def get_score_diff_from_transaction(self, tx: Transaction) -> float:
         """
         Simulate a transaction and get the resulting score (taking into account the fee)
         :param tx: a transaction object.
         :return: the score.
         """
-        switch = -1 if tx.buyer else 1
-
-        delta_money = switch * tx.amount
-        delta_quantities = {}
-        for good_id, quantity in tx.quantities_by_good_id.items():
-            delta_quantities[good_id] = -switch * quantity
-
-        return self.get_score_from_deltas(delta_money, delta_quantities, tx.buyer)
-
-    def get_score_from_deltas(self, delta_money: int, delta_quantities_by_good_id: Dict[int, int], is_buyer: bool) -> int:
-        """
-        Simulate a transaction and get the resulting score (taking into account the fee)
-
-        >>> agent_state = AgentState(20, [0, 1, 2], [20, 40, 60], 1)
-        >>> agent_state.get_score()  # gives: money + utility from holdings = 20 * (0*20 + 1*40 + 1*60)
-        120
-        >>> agent_state.get_score_from_deltas(-10, {0: 1}, True)  # add a holding for the first good, pay 10 and a fee of 1.
-        129
-        >>> agent_state.get_score_from_deltas(-10, {0: 1}, False)  # the same, but as a seller (no fee!)
-        130
-        >>> agent_state.get_score_from_deltas(10, {1: -1}, False)  # sell a holding for the first good, gain 10.
-        90
-
-        :param delta_money: the delta amount of money.
-                            A negative value means that we pay money in the transaction.
-                            A positive value means that we gain money from the transaction.
-        :param delta_quantities_by_good_id: a map from good ids to delta quantities.
-                               A negative value ``q`` with key ``i`` means that we sell ``q`` instances of good ``i``.
-                               A positive value ``q`` with key``i`` means that we buy ``q`` instances of good ``i``.
-        :param is_buyer: True if the simulated transaction is from a buyer, false otherwise
-        :return: the score that we would get if the transaction is confirmed.
-        :raises: ValueError: if we cannot update the state with the proposed changes.
-        """
-        if not self.check_update(delta_money, delta_quantities_by_good_id, is_buyer):
-            raise ValueError("Transaction is not valid.")
-
-        # create a new (temporary) holdings
-        new_holdings = self._apply_delta_quantities(delta_quantities_by_good_id)
-        new_holdings_score = self.score_good_quantities(new_holdings)
-
-        tx_fee = self.tx_fee if is_buyer else 0
-        new_money = self.balance + delta_money - tx_fee
-        return new_holdings_score + new_money
-
-    def update(self, tx: Transaction) -> None:
-        """
-        Update the agent state from a transaction request.
-        :param tx: the transaction request message.
-        :return: None
-        """
-        switch = -1 if tx.buyer else 1
-
-        fee = self.tx_fee if tx.buyer else 0
-        self.balance += switch * tx.amount + fee
-        for good_id, quantity in tx.quantities_by_good_id.items():
-            self._current_holdings[good_id] += -switch * quantity
+        current_score = self.get_score()
+        new_state = self.apply([tx])
+        new_score = new_state.get_score()
+        return new_score - current_score
 
     def restore(self, tx: Transaction) -> None:
         """
@@ -590,45 +461,25 @@ class AgentState:
         switch = 1 if tx.buyer else -1
 
         fee = self.tx_fee if not tx.buyer else 0
-        self.balance += switch * tx.amount + fee
+        self.balance += switch * (tx.amount + fee)
         for good_id, quantity in tx.quantities_by_good_id.items():
             self._current_holdings[good_id] += -switch * quantity
 
-    def check_transaction(self, tx: Transaction) -> bool:
+    def check_transaction_is_consistent(self, tx: Transaction) -> bool:
         """
-        Check if the transaction is consistent. E.g. check that the agent state has enough money and enough holdings.
-        :param tx: the transaction.
+        Check if the transaction is consistent.  E.g. check that the agent state has enough money if it is a buyer
+        or enough holdings if it is a seller.
         :return: True if the transaction is legal wrt the current state, false otherwise.
         """
-        switch = -1 if tx.buyer else 1
-        delta_money = switch * tx.amount
-        delta_quantities_by_good_id = {good_id: - switch * quantity
-                                       for good_id, quantity in tx.quantities_by_good_id.items()}
-        return self.check_update(delta_money, delta_quantities_by_good_id, tx.buyer)
 
-    def check_update(self, delta_money: int, delta_quantities_by_good_id: Dict[int, int], is_buyer: bool) -> bool:
-        """
-        Check if the update is consistent. E.g. check that the agent state has enough money and enough holdings.
-
-        :param delta_money: the difference of money between the new and the old balance.
-        :param delta_quantities_by_good_id: a map from good ids to delta quantities.
-        :param is_buyer: True if the role in the transaction is the buyer, False if it's the seller
-        :return: True if the transaction is valid, False otherwise.
-        """
-
-        result = True
-
-        # the transaction fee is zero if the update is made as seller.
-        tx_fee = self.tx_fee if is_buyer else 0
-
-        # check if we have enough money.
-        result = result and (delta_money >= 0 or self.balance >= abs(delta_money) + tx_fee)
-
-        # check if we have enough good instances.
-        for good_id, delta_quantity in delta_quantities_by_good_id.items():
-            # if the delta is negative, check that we have enough good instances for the transaction.
-            result = result and (delta_quantity >= 0 or self._current_holdings[good_id] >= abs(delta_quantity))
-
+        if tx.buyer:
+            # check if we have the money.
+            result = self.balance >= tx.amount + self.tx_fee
+        else:
+            # check if we have the goods.
+            result = True
+            for good_id, quantity in tx.quantities_by_good_id.items():
+                result = result and (self._current_holdings[good_id] >= quantity)
         return result
 
     def apply(self, transactions: List[Transaction]) -> 'AgentState':
@@ -644,6 +495,22 @@ class AgentState:
 
         return new_state
 
+    def update(self, tx: Transaction) -> None:
+        """
+        Update the agent state from a transaction request.
+        :param tx: the transaction request message.
+        :return: None
+        """
+        if tx.buyer:
+            fees = tx.amount + self.tx_fee
+            self.balance -= fees
+        else:
+            self.balance += tx.amount
+
+        for good_id, quantity in tx.quantities_by_good_id.items():
+            quantity_delta = quantity if tx.buyer else -quantity
+            self._current_holdings[good_id] += quantity_delta
+
     def __copy__(self):
         return AgentState(self.balance, self.current_holdings, self.utilities, self.tx_fee)
 
@@ -657,9 +524,9 @@ class AgentState:
 
     def __eq__(self, other) -> bool:
         return isinstance(other, AgentState) and \
-               self.balance == other.balance and \
-               self.utilities == other.utilities and \
-               self._current_holdings == other._current_holdings
+            self.balance == other.balance and \
+            self.utilities == other.utilities and \
+            self._current_holdings == other._current_holdings
 
 
 class GameTransaction:
@@ -720,8 +587,8 @@ class GameTransaction:
 
     def __eq__(self, other) -> bool:
         return isinstance(other, GameTransaction) and \
-               self.buyer_id == other.buyer_id and \
-               self.seller_id == other.seller_id and \
-               self.amount == other.amount and \
-               self.quantities_by_good_id == other.quantities_by_good_id and \
-               self.timestamp == other.timestamp
+            self.buyer_id == other.buyer_id and \
+            self.seller_id == other.seller_id and \
+            self.amount == other.amount and \
+            self.quantities_by_good_id == other.quantities_by_good_id and \
+            self.timestamp == other.timestamp

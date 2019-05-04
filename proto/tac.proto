@@ -1,14 +1,12 @@
-syntax = "proto2";
+syntax = "proto3";
 
 package fetch.oef.pb;
 
-message IntPair {
-    required int32 key = 1;
-    required int32 value = 2;
-}
+import "google/protobuf/struct.proto";
 
-message Dictionary{
-    repeated IntPair pairs = 1;
+message IntPair {
+    int32 first = 1;
+    int32 second = 2;
 }
 
 message TACController {
@@ -21,14 +19,14 @@ message TACController {
     }
 
     message GameData {
-        required int32 money = 1;
-        repeated int32 resources = 2;
-        repeated int32 preferences = 3;
-        required int32 fee = 4;
+        double money = 1;
+        repeated int32 endowment = 2;
+        repeated double utilities = 3;
+        double fee = 4;
     }
 
     message TransactionConfirmation {
-        required string transaction_id = 1;
+        string transaction_id = 1;
     }
 
     message Error {
@@ -40,8 +38,9 @@ message TACController {
             TRANSACTION_NOT_VALID = 4;
         }
 
-        required ErrorCode error_code = 1;
-        required string error_msg = 2;
+        ErrorCode error_code = 1;
+        string error_msg = 2;
+        google.protobuf.Struct details = 3;
     }
 
 
@@ -66,11 +65,11 @@ message TACAgent {
     }
 
     message Transaction{
-        required string transaction_id = 1;
-        required bool buyer = 2;  // is the sender of this message a buyer?
-        required string counterparty = 3;
-        required int32 amount = 4;
-        required Dictionary quantities = 5;
+        string transaction_id = 1;
+        bool buyer = 2;  // is the sender of this message a buyer?
+        string counterparty = 3;
+        double amount = 4;
+        repeated IntPair quantities = 5;
     }
 
     message Message {

@@ -41,8 +41,9 @@ logger = logging.getLogger("tac")
 def parse_arguments():
     parser = argparse.ArgumentParser("tac_agent_spawner")
     parser.add_argument("--nb-agents", type=int, default=10, help="(minimum) number of TAC agent to wait for the competition.")
-    parser.add_argument("--nb-goods",   type=int, default=10, help="Number of TAC agent to run.")
+    parser.add_argument("--nb-goods", type=int, default=10, help="Number of TAC agent to run.")
     parser.add_argument("--nb-baseline-agents", type=int, default=10, help="Number of baseline agent to run. Defaults to the number of agents of the competition.")
+    parser.add_argument("--registers-supply", type=bool, default=True, help="A boolean indicating whether the baseline agent registers supply or demand on the oef.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
     parser.add_argument("--uml", default=True, help="Plot uml file")
@@ -52,8 +53,9 @@ def parse_arguments():
     parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
     parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
     parser.add_argument("--fee", default=1, type=int, help="The transaction fee.")
-    parser.add_argument("--timeout", default=5, type=int, help="The amount of time (in seconds) to wait for starting the competition.")
-    parser.add_argument("--inactivity-timeout", default=5, type=int, help="The amount of inactivity time (in seconds) to wait until the cancellation of the competition.")
+    parser.add_argument("--registration-timeout", default=10, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
+    parser.add_argument("--inactivity-timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
+    parser.add_argument("--competition-timeout", default=120, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
 
     arguments = parser.parse_args()
     logger.debug("Arguments: {}".format(pprint.pformat(arguments.__dict__)))
@@ -61,20 +63,21 @@ def parse_arguments():
     return arguments
 
 
-def _compute_competition_start_time(timeout: int) -> datetime.datetime:
+def _compute_competition_start_and_end_time(registration_timeout: int, competition_timeout: int) -> [datetime.datetime, datetime.datetime]:
     """
     Compute the start time of the competition.
-    It just sums N seconds from 'now'.
-    :param timeout: seconds to wait from 'now'.
-    :return: the date time of the start of the competition.
+    :param registration_timeout: seconds to wait for registration timeout.
+    :param competition_timeout: seconds to wait for competition timeout.
+    :return: list with the datetime of the start and end of the competition.
     """
-    delta = datetime.timedelta(0, timeout)
+    delta_now_to_start = datetime.timedelta(0, registration_timeout)
+    delta_start_to_end = datetime.timedelta(0, competition_timeout)
     now = datetime.datetime.now()
 
-    # the start time of the competition is NOW  plus N seconds in the future, where N is in the 'timeout' variable.
     # TODO the "now" might have different meaning depending on where the following line of code is executed.
-    start_time = now + delta
-    return start_time
+    start_time = now + delta_now_to_start
+    end_time = start_time + delta_start_to_end
+    return start_time, end_time
 
 
 def initialize_controller_agent(public_key: str,
@@ -85,7 +88,9 @@ def initialize_controller_agent(public_key: str,
                                 fee: int,
                                 lower_bound_factor: int,
                                 upper_bound_factor: int,
-                                timeout: int) -> ControllerAgent:
+                                registration_timeout: int,
+                                inactivity_timeout: int,
+                                competition_timeout: int) -> ControllerAgent:
     """
     Initialize the controller agent.
     :param public_key: the public key of the controller agent.
@@ -96,16 +101,18 @@ def initialize_controller_agent(public_key: str,
     :param fee: the transaction fee.
     :param lower_bound_factor: the lower bound factor of a uniform distribution.
     :param upper_bound_factor: the upper bound factor of a uniform distribution.
-    :param timeout: the timeout (in seconds) to wait until the competition starts.
+    :param registration_timeout: the amount of time (in seconds) to wait for agents to register before attempting to start the competition.
+    :param inactivity_timeout: the amount of time (in seconds) to wait during inactivity until the termination of the competition.
+    :param competition_timeout: the amount of time (in seconds) to wait from the start of the competition until the termination of the competition.
     :return: the controller agent.
     """
 
-    start_time = _compute_competition_start_time(timeout)
+    start_time, end_time = _compute_competition_start_and_end_time(registration_timeout, competition_timeout)
 
     tac_controller = ControllerAgent(public_key=public_key, oef_addr=oef_addr,
                                      oef_port=oef_port, min_nb_agents=min_nb_agents,
                                      nb_goods=nb_goods, fee=fee, lower_bound_factor=lower_bound_factor,
-                                     upper_bound_factor=upper_bound_factor, start_time=start_time)
+                                     upper_bound_factor=upper_bound_factor, start_time=start_time, end_time=end_time, inactivity_timeout=inactivity_timeout)
     tac_controller.connect()
     tac_controller.register()
     return tac_controller
@@ -136,7 +143,7 @@ def _make_id(agent_id: int, nb_agents: int) -> str:
     return result
 
 
-def initialize_baseline_agent(agent_pbk: str, oef_addr: str, oef_port: int) -> BaselineAgent:
+def initialize_baseline_agent(agent_pbk: str, oef_addr: str, oef_port: int, registers_supply: bool) -> BaselineAgent:
     """
     Initialize one baseline agent.
     :param agent_pbk: the public key of the Baseline agent.
@@ -146,10 +153,10 @@ def initialize_baseline_agent(agent_pbk: str, oef_addr: str, oef_port: int) -> B
     """
 
     # Notice: we create a new asyncio loop, so we can run it in an independent thread.
-    return BaselineAgent(agent_pbk, oef_addr, oef_port, loop=asyncio.new_event_loop())
+    return BaselineAgent(agent_pbk, oef_addr, oef_port, loop=asyncio.new_event_loop())  # registers_supply=registers_supply)
 
 
-def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port: int) -> List[BaselineAgent]:
+def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port: int, registers_supply: bool) -> List[BaselineAgent]:
     """
     Initialize a list of baseline agents.
     :param nb_baseline_agents: number of agents to initialize.
@@ -157,7 +164,7 @@ def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port:
     :param oef_port: TCP port of the OEF Node.
     :return: A list of baseline agents.
     """
-    baseline_agents = [initialize_baseline_agent(_make_id(i, nb_baseline_agents), oef_addr, oef_port)
+    baseline_agents = [initialize_baseline_agent(_make_id(i, nb_baseline_agents), oef_addr, oef_port, registers_supply)
                        for i in range(nb_baseline_agents)]
     return baseline_agents
 
@@ -207,8 +214,8 @@ if __name__ == '__main__':
 
         tac_controller = initialize_controller_agent("tac_controller", arguments.oef_addr, arguments.oef_port,
                                                      arguments.nb_agents, arguments.nb_goods, arguments.fee, arguments.lower_bound_factor,
-                                                     arguments.upper_bound_factor, arguments.timeout)
-        baseline_agents = initialize_baseline_agents(arguments.nb_baseline_agents, arguments.oef_addr, arguments.oef_port)
+                                                     arguments.upper_bound_factor, arguments.registration_timeout, arguments.inactivity_timeout, arguments.competition_timeout)
+        baseline_agents = initialize_baseline_agents(arguments.nb_baseline_agents, arguments.oef_addr, arguments.oef_port, arguments.registers_supply)
         run(tac_controller, baseline_agents)
 
     except KeyboardInterrupt:

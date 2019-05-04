@@ -46,7 +46,7 @@
       {% for idx, agent_state in idx_agent_states %}
         <tr>
           <th>{{ game.configuration.agent_labels[idx] }}</th>
-          <th>{{ agent_state.score_good_quantities(game.configuration.endowments[idx]) + game.configuration.initial_money_amounts[idx]}}</th>
+          <th>{{ game.initial_agent_states[idx].get_score() }}</th>
           <th>{{ game.configuration.endowments[idx] }}</th>
           <th>{{ game.configuration.utilities[idx] }}</th>
           <th>{{ agent_state.current_holdings }}</th>

@@ -23,9 +23,10 @@ import logging
 import pprint
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import List, Dict
+from typing import List, Dict, Any
 from typing import Optional
 
+import google
 from google.protobuf.message import DecodeError
 
 import tac.tac_pb2 as tac_pb2
@@ -42,8 +43,8 @@ def _make_int_pair(key: int, value: int) -> tac_pb2.IntPair:
     :return: a IntPair protobuf object.
     """
     pair = tac_pb2.IntPair()
-    pair.key = key
-    pair.value = value
+    pair.first = key
+    pair.second = value
     return pair
 
 
@@ -160,9 +161,7 @@ class Transaction(Request):
         msg.amount = self.amount
 
         good_id_quantity_pairs = [_make_int_pair(gid, q) for gid, q in self.quantities_by_good_id.items()]
-        dictionary = tac_pb2.Dictionary()
-        dictionary.pairs.extend(good_id_quantity_pairs)
-        msg.quantities.CopyFrom(dictionary)
+        msg.quantities.extend(good_id_quantity_pairs)
 
         envelope = tac_pb2.TACAgent.Message()
         envelope.transaction.CopyFrom(msg)
@@ -173,7 +172,7 @@ class Transaction(Request):
         msg = tac_pb2.TACAgent.Message()
         msg.ParseFromString(obj)
 
-        quantities_per_good_id = {pair.key: pair.value for pair in msg.transaction.quantities.pairs}
+        quantities_per_good_id = {pair.first: pair.second for pair in msg.transaction.quantities}
 
         return Transaction(msg.transaction.transaction_id,
                            msg.transaction.buyer,
@@ -238,15 +237,16 @@ class Response(Message):
                 return Cancelled()
             elif case == "game_data":
                 return GameData(msg.game_data.money,
-                                list(msg.game_data.resources),
-                                list(msg.game_data.preferences),
+                                list(msg.game_data.endowment),
+                                list(msg.game_data.utilities),
                                 msg.game_data.fee)
             elif case == "tx_confirmation":
                 return TransactionConfirmation(msg.tx_confirmation.transaction_id)
             elif case == "error":
                 error_code = ErrorCode(msg.error.error_code)
                 error_msg = msg.error.error_msg
-                return Error(error_code, error_msg)
+                details = dict(msg.error.details.items())
+                return Error(error_code, error_msg, details)
             else:
                 raise TacError("Unrecognized type of Response.")
         except DecodeError as e:
@@ -293,14 +293,16 @@ class Cancelled(Response):
 class Error(Response):
     """This response means that something bad happened while processing a request."""
 
-    def __init__(self, error_code: ErrorCode, error_msg: str):
+    def __init__(self, error_code: ErrorCode, error_msg: str, details: Optional[Dict[str, Any]] = None):
         self.error_code = error_code
         self.error_msg = error_msg
+        self.details = details if details is not None else {}
 
     def to_pb(self) -> tac_pb2.TACController.Message:
         msg = tac_pb2.TACController.Error()
         msg.error_code = self.error_code.value
         msg.error_msg = self.error_msg
+        msg.details.update(self.details)
         envelope = tac_pb2.TACController.Message()
         envelope.error.CopyFrom(msg)
         return envelope
@@ -315,25 +317,25 @@ class Error(Response):
 class GameData(Response):
     """Class that holds the initial condition of a TAC agent."""
 
-    def __init__(self, money: int, endowment: List[int], preferences: List[int], fee: int):
+    def __init__(self, money: int, endowment: List[int], utilities: List[float], fee: int):
         """
         Initialize a game data object.
         :param money: the money amount.
         :param endowment: the endowment for every good.
-        :param preferences: the utilities for every good.
+        :param utilities: the utilities for every good.
         :param fee: the transaction fee.
         """
-        assert len(endowment) == len(preferences)
+        assert len(endowment) == len(utilities)
         self.money = money
         self.endowment = endowment
-        self.preferences = preferences
+        self.utilities = utilities
         self.fee = fee
 
     def to_pb(self) -> tac_pb2.TACController.Message:
         msg = tac_pb2.TACController.GameData()
         msg.money = self.money
-        msg.resources.extend(self.endowment)
-        msg.preferences.extend(self.preferences)
+        msg.endowment.extend(self.endowment)
+        msg.utilities.extend(self.utilities)
         msg.fee = self.fee
         envelope = tac_pb2.TACController.Message()
         envelope.game_data.CopyFrom(msg)
@@ -343,7 +345,7 @@ class GameData(Response):
         return self._build_str(
             money=self.money,
             endowment=self.endowment,
-            preferences=self.preferences,
+            utilities=self.utilities,
             fee=self.fee
         )
 
@@ -351,7 +353,7 @@ class GameData(Response):
         return super().__eq__(other) and \
             self.money == other.money and \
             self.endowment == other.endowment and \
-            self.preferences == other.preferences and \
+            self.utilities == other.utilities and \
             self.fee == other.fee
 
 

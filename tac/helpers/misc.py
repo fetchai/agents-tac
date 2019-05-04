@@ -91,82 +91,30 @@ def from_good_attribute_name_to_good_id(good_id_str: str) -> 1:
     return int(good_id_str[offset:])
 
 
-def sample_good_instance(a: int, b: int) -> int:
-    """Sample the number of instances for a good.
-
-    :param a: the lower bound of the uniform distribution
-    :param b: the uper bound of the uniform distribution
-    :return the number of instances I sampled.
-    """
-    # Return random integer in range [a, b]
-    nb_instances = round(np.random.uniform(a, b))
-    return nb_instances
-
-
-def compute_allocation(nb_agents: int, h: int) -> List[int]:
-    """
-    Compute an allocation (defined above).
-    :param nb_agents: the number of agents.
-    :param h: the number of instances to allocate.
-    :return: the allocation (a vector of 0s and 1s
-    """
-    allocation = [0] * nb_agents
-    for i in random.sample(range(nb_agents), h):
-        allocation[i] = 1
-    return allocation
-
-
-def generate_instances_per_good(nb_goods: int, nb_agents: int, lower_bound_factor: int, upper_bound_factor: int) -> List[int]:
-    """
-    Compute the vector of good instances available in the game.
-    An element of the vector at index j determines the number of instances of good j in the game.
-    :param nb_goods: the number of goods.
-    :param nb_agents: the number of agents.
-    :param lower_bound_factor: the lower bound factor of the uniform distribution
-    :param upper_bound_factor: the upper bound factor of the uniform distribution
-    :return: the vector of good instances.
-    """
-    a = nb_agents - round(nb_agents / float(lower_bound_factor))
-    b = nb_agents + round(nb_agents / float(upper_bound_factor))
-    return [sample_good_instance(a, b) for _ in range(nb_goods)]
-
-
-def generate_endowment_of_good(nb_agents: int, nb_instances: int) -> List[int]:
-    """
-    Compute the allocation for all the agent of a single good.
-    :param nb_agents: the number of agents.
-    :param nb_instances: the number of instances of the good.
-    :return: the endowment of good j for all the agents.
-    """
-    I_j = nb_instances
-    h_1, h_2 = (I_j // 2, I_j // 2) if I_j % 2 == 0 else (I_j // 2, I_j // 2 + 1)
-    a_1, a_2 = [compute_allocation(nb_agents, h_1), compute_allocation(nb_agents, h_2)]
-
-    endowment = [a_1[idx] + a_2[idx] for idx in range(nb_agents)]
-
-    return endowment
-
-
-def generate_endowments(nb_goods: int, nb_agents: int, lower_bound_factor: int, upper_bound_factor: int) -> List[List[int]]:
+def generate_endowments(nb_goods: int, nb_agents: int, uniform_lower_bound_factor: int, uniform_upper_bound_factor: int) -> List[List[int]]:
     """
     Compute endowments per agent. That is, a matrix of shape (nb_agents, nb_goods)
 
     :param nb_goods: the number of goods.
     :param nb_agents: the number of agents.
-    :param lower_bound_factor: the lower bound of the uniform distribution for the sampling of the good instance number.
-    :param upper_bound_factor: the upper bound of the uniform distribution for the sampling of the good instance number.
+    :param uniform_lower_bound_factor: the lower bound of the uniform distribution for the sampling of the good instance number.
+    :param uniform_upper_bound_factor: the upper bound of the uniform distribution for the sampling of the good instance number.
     :return: the endowments matrix.
     """
-    instances_per_good = generate_instances_per_good(nb_goods, nb_agents, lower_bound_factor, upper_bound_factor) # type: List[int]
-    # compute endowment matrix per good. The shape is (nb_goods, nb_agents).
-    # Row i contains the holdings for every agent j.
-    endowments_by_good = [generate_endowment_of_good(nb_agents, I_j) for I_j in instances_per_good] # type: List[List[int]]
-    # transpose the matrix.
-    endowments = np.asarray(endowments_by_good).T.tolist()
+    # sample good instances
+    instances_per_good = _sample_good_instances(nb_agents, nb_goods,
+                                                uniform_lower_bound_factor, uniform_upper_bound_factor)
+    # each agent receives at least one good
+    endowments = [[1] * nb_goods for _ in range(nb_agents)]
+    # randomly assign additional goods to create differences
+    for good_id in range(nb_goods):
+        for _ in range(instances_per_good[good_id] - nb_agents):
+            agent_id = random.randint(0, nb_agents - 1)
+            endowments[agent_id][good_id] += 1
     return endowments
 
 
-def generate_utilities(nb_agents: int, nb_goods: int) -> List[List[int]]:
+def generate_utilities(nb_agents: int, nb_goods: int) -> List[List[float]]:
     """
     Compute the preference matrix. That is, a generic element e_ij is the utility of good j for agent i.
 
@@ -174,12 +122,50 @@ def generate_utilities(nb_agents: int, nb_goods: int) -> List[List[int]]:
     :param nb_goods: the number of goods.
     :return: the preference matrix.
     """
-    scores = set(map(lambda x: x * 2, range(nb_goods)))  # type: Set[int]
-    # matrix where each row is in the same order.
-    temporary_matrix = [list(scores)] * nb_agents
-    # compute random preferences (i.e. permute every preference list randomly).
-    preferences = list(map(lambda x: random.sample(x, len(x)), temporary_matrix))
-    return preferences
+    utilities = _sample_utility_function_params(nb_goods, nb_agents)
+    return utilities
+
+
+def _sample_utility_function_params(nb_goods: int, nb_agents: int, scaling_factor: float = 100.0) -> List[List[float]]:
+    """
+    Sample utility function params for each agent.
+    :param nb_goods: the number of goods
+    :param nb_agents: the number of agents
+    :param scaling_factor: a scaling factor for all the utilities generated.
+    :return: a matrix with utility function params for each agent
+    """
+    decimals = 4 if nb_goods < 100 else 8
+    utility_function_params = []
+    for i in range(nb_agents):
+        random_integers = [random.randint(1, 101) for _ in range(nb_goods)]
+        total = sum(random_integers)
+        normalized_fractions = [round(i / float(total), decimals) for i in random_integers]
+        if not sum(normalized_fractions) == 1.0:
+            normalized_fractions[-1] = round(1.0 - sum(normalized_fractions[0:-1]), decimals)
+        utility_function_params.append(normalized_fractions)
+
+    # scale the utilities
+    for i in range(len(utility_function_params)):
+        for j in range(len(utility_function_params[i])):
+            utility_function_params[i][j] *= scaling_factor
+
+    return utility_function_params
+
+
+def _sample_good_instances(nb_agents: int, nb_goods: int,
+                           uniform_lower_bound_factor: int, uniform_upper_bound_factor: int) -> List[int]:
+    """
+    Sample the number of instances for a good.
+    :param nb_agents: the number of agents
+    :param uniform_lower_bound_factor: the lower bound factor of a uniform distribution
+    :param uniform_upper_bound_factor: the upper bound factor of a uniform distribution
+    :return: the number of instances I sampled.
+    """
+    a = nb_agents + nb_agents * uniform_lower_bound_factor
+    b = nb_agents + nb_agents * uniform_upper_bound_factor
+    # Return random integer in range [a, b]
+    nb_instances = [round(np.random.uniform(a, b)) for _ in range(nb_goods)]
+    return nb_instances
 
 
 def generate_initial_money_amounts(nb_agents: int, money_endowment: int) -> List[int]:
@@ -193,18 +179,44 @@ def generate_initial_money_amounts(nb_agents: int, money_endowment: int) -> List
     return [money_endowment] * nb_agents
 
 
-def build_datamodel(nb_goods: int, seller: bool) -> DataModel:
+def logarithmic_utility(utility_function_params: List[float], good_bundle: List[int]) -> float:
+    """
+    Compute agent's utility given her utility function params and a good bundle.
+    :param utility_function_params: utility function params of the agent
+    :param good_bundle: a bundle of goods with the quantity for each good
+    :return: utility value
+    """
+    goodwise_utility = [param * math.log(quantity) if quantity > 0 else -10000
+                        for param, quantity in zip(utility_function_params, good_bundle)]
+    return sum(goodwise_utility)
+
+
+def marginal_utility(utility_function_params: List[float], current_holdings: List[int], delta_holdings: List[int]) -> float:
+    """
+    Compute agent's utility given her utility function params and a good bundle.
+    :param utility_function_params: utility function params of the agent
+    :param current_holdings: a list of goods with the quantity for each good
+    :param delta_holdings: a list of goods with the quantity for each good (can be positive or negative)
+    :return: utility difference between new and current utility
+    """
+    current_utility = logarithmic_utility(utility_function_params, current_holdings)
+    new_holdings = [sum(x) for x in zip(current_holdings, delta_holdings)]
+    new_utility = logarithmic_utility(utility_function_params, new_holdings)
+    return new_utility - current_utility
+
+
+def build_datamodel(nb_goods: int, is_seller: bool) -> DataModel:
     """
     Build a data model for buyers or sellers.
 
     :param nb_goods: the number of goods.
-    :param seller: bool indicating whether a seller or buyer data model
+    :param is_seller: bool indicating whether a seller or buyer data model
     :return: the data model.
     """
     goods_quantities_attributes = [AttributeSchema(format_good_attribute_name(i, nb_goods), int, False)
                                    for i in range(nb_goods)]
-    price_attribute = AttributeSchema("price", int, False)
-    description = TAC_SELLER_DATAMODEL_NAME if seller else TAC_BUYER_DATAMODEL_NAME
+    price_attribute = AttributeSchema("price", float, False)
+    description = TAC_SELLER_DATAMODEL_NAME if is_seller else TAC_BUYER_DATAMODEL_NAME
     data_model = DataModel(description, goods_quantities_attributes + [price_attribute])
     return data_model
 
@@ -241,13 +253,13 @@ def get_goods_quantities_description(good_quantities: List[int], is_seller: bool
     :return: the description to advertise on the Service Directory.
     """
     nb_goods = len(good_quantities)
-    data_model = build_datamodel(nb_goods, seller=is_seller)
+    data_model = build_datamodel(nb_goods, is_seller)
     desc = Description({format_good_attribute_name(i, nb_goods): q for i, q in enumerate(good_quantities)},
                        data_model=data_model)
     return desc
 
 
-def build_query(good_ids: Set[int], seller: bool, nb_goods: Optional[int] = None) -> Query:
+def build_query(good_ids: Set[int], is_seller: bool, nb_goods: Optional[int] = None) -> Query:
     """
     Build the query that the buyer can send to look for goods.
 
@@ -259,11 +271,11 @@ def build_query(good_ids: Set[int], seller: bool, nb_goods: Optional[int] = None
     (assuming that the sellers are registered with the data model for baseline sellers.
 
     :param good_ids: the good ids to put in the query.
-    :param seller: bool indicating whether it's a seller or buyer query
+    :param is_seller: bool indicating whether it's a seller or buyer query
     :param nb_goods: the total number of goods (to build the data model, optional)
     :return: the query.
     """
-    data_model = None if nb_goods is None else build_datamodel(nb_goods, seller)
+    data_model = None if nb_goods is None else build_datamodel(nb_goods, is_seller)
     constraints = [Constraint(format_good_attribute_name(good_id, nb_goods), GtEq(1)) for good_id in good_ids]
 
     if len(good_ids) > 1:
