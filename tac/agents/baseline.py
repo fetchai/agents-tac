@@ -66,7 +66,7 @@ class BaselineAgent(NegotiationAgent):
     to their marginal utility and buying goods at a price plus fee equal or below their marginal utility.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # register_supply: bool = True
         super().__init__(*args, **kwargs)
 
         self.tac_search_id = set()
@@ -910,7 +910,7 @@ class BaselineAgent(NegotiationAgent):
             state_after_locks = self._state_after_locks_as_buyer()
             delta_holdings = lis
             marginal_utility_from_single_good = marginal_utility(state_after_locks.utilities, state_after_locks.current_holdings, delta_holdings)
-            desc.values["price"] = round(marginal_utility_from_single_good, 2) + 0.01  # to avoid rounding down issues
+            desc.values["price"] = round(marginal_utility_from_single_good, 2) - state_after_locks.tx_fee - 0.01  # to avoid rounding up issues
             proposals.append(desc)
         return proposals
 

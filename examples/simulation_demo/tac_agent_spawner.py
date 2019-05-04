@@ -41,7 +41,7 @@ logger = logging.getLogger("tac")
 def parse_arguments():
     parser = argparse.ArgumentParser("tac_agent_spawner")
     parser.add_argument("--nb-agents", type=int, default=10, help="(minimum) number of TAC agent to wait for the competition.")
-    parser.add_argument("--nb-goods",   type=int, default=10, help="Number of TAC agent to run.")
+    parser.add_argument("--nb-goods", type=int, default=10, help="Number of TAC agent to run.")
     parser.add_argument("--nb-baseline-agents", type=int, default=10, help="Number of baseline agent to run. Defaults to the number of agents of the competition.")
     parser.add_argument("--registers-supply", type=bool, default=True, help="A boolean indicating whether the baseline agent registers supply or demand on the oef.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
@@ -153,7 +153,7 @@ def initialize_baseline_agent(agent_pbk: str, oef_addr: str, oef_port: int, regi
     """
 
     # Notice: we create a new asyncio loop, so we can run it in an independent thread.
-    return BaselineAgent(agent_pbk, oef_addr, oef_port, loop=asyncio.new_event_loop()) #, registers_supply=registers_supply)
+    return BaselineAgent(agent_pbk, oef_addr, oef_port, loop=asyncio.new_event_loop())  # registers_supply=registers_supply)
 
 
 def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port: int, registers_supply: bool) -> List[BaselineAgent]:
