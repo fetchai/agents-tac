@@ -294,11 +294,16 @@ class GameHandler:
         return tx
 
     def _start_competition(self):
-        """Create a game and send the game setting to every registered agent."""
+        """Create a game and send the game setting to every registered agent.
+        Moreover, start the inactivity timeout checker."""
         # assert that there is no competition running.
         assert not self.is_game_running()
         self.current_game = self._create_game()
         self._send_game_data_to_agents()
+
+        # start the inactivity timeout.
+        self._timeout_checker_task = Thread(target=self.controller_agent.check_inactivity_timeout)
+        self._timeout_checker_task.start()
 
         # log messages
         logger.debug("Started competition:\n{}".format(self.current_game.get_holdings_summary()))
@@ -384,7 +389,7 @@ class ControllerAgent(TACAgent):
                  version: int = 1,
                  start_time: datetime.datetime = None,
                  end_time: datetime.datetime = None,
-                 inactivity_timeout: Optional[datetime.timedelta] = None,
+                 inactivity_timeout: Optional[int] = None,
                  **kwargs):
         """
         Initialize a Controller Agent for TAC.
@@ -403,20 +408,7 @@ class ControllerAgent(TACAgent):
         :param inactivity_timeout: the time when the competition will start.
         """
         super().__init__(public_key, oef_addr, oef_port, **kwargs)
-        logger.debug("Initialized Controller Agent :\n{}".format(pprint.pformat({
-            "public_key": public_key,
-            "oef_addr": oef_addr,
-            "oef_port": oef_port,
-            "min_nb_agents": min_nb_agents,
-            "money_endowment": money_endowment,
-            "nb_goods": nb_goods,
-            "fee": fee,
-            "lower_bound_factor": lower_bound_factor,
-            "upper_bound_factor": upper_bound_factor,
-            "version": version,
-            "start_time": str(start_time),
-            "end_time": str(end_time)
-        })))
+        logger.debug("Initialized Controller Agent :\n{}".format(pprint.pformat(vars())))
 
         self.game_handler = GameHandler(self, min_nb_agents, money_endowment, nb_goods, fee, lower_bound_factor, upper_bound_factor, start_time)
         self.handler = ControllerHandler(self)
@@ -492,7 +484,7 @@ class ControllerAgent(TACAgent):
         self.game_handler.notify_tac_cancelled()
         self._loop.call_soon_threadsafe(self._task.cancel)
 
-    def check_timeout(self, rate: Optional[float] = 2.0) -> None:
+    def check_inactivity_timeout(self, rate: Optional[float] = 2.0) -> None:
         """
         Check periodically if the timeout for inactivity or competition expired.
         :param: rate: at which rate (in seconds) the frequency of the check.
@@ -519,15 +511,10 @@ class ControllerAgent(TACAgent):
         self._last_activity = datetime.datetime.now()
 
     def run_controller(self) -> None:
-        self._message_processing_task = Thread(target=self.run)
-        self._timeout_checker_task = Thread(target=self.check_timeout)
-
         logger.debug("Running TAC controller agent...")
+        self._message_processing_task = Thread(target=self.run)
         self._message_processing_task.start()
-        self._timeout_checker_task.start()
-
         self._message_processing_task.join()
-        self._timeout_checker_task.join()
 
 
 def main():
