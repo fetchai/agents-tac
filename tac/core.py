@@ -21,9 +21,8 @@ import logging
 from abc import abstractmethod
 from typing import List, Optional
 
-from oef.agents import OEFAgent, Agent
+from oef.agents import OEFAgent
 from oef.messages import CFP_TYPES, PROPOSE_TYPES
-from oef.proxy import OEFNetworkProxy
 from oef.query import Query, Constraint, GtEq
 from oef.schema import Description
 
@@ -60,12 +59,12 @@ class TACAgent(OEFAgent):
         plantuml_gen.send_propose(self.public_key, destination, dialogue_id, Description({}))
 
 
-class NegotiationAgent(Agent):
+class NegotiationAgent(TACAgent):
 
     TAC_CONTROLLER_SEARCH_ID = 1
 
     def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, **kwargs) -> None:
-        super().__init__(OEFNetworkProxy(public_key, oef_addr, oef_port, **kwargs))
+        super().__init__(public_key, oef_addr, oef_port, **kwargs)
 
         # data about the current game
         self._controller_pbk = None  # type: Optional[str]
