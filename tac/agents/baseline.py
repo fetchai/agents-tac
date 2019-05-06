@@ -66,8 +66,9 @@ class BaselineAgent(NegotiationAgent):
     to their marginal utility and buying goods at a price plus fee equal or below their marginal utility.
     """
 
-    def __init__(self, *args, **kwargs):  # register_supply: bool = True
-        super().__init__(*args, **kwargs)
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, register_supply: bool = True, **kwargs):
+        super().__init__(public_key, oef_addr, oef_port, **kwargs)
+        self._register_supply = register_supply
 
         self.tac_search_id = set()
 
@@ -81,7 +82,6 @@ class BaselineAgent(NegotiationAgent):
         self._locks = {}  # type: Dict[str, Transaction]
         self._locks_as_buyer = {}  # type: Dict[str, Transaction]
         self._locks_as_seller = {}  # type: Dict[str, Transaction]
-        self._register_supply = True
 
     def on_start(self, game_data: GameData) -> None:
         """

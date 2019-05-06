@@ -149,22 +149,24 @@ def initialize_baseline_agent(agent_pbk: str, oef_addr: str, oef_port: int, regi
     :param agent_pbk: the public key of the Baseline agent.
     :param oef_addr: IP address of the OEF Node.
     :param oef_port: TCP port of the OEF Node.
+    :param registers_supply: whether the baseline agent registers supply or demand on the oef.
     :return: the baseline agent.
     """
 
     # Notice: we create a new asyncio loop, so we can run it in an independent thread.
-    return BaselineAgent(agent_pbk, oef_addr, oef_port, loop=asyncio.new_event_loop())  # registers_supply=registers_supply)
+    return BaselineAgent(agent_pbk, oef_addr, oef_port, loop=asyncio.new_event_loop(), register_supply=registers_supply)
 
 
-def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port: int, registers_supply: bool) -> List[BaselineAgent]:
+def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port: int, register_supply: bool) -> List[BaselineAgent]:
     """
     Initialize a list of baseline agents.
     :param nb_baseline_agents: number of agents to initialize.
     :param oef_addr: IP address of the OEF Node.
     :param oef_port: TCP port of the OEF Node.
+    :param register_supply: whether the baseline agents register supply or demand on the oef.
     :return: A list of baseline agents.
     """
-    baseline_agents = [initialize_baseline_agent(_make_id(i, nb_baseline_agents), oef_addr, oef_port, registers_supply)
+    baseline_agents = [initialize_baseline_agent(_make_id(i, nb_baseline_agents), oef_addr, oef_port, register_supply)
                        for i in range(nb_baseline_agents)]
     return baseline_agents
 
