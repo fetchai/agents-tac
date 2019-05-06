@@ -15,7 +15,7 @@ tox = "*"
 pytest-cov = "*"
 
 [packages]
-oef = {git = "ssh://git@github.com/uvue-git/oef-sdk-python.git"}
+oef = {path = "./oef-sdk-python"}
 flask-sqlalchemy = "*"
 sqlalchemy = "*"
 numpy = "*"

@@ -25,6 +25,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 
 from setuptools import setup, find_packages, Command
 from setuptools.command.build_py import build_py as _build_py
@@ -87,7 +88,7 @@ class protoc(Command):
         for line in fileinput.input(filename, inplace=True):
             line = re.sub("^(import \w*_pb2)", "from . \g<1>", line)
             # stdout redirected to the file (fileinput.input with inplace=True)
-            print(line, end="")
+            sys.stdout.write(line)
 
 
 here = os.path.abspath(os.path.dirname(__file__))

@@ -26,6 +26,10 @@ Agents for Trading Agents Competition
 
       pipenv --python 3.7 && pipenv shell
 
+- Install the local copy of `oef-sdk-python`:
+
+      pip3 install oef-sdk-python/ 
+
 - Install the package:
 
       python3 setup.py install
