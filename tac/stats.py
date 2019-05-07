@@ -92,6 +92,24 @@ class GameStats:
 
         return result
 
+    def balance_history(self):
+        nb_transactions = len(self.game.transactions)
+        nb_agents = self.game.configuration.nb_agents
+        result = np.zeros((nb_transactions + 1, nb_agents), dtype=np.int32)
+
+        temp_game = Game(self.game.configuration)
+
+        # initial balance
+        result[0, :] = np.asarray(temp_game.configuration.initial_money_amounts, dtype=np.int32)
+
+        # compute the partial scores for every agent after every transaction
+        # (remember that indexes of the transaction start from one, because index 0 is reserved for the initial scores)
+        for idx, tx in enumerate(self.game.transactions):
+            temp_game.settle_transaction(tx)
+            result[idx + 1, :] = np.asarray(temp_game.get_balances(), dtype=np.int32)
+
+        return result
+
     def plot_score_history(self, output_path: Optional[str] = None) -> None:
         """
         Plot the history of the scores, for every agent, by transaction.

@@ -91,11 +91,16 @@ def plot_scores(game_stats: GameStats):
     ))
 
 
-def plot_transactions(game_stats: GameStats):
+def plot_balance_history(game_stats: GameStats):
+    balance_history = game_stats.balance_history()
 
-    window_name = "Transaction data"
-    for tx in game_stats.game.transactions:
-        pass
+    window_name = "Balances history"
+    viz.line(X=np.arange(balance_history.shape[0]), Y=balance_history, env=env_main_name, win=window_name, opts=dict(
+        legend=game_stats.game.configuration.agent_labels,
+        title="Balance history",
+        xlabel="Transactions",
+        ylabel="Money"
+    ))
 
 
 def main():
@@ -121,6 +126,7 @@ def main():
         add_current_holdings(game_stats)
         add_initial_holdings(game_stats)
         plot_scores(game_stats)
+        plot_balance_history(game_stats)
         add_current_balance(game_stats)
 
         print("Start server at http://localhost:8097")

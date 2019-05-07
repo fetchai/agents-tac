@@ -346,6 +346,12 @@ class Game:
         result = list(map(lambda state: state.current_holdings, self.agent_states))
         return result
 
+    def get_balances(self) -> List[float]:
+        """Get the current balances."""
+        result = list(map(lambda state: state.balance, self.agent_states))
+        return result
+
+
     def get_holdings_summary(self) -> str:
         """
         Get holdings summary.
