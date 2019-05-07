@@ -35,10 +35,9 @@ import logging
 import pprint
 from typing import List, Dict, Any, Optional
 
-from tac.protocol import Transaction
-
 from tac.helpers.misc import generate_initial_money_amounts, generate_endowments, generate_utilities, from_iso_format, \
     logarithmic_utility
+from tac.protocol import Transaction
 
 Endowment = List[int]  # an element e_j is the endowment of good j.
 Utilities = List[float]  # an element u_j is the utility value of good j.
@@ -350,7 +349,6 @@ class Game:
         """Get the current balances."""
         result = list(map(lambda state: state.balance, self.agent_states))
         return result
-
 
     def get_holdings_summary(self) -> str:
         """

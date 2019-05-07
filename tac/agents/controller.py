@@ -41,9 +41,11 @@ from oef.schema import Description, DataModel, AttributeSchema
 
 from tac.core import TACAgent
 from tac.game import Game, GameTransaction
+from tac.gui.dashboard import Dashboard
 from tac.helpers.plantuml import plantuml_gen
 from tac.protocol import Response, Request, Register, Unregister, Error, GameData, \
     Transaction, TransactionConfirmation, ErrorCode, Cancelled
+from tac.stats import GameStats
 
 if __name__ != "__main__":
     logger = logging.getLogger(__name__)
@@ -64,7 +66,7 @@ def parse_arguments():
     parser.add_argument("--fee", default=1, type=int, help="Number of goods")
     parser.add_argument("--inactivity-countdown", default=30, type=int, help="Timeout of inactivity.")
     parser.add_argument("--verbose", default=False, action="store_true", help="Log debug messages.")
-    # parser.add_argument("--gui", action="store_true", help="Show the GUI.")
+    parser.add_argument("--gui", action="store_true", help="Show the GUI.")
 
     return parser.parse_args()
 
@@ -204,6 +206,7 @@ class ControllerHandler(object):
         # update the game state.
         tx = self.game_handler.from_request_to_game_tx(request, public_key)
         self.game_handler.current_game.settle_transaction(tx)
+        self.controller_agent._update_dashboard()
 
         # send the transaction confirmation.
         tx_confirmation = TransactionConfirmation(request.transaction_id)
@@ -299,6 +302,7 @@ class GameHandler:
         # assert that there is no competition running.
         assert not self.is_game_running()
         self.current_game = self._create_game()
+        self.controller_agent._start_dashboard(GameStats(self.current_game))
         self._send_game_data_to_agents()
 
         # start the inactivity timeout.
@@ -390,6 +394,7 @@ class ControllerAgent(TACAgent):
                  start_time: datetime.datetime = None,
                  end_time: datetime.datetime = None,
                  inactivity_timeout: Optional[int] = None,
+                 gui: bool = False,
                  **kwargs):
         """
         Initialize a Controller Agent for TAC.
@@ -406,6 +411,7 @@ class ControllerAgent(TACAgent):
         :param start_time: the time when the competition will start.
         :param end_time: the time when the competition will end.
         :param inactivity_timeout: the time when the competition will start.
+        :param gui: show the GUI.
         """
         super().__init__(public_key, oef_addr, oef_port, **kwargs)
         logger.debug("Initialized Controller Agent :\n{}".format(pprint.pformat(vars())))
@@ -413,6 +419,7 @@ class ControllerAgent(TACAgent):
         self.game_handler = GameHandler(self, min_nb_agents, money_endowment, nb_goods, fee, lower_bound_factor, upper_bound_factor, start_time)
         self.handler = ControllerHandler(self)
         self.version = version
+        self.gui = gui
 
         self._last_activity = datetime.datetime.now()
         self._inactivity_timeout = datetime.timedelta(seconds=inactivity_timeout) if inactivity_timeout is not None else datetime.timedelta(seconds=15)
@@ -422,6 +429,23 @@ class ControllerAgent(TACAgent):
         self._timeout_checker_task = None
 
         self._terminated = False
+
+        self.dashboard = None  # type: Optional[Dashboard]
+
+    def _start_dashboard(self, game_stats: GameStats):
+        if self.gui:
+            d = Dashboard(game_stats)
+            d.start()
+            self.dashboard = d
+            self.dashboard.update()
+
+    def _update_dashboard(self):
+        if self.dashboard is not None:
+            self.dashboard.update()
+
+    def _stop_dashboard(self):
+        if self.dashboard is not None:
+            self.dashboard.stop()
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
         """
@@ -483,6 +507,7 @@ class ControllerAgent(TACAgent):
         self._terminated = True
         self.game_handler.notify_tac_cancelled()
         self._loop.call_soon_threadsafe(self._task.cancel)
+        self._stop_dashboard()
 
     def check_inactivity_timeout(self, rate: Optional[float] = 2.0) -> None:
         """
@@ -525,7 +550,20 @@ def main():
     else:
         logger.setLevel(logging.INFO)
 
-    agent = ControllerAgent(public_key=args.public_key, oef_addr=args.oef_addr, oef_port=args.oef_port)
+    agent = ControllerAgent(public_key=args.public_key,
+                            oef_addr=args.oef_addr,
+                            oef_port=args.oef_port,
+                            min_nb_agents=args.nb_agents,
+                            money_endowment=args.money_endowment,
+                            nb_goods=args.nb_goods,
+                            fee=args.fee,
+                            lower_bound_factor=args.lower_bound_factor,
+                            upper_bound_factor=args.upper_bound_factor,
+                            version=args.version,
+                            start_time=args.start_time,
+                            end_time=args.end_time,
+                            inactivity_timeout=args.inactivity_timeout,
+                            gui=args.gui)
 
     agent.connect()
     agent.register()
