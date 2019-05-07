@@ -8,4 +8,4 @@ This package contains GUI tools to interact with the TAC project (e.g. data visu
 
 ### Run script
 
-    python3 sim_visualization <datadir>
+    python3 sim_visualization.py --datadir <datadir path>

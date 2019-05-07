@@ -121,3 +121,6 @@ notebooks/.ipynb_checkpoints
 
 .DS_Store
 */.DS_Store
+
+!tac/gui/.visdom_env/view/layouts.json
+tac/gui/.visdom_env/

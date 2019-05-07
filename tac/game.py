@@ -59,7 +59,7 @@ class GameConfiguration:
         :param endowments: the endowments of the agents. A matrix where the first index is the agent id
                             and the second index is the good id. A generic element e_ij at row i and column j is
                             an integer that denotes the endowment of good j for agent i.
-        :param utilities: the utilites representing the preferences of the agents. A matrix where the first
+        :param utilities: the utilities representing the preferences of the agents. A matrix where the first
                             index is the agent id and the second index is the good id. A generic element e_ij
                             at row i and column j is an integer that denotes the utility of good j for agent i.
         :param fee: the fee for a transaction.
