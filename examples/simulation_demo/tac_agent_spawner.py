@@ -25,6 +25,7 @@ import asyncio
 import datetime
 import logging
 import pprint
+import random
 from threading import Thread
 from typing import List
 
@@ -57,6 +58,7 @@ def parse_arguments():
     parser.add_argument("--inactivity-timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
     parser.add_argument("--competition-timeout", default=120, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
     parser.add_argument("--gui", action="store_true", help="Show the GUI.")
+    parser.add_argument("--seed", default=42, help="The random seed of the simulation.")
 
     arguments = parser.parse_args()
     logger.debug("Arguments: {}".format(pprint.pformat(arguments.__dict__)))
@@ -216,6 +218,7 @@ def run(tac_controller: ControllerAgent, baseline_agents: List[BaselineAgent]):
 
 if __name__ == '__main__':
     arguments = parse_arguments()
+    random.seed(arguments.seed)
     try:
 
         tac_controller = initialize_controller_agent("tac_controller", arguments.oef_addr, arguments.oef_port,

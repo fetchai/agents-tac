@@ -38,6 +38,10 @@ Agents for Trading Agents Competition
 
 ## Development
 
+- After each change to the codebase re-install package:
+
+      python3 setup.py install
+
 - To run tests:
 
       tox -e py37
