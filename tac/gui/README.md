@@ -4,8 +4,8 @@ This package contains GUI tools to interact with the TAC project (e.g. data visu
 
 ### Start a Visdom server
 
-    python3 -m server.visdom
+    python3 -m visdom.server
 
 ### Run script
 
-    python3 sim_visualization.py --datadir <datadir path>
+    python3 dashboard.py --datadir <datadir path>

@@ -123,7 +123,9 @@ setup(
         "oef",
         "numpy",
         "matplotlib",
-        "flask"
+        "flask",
+        "python-dateutil",
+        "visdom",
     ],
     dependency_links=[
         "git+ssh://git@github.com/uvue-git/oef-sdk-python.git#egg=oef",
