@@ -106,6 +106,7 @@ class BaselineAgent(NegotiationAgent):
         :return: None
         """
         if self._stopped:
+            logger.debug("Not proceeding with the main loop, since the agent has stopped.")
             return
 
         logger.debug("[{}]: Updating service directory and searching for sellers.".format(self.public_key))
