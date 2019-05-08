@@ -101,8 +101,8 @@ class Dashboard(object):
         initial_holdings = self.game_stats.holdings_history()[0]
         self.viz.heatmap(initial_holdings, env=env_main_name, win="initial_holdings", opts=dict(
             title="Initial Holdings",
-            xlabel="Agents",
-            ylabel="Quantity",
+            xlabel="Goods",
+            ylabel="Agents",
             stacked=True,
         ))
 
