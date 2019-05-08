@@ -21,6 +21,7 @@ sqlalchemy = "*"
 numpy = "*"
 matplotlib = "*"
 python-dateutil = "*"
+visdom = "*"
 
 [requires]
 python_version = "3.7"

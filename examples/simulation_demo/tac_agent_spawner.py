@@ -57,6 +57,7 @@ def parse_arguments():
     parser.add_argument("--registration-timeout", default=10, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
     parser.add_argument("--inactivity-timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
     parser.add_argument("--competition-timeout", default=120, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
+    parser.add_argument("--gui", action="store_true", help="Show the GUI.")
     parser.add_argument("--seed", default=42, help="The random seed of the simulation.")
 
     arguments = parser.parse_args()
@@ -92,7 +93,8 @@ def initialize_controller_agent(public_key: str,
                                 upper_bound_factor: int,
                                 registration_timeout: int,
                                 inactivity_timeout: int,
-                                competition_timeout: int) -> ControllerAgent:
+                                competition_timeout: int,
+                                gui: bool) -> ControllerAgent:
     """
     Initialize the controller agent.
     :param public_key: the public key of the controller agent.
@@ -106,6 +108,7 @@ def initialize_controller_agent(public_key: str,
     :param registration_timeout: the amount of time (in seconds) to wait for agents to register before attempting to start the competition.
     :param inactivity_timeout: the amount of time (in seconds) to wait during inactivity until the termination of the competition.
     :param competition_timeout: the amount of time (in seconds) to wait from the start of the competition until the termination of the competition.
+    :param gui: Show the dashboard.
     :return: the controller agent.
     """
 
@@ -115,7 +118,7 @@ def initialize_controller_agent(public_key: str,
                                      oef_port=oef_port, min_nb_agents=min_nb_agents,
                                      nb_goods=nb_goods, fee=fee, lower_bound_factor=lower_bound_factor,
                                      upper_bound_factor=upper_bound_factor, start_time=start_time, end_time=end_time,
-                                     inactivity_timeout=inactivity_timeout)
+                                     inactivity_timeout=inactivity_timeout, gui=gui)
     tac_controller.connect()
     tac_controller.register()
     return tac_controller
@@ -219,8 +222,10 @@ if __name__ == '__main__':
     try:
 
         tac_controller = initialize_controller_agent("tac_controller", arguments.oef_addr, arguments.oef_port,
-                                                     arguments.nb_agents, arguments.nb_goods, arguments.fee, arguments.lower_bound_factor,
-                                                     arguments.upper_bound_factor, arguments.registration_timeout, arguments.inactivity_timeout, arguments.competition_timeout)
+                                                     arguments.nb_agents, arguments.nb_goods, arguments.fee,
+                                                     arguments.lower_bound_factor, arguments.upper_bound_factor,
+                                                     arguments.registration_timeout, arguments.inactivity_timeout, arguments.competition_timeout,
+                                                     arguments.gui)
         baseline_agents = initialize_baseline_agents(arguments.nb_baseline_agents, arguments.oef_addr, arguments.oef_port, arguments.registers_supply)
         run(tac_controller, baseline_agents)
 

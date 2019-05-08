@@ -2,14 +2,10 @@
 
 This package contains GUI tools to interact with the TAC project (e.g. data visualization).		
 
-### Tools		
+### Start a Visdom server
 
-- Load a JSON file describing a game simulation 		
-(like the one described in [this section](../../examples/simulation_demo#other-parameters)) and		
-show some details:		
+    python3 -m server.visdom
 
-    python display_data.py		
+### Run script
 
-- Screenshot:		
-
-  ![](../../docs/misc/screenshot_gui.png)
+    python3 sim_visualization.py --datadir <datadir path>

@@ -19,6 +19,7 @@
 #
 # ------------------------------------------------------------------------------
 import argparse
+import asyncio
 import copy
 import logging
 import pprint
@@ -83,6 +84,8 @@ class BaselineAgent(NegotiationAgent):
         self._locks_as_buyer = {}  # type: Dict[str, Transaction]
         self._locks_as_seller = {}  # type: Dict[str, Transaction]
 
+        self._stopped = False
+
     def on_start(self, game_data: GameData) -> None:
         """
         Handle the 'start' event (baseline agent):
@@ -102,6 +105,10 @@ class BaselineAgent(NegotiationAgent):
         Start loop.
         :return: None
         """
+        if self._stopped:
+            logger.debug("Not proceeding with the main loop, since the agent has stopped.")
+            return
+
         logger.debug("[{}]: Updating service directory and searching for sellers.".format(self.public_key))
         if self._register_supply:
             self._register_as_seller()
@@ -115,7 +122,8 @@ class BaselineAgent(NegotiationAgent):
 
     def on_cancelled(self):
         logger.debug("[{}]: Received cancellation from the controller. Stopping...".format(self.public_key))
-        self.stop()
+        self._loop.call_soon_threadsafe(self._task.cancel)
+        self._stopped = True
 
     def _register_as_seller(self) -> None:
         """

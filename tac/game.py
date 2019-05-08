@@ -35,10 +35,9 @@ import logging
 import pprint
 from typing import List, Dict, Any, Optional
 
-from tac.protocol import Transaction
-
 from tac.helpers.misc import generate_initial_money_amounts, generate_endowments, generate_utilities, from_iso_format, \
     logarithmic_utility
+from tac.protocol import Transaction
 
 Endowment = List[int]  # an element e_j is the endowment of good j.
 Utilities = List[float]  # an element u_j is the utility value of good j.
@@ -59,7 +58,7 @@ class GameConfiguration:
         :param endowments: the endowments of the agents. A matrix where the first index is the agent id
                             and the second index is the good id. A generic element e_ij at row i and column j is
                             an integer that denotes the endowment of good j for agent i.
-        :param utilities: the utilites representing the preferences of the agents. A matrix where the first
+        :param utilities: the utilities representing the preferences of the agents. A matrix where the first
                             index is the agent id and the second index is the good id. A generic element e_ij
                             at row i and column j is an integer that denotes the utility of good j for agent i.
         :param fee: the fee for a transaction.
@@ -344,6 +343,11 @@ class Game:
         :return: the holdings matrix.
         """
         result = list(map(lambda state: state.current_holdings, self.agent_states))
+        return result
+
+    def get_balances(self) -> List[float]:
+        """Get the current balances."""
+        result = list(map(lambda state: state.balance, self.agent_states))
         return result
 
     def get_holdings_summary(self) -> str:
