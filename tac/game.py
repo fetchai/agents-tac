@@ -70,7 +70,7 @@ class GameConfiguration:
         self._utilities = utilities
         self._fee = fee
 
-        self._agent_labels = agent_labels if agent_labels is not None else self._generate_ids(self.nb_agents)
+        self._agent_labels = agent_labels if agent_labels is not None else self._generate_ids(self.nb_agents, 'agent')
 
         self._from_agent_pbk_to_agent_id = dict(map(reversed, enumerate(self.agent_labels)))
 
@@ -104,13 +104,17 @@ class GameConfiguration:
     def agent_labels(self) -> List[str]:
         return self._agent_labels
 
-    def _generate_ids(self, nb_agents: int) -> List[str]:
+    @property
+    def good_labels(self) -> List[str]:
+        return self._generate_ids(len(self.endowments[0]), 'good')
+
+    def _generate_ids(self, nb: int, thing_name: str) -> List[str]:
         """
-        Generate ids for the agents.
-        :param nb_agents: the number of agents.
+        Generate ids for things.
+        :param nb_agents: the number of things.
         :return: a list of labels.
         """
-        return ["agent_{:02}".format(i) for i in range(nb_agents)]
+        return [thing_name + "_{:02}".format(i) for i in range(nb)]
 
     def agent_id_from_label(self, agent_label: str) -> int:
         """
@@ -229,6 +233,14 @@ class Game:
             )
             for i in range(configuration.nb_agents)]  # type: List[AgentState]
 
+        # instantiate the good state for every good.
+        self.good_states = [
+            GoodState(
+                0.0,
+                configuration.fee
+            )
+            for i in range(configuration.nb_goods)]  # type: List[GoodState]
+
     @staticmethod
     def generate_game(nb_agents: int,
                       nb_goods: int,
@@ -328,10 +340,16 @@ class Game:
         buyer_state = self.agent_states[tx.buyer_id]
         seller_state = self.agent_states[tx.seller_id]
 
-        # update holdings
+        nb_instances_traded = sum(tx.quantities_by_good_id.values())
+
+        # update holdings and prices
         for good_id, quantity in tx.quantities_by_good_id.items():
             buyer_state._current_holdings[good_id] += quantity
             seller_state._current_holdings[good_id] -= quantity
+            if quantity > 0:
+                price = (tx.amount - self.configuration.fee) / nb_instances_traded
+                good_state = self.good_states[good_id]
+                good_state.price = price
 
         # update balances and charge fee to buyer
         buyer_state.balance -= tx.amount + self.configuration.fee
@@ -348,6 +366,11 @@ class Game:
     def get_balances(self) -> List[float]:
         """Get the current balances."""
         result = list(map(lambda state: state.balance, self.agent_states))
+        return result
+
+    def get_prices(self) -> List[float]:
+        """Get the current prices."""
+        result = list(map(lambda state: state.price, self.good_states))
         return result
 
     def get_holdings_summary(self) -> str:
@@ -531,6 +554,43 @@ class AgentState:
             self.balance == other.balance and \
             self.utilities == other.utilities and \
             self._current_holdings == other._current_holdings
+
+
+class GoodState:
+    """Represent the state of a good during the game."""
+
+    def __init__(self, price: float, tx_fee: int):
+        """
+        Instantiate an agent state object.
+
+        :param price: price of the good in this state.
+        # :param nb_instances: the instances of this good.
+        :param tx_fee: the fee of a transaction (i.e. state transition)
+        """
+        self.price = price
+        # self.nb_instances = nb_instances
+        self.tx_fee = tx_fee
+
+    def apply(self, transactions: List[Transaction]) -> 'GoodState':
+        """
+        Apply a list of transactions to the current state.
+        :param transactions: the sequence of transaction.
+        :return: the final state.
+        """
+
+        new_state = copy.copy(self)
+        for tx in transactions:
+            new_state.update(tx)
+
+        return new_state
+
+    def update(self, tx: Transaction) -> None:
+        """
+        Update the good state from a transaction request.
+        :param tx: the transaction request message.
+        :return: None
+        """
+        self.price = tx.amount - self.tx_fee
 
 
 class GameTransaction:

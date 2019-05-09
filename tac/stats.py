@@ -110,6 +110,22 @@ class GameStats:
 
         return result
 
+    def price_history(self):
+        nb_transactions = len(self.game.transactions)
+        nb_goods = self.game.configuration.nb_goods
+        result = np.zeros((nb_transactions + 1, nb_goods), dtype=np.float32)
+
+        temp_game = Game(self.game.configuration)
+
+        # initial balance
+        result[0, :] = np.asarray(0, dtype=np.float32)
+
+        for idx, tx in enumerate(self.game.transactions):
+            temp_game.settle_transaction(tx)
+            result[idx + 1, :] = np.asarray(temp_game.get_prices(), dtype=np.float32)
+
+        return result
+
     def plot_score_history(self, output_path: Optional[str] = None) -> None:
         """
         Plot the history of the scores, for every agent, by transaction.
