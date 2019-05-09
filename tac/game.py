@@ -108,13 +108,13 @@ class GameConfiguration:
     def good_labels(self) -> List[str]:
         return self._generate_ids(len(self.endowments[0]), 'good')
 
-    def _generate_ids(self, nb: int, thing_name: str) -> List[str]:
+    def _generate_ids(self, nb_things: int, thing_name: str) -> List[str]:
         """
         Generate ids for things.
-        :param nb_agents: the number of things.
+        :param nb_things: the number of things.
         :return: a list of labels.
         """
-        return [thing_name + "_{:02}".format(i) for i in range(nb)]
+        return [thing_name + "_{:02}".format(i) for i in range(nb_things)]
 
     def agent_id_from_label(self, agent_label: str) -> int:
         """
