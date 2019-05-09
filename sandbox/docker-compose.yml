@@ -38,7 +38,22 @@ services:
       - "172.28.1.1"
       - "--oef-port"
       - "3333"
-
+      - "--data-output-dir"
+      - "${DATA_OUTPUT_DIR}"
+      - "--experiment-id"
+      - "${EXPERIMENT_ID}"
+      - "--lower-bound-factor"
+      - "${LOWER_BOUND_FACTOR}"
+      - "--upper-bound-factor"
+      - "${UPPER_BOUND_FACTOR}"
+      - "--fee"
+      - "${FEE}"
+      - "--registration-timeout"
+      - "${REGISTRATION_TIMEOUT}"
+      - "--inactivity-timeout "
+      - "${INACTIVITY_TIMEOUT}"
+      - "--competition-timeout"
+      - "${COMPETITION_TIMEOUT}"
 networks:
     main_net:
         ipam:
