@@ -44,6 +44,8 @@ Utilities = List[float]  # an element u_j is the utility value of good j.
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_PRICE = 0.0
+
 
 class GameConfiguration:
 
@@ -236,7 +238,7 @@ class Game:
         # instantiate the good state for every good.
         self.good_states = [
             GoodState(
-                0.0,
+                DEFAULT_PRICE,
                 configuration.fee
             )
             for i in range(configuration.nb_goods)]  # type: List[GoodState]
@@ -347,7 +349,8 @@ class Game:
             buyer_state._current_holdings[good_id] += quantity
             seller_state._current_holdings[good_id] -= quantity
             if quantity > 0:
-                price = (tx.amount - self.configuration.fee) / nb_instances_traded
+                # for now the price is simply the amount proportional to the share in the bundle
+                price = tx.amount / nb_instances_traded
                 good_state = self.good_states[good_id]
                 good_state.price = price
 
@@ -564,33 +567,10 @@ class GoodState:
         Instantiate an agent state object.
 
         :param price: price of the good in this state.
-        # :param nb_instances: the instances of this good.
         :param tx_fee: the fee of a transaction (i.e. state transition)
         """
         self.price = price
-        # self.nb_instances = nb_instances
         self.tx_fee = tx_fee
-
-    def apply(self, transactions: List[Transaction]) -> 'GoodState':
-        """
-        Apply a list of transactions to the current state.
-        :param transactions: the sequence of transaction.
-        :return: the final state.
-        """
-
-        new_state = copy.copy(self)
-        for tx in transactions:
-            new_state.update(tx)
-
-        return new_state
-
-    def update(self, tx: Transaction) -> None:
-        """
-        Update the good state from a transaction request.
-        :param tx: the transaction request message.
-        :return: None
-        """
-        self.price = tx.amount - self.tx_fee
 
 
 class GameTransaction:
