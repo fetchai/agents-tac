@@ -1,1 +1,1 @@
-{"main":{"current":{}},"sim_main":{"current":{},"sim_main_layout":{"utilities":[0,24,30],"initial_holdings":[1,24,30],"configuration_details":[2,24,20],"score_history":[3,24,30],"final_holdings":[4,24,30],"balances":[5,24,30]}}}
+{"main":{"current":{}},"sim_main":{"current":{},"sim_main_layout":{"configuration_details":[0,24,20],"score_history":[1,24,30],"utilities":[2,24,30],"initial_holdings":[3,24,30],"final_holdings":[4,24,30],"price_history":[5,24,30]}}}

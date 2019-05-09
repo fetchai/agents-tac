@@ -60,7 +60,8 @@ class Dashboard(object):
         self._update_initial_holdings()
         self._update_plot_scores()
         self._update_plot_balance_history()
-        self._update_current_balances()
+        self._update_plot_price_history()
+        # self._update_current_balances()
 
     @staticmethod
     def from_datadir(datadir: str):
@@ -93,13 +94,15 @@ class Dashboard(object):
             ylabel="Agents"
         ))
 
-    def _update_current_balances(self):
-        balances = np.asarray([state.balance for state in self.game_stats.game.agent_states])
-        self.viz.bar(X=balances, env=env_main_name, win="balances", opts=dict(title="Balances"))
+    # def _update_current_balances(self):
+    #     balances = np.asarray([state.balance for state in self.game_stats.game.agent_states])
+    #     self.viz.bar(X=balances, env=env_main_name, win="balances", opts=dict(title="Balances"))
 
     def _update_initial_holdings(self):
         initial_holdings = self.game_stats.holdings_history()[0]
-        self.viz.heatmap(initial_holdings, env=env_main_name, win="initial_holdings", opts=dict(
+
+        window_name = "initial_holdings"
+        self.viz.heatmap(initial_holdings, env=env_main_name, win=window_name, opts=dict(
             title="Initial Holdings",
             xlabel="Goods",
             ylabel="Agents",
@@ -108,35 +111,51 @@ class Dashboard(object):
 
     def _update_current_holdings(self):
         initial_holdings = self.game_stats.holdings_history()[-1]
-        self.viz.heatmap(initial_holdings, env=env_main_name, win="final_holdings", opts=dict(
-            title="Current Holdings",
-            xlabel="Goods",
-            ylabel="Agents",
-            stacked=True,
-        ))
+
+        window_name = "final_holdings"
+        self.viz.heatmap(initial_holdings, env=env_main_name, win=window_name,
+                         opts=dict(
+                             title="Current Holdings",
+                             xlabel="Goods",
+                             ylabel="Agents",
+                             stacked=True,
+                         ))
 
     def _update_plot_scores(self):
         score_history = self.game_stats.score_history()
 
         window_name = "score_history"
-        self.viz.line(X=np.arange(score_history.shape[0]), Y=score_history, env=env_main_name, win=window_name, opts=dict(
-            legend=self.game_stats.game.configuration.agent_labels,
-            title="Scores",
-            xlabel="Transactions",
-            ylabel="Score"
-        ))
+        self.viz.line(X=np.arange(score_history.shape[0]), Y=score_history, env=env_main_name, win=window_name,
+                      opts=dict(
+                          legend=self.game_stats.game.configuration.agent_labels,
+                          title="Scores",
+                          xlabel="Transactions",
+                          ylabel="Score")
+                      )
 
     def _update_plot_balance_history(self):
         balance_history = self.game_stats.balance_history()
 
-        window_name = "Balances history"
+        window_name = "balance_history"
         self.viz.line(X=np.arange(balance_history.shape[0]), Y=balance_history, env=env_main_name, win=window_name,
-                 opts=dict(
-                     legend=self.game_stats.game.configuration.agent_labels,
-                     title="Balance history",
-                     xlabel="Transactions",
-                     ylabel="Money"
-                 ))
+                      opts=dict(
+                          legend=self.game_stats.game.configuration.agent_labels,
+                          title="Balance history",
+                          xlabel="Transactions",
+                          ylabel="Money")
+                      )
+
+    def _update_plot_price_history(self):
+        price_history = self.game_stats.price_history()
+
+        window_name = "price_history"
+        self.viz.line(X=np.arange(price_history.shape[0]), Y=price_history, env=env_main_name, win=window_name,
+                      opts=dict(
+                          legend=self.game_stats.game.configuration.good_labels,
+                          title="Price history",
+                          xlabel="Transactions",
+                          ylabel="Price")
+                      )
 
     def __enter__(self):
         d.start()
@@ -164,4 +183,3 @@ if __name__ == '__main__':
     with d:
         while True:
             input()
-

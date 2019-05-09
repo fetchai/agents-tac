@@ -2,10 +2,22 @@
 
 This package contains GUI tools to interact with the TAC project (e.g. data visualization).		
 
-### Start a Visdom server
+## Recommended Visualization:
 
-    python3 -m visdom.server
+This displays dynamic information.
 
-### Run script
+### To run a Visdom server via script to visualise historic data
 
-    python3 dashboard.py --datadir <datadir path>
+Set explicit experiment id `experiment_id` and then run
+
+    python3 tac/gui/dashboard.py --datadir #{data_output_dir}/#{experiment_id}
+
+Here `#{data_output_dir}/#{experiment_id}` is the path to the folder containing the `game.json` file.
+
+## Alternative Visualization
+
+This displays static information.
+
+### Run a basic flask app
+
+    python3 tac/gui/app.py

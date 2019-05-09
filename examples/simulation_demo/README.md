@@ -10,6 +10,12 @@ This tutorial shows how to simulate a simple TAC.
 
       python examples/simulation_demo/tac_agent_spawner.py
 
+- Run the simulation example with the gui flag to visualize data in realtime
+
+      python examples/simulation_demo/tac_agent_spawner.py --gui  
+
+and then open `http://localhost:8097` in your browser.
+
 ### Optional parameters
 
 - `--nb-agents` is the number of agents to participate in the competition.
@@ -26,6 +32,10 @@ This tutorial shows how to simulate a simple TAC.
 - `--registration-timeout` is the amount of time (in seconds) to wait for agents to register before attempting to start the competition.
 - `--inactivity-timeout` is the amount of time (in seconds) to wait during inactivity until the termination of the competition.
 - `--competition-timeout` is the amount of time (in seconds) to wait from the start of the competition until the termination of the competition.
+- `--seed` is the seed for the random module.
+
+### Optional flags
+- `--gui` is a flag to specify that the gui is live and expecting an event stream.
 
 Example:
 
@@ -45,6 +55,7 @@ Example:
           --registration-timeout 10
           --inactivity-timeout 20
           --competition-timeout 120
+          --seed 42
       
 It generates a `game.json` file in the `${data_output_dir}/${experiment_id}` that can be inspected with a GUI (see `tac/gui`).
 
