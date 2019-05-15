@@ -261,20 +261,18 @@ class Game:
         # instantiate the agent state for every agent.
         self.agent_states = [
             AgentState(
-                configuration.initial_money_amounts[i],
-                configuration.endowments[i],
-                configuration.utilities[i],
-                configuration.fee
+                initialization.initial_money_amounts[i],
+                initialization.endowments[i],
+                initialization.utilities[i]
             )
             for i in range(configuration.nb_agents)]  # type: List[AgentState]
 
         # instantiate the initial agent state for every agent.
         self.initial_agent_states = [
             AgentState(
-                configuration.initial_money_amounts[i],
-                configuration.endowments[i],
-                configuration.utilities[i],
-                configuration.fee
+                initialization.initial_money_amounts[i],
+                initialization.endowments[i],
+                initialization.utilities[i]
             )
             for i in range(configuration.nb_agents)]  # type: List[AgentState]
 
@@ -282,7 +280,7 @@ class Game:
         self.good_states = [
             GoodState(
                 DEFAULT_PRICE,
-                configuration.fee
+                configuration.tx_fee
             )
             for i in range(configuration.nb_goods)]  # type: List[GoodState]
 
