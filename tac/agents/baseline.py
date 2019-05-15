@@ -133,6 +133,7 @@ class BaselineAgent(NegotiationAgent):
         """
         logger.debug("[{}]: Register as seller.".format(self.public_key))
         goods_supplied_description = self._get_goods_supplied_description()
+        # TODO: define 0 explicit via a constant
         self.register_service(0, goods_supplied_description)
 
     def _register_as_buyer(self) -> None:
@@ -202,7 +203,7 @@ class BaselineAgent(NegotiationAgent):
         if len(demanded_goods_ids) == 0:
             return None
         else:
-            return build_query(demanded_goods_ids, True, self._agent_state.nb_goods)
+            return build_query(demanded_goods_ids, True, self._game_configuration.nb_goods)
 
     def _build_buyers_query(self) -> Optional[Query]:
         """
@@ -215,7 +216,7 @@ class BaselineAgent(NegotiationAgent):
         if len(supplied_goods_ids) == 0:
             return None
         else:
-            return build_query(supplied_goods_ids, False, self._agent_state.nb_goods)
+            return build_query(supplied_goods_ids, False, self._game_configuration.nb_goods)
 
     def on_search_results(self, search_id: int, agents: List[str]) -> None:
         """
@@ -253,6 +254,7 @@ class BaselineAgent(NegotiationAgent):
         query = self._build_sellers_query()
         if query is None:
             logger.debug("[{}]: No longer demanding any goods...".format(self.public_key))
+            # TODO: could restart loop here
             return
         for seller in sellers:
             if seller == self.public_key: continue
@@ -845,7 +847,7 @@ class BaselineAgent(NegotiationAgent):
         """
         Return the vector of good quantities on offer.
         An agent in principle offers any of her quantities.
-        >>> agent_state = AgentState(20, [1, 2, 3], [20.0, 40.0, 60.0], 1)
+        >>> agent_state = AgentState(20, [1, 2, 3], [20.0, 40.0, 60.0])
         >>> agent_state.get_offered_quantities()
         [1, 2, 3]
 
@@ -867,7 +869,7 @@ class BaselineAgent(NegotiationAgent):
         """
         Return the vector of good quantities requested.
         An agent in principle requests any good once.
-        >>> agent_state = AgentState(20, [1, 2, 3], [20.0, 40.0, 60.0], 1)
+        >>> agent_state = AgentState(20, [1, 2, 3], [20.0, 40.0, 60.0])
         >>> agent_state.get_requested_quantities()
         [1, 1, 1]
 

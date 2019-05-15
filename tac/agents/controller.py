@@ -42,6 +42,7 @@ from oef.schema import Description, DataModel, AttributeSchema
 from tac.core import TACAgent
 from tac.game import Game, GameTransaction
 from tac.gui.dashboard import Dashboard
+from tac.helpers.misc import generate_pbks
 from tac.helpers.plantuml import plantuml_gen
 from tac.protocol import Response, Request, Register, Unregister, Error, GameData, \
     Transaction, TransactionConfirmation, ErrorCode, Cancelled
@@ -323,9 +324,15 @@ class GameHandler:
 
         :return: a Game instance.
         """
-        agents_ids = sorted(self.registered_agents)
-        nb_agents = len(agents_ids)
-        game = Game.generate_game(nb_agents, self.nb_goods, self.money_endowment, self.fee, self.lower_bound_factor, self.upper_bound_factor, agent_ids=agents_ids)
+        agent_pbks = sorted(self.registered_agents)
+        nb_agents = len(agent_pbks)
+
+        # TODO these pbks need to come externally, should not be set here!
+        # if agent_pbks is None:
+        #     agent_pbks = generate_pbks(self.nb_agents, 'agent')
+        good_pbks = generate_pbks(self.nb_goods, 'good')
+
+        game = Game.generate_game(nb_agents, self.nb_goods, self.money_endowment, self.fee, self.lower_bound_factor, self.upper_bound_factor, agent_pbks, good_pbks)
         return game
 
     def _send_game_data_to_agents(self) -> None:
@@ -335,13 +342,17 @@ class GameHandler:
 
         :return: None.
         """
-        for public_key in self.current_game.configuration.agent_labels:
-            game_data = self.current_game.get_agent_state_from_agent_label(public_key)
+        for public_key in self.current_game.configuration.agent_pbks:
+            agent_state = self.current_game.get_agent_state_from_agent_label(public_key)
             game_data_response = GameData(
-                game_data.balance,
-                game_data.current_holdings,
-                game_data.utilities,
-                self.fee,
+                agent_state.balance,
+                agent_state.current_holdings,
+                agent_state.utilities,
+                self.current_game.configuration.nb_agents,
+                self.current_game.configuration.nb_goods,
+                self.current_game.configuration.tx_fee,
+                self.current_game.configuration.agent_pbks,
+                self.current_game.configuration.good_pbks
             )
             logger.debug("[{}]: sending GameData to '{}': {}"
                          .format(self.controller_agent.public_key, public_key, str(game_data_response)))

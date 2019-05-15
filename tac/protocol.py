@@ -239,7 +239,11 @@ class Response(Message):
                 return GameData(msg.game_data.money,
                                 list(msg.game_data.endowment),
                                 list(msg.game_data.utilities),
-                                msg.game_data.fee)
+                                msg.game_data.nb_agents,
+                                msg.game_data.nb_goods,
+                                msg.game_data.tx_fee,
+                                msg.game_data.agent_pbks,
+                                msg.game_data.good_pbks)
             elif case == "tx_confirmation":
                 return TransactionConfirmation(msg.tx_confirmation.transaction_id)
             elif case == "error":
@@ -315,28 +319,41 @@ class Error(Response):
 
 
 class GameData(Response):
-    """Class that holds the initial condition of a TAC agent."""
+    """Class that holds the game configuration and the initialization of a TAC agent."""
 
-    def __init__(self, money: int, endowment: List[int], utilities: List[float], fee: int):
+    def __init__(self, money: int, endowment: List[int], utilities: List[float], nb_agents: int, nb_goods: int,
+                 tx_fee: float, agent_pbks: List[str], good_pbks: List[str]):
         """
         Initialize a game data object.
         :param money: the money amount.
         :param endowment: the endowment for every good.
         :param utilities: the utilities for every good.
-        :param fee: the transaction fee.
+        :param nb_agents: the number of agents.
+        :param nb_goods: the number of goods.
+        :param tx_fee: the transaction fee.
+        :param agent_pbks: the pbks of the agents.
+        :param good_pbks: the pbks of the goods.
         """
         assert len(endowment) == len(utilities)
         self.money = money
         self.endowment = endowment
         self.utilities = utilities
-        self.fee = fee
+        self.nb_agents = nb_agents
+        self.nb_goods = nb_goods
+        self.tx_fee = tx_fee
+        self.agent_pbks = agent_pbks
+        self.good_pbks = good_pbks
 
     def to_pb(self) -> tac_pb2.TACController.Message:
         msg = tac_pb2.TACController.GameData()
         msg.money = self.money
         msg.endowment.extend(self.endowment)
         msg.utilities.extend(self.utilities)
-        msg.fee = self.fee
+        msg.nb_agents = self.nb_agents
+        msg.nb_goods = self.nb_goods
+        msg.tx_fee = self.tx_fee
+        msg.agent_pbks = self.agent_pbks
+        msg.good_pbks = self.good_pbks
         envelope = tac_pb2.TACController.Message()
         envelope.game_data.CopyFrom(msg)
         return envelope
@@ -346,7 +363,11 @@ class GameData(Response):
             money=self.money,
             endowment=self.endowment,
             utilities=self.utilities,
-            fee=self.fee
+            nb_agents=self.nb_agents,
+            nb_goods=self.nb_goods,
+            tx_fee=self.tx_fee,
+            agent_pbks=self.agent_pbks,
+            good_pbks=self.good_pbks
         )
 
     def __eq__(self, other):
@@ -354,7 +375,11 @@ class GameData(Response):
             self.money == other.money and \
             self.endowment == other.endowment and \
             self.utilities == other.utilities and \
-            self.fee == other.fee
+            self.nb_agents == other.nb_agents and \
+            self.nb_goods == other.nb_goods and \
+            self.tx_fee == other.tx_fee and \
+            self.agent_pbks == other.agent_pbks and \
+            self.good_pbks == other.good_pbks
 
 
 class TransactionConfirmation(Response):

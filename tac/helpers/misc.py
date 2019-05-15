@@ -292,3 +292,12 @@ def from_iso_format(date_string: str) -> datetime.datetime:
     :return: the datetime object.
     """
     return dateutil.parser.parse(date_string)
+
+
+def generate_pbks(nb_things: int, thing_name: str) -> List[str]:
+    """
+    Generate ids for things.
+    :param nb_things: the number of things.
+    :return: a list of labels.
+    """
+    return [thing_name + "_{:02}".format(i) for i in range(nb_things)]
