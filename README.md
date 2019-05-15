@@ -42,6 +42,10 @@ Agents for Trading Agents Competition
 
       python3 setup.py install
 
+- After changes to the protobuf schema run:
+
+	  python setup.py protoc
+
 - To run tests:
 
       tox -e py37

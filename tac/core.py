@@ -26,7 +26,7 @@ from oef.messages import CFP_TYPES, PROPOSE_TYPES
 from oef.query import Query, Constraint, GtEq
 from oef.schema import Description
 
-from tac.game import AgentState
+from tac.game import AgentState, GameConfiguration
 from tac.helpers.misc import TacError
 from tac.helpers.plantuml import plantuml_gen
 from tac.protocol import Register, Response, GameData, TransactionConfirmation, Error, Transaction, Cancelled
@@ -66,18 +66,18 @@ class NegotiationAgent(TACAgent):
     def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, **kwargs) -> None:
         super().__init__(public_key, oef_addr, oef_port, **kwargs)
 
-        # data about the current game
         self._controller_pbk = None  # type: Optional[str]
+        self._game_configuration = None  # type: Optional[GameConfiguration]
         self._agent_state = None  # type: Optional[AgentState]
-        self._fee = None         # type: Optional[int]
 
-    def reset(self):
-        """
-        Reset the agent to its initial condition.
-        """
-        self._controller_pbk = None
-        self._agent_state = None
-        self._fee = None
+    # def reset(self):
+    #     """
+    #     Reset the agent to its initial condition.
+    #     """
+    #     self._controller_pbk = None
+    #     self._game_configuration = None  # type: Optional[GameConfiguration]
+    #     self._agent_state = None
+    #     # self._fee = None
 
     def on_search_result(self, search_id: int, agents: List[str]):
         """
@@ -105,6 +105,7 @@ class NegotiationAgent(TACAgent):
         :param game_data: the set of parameters assigned to this agent by the TAC controller.
         :return: ``None``
         """
+        # TODO: passing gama data is pointless here
 
     @abstractmethod
     def on_tac_error(self, error: Error) -> None:
@@ -127,8 +128,8 @@ class NegotiationAgent(TACAgent):
 
         # populate data structures about the started competition
         self._controller_pbk = controller_public_key
-        self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utilities, game_data.fee)
-        self._fee = game_data.fee
+        self._game_configuration = GameConfiguration(game_data.nb_agents, game_data.nb_goods, game_data.tx_fee, game_data.agent_pbks, game_data.good_pbks)
+        self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utilities)
 
         # dispatch the handling to the developer's implementation.
         self.on_start(game_data)
@@ -142,6 +143,7 @@ class NegotiationAgent(TACAgent):
         :return: ``None``
         """
 
+    # TODO this should really be called: on_other_message
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
         # here we can get a new message from any agent, including the controller.
         # however, the one from the controller should be handled in a different way.
