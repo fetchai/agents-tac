@@ -352,8 +352,8 @@ class GameData(Response):
         msg.nb_agents = self.nb_agents
         msg.nb_goods = self.nb_goods
         msg.tx_fee = self.tx_fee
-        msg.agent_pbks = self.agent_pbks
-        msg.good_pbks = self.good_pbks
+        msg.agent_pbks.extend(self.agent_pbks)
+        msg.good_pbks.extend(self.good_pbks)
         envelope = tac_pb2.TACController.Message()
         envelope.game_data.CopyFrom(msg)
         return envelope

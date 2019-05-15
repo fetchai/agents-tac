@@ -25,8 +25,8 @@ message TACController {
         int32 nb_agents = 4;
         int32 nb_goods = 5;
         double tx_fee = 6;
-        repeated int32 agent_pbks = 7;
-        repeated int32 good_pbks = 8;
+        repeated string agent_pbks = 7;
+        repeated string good_pbks = 8;
     }
 
     message TransactionConfirmation {

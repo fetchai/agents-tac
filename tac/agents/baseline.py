@@ -728,11 +728,11 @@ class BaselineAgent(NegotiationAgent):
 
         state_after_locks = self._state_after_locks_as_buyer()
 
-        if not state_after_locks.check_transaction_is_consistent(transaction):
+        if not state_after_locks.check_transaction_is_consistent(transaction, self._game_configuration.tx_fee):
             logger.debug("[{}]: the proposed transaction is not consistent with the state after locks.".format(self.public_key))
             return False
 
-        proposal_delta_score = state_after_locks.get_score_diff_from_transaction(transaction)
+        proposal_delta_score = state_after_locks.get_score_diff_from_transaction(transaction, self._game_configuration.tx_fee)
 
         result = proposal_delta_score >= 0
         logger.debug("[{}]: is good proposal for buyer? {}: tx_id={}, "
@@ -758,11 +758,11 @@ class BaselineAgent(NegotiationAgent):
 
         state_after_locks = self._state_after_locks_as_seller()
 
-        if not state_after_locks.check_transaction_is_consistent(transaction):
+        if not state_after_locks.check_transaction_is_consistent(transaction, self._game_configuration.tx_fee):
             logger.debug("[{}]: the proposed transaction is not consistent with the state after locks.".format(self.public_key))
             return False
 
-        proposal_delta_score = state_after_locks.get_score_diff_from_transaction(transaction)
+        proposal_delta_score = state_after_locks.get_score_diff_from_transaction(transaction, self._game_configuration.tx_fee)
 
         result = proposal_delta_score >= 0
         logger.debug("[{}]: is good proposal for seller? {}: tx_id={}, delta_score={}, amount={}"
@@ -816,7 +816,7 @@ class BaselineAgent(NegotiationAgent):
         :return: the agent state with the locks applied to current state
         """
         transactions = list(self._locks_as_seller.values())
-        state_after_locks = self._agent_state.apply(transactions)
+        state_after_locks = self._agent_state.apply(transactions, self._game_configuration.tx_fee)
         return state_after_locks
 
     def _state_after_locks_as_buyer(self):
@@ -826,7 +826,7 @@ class BaselineAgent(NegotiationAgent):
         :return: the agent state with the locks applied to current state
         """
         transactions = list(self._locks_as_buyer.values())
-        state_after_locks = self._agent_state.apply(transactions)
+        state_after_locks = self._agent_state.apply(transactions, self._game_configuration.tx_fee)
         return state_after_locks
 
     def _remove_lock(self, transaction_id: str):
@@ -920,7 +920,7 @@ class BaselineAgent(NegotiationAgent):
             state_after_locks = self._state_after_locks_as_buyer()
             delta_holdings = lis
             marginal_utility_from_single_good = marginal_utility(state_after_locks.utilities, state_after_locks.current_holdings, delta_holdings)
-            desc.values["price"] = round(marginal_utility_from_single_good, 2) - state_after_locks.tx_fee - 0.01  # to avoid rounding up issues
+            desc.values["price"] = round(marginal_utility_from_single_good, 2) - self._game_configuration.tx_fee - 0.01  # to avoid rounding up issues
             proposals.append(desc)
         return proposals
 

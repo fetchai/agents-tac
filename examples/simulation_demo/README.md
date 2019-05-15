@@ -12,7 +12,7 @@ This tutorial shows how to simulate a simple TAC.
 
 - Run the simulation example with the gui flag to visualize data in realtime
 
-      python examples/simulation_demo/tac_agent_spawner.py --gui  
+      python examples/simulation_demo/tac_agent_spawner.py --gui
 
 and then open `http://localhost:8097` in your browser.
 

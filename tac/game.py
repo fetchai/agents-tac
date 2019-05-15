@@ -96,7 +96,7 @@ class GameConfiguration:
     def good_pbks(self) -> List[str]:
         return self._good_pbks
 
-    def agent_id_from_label(self, agent_pbk: str) -> int:
+    def agent_id_from_pbk(self, agent_pbk: str) -> int:
         """
         From the pbk of an agent to his id.
         :param agent_pbk: the pbk of the agent.
@@ -223,6 +223,7 @@ class GameInitialization:
             self.utilities == other.utilities
 
 
+# TODO this is actually a GameState; rename
 class Game:
     """
     >>> money_amounts = [20, 20, 20]
@@ -267,6 +268,7 @@ class Game:
             )
             for i in range(configuration.nb_agents)]  # type: List[AgentState]
 
+        # TODO remove this!
         # instantiate the initial agent state for every agent.
         self.initial_agent_states = [
             AgentState(
@@ -279,8 +281,7 @@ class Game:
         # instantiate the good state for every good.
         self.good_states = [
             GoodState(
-                DEFAULT_PRICE,
-                configuration.tx_fee
+                DEFAULT_PRICE
             )
             for i in range(configuration.nb_goods)]  # type: List[GoodState]
 
@@ -322,21 +323,13 @@ class Game:
         """Get the current scores for every agent."""
         return [agent_state.get_score() for agent_state in self.agent_states]
 
-    def agent_id_from_label(self, agent_label: str) -> int:
+    def get_agent_state_from_agent_label(self, agent_pbk: str) -> 'AgentState':
         """
-        Get agent id from label.
-        :param agent_label: the label for the agent.
-        :return: the agent id associated with the label.
-        """
-        return self.configuration.agent_id_from_label(agent_label)
-
-    def get_agent_state_from_agent_label(self, agent_label: str) -> 'AgentState':
-        """
-        Get agent state from agent label.
-        :param agent_label: the agent's label.
+        Get agent state from agent pbk.
+        :param agent_pbk: the agent's pbk.
         :return: the agent state of the agent.
         """
-        return self.agent_states[self.configuration.agent_id_from_label(agent_label)]
+        return self.agent_states[self.configuration.agent_id_from_pbk(agent_pbk)]
 
     def is_transaction_valid(self, tx: 'GameTransaction') -> bool:
         """
@@ -517,14 +510,14 @@ class AgentState:
         score = goods_score + money_score
         return score
 
-    def get_score_diff_from_transaction(self, tx: Transaction) -> float:
+    def get_score_diff_from_transaction(self, tx: Transaction, tx_fee: float) -> float:
         """
         Simulate a transaction and get the resulting score (taking into account the fee)
         :param tx: a transaction object.
         :return: the score.
         """
         current_score = self.get_score()
-        new_state = self.apply([tx])
+        new_state = self.apply([tx], tx_fee)
         new_score = new_state.get_score()
         return new_score - current_score
 
@@ -541,7 +534,7 @@ class AgentState:
     #     for good_id, quantity in tx.quantities_by_good_id.items():
     #         self._current_holdings[good_id] += -switch * quantity
 
-    def check_transaction_is_consistent(self, tx: Transaction) -> bool:
+    def check_transaction_is_consistent(self, tx: Transaction, tx_fee: float) -> bool:
         """
         Check if the transaction is consistent.  E.g. check that the agent state has enough money if it is a buyer
         or enough holdings if it is a seller.
@@ -550,7 +543,7 @@ class AgentState:
 
         if tx.buyer:
             # check if we have the money.
-            result = self.balance >= tx.amount + self.tx_fee
+            result = self.balance >= tx.amount + tx_fee
         else:
             # check if we have the goods.
             result = True
@@ -559,7 +552,7 @@ class AgentState:
         return result
 
     # Todo: think about potentially taking apply and update out (simplifies not having to worry about changing state from within the class)
-    def apply(self, transactions: List[Transaction]) -> 'AgentState':
+    def apply(self, transactions: List[Transaction], tx_fee: float) -> 'AgentState':
         """
         Apply a list of transactions to the current state.
         :param transactions: the sequence of transaction.
@@ -568,18 +561,18 @@ class AgentState:
 
         new_state = copy.copy(self)
         for tx in transactions:
-            new_state.update(tx)
+            new_state.update(tx, tx_fee)
 
         return new_state
 
-    def update(self, tx: Transaction) -> None:
+    def update(self, tx: Transaction, tx_fee: float) -> None:
         """
         Update the agent state from a transaction request.
         :param tx: the transaction request message.
         :return: None
         """
         if tx.buyer:
-            fees = tx.amount + self.tx_fee
+            fees = tx.amount + tx_fee
             self.balance -= fees
         else:
             self.balance += tx.amount
@@ -608,15 +601,13 @@ class AgentState:
 class GoodState:
     """Represent the state of a good during the game."""
 
-    def __init__(self, price: float, tx_fee: int):
+    def __init__(self, price: float):
         """
         Instantiate an agent state object.
 
         :param price: price of the good in this state.
-        :param tx_fee: the fee of a transaction (i.e. state transition)
         """
         self.price = price
-        self.tx_fee = tx_fee
 
 
 class GameTransaction:

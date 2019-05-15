@@ -77,14 +77,12 @@ class Dashboard(object):
         self.viz.properties([
             {'type': 'number', 'name': '# agents', 'value': self.game_stats.game.configuration.nb_agents},
             {'type': 'number', 'name': '# goods', 'value': self.game_stats.game.configuration.nb_goods},
-            {'type': 'number', 'name': 'fee', 'value': self.game_stats.game.configuration.fee},
-            {'type': 'number', 'name': 'initial balance',
-             'value': self.game_stats.game.configuration.initial_money_amounts[0]},
+            {'type': 'number', 'name': 'tx fee', 'value': self.game_stats.game.configuration.tx_fee},
             {'type': 'number', 'name': '# transactions', 'value': len(self.game_stats.game.transactions)},
         ], env=env_main_name, win=window_name, opts=dict(title="Configuration"))
 
     def _update_utilities(self):
-        utilities = self.game_stats.game.configuration.utilities
+        utilities = self.game_stats.game.initialization.utilities
         utilities = np.asarray(utilities)
 
         window_name = "utilities"
@@ -127,7 +125,7 @@ class Dashboard(object):
         window_name = "score_history"
         self.viz.line(X=np.arange(score_history.shape[0]), Y=score_history, env=env_main_name, win=window_name,
                       opts=dict(
-                          legend=self.game_stats.game.configuration.agent_labels,
+                          legend=self.game_stats.game.configuration.agent_pbks,
                           title="Scores",
                           xlabel="Transactions",
                           ylabel="Score")
@@ -139,7 +137,7 @@ class Dashboard(object):
         window_name = "balance_history"
         self.viz.line(X=np.arange(balance_history.shape[0]), Y=balance_history, env=env_main_name, win=window_name,
                       opts=dict(
-                          legend=self.game_stats.game.configuration.agent_labels,
+                          legend=self.game_stats.game.configuration.agent_pbks,
                           title="Balance history",
                           xlabel="Transactions",
                           ylabel="Money")
@@ -151,7 +149,7 @@ class Dashboard(object):
         window_name = "price_history"
         self.viz.line(X=np.arange(price_history.shape[0]), Y=price_history, env=env_main_name, win=window_name,
                       opts=dict(
-                          legend=self.game_stats.game.configuration.good_labels,
+                          legend=self.game_stats.game.configuration.good_pbks,
                           title="Price history",
                           xlabel="Transactions",
                           ylabel="Price")

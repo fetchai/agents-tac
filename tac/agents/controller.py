@@ -278,15 +278,15 @@ class GameHandler:
         """
         return self.current_game is not None
 
-    def from_request_to_game_tx(self, transaction: Transaction, agent_label: str) -> GameTransaction:
+    def from_request_to_game_tx(self, transaction: Transaction, agent_pbk: str) -> GameTransaction:
         """
         From a transaction request message to a game transaction
         :param transaction: the request message for a transaction.
         :param agent_label: the agent label that sent the transaction.
         :return: the game transaction.
         """
-        sender_id = self.controller_agent.game_handler.current_game.configuration.agent_id_from_label(agent_label)
-        receiver_id = self.current_game.agent_id_from_label(transaction.counterparty)
+        sender_id = self.controller_agent.game_handler.current_game.configuration.agent_id_from_pbk(agent_pbk)
+        receiver_id = self.current_game.configuration.agent_id_from_pbk(transaction.counterparty)
         buyer_id, seller_id = (sender_id, receiver_id) if transaction.buyer else (receiver_id, sender_id)
 
         tx = GameTransaction(
