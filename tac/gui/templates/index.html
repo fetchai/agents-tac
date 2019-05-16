@@ -43,12 +43,12 @@
       </tr>
     </thead>
     <tbody>
-      {% for idx, agent_state in idx_agent_states %}
+      {% for agent_pbk, agent_state in agent_pbks_agent_states %}
         <tr>
-          <th>{{ game.configuration.agent_labels[idx] }}</th>
-          <th>{{ game.initial_agent_states[idx].get_score() }}</th>
-          <th>{{ game.configuration.endowments[idx] }}</th>
-          <th>{{ game.configuration.utility_params[idx] }}</th>
+          <th>{{ game.configuration.agent_labels[agent_pbk] }}</th>
+          <th>{{ game.initial_agent_states[agent_pbk].get_score() }}</th>
+          <th>{{ game.configuration.endowments[agent_pbk] }}</th>
+          <th>{{ game.configuration.utility_params[agent_pbk] }}</th>
           <th>{{ agent_state.current_holdings }}</th>
           <th>{{ agent_state.balance }}</th>
           <th>{{ agent_state.get_score() }}</th>
@@ -80,17 +80,17 @@
       {% for idx, game_transaction in idx_transactions %}
         <tr>
           <th>{{ idx }}</th>
-          <th>{{ game.configuration.agent_labels[game_transaction.buyer_id]}}</th>
-          <th>{{ game.configuration.agent_labels[game_transaction.seller_id]}}</th>
+          <th>{{ game.configuration.agent_labels[game_transaction.buyer_pbk]}}</th>
+          <th>{{ game.configuration.agent_labels[game_transaction.seller_pbk]}}</th>
           <th>{{ game_transaction.amount }}</th>
-          <th>{{ holdings_history[idx][game_transaction.buyer_id] }}</th>
-          <th>{{ score_history[idx][game_transaction.buyer_id] }}</th>
-          <th>{{ holdings_history[idx][game_transaction.seller_id] }}</th>
-          <th>{{ score_history[idx][game_transaction.seller_id] }}</th>
-          <th>{{ holdings_history[idx + 1][game_transaction.buyer_id] }}</th>
-          <th>{{ score_history[idx + 1][game_transaction.buyer_id] }}</th>
-          <th>{{ holdings_history[idx + 1][game_transaction.seller_id] }}</th>
-          <th>{{ score_history[idx + 1][game_transaction.seller_id] }}</th>
+          <th>{{ holdings_history[idx][game_transaction.buyer_pbk] }}</th>
+          <th>{{ score_history[idx][game_transaction.buyer_pbk] }}</th>
+          <th>{{ holdings_history[idx][game_transaction.seller_pbk] }}</th>
+          <th>{{ score_history[idx][game_transaction.seller_pbk] }}</th>
+          <th>{{ holdings_history[idx + 1][game_transaction.buyer_pbk] }}</th>
+          <th>{{ score_history[idx + 1][game_transaction.buyer_pbk] }}</th>
+          <th>{{ holdings_history[idx + 1][game_transaction.seller_pbk] }}</th>
+          <th>{{ score_history[idx + 1][game_transaction.seller_pbk] }}</th>
         </tr>
       {% endfor %}
     </tbody>

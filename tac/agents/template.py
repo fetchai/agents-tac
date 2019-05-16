@@ -19,7 +19,7 @@
 #
 # ------------------------------------------------------------------------------
 
-from tac.agents.baseline import BaselineAgent
+from tac.agents.baseline import BaselineAgent, BaselineStrategy
 
 
 class MyAgent(BaselineAgent, BaselineStrategy):

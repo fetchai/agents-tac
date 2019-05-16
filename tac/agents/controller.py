@@ -175,17 +175,21 @@ class ControllerHandler(object):
         """
         logger.debug("Handling transaction: {}".format(request))
 
+        # if transaction arrives first time then put it into the pending pool
         if request.transaction_id not in self._pending_transaction_requests:
             logger.debug("Put transaction request in the pool: {}".format(request.transaction_id))
             self._pending_transaction_requests[request.transaction_id] = request
+        # if transaction arrives second time then process it
         else:
             # TODO how to handle failures in matching transaction?
             #   that is, should the pending txs be removed from the pool?
             #       if yes, should the senders be notified and how?
             #  don't care for now, because assuming only (properly implemented) baseline agents.
             pending_tx = self._pending_transaction_requests.pop(request.transaction_id)
+            logger.debug("GOT HERE!")
             if request.matches(pending_tx):
                 tx = self.game_handler.from_request_to_game_tx(request, public_key)
+
                 if self.game_handler.current_game.is_transaction_valid(tx):
                     return self._handle_valid_transaction(request, public_key)
                 else:
@@ -278,20 +282,19 @@ class GameHandler:
         """
         return self.current_game is not None
 
-    def from_request_to_game_tx(self, transaction: Transaction, agent_pbk: str) -> GameTransaction:
+    def from_request_to_game_tx(self, transaction: Transaction, sender_pbk: str) -> GameTransaction:
         """
         From a transaction request message to a game transaction
         :param transaction: the request message for a transaction.
-        :param agent_label: the agent label that sent the transaction.
+        :param sender_pbk: the agent pbk that sent the transaction.
         :return: the game transaction.
         """
-        sender_id = self.controller_agent.game_handler.current_game.configuration.agent_id_from_pbk(agent_pbk)
-        receiver_id = self.current_game.configuration.agent_id_from_pbk(transaction.counterparty)
-        buyer_id, seller_id = (sender_id, receiver_id) if transaction.buyer else (receiver_id, sender_id)
+        receiver_pbk = transaction.counterparty
+        buyer_pbk, seller_pbk = (sender_pbk, receiver_pbk) if transaction.buyer else (receiver_pbk, sender_pbk)
 
         tx = GameTransaction(
-            buyer_id,
-            seller_id,
+            buyer_pbk,
+            seller_pbk,
             transaction.amount,
             transaction.quantities_by_good_id
         )

@@ -92,10 +92,6 @@ class Dashboard(object):
             ylabel="Agents"
         ))
 
-    # def _update_current_balances(self):
-    #     balances = np.asarray([state.balance for state in self.game_stats.game.agent_states])
-    #     self.viz.bar(X=balances, env=env_main_name, win="balances", opts=dict(title="Balances"))
-
     def _update_initial_holdings(self):
         initial_holdings = self.game_stats.holdings_history()[0]
 

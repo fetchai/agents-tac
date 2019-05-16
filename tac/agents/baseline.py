@@ -687,7 +687,7 @@ class BaselineAgent(NegotiationAgent):
         """
         logger.debug("[{}]: on transaction confirmed.".format(self.public_key))
         transaction = self._locks[tx_confirmation.transaction_id]
-        self._agent_state.update(transaction)
+        self._agent_state.update(transaction, self._game_configuration.tx_fee)
         self._remove_lock(tx_confirmation.transaction_id)
 
         self._start_loop()

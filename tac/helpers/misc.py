@@ -47,8 +47,8 @@ def callback(fut):
         raise e
 
 
-def generate_transaction_id(buyer, seller, dialogue_id):
-    transaction_id = "{}_{}_{}".format(buyer, seller, dialogue_id)
+def generate_transaction_id(buyer_pbk, seller_pbk, dialogue_id):
+    transaction_id = buyer_pbk + "_" + seller_pbk + "_" + "{}".format(dialogue_id)
     return transaction_id
 
 
@@ -300,4 +300,6 @@ def generate_pbks(nb_things: int, thing_name: str) -> List[str]:
     :param nb_things: the number of things.
     :return: a list of labels.
     """
-    return [thing_name + "_{:02}".format(i) for i in range(nb_things)]
+    max_number_of_digits = math.ceil(math.log10(nb_things))
+    string_format = "tac_" + thing_name + "_{:0" + str(max_number_of_digits) + "}"
+    return [string_format.format(i) for i in range(nb_things)]

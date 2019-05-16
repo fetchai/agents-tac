@@ -74,7 +74,7 @@ def upload():
                            nb_goods=game.configuration.nb_goods,
                            initial_money_amounts=game.configuration.initial_money_amounts,
                            fee=game.configuration.fee,
-                           idx_agent_states=enumerate(game.agent_states),
+                           agent_pbks_agent_states=game.agent_states.items(),
                            game=game,
                            nb_transactions=len(game.transactions),
                            saved_plot_figure=output_filepath,
