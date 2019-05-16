@@ -442,14 +442,16 @@ class Game:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "configuration": self.configuration.to_dict(),
+            "initialization": self.initialization.to_dict(),
             "transactions": [t.to_dict() for t in self.transactions]
         }
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> 'Game':
         configuration = GameConfiguration.from_dict(d["configuration"])
+        initialization = GameInitialization.from_dict(d["initialization"])
 
-        game = Game(configuration)
+        game = Game(configuration, initialization)
         for tx_dict in d["transactions"]:
             tx = GameTransaction.from_dict(tx_dict)
             game.settle_transaction(tx)
