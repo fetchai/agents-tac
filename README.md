@@ -1,6 +1,12 @@
 # tac-agents
 Agents for Trading Agents Competition
 
+## Cloning
+
+This repository contains submodules. Clone with recursive strategy:
+
+	  git clone git@github.com:uvue-git/tac-agents.git --recursive
+
 ## Repository structure
 
 - `data`: default folder for storage of the simulation data.
