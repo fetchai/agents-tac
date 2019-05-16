@@ -24,42 +24,15 @@ from typing import List, Optional
 from oef.agents import OEFAgent
 from oef.messages import CFP_TYPES, PROPOSE_TYPES
 from oef.query import Query, Constraint, GtEq
-from oef.schema import Description
 
 from tac.game import AgentState, GameConfiguration
 from tac.helpers.misc import TacError
-from tac.helpers.plantuml import plantuml_gen
 from tac.protocol import Register, Response, GameData, TransactionConfirmation, Error, Transaction, Cancelled
 
 logger = logging.getLogger(__name__)
 
 
-class TACAgent(OEFAgent):
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, **kwargs) -> None:
-        super().__init__(public_key, oef_addr, oef_port, **kwargs)
-
-    def register_service(self, msg_id: int, service_description: Description) -> None:
-        super().register_service(msg_id, service_description)
-        plantuml_gen.register_service(self.public_key, service_description)
-
-    def search_services(self, search_id: int, query: Query, additional_msg: str = "") -> None:
-        super().search_services(search_id, query)
-        plantuml_gen.search_services(self.public_key, query, additional_msg=additional_msg)
-
-    def on_search_result(self, search_id: int, agents: List[str]):
-        plantuml_gen.on_search_result(self.public_key, agents)
-
-    def send_cfp(self, msg_id: int, dialogue_id: int, destination: str, target: int, query: CFP_TYPES) -> None:
-        super().send_cfp(msg_id, dialogue_id, destination, target, query)
-        plantuml_gen.send_cfp(self.public_key, destination, dialogue_id, "")
-
-    def send_propose(self, msg_id: int, dialogue_id: int, destination: str, target: int,
-                     proposals: PROPOSE_TYPES) -> None:
-        super().send_propose(msg_id, dialogue_id, destination, target, proposals)
-        plantuml_gen.send_propose(self.public_key, destination, dialogue_id, Description({}))
-
-
-class NegotiationAgent(TACAgent):
+class NegotiationAgent(OEFAgent):
 
     TAC_CONTROLLER_SEARCH_ID = 1
 
@@ -70,14 +43,23 @@ class NegotiationAgent(TACAgent):
         self._game_configuration = None  # type: Optional[GameConfiguration]
         self._agent_state = None  # type: Optional[AgentState]
 
-    # def reset(self):
-    #     """
-    #     Reset the agent to its initial condition.
-    #     """
-    #     self._controller_pbk = None
-    #     self._game_configuration = None  # type: Optional[GameConfiguration]
-    #     self._agent_state = None
-    #     # self._fee = None
+    @abstractmethod
+    def on_start(self, game_data: GameData) -> None:
+        """
+        On receiving game data from the TAC controller, do the setup.
+
+        :param game_data: the set of parameters assigned to this agent by the TAC controller.
+        :return: ``None``
+        """
+        # TODO: passing gama data is pointless here
+
+    @abstractmethod
+    def on_cancelled(self):
+        """
+        Handle the cancellation of the competition from the TAC controller.
+        
+        :return: ``None``
+        """
 
     def on_search_result(self, search_id: int, agents: List[str]):
         """
@@ -91,34 +73,84 @@ class NegotiationAgent(TACAgent):
         else:
             self.on_search_results(search_id, agents)
 
-    def on_search_results(self, search_id: int, agents: List[str]):
-        """Handle search results. To be implemented by the developer.
-
-        TODO this is different from the SDK's on_search_result,
-             because that one is used for low-level operations."""
-
     @abstractmethod
-    def on_start(self, game_data: GameData) -> None:
+    def on_search_results(self, search_id: int, agents: List[str]):
         """
-        On receiving game data from the TAC controller, do the setup.
+        Handle search results.
 
-        :param game_data: the set of parameters assigned to this agent by the TAC controller.
         :return: ``None``
         """
-        # TODO: passing gama data is pointless here
+        # TODO this is different from the SDK's on_search_result, because that one is used for low-level operations.
+
+    @abstractmethod
+    def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES):
+        """
+        Handle call for proposal message.
+
+        :param msg_id: the message id
+        :param dialogue_id: the dialogue id
+        :param origin: the public key of the message sender.
+        :param target: the targeted message id to which this message is a response.
+        :param query: the query associated with the cfp.
+
+        :return: None
+        """
+
+    @abstractmethod
+    def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES) -> None:
+        """
+        On propose dispatcher.
+
+        :param msg_id: the message id
+        :param dialogue_id: the dialogue id
+        :param origin: the public key of the message sender.
+        :param target: the targeted message id to which this message is a response.
+        :param proposals: the proposals associated with the message.
+
+        :return: None
+        """
+
+    @abstractmethod
+    def on_decline(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
+        """
+        On Decline handler.
+
+        :param msg_id: the message id
+        :param dialogue_id: the dialogue id
+        :param origin: the public key of the message sender.
+        :param target: the targeted message id to which this message is a response.
+
+        :return: None
+        """
+
+    @abstractmethod
+    def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
+        """
+        On Accept handler.
+
+        :param msg_id: the message id
+        :param dialogue_id: the dialogue id
+        :param origin: the public key of the message sender.
+        :param target: the targeted message id to which this message is a response.
+
+        :return: None
+        """
+
+    @abstractmethod
+    def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
+        """
+        On Transaction confirmed handler.
+
+        :param tx_confirmation: the transaction confirmation
+
+        :return: None
+        """
 
     @abstractmethod
     def on_tac_error(self, error: Error) -> None:
         """
         Handle error messages from the TAC controller.
 
-        :return: ``None``
-        """
-
-    @abstractmethod
-    def on_cancelled(self):
-        """
-        Handle the cancellation of the competition from the TAC controller.
         :return: ``None``
         """
 
@@ -129,19 +161,10 @@ class NegotiationAgent(TACAgent):
         # populate data structures about the started competition
         self._controller_pbk = controller_public_key
         self._game_configuration = GameConfiguration(game_data.nb_agents, game_data.nb_goods, game_data.tx_fee, game_data.agent_pbks, game_data.good_pbks)
-        self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utilities)
+        self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
 
         # dispatch the handling to the developer's implementation.
         self.on_start(game_data)
-
-    @abstractmethod
-    def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
-        """
-        Handle the transaction confirmation.
-
-        :param tx_confirmation: the data of the confirmed transaction.
-        :return: ``None``
-        """
 
     # TODO this should really be called: on_other_message
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
@@ -200,3 +223,12 @@ class NegotiationAgent(TACAgent):
         """
         dialogue_id = abs(hash(tx.transaction_id) % 2**31)
         self.send_message(0, dialogue_id, self._controller_pbk, tx.serialize())
+
+    # def reset(self):
+    #     """
+    #     Reset the agent to its initial condition.
+    #     """
+    #     self._controller_pbk = None
+    #     self._game_configuration = None  # type: Optional[GameConfiguration]
+    #     self._agent_state = None
+    #     # self._fee = None

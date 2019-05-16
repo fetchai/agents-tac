@@ -37,9 +37,9 @@ from threading import Thread
 from typing import Dict
 from typing import Optional, Set
 
+from oef.agents import OEFAgent
 from oef.schema import Description, DataModel, AttributeSchema
 
-from tac.core import TACAgent
 from tac.game import Game, GameTransaction
 from tac.gui.dashboard import Dashboard
 from tac.helpers.misc import generate_pbks
@@ -347,7 +347,7 @@ class GameHandler:
             game_data_response = GameData(
                 agent_state.balance,
                 agent_state.current_holdings,
-                agent_state.utilities,
+                agent_state.utility_params,
                 self.current_game.configuration.nb_agents,
                 self.current_game.configuration.nb_goods,
                 self.current_game.configuration.tx_fee,
@@ -386,7 +386,7 @@ class GameHandler:
             self.controller_agent.send_message(0, 0, tac_agent, Cancelled().serialize())
 
 
-class ControllerAgent(TACAgent):
+class ControllerAgent(OEFAgent):
     CONTROLLER_DATAMODEL = DataModel("tac", [
         AttributeSchema("version", int, True, "Version number of the TAC Controller Agent."),
     ])

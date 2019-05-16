@@ -37,12 +37,12 @@ import logging
 import pprint
 from typing import List, Dict, Any, Optional
 
-from tac.helpers.misc import generate_initial_money_amounts, generate_endowments, generate_utilities, from_iso_format, \
+from tac.helpers.misc import generate_initial_money_amounts, generate_endowments, generate_utility_params, from_iso_format, \
     logarithmic_utility
 from tac.protocol import Transaction
 
 Endowment = List[int]  # an element e_j is the endowment of good j.
-Utilities = List[float]  # an element u_j is the utility value of good j.
+UtilityParams = List[float]  # an element u_j is the utility value of good j.
 
 logger = logging.getLogger(__name__)
 
@@ -151,21 +151,21 @@ class GameInitialization:
     def __init__(self,
                  initial_money_amounts: List[int],
                  endowments: List[Endowment],
-                 utilities: List[Utilities]):
+                 utility_params: List[UtilityParams]):
         """
         Initialization of a game.
         :param initial_money_amounts: the initial amount of money of every agent.
         :param endowments: the endowments of the agents. A matrix where the first index is the agent id
                             and the second index is the good id. A generic element e_ij at row i and column j is
                             an integer that denotes the endowment of good j for agent i.
-        :param utilities: the utilities representing the preferences of the agents. A matrix where the first
+        :param utility_params: the utility params representing the preferences of the agents. A matrix where the first
                             index is the agent id and the second index is the good id. A generic element e_ij
                             at row i and column j is an integer that denotes the utility of good j for agent i.
         """
 
         self._initial_money_amounts = initial_money_amounts
         self._endowments = endowments
-        self._utilities = utilities
+        self._utility_params = utility_params
 
         self._check_consistency()
 
@@ -178,8 +178,8 @@ class GameInitialization:
         return self._endowments
 
     @property
-    def utilities(self) -> List[Utilities]:
-        return self._utilities
+    def utility_params(self) -> List[UtilityParams]:
+        return self._utility_params
 
     def _check_consistency(self):
         """
@@ -190,20 +190,20 @@ class GameInitialization:
 
         assert all(money >= 0 for money in self.initial_money_amounts), "Money must be non-negative."
         assert all(e >= 0 for row in self.endowments for e in row), "Endowments must be non-negative."
-        assert all(e >= 0 for row in self.utilities for e in row), "Utilities must be non-negative."
+        assert all(e >= 0 for row in self.utility_params for e in row), "UtilityParams must be non-negative."
 
         # checks that the data structure have information about the right number of agents
         assert len(self.endowments) == len(self.initial_money_amounts)
-        assert len(self.endowments) == len(self.utilities)
+        assert len(self.endowments) == len(self.utility_params)
 
         # checks that all the rows have matching dimensions.
-        assert all(len(row_e) == len(row_u) for row_e, row_u in zip(self.endowments, self.utilities)), "Dimensions don't match for utilities and endowments rows."
+        assert all(len(row_e) == len(row_u) for row_e, row_u in zip(self.endowments, self.utility_params)), "Dimensions don't match for utility_params and endowments rows."
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "initial_money_amounts": self.initial_money_amounts,
             "endowments": self.endowments,
-            "utilities": self.utilities
+            "utility_params": self.utility_params
         }
 
     @classmethod
@@ -212,7 +212,7 @@ class GameInitialization:
         obj = cls(
             d["initial_money_amounts"],
             d["endowments"],
-            d["utilities"],
+            d["utility_params"],
         )
         return obj
 
@@ -220,7 +220,7 @@ class GameInitialization:
         return isinstance(other, GameInitialization) and \
             self.initial_money_amounts == other.initial_money_amounts and \
             self.endowments == other.endowments and \
-            self.utilities == other.utilities
+            self.utility_params == other.utility_params
 
 
 # TODO this is actually a GameState; rename
@@ -231,18 +231,17 @@ class Game:
     ... [1, 1, 1],
     ... [2, 1, 1],
     ... [1, 1, 2]]
-    >>> utilities = [
+    >>> utility_params = [
     ... [20.0, 40.0, 40.0],
     ... [10.0, 50.0, 40.0],
     ... [40.0, 30.0, 30.0]]
     >>> fee = 1
-    >>> game_configuration = GameConfiguration(
+    >>> game_initialization = GameInitialization(
     ...     money_amounts,
     ...     endowments,
-    ...     utilities,
-    ...     fee
+    ...     utility_params
     ... )
-    >>> game = Game(game_configuration)
+    >>> game = Game(game_initialization)
 
     Get the scores:
     >>> game.get_scores()
@@ -264,7 +263,7 @@ class Game:
             AgentState(
                 initialization.initial_money_amounts[i],
                 initialization.endowments[i],
-                initialization.utilities[i]
+                initialization.utility_params[i]
             )
             for i in range(configuration.nb_agents)]  # type: List[AgentState]
 
@@ -274,7 +273,7 @@ class Game:
             AgentState(
                 initialization.initial_money_amounts[i],
                 initialization.endowments[i],
-                initialization.utilities[i]
+                initialization.utility_params[i]
             )
             for i in range(configuration.nb_agents)]  # type: List[AgentState]
 
@@ -310,8 +309,8 @@ class Game:
 
         initial_money_amounts = generate_initial_money_amounts(nb_agents, money_endowment)
         endowments = generate_endowments(nb_goods, nb_agents, lower_bound_factor, upper_bound_factor)
-        utilities = generate_utilities(nb_agents, nb_goods)
-        game_initialization = GameInitialization(initial_money_amounts, endowments, utilities)
+        utility_params = generate_utility_params(nb_agents, nb_goods)
+        game_initialization = GameInitialization(initial_money_amounts, endowments, utility_params)
 
         return Game(game_configuration, game_initialization)
 
@@ -358,7 +357,7 @@ class Game:
         >>> game = Game(GameConfiguration(
         ... initial_money_amounts = [20, 20],
         ... endowments = [[0, 0], [1, 1]],
-        ... utilities = [[80.0, 20.0], [10.0, 90.0]],
+        ... utility_params = [[80.0, 20.0], [10.0, 90.0]],
         ... fee = 0))
         >>> agent_state_1 = game.agent_states[0] # agent state of player 1
         >>> agent_state_2 = game.agent_states[1] # agent state of player 2
@@ -424,17 +423,16 @@ class Game:
         ... [1, 1, 0],
         ... [1, 0, 0],
         ... [0, 1, 2]]
-        >>> utilities = [
+        >>> utility_params = [
         ... [20.0, 20.0, 60.0],
         ... [10.0, 50.0, 40.0],
         ... [30.0, 20.0, 50.0]]
         >>> fee = 1
-        >>> game_configuration = GameConfiguration(
+        >>> game_initialization = GameInitialization(
         ... money_amounts,
         ... endowment,
-        ... utilities,
-        ... fee)
-        >>> game = Game(game_configuration)
+        ... utility_params)
+        >>> game = Game(game_initialization)
         >>> print(game.get_holdings_summary(), end="")
         00 [1, 1, 0]
         01 [1, 0, 0]
@@ -474,19 +472,19 @@ class Game:
 class AgentState:
     """Represent the state of an agent during the game."""
 
-    def __init__(self, money: int, endowment: Endowment, utilities: Utilities):
+    def __init__(self, money: int, endowment: Endowment, utility_params: UtilityParams):
         """
         Instantiate an agent state object.
 
         :param money: the money of the agent in this state.
         :param endowment: the endowment for every good.
-        :param utilities: the utility values for every good.
+        :param utility_params: the utility params for every good.
         :param tx_fee: the fee of a transaction (i.e. state transition)
         """
-        assert len(endowment) == len(utilities)
+        assert len(endowment) == len(utility_params)
         self.balance = money
         # TODO: fix notation to utility_params
-        self._utilities = copy.copy(utilities)
+        self._utility_params = copy.copy(utility_params)
         self._current_holdings = copy.copy(endowment)
 
     @property
@@ -494,8 +492,8 @@ class AgentState:
         return copy.copy(self._current_holdings)
 
     @property
-    def utilities(self) -> Utilities:
-        return copy.copy(self._utilities)
+    def utility_params(self) -> UtilityParams:
+        return copy.copy(self._utility_params)
 
     # TODO: poitentially move the next two methods out as separate utilities
     def get_score(self) -> float:
@@ -505,7 +503,7 @@ class AgentState:
         with positive quantity plus the money left.
         :return: the score.
         """
-        goods_score = logarithmic_utility(self.utilities, self.current_holdings)
+        goods_score = logarithmic_utility(self.utility_params, self.current_holdings)
         money_score = self.balance
         score = goods_score + money_score
         return score
@@ -582,19 +580,19 @@ class AgentState:
             self._current_holdings[good_id] += quantity_delta
 
     def __copy__(self):
-        return AgentState(self.balance, self.current_holdings, self.utilities)
+        return AgentState(self.balance, self.current_holdings, self.utility_params)
 
     def __str__(self):
         return "AgentState{}".format(pprint.pformat({
             "money": self.balance,
-            "utilities": self.utilities,
+            "utility_params": self.utility_params,
             "current_holdings": self._current_holdings
         }))
 
     def __eq__(self, other) -> bool:
         return isinstance(other, AgentState) and \
             self.balance == other.balance and \
-            self.utilities == other.utilities and \
+            self.utility_params == other.utility_params and \
             self._current_holdings == other._current_holdings
 
 

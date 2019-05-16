@@ -55,7 +55,7 @@ class Dashboard(object):
 
     def update(self):
         self._update_info()
-        self._update_utilities()
+        self._update_utility_params()
         self._update_current_holdings()
         self._update_initial_holdings()
         self._update_plot_scores()
@@ -81,13 +81,13 @@ class Dashboard(object):
             {'type': 'number', 'name': '# transactions', 'value': len(self.game_stats.game.transactions)},
         ], env=env_main_name, win=window_name, opts=dict(title="Configuration"))
 
-    def _update_utilities(self):
-        utilities = self.game_stats.game.initialization.utilities
-        utilities = np.asarray(utilities)
+    def _update_utility_params(self):
+        utility_params = self.game_stats.game.initialization.utility_params
+        utility_params = np.asarray(utility_params)
 
-        window_name = "utilities"
-        self.viz.heatmap(utilities, env=env_main_name, win=window_name, opts=dict(
-            title="Utilities",
+        window_name = "utility_params"
+        self.viz.heatmap(utility_params, env=env_main_name, win=window_name, opts=dict(
+            title="Utility Parameters",
             xlabel="Goods",
             ylabel="Agents"
         ))

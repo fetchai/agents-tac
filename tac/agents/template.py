@@ -22,5 +22,5 @@
 from tac.agents.baseline import BaselineAgent
 
 
-class MyAgent(BaselineAgent):
+class MyAgent(BaselineAgent, BaselineStrategy):
     pass

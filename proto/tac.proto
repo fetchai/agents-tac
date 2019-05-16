@@ -21,7 +21,7 @@ message TACController {
     message GameData {
         double money = 1;
         repeated int32 endowment = 2;
-        repeated double utilities = 3;
+        repeated double utility_params = 3;
         int32 nb_agents = 4;
         int32 nb_goods = 5;
         double tx_fee = 6;

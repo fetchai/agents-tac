@@ -238,7 +238,7 @@ class Response(Message):
             elif case == "game_data":
                 return GameData(msg.game_data.money,
                                 list(msg.game_data.endowment),
-                                list(msg.game_data.utilities),
+                                list(msg.game_data.utility_params),
                                 msg.game_data.nb_agents,
                                 msg.game_data.nb_goods,
                                 msg.game_data.tx_fee,
@@ -321,23 +321,23 @@ class Error(Response):
 class GameData(Response):
     """Class that holds the game configuration and the initialization of a TAC agent."""
 
-    def __init__(self, money: int, endowment: List[int], utilities: List[float], nb_agents: int, nb_goods: int,
+    def __init__(self, money: int, endowment: List[int], utility_params: List[float], nb_agents: int, nb_goods: int,
                  tx_fee: float, agent_pbks: List[str], good_pbks: List[str]):
         """
         Initialize a game data object.
         :param money: the money amount.
         :param endowment: the endowment for every good.
-        :param utilities: the utilities for every good.
+        :param utility_params: the utility params for every good.
         :param nb_agents: the number of agents.
         :param nb_goods: the number of goods.
         :param tx_fee: the transaction fee.
         :param agent_pbks: the pbks of the agents.
         :param good_pbks: the pbks of the goods.
         """
-        assert len(endowment) == len(utilities)
+        assert len(endowment) == len(utility_params)
         self.money = money
         self.endowment = endowment
-        self.utilities = utilities
+        self.utility_params = utility_params
         self.nb_agents = nb_agents
         self.nb_goods = nb_goods
         self.tx_fee = tx_fee
@@ -348,7 +348,7 @@ class GameData(Response):
         msg = tac_pb2.TACController.GameData()
         msg.money = self.money
         msg.endowment.extend(self.endowment)
-        msg.utilities.extend(self.utilities)
+        msg.utility_params.extend(self.utility_params)
         msg.nb_agents = self.nb_agents
         msg.nb_goods = self.nb_goods
         msg.tx_fee = self.tx_fee
@@ -362,7 +362,7 @@ class GameData(Response):
         return self._build_str(
             money=self.money,
             endowment=self.endowment,
-            utilities=self.utilities,
+            utility_params=self.utility_params,
             nb_agents=self.nb_agents,
             nb_goods=self.nb_goods,
             tx_fee=self.tx_fee,
@@ -374,7 +374,7 @@ class GameData(Response):
         return super().__eq__(other) and \
             self.money == other.money and \
             self.endowment == other.endowment and \
-            self.utilities == other.utilities and \
+            self.utility_params == other.utility_params and \
             self.nb_agents == other.nb_agents and \
             self.nb_goods == other.nb_goods and \
             self.tx_fee == other.tx_fee and \

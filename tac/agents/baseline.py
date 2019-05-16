@@ -561,6 +561,16 @@ class BaselineAgent(NegotiationAgent):
         self.send_accept(acceptance_id, dialogue_id, origin, msg_id)
 
     def on_decline(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
+        """
+        On Decline handler.
+
+        :param msg_id: the message id
+        :param dialogue_id: the dialogue id
+        :param origin: the public key of the message sender.
+        :param target: the targeted message id to which this message is a response.
+
+        :return: None
+        """
         logger.debug("[{}]: on_decline: msg_id={}, dialogue_id={}, origin={}, target={}"
                      .format(self.public_key, msg_id, dialogue_id, origin, target))
 
@@ -574,6 +584,16 @@ class BaselineAgent(NegotiationAgent):
         self._start_loop()
 
     def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
+        """
+        On Accept handler.
+
+        :param msg_id: the message id
+        :param dialogue_id: the dialogue id
+        :param origin: the public key of the message sender.
+        :param target: the targeted message id to which this message is a response.
+
+        :return: None
+        """
         logger.debug("[{}]: on_accept: msg_id={}, dialogue_id={}, origin={}, target={}"
                      .format(self.public_key, msg_id, dialogue_id, origin, target))
 
@@ -638,8 +658,10 @@ class BaselineAgent(NegotiationAgent):
     def _on_match_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int):
         """
         Handles match accept.
+
         :return: None
         """
+        # TODO implement at SDK level
         logger.debug("[{}]: on match accept".format(self.public_key))
 
         transaction = self._recover_pending_acceptance(dialogue_id, origin, target)
@@ -656,6 +678,13 @@ class BaselineAgent(NegotiationAgent):
         return transaction
 
     def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
+        """
+        On Transaction confirmed handler.
+
+        :param tx_confirmation: the transaction confirmation
+
+        :return: None
+        """
         logger.debug("[{}]: on transaction confirmed.".format(self.public_key))
         transaction = self._locks[tx_confirmation.transaction_id]
         self._agent_state.update(transaction)
@@ -832,6 +861,7 @@ class BaselineAgent(NegotiationAgent):
     def _remove_lock(self, transaction_id: str):
         """
         Try to remove a lock, given its id.
+
         :param transaction_id: the transaction id.
         :return: None
         """
@@ -839,44 +869,32 @@ class BaselineAgent(NegotiationAgent):
         self._locks_as_buyer.pop(transaction_id, None)
         self._locks_as_seller.pop(transaction_id, None)
 
-    #####
-    # STRATEGY
-    #####
-
     def _get_supplied_goods_quantities(self) -> List[int]:
         """
-        Return the vector of good quantities on offer.
-        An agent in principle offers any of her quantities.
-        >>> agent_state = AgentState(20, [1, 2, 3], [20.0, 40.0, 60.0])
-        >>> agent_state.get_offered_quantities()
-        [1, 2, 3]
+        Wraps the function which determines supplied good quantities.
 
         :return: the vector of good quantities offered.
         """
         state_after_locks = self._state_after_locks_as_seller()
-        return [q - 1 for q in state_after_locks.current_holdings]
+        return BaselineStrategy.supplied_good_quantities(state_after_locks.current_holdings)
 
     def _get_supplied_goods_ids(self) -> Set[int]:
         """
-        Wraps the function which determines supply.
+        Wraps the function which determines supplied good ids.
 
         :return: a list of supplied good ids
         """
         state_after_locks = self._state_after_locks_as_seller()
-        return {good_id for good_id, quantity in enumerate(state_after_locks.current_holdings) if quantity > 1}
+        return BaselineStrategy.supplied_good_ids(state_after_locks.current_holdings)
 
     def _get_demanded_goods_quantities(self) -> List[int]:
         """
-        Return the vector of good quantities requested.
-        An agent in principle requests any good once.
-        >>> agent_state = AgentState(20, [1, 2, 3], [20.0, 40.0, 60.0])
-        >>> agent_state.get_requested_quantities()
-        [1, 1, 1]
+        Wraps the function which determines demanded good quantities.
 
         :return: the vector of good quantities requested.
         """
         state_after_locks = self._state_after_locks_as_buyer()
-        return [1 for _ in state_after_locks.current_holdings]
+        return BaselineStrategy.demanded_good_quantities(state_after_locks.current_holdings)
 
     def _get_demanded_goods_ids(self) -> Set[int]:
         """
@@ -887,40 +905,112 @@ class BaselineAgent(NegotiationAgent):
         :return: a list of demanded good ids
         """
         state_after_locks = self._state_after_locks_as_buyer()
-        return {good_id for good_id, quantity in enumerate(state_after_locks.current_holdings)}
+        return BaselineStrategy.demanded_good_ids(state_after_locks.current_holdings)
 
     def _get_seller_proposals(self) -> List[Description]:
         """
+        Wraps the function which generates proposals from a seller.
+
+        If there are locks as seller, it applies them.
+
+        :return: a list of descriptions
         """
-        quantities = self._get_supplied_goods_quantities()
+        state_after_locks = self._state_after_locks_as_seller()
+        return BaselineStrategy.get_seller_proposals(state_after_locks.current_holdings, state_after_locks.utility_params)
+
+    def _get_buyer_proposals(self) -> List[Description]:
+        """
+        Wraps the function which generates proposals from a buyer.
+
+        If there are locks as buyer, it applies them.
+
+        :return: a list of descriptions
+        """
+        state_after_locks = self._state_after_locks_as_buyer()
+        return BaselineStrategy.get_buyer_proposals(state_after_locks.current_holdings, state_after_locks.utility_params, self._game_configuration.tx_fee)
+
+
+class BaselineStrategy:
+    def supplied_good_quantities(current_holdings: List[int]) -> List[int]:
+        """
+        Generates list of quantities which are supplied.
+
+        :param current_holdings: a list of current good holdings
+        :return: a list of quantities
+        """
+        return [q - 1 for q in current_holdings]
+
+    def supplied_good_ids(current_holdings: List[int]) -> Set[int]:
+        """
+        Generates set of good ids which are supplied.
+
+        :param current_holdings: a list of current good holdings
+        :return: a set of ids
+        """
+        return {good_id for good_id, quantity in enumerate(current_holdings) if quantity > 1}
+
+    def demanded_good_quantities(current_holdings: List[int]) -> List[int]:
+        """
+        Generates list of quantities which are demanded.
+
+        :param current_holdings: a list of current good holdings
+        :return: a list of quantities
+        """
+        return [1 for _ in current_holdings]
+
+    def demanded_good_ids(current_holdings: List[int]) -> Set[int]:
+        """
+        Generates set of good ids which are demanded.
+
+        :param current_holdings: a list of current good holdings
+        :return: a set of ids
+        """
+        return {good_id for good_id, quantity in enumerate(current_holdings)}
+
+    def get_seller_proposals(current_holdings: List[int], utility_params: List[int]) -> List[Description]:
+        """
+        Generates proposals from the seller.
+
+        :param current_holdings: a list of current good holdings
+        :param utility_params: a list of utility params
+        :param tx_fee: the transaction fee
+        :return: a list of proposals in Description form
+        """
+        quantities = BaselineStrategy.supplied_good_quantities(current_holdings)
         proposals = []
         zeroslist = [0] * len(quantities)
+        rounding_adjustment = 0.01
         for good_id in range(len(quantities)):
             if quantities[good_id] == 0: continue
             lis = copy.deepcopy(zeroslist)
             lis[good_id] = 1
             desc = get_goods_quantities_description(lis, True)
-            state_after_locks = self._state_after_locks_as_seller()
             delta_holdings = [i * -1 for i in lis]
-            marginal_utility_from_single_good = marginal_utility(state_after_locks.utilities, state_after_locks.current_holdings, delta_holdings) * -1
-            desc.values["price"] = round(marginal_utility_from_single_good, 2) + 0.01  # to avoid rounding down issues
+            marginal_utility_from_single_good = marginal_utility(utility_params, current_holdings, delta_holdings) * -1
+            desc.values["price"] = round(marginal_utility_from_single_good, 2) + rounding_adjustment
             proposals.append(desc)
         return proposals
 
-    def _get_buyer_proposals(self) -> List[Description]:
+    def get_buyer_proposals(current_holdings: List[int], utility_params: List[int], tx_fee: float) -> List[Description]:
         """
+        Generates proposals from the buyer.
+
+        :param current_holdings: a list of current good holdings
+        :param utility_params: a list of utility params
+        :param tx_fee: the transaction fee
+        :return: a list of proposals in Description form
         """
-        quantities = self._get_demanded_goods_quantities()
+        quantities = BaselineStrategy.demanded_good_quantities(current_holdings)
         proposals = []
         zeroslist = [0] * len(quantities)
+        rounding_adjustment = 0.01
         for good_id in range(len(quantities)):
             lis = copy.deepcopy(zeroslist)
             lis[good_id] = 1
             desc = get_goods_quantities_description(lis, True)
-            state_after_locks = self._state_after_locks_as_buyer()
             delta_holdings = lis
-            marginal_utility_from_single_good = marginal_utility(state_after_locks.utilities, state_after_locks.current_holdings, delta_holdings)
-            desc.values["price"] = round(marginal_utility_from_single_good, 2) - self._game_configuration.tx_fee - 0.01  # to avoid rounding up issues
+            marginal_utility_from_single_good = marginal_utility(utility_params, current_holdings, delta_holdings)
+            desc.values["price"] = round(marginal_utility_from_single_good, 2) - tx_fee - rounding_adjustment
             proposals.append(desc)
         return proposals
 
