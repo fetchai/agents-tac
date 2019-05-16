@@ -624,7 +624,7 @@ class BaselineAgent(NegotiationAgent):
         if self._is_profitable_transaction_as_buyer(transaction):
             logger.debug("[{}]: Locking the current state (buyer).".format(self.public_key))
             self._lock_state_as_buyer(transaction)
-            self.submit_transaction(transaction)
+            self.submit_transaction_to_controller(transaction)
             self.send_accept(msg_id + 1, dialogue_id, origin, msg_id)
         else:
             logger.debug("[{}]: Decline the accept (as buyer).".format(self.public_key))
@@ -639,7 +639,7 @@ class BaselineAgent(NegotiationAgent):
         if self._is_profitable_transaction_as_seller(transaction):
             logger.debug("[{}]: Locking the current state (seller).".format(self.public_key))
             self._lock_state_as_seller(transaction)
-            self.submit_transaction(transaction)
+            self.submit_transaction_to_controller(transaction)
             self.send_accept(msg_id + 1, dialogue_id, origin, msg_id)
         else:
             logger.debug("[{}]: Decline the accept (as seller).".format(self.public_key))
@@ -665,7 +665,7 @@ class BaselineAgent(NegotiationAgent):
         logger.debug("[{}]: on match accept".format(self.public_key))
 
         transaction = self._recover_pending_acceptance(dialogue_id, origin, target)
-        self.submit_transaction(transaction)
+        self.submit_transaction_to_controller(transaction)
 
     def _recover_pending_acceptance(self, dialogue_id: int, origin: str, acceptance_id: int) -> Transaction:
         """
@@ -1020,7 +1020,7 @@ def main():
     agent = BaselineAgent(public_key=args.public_key, oef_addr=args.oef_addr, oef_port=args.oef_port)
 
     agent.connect()
-    agent.register_to_tac()
+    agent.search_for_tac()
 
     logger.debug("Running agent...")
     agent.run()

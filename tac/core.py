@@ -51,39 +51,26 @@ class NegotiationAgent(OEFAgent):
         :param game_data: the set of parameters assigned to this agent by the TAC controller.
         :return: ``None``
         """
-        # TODO: passing gama data is pointless here
 
     @abstractmethod
-    def on_cancelled(self):
+    def on_cancelled(self) -> None:
         """
         Handle the cancellation of the competition from the TAC controller.
-        
-        :return: ``None``
-        """
 
-    def on_search_result(self, search_id: int, agents: List[str]):
+        :return: None
         """
-        Handle search results.
-        """
-        if search_id == self.TAC_CONTROLLER_SEARCH_ID:
-            # assuming the number of active controller is only one.
-            assert len(agents) == 1
-            controller_public_key = agents[0]
-            self.register(controller_public_key)
-        else:
-            self.on_search_results(search_id, agents)
 
     @abstractmethod
-    def on_search_results(self, search_id: int, agents: List[str]):
+    def on_search_results(self, search_id: int, agents: List[str]) -> None:
         """
         Handle search results.
 
-        :return: ``None``
+        :return: None
         """
         # TODO this is different from the SDK's on_search_result, because that one is used for low-level operations.
 
     @abstractmethod
-    def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES):
+    def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES) -> None:
         """
         Handle call for proposal message.
 
@@ -151,26 +138,28 @@ class NegotiationAgent(OEFAgent):
         """
         Handle error messages from the TAC controller.
 
-        :return: ``None``
+        :return: None
         """
 
-    def _on_start(self, controller_public_key: str, game_data: GameData) -> None:
-        """The private handler for the on_start event. It is used to populate
-        data structures of the agent and remove the burden from the developer to do so."""
+    ###
+    # The following methods do not need to be implemented by the developer.
+    ###
 
-        # populate data structures about the started competition
-        self._controller_pbk = controller_public_key
-        self._game_configuration = GameConfiguration(game_data.nb_agents, game_data.nb_goods, game_data.tx_fee, game_data.agent_pbks, game_data.good_pbks)
-        self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
-
-        # dispatch the handling to the developer's implementation.
-        self.on_start(game_data)
-
-    # TODO this should really be called: on_other_message
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
+        """
+        Handle any message from the OEF not handled by specific handlers.
+
+        :param msg_id: the message id
+        :param dialogue_id: the dialogue id
+        :param origin: the public key of the message sender.
+        :param content: the message content.
+
+        :return: None
+        """
         # here we can get a new message from any agent, including the controller.
         # however, the one from the controller should be handled in a different way.
         # try to parse it as if it were a response from the Controller Agent.
+        # TODO this should really be called: on_other_message
 
         response = None  # type: Optional[Response]
         try:
@@ -191,44 +180,74 @@ class NegotiationAgent(OEFAgent):
         else:
             raise TacError("No correct message received.")
 
-    def register_to_tac(self):
-        """Search for active TAC Controller, and register to one of them.
+    def _on_start(self, controller_public_key: str, game_data: GameData) -> None:
+        """
+        The private handler for the on_start event. It is used to populate
+        data structures of the agent and remove the burden from the developer to do so.
+
+        :param controller_public_key: the public key of the controller
+        :param game_data: the data sent from the controller about the game.
+
+        :return: None
+        """
+
+        # populate data structures about the started competition
+        self._controller_pbk = controller_public_key
+        self._game_configuration = GameConfiguration(game_data.nb_agents, game_data.nb_goods, game_data.tx_fee, game_data.agent_pbks, game_data.good_pbks)
+        self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
+
+        # dispatch the handling to the developer's implementation.
+        self.on_start(game_data)
+
+    def on_search_result(self, search_id: int, agent_pbks: List[str]) -> None:
+        """
+        Handle search results.
+
+        :param search_id: the id set in the search query
+        :param agent_pbks: a list of agent pbks
+
+        :return: None
+        """
+        if search_id == self.TAC_CONTROLLER_SEARCH_ID:
+            # assuming the number of active controller is only one.
+            assert len(agent_pbks) == 1
+            controller_public_key = agent_pbks[0]
+            self.register(controller_public_key)
+        else:
+            self.on_search_results(search_id, agent_pbks)
+
+    def search_for_tac(self) -> None:
+        """
+        Search for active TAC Controller.
 
         We assume that the controller is registered as a service with the 'tac' data model
-        and with an attribute version = 1."""
+        and with an attribute version = 1.
 
+        :return: None
+        """
         query = Query([Constraint("version", GtEq(1))])
         self.search_services(self.TAC_CONTROLLER_SEARCH_ID, query)
-        # when the search result arrives, the on_search_result method is executed and
-        # the actual registration request is sent.
 
-    def register(self, tac_controller_pk: str) -> None:
-        """Register to a competition.
+    def register_to_tac(self, tac_controller_pk: str) -> None:
+        """
+        Register to active TAC Controller.
+
         :param tac_controller_pk: the public key of the controller.
-        :return: ``None``
+
+        :return: None
         :raises AssertionError: if the agent is already registered.
         """
-        assert self._controller_pbk is None and self._agent_state is None
+        assert self._controller_pbk is None and self._game_configuration is None and self._agent_state is None
         msg = Register().serialize()
         self.send_message(0, 0, tac_controller_pk, msg)
 
-    def submit_transaction(self, tx: Transaction):
+    def submit_transaction_to_controller(self, tx: Transaction) -> None:
         """
-        Submit a transaction, that is:
-        - put in the local pool of pending transaction (waiting for confirmation)
-        - send the transaction request to the controller
+        Submit a transaction request to the controller
 
         :param tx: the transaction request.
+
         :return: None
         """
         dialogue_id = abs(hash(tx.transaction_id) % 2**31)
         self.send_message(0, dialogue_id, self._controller_pbk, tx.serialize())
-
-    # def reset(self):
-    #     """
-    #     Reset the agent to its initial condition.
-    #     """
-    #     self._controller_pbk = None
-    #     self._game_configuration = None  # type: Optional[GameConfiguration]
-    #     self._agent_state = None
-    #     # self._fee = None
