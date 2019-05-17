@@ -95,7 +95,7 @@ class PlantUMLGenerator:
             self.add_drawable(PlantUMLGenerator.Note("{} game state: \n".format(agent_pbk) + str(agent_state) + "\nScore: {}".format(agent_state.get_score()),
                                                      public_key))
             self.add_drawable(PlantUMLGenerator.Transition(public_key, agent_pbk,
-                                                           "GameData(money, endowments, preferences, scores, fee)"))
+                                                           "GameData(money, endowments, preferences, scores, tx_fee)"))
 
     def handle_valid_transaction(self, public_key, sender, counterparty, transaction_id, _current_game):
         self.add_drawable(PlantUMLGenerator.Note("Transaction {} settled.".format(transaction_id),

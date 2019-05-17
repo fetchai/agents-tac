@@ -355,7 +355,7 @@ class Game:
 
         # check if we have enough instances of goods, for every good involved in the transaction.
         seller_holdings = self.agent_states[tx.seller_pbk].current_holdings
-        for good_id, bought_quantity in tx.quantities_by_good_id.items():
+        for good_id, bought_quantity in enumerate(tx.quantities_by_good_pbk.values()):
             if seller_holdings[good_id] < bought_quantity:
                 return False
 
@@ -401,7 +401,7 @@ class Game:
         (20, [2, 1, 1])
         >>> agent_state_2.balance, agent_state_2.current_holdings
         (20, [1, 1, 2])
-        >>> game.settle_transaction(GameTransaction('tac_agent_0', 'tac_agent_1', 15, {0: 1, 1: 0, 2: 0}))
+        >>> game.settle_transaction(GameTransaction('tac_agent_0', 'tac_agent_1', 15, {'tac_good_0': 1, 'tac_good_1': 0, 'tac_good_2': 0}))
         >>> agent_state_0.balance, agent_state_0.current_holdings
         (4.0, [2, 1, 1])
         >>> agent_state_1.balance, agent_state_1.current_holdings
@@ -416,16 +416,15 @@ class Game:
         buyer_state = self.agent_states[tx.buyer_pbk]
         seller_state = self.agent_states[tx.seller_pbk]
 
-        nb_instances_traded = sum(tx.quantities_by_good_id.values())
+        nb_instances_traded = sum(tx.quantities_by_good_pbk.values())
 
         # update holdings and prices
-        for good_id, quantity in tx.quantities_by_good_id.items():
+        for good_id, (good_pbk, quantity) in enumerate(tx.quantities_by_good_pbk.items()):
             buyer_state._current_holdings[good_id] += quantity
             seller_state._current_holdings[good_id] -= quantity
             if quantity > 0:
                 # for now the price is simply the amount proportional to the share in the bundle
                 price = tx.amount / nb_instances_traded
-                good_pbk = self.configuration.good_pbks[good_id]
                 good_state = self.good_states[good_pbk]
                 good_state.price = price
 
@@ -582,7 +581,7 @@ class AgentState:
         else:
             # check if we have the goods.
             result = True
-            for good_id, quantity in tx.quantities_by_good_id.items():
+            for good_id, quantity in enumerate(tx.quantities_by_good_pbk.values()):
                 result = result and (self._current_holdings[good_id] >= quantity)
         return result
 
@@ -612,7 +611,7 @@ class AgentState:
         else:
             self.balance += tx.amount
 
-        for good_id, quantity in tx.quantities_by_good_id.items():
+        for good_id, quantity in enumerate(tx.quantities_by_good_pbk.values()):
             quantity_delta = quantity if tx.buyer else -quantity
             self._current_holdings[good_id] += quantity_delta
 
@@ -658,7 +657,7 @@ class GoodState:
 class GameTransaction:
     """Represent a transaction between agents"""
 
-    def __init__(self, buyer_pbk: str, seller_pbk: str, amount: int, quantities_by_good_id: Dict[int, int],
+    def __init__(self, buyer_pbk: str, seller_pbk: str, amount: int, quantities_by_good_pbk: Dict[str, int],
                  timestamp: Optional[datetime.datetime] = None):
         """
         Instantiate a game transaction object.
@@ -666,13 +665,13 @@ class GameTransaction:
         :param buyer_pbk: the pbk of the buyer in the game.
         :param seller_pbk: the pbk of the seller in the game.
         :param amount: the amount transferred.
-        :param quantities_by_good_id: a map from good id to the quantity transacted.
+        :param quantities_by_good_pbk: a map from good pbk to the quantity transacted.
         :param timestamp: the timestamp of the transaction.
         """
         self.buyer_pbk = buyer_pbk
         self.seller_pbk = seller_pbk
         self.amount = amount
-        self.quantities_by_good_id = quantities_by_good_id
+        self.quantities_by_good_pbk = quantities_by_good_pbk
         self.timestamp = datetime.datetime.now() if timestamp is None else timestamp
 
         self._check_consistency()
@@ -686,28 +685,25 @@ class GameTransaction:
 
         assert self.buyer_pbk != self.seller_pbk
         assert self.amount >= 0
-        assert all(good_id >= 0 for good_id in self.quantities_by_good_id.keys())
-        assert all(quantity >= 0 for quantity in self.quantities_by_good_id.values())
+        assert len(self.quantities_by_good_pbk.keys()) == len(set(self.quantities_by_good_pbk.keys()))
+        assert all(quantity >= 0 for quantity in self.quantities_by_good_pbk.values())
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "buyer_pbk": self.buyer_pbk,
             "seller_pbk": self.seller_pbk,
             "amount": self.amount,
-            "quantities_by_good_id": self.quantities_by_good_id,
+            "quantities_by_good_pbk": self.quantities_by_good_pbk,
             "timestamp": str(self.timestamp)
         }
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> 'GameTransaction':
-        # make the keys as integers
-        quantities_by_good_id = {int(k): v for k, v in d["quantities_by_good_id"].items()}
-
         return cls(
             buyer_pbk=d["buyer_pbk"],
             seller_pbk=d["seller_pbk"],
             amount=d["amount"],
-            quantities_by_good_id=quantities_by_good_id,
+            quantities_by_good_pbk=d["quantities_by_good_pbk"],
             timestamp=from_iso_format(d["timestamp"])
         )
 
@@ -716,5 +712,5 @@ class GameTransaction:
             self.buyer_pbk == other.buyer_pbk and \
             self.seller_pbk == other.seller_pbk and \
             self.amount == other.amount and \
-            self.quantities_by_good_id == other.quantities_by_good_id and \
+            self.quantities_by_good_pbk == other.quantities_by_good_pbk and \
             self.timestamp == other.timestamp

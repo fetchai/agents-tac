@@ -20,7 +20,7 @@
 import datetime
 import logging
 import random
-from typing import List, Set, Optional
+from typing import List, Set
 
 import dateutil.parser
 import math
@@ -38,57 +38,16 @@ class TacError(Exception):
     """General purpose exception to detect exception associated with the logic of the TAC application."""
 
 
-def callback(fut):
-    """Callback to audit exceptions from asyncio tasks."""
-    try:
-        _ = fut.result()
-    except Exception as e:
-        logger.exception('Unexpected error')
-        raise e
-
-
-def generate_transaction_id(buyer_pbk, seller_pbk, dialogue_id):
+def generate_transaction_id(buyer_pbk: str, seller_pbk: str, dialogue_id: int) -> str:
+    """
+    Generate a transaction id.
+    :param buyer_pbk: the pbk of the buyer.
+    :param seller_pbk: the pbk of the seller.
+    :param dialogue_id: the id of the dialogue.
+    :return: a transaction id
+    """
     transaction_id = buyer_pbk + "_" + seller_pbk + "_" + "{}".format(dialogue_id)
     return transaction_id
-
-
-def format_good_attribute_name(good_id: int, nb_goods: int) -> str:
-    """Format the name of the attribute associated to a good id.
-
-    E.g.:
-
-    >>> format_good_attribute_name(2, 10)
-    'good_2'
-    >>> format_good_attribute_name(2, 100)
-    'good_02'
-    >>> format_good_attribute_name(2, 101)
-    'good_002'
-
-    :param good_id: the good id.
-    :param nb_goods: the overall number of goods.
-    :return: the formatted name.
-    """
-    max_number_of_digits = math.ceil(math.log10(nb_goods))
-    string_format = "good_{:0" + str(max_number_of_digits) + "}"
-    result = string_format.format(good_id)
-    return result
-
-
-def from_good_attribute_name_to_good_id(good_id_str: str) -> 1:
-    """
-    From 'good_[0-9]+' to the associated good id.
-
-    >>> from_good_attribute_name_to_good_id("good_001")
-    1
-    >>> from_good_attribute_name_to_good_id("good_9999")
-    9999
-
-
-    :param good_id_str: the good id in the format for attribute names.
-    :return: the good id.
-    """
-    offset = len("good_")
-    return int(good_id_str[offset:])
 
 
 def generate_endowments(nb_goods: int, nb_agents: int, uniform_lower_bound_factor: int, uniform_upper_bound_factor: int) -> List[List[int]]:
@@ -205,80 +164,78 @@ def marginal_utility(utility_function_params: List[float], current_holdings: Lis
     return new_utility - current_utility
 
 
-def build_datamodel(nb_goods: int, is_seller: bool) -> DataModel:
+def build_datamodel(good_pbks: List[str], is_seller: bool) -> DataModel:
     """
     Build a data model for buyers or sellers.
 
-    :param nb_goods: the number of goods.
+    :param good_pbks: the list of good pbks.
     :param is_seller: bool indicating whether a seller or buyer data model
     :return: the data model.
     """
-    goods_quantities_attributes = [AttributeSchema(format_good_attribute_name(i, nb_goods), int, False)
-                                   for i in range(nb_goods)]
+    goods_quantities_attributes = [AttributeSchema(good_pbk, int, False)
+                                   for good_pbk in good_pbks]
     price_attribute = AttributeSchema("price", float, False)
     description = TAC_SELLER_DATAMODEL_NAME if is_seller else TAC_BUYER_DATAMODEL_NAME
     data_model = DataModel(description, goods_quantities_attributes + [price_attribute])
     return data_model
 
 
-def get_goods_quantities_description(good_quantities: List[int], is_seller: bool) -> Description:
+def get_goods_quantities_description(good_pbks: List[str], good_quantities: List[int], is_seller: bool) -> Description:
     """
     Get the TAC seller description, following a baseline policy.
     That is, a description with the following structure:
-    >>> desciption = {
-    ...     "good_01": 1,
-    ...     "good_02": 0,
+    >>> description = {
+    ...     "tac_good_0": 1,
+    ...     "tac_good_1": 0,
     ...     #...
     ...
     ... }
     >>>
 
-     where the keys indicate the good and the values the quantity that the seller wants to sell.
+     where the keys indicate the good_pbk and the values the quantity.
 
-     The baseline agent decides to sell everything in excess, but keeping the goods that
-
-     >>> desc = get_goods_quantities_description([0, 0, 1, 2], True)
+     >>> desc = get_goods_quantities_description(['tac_good_0', 'tac_good_1', 'tac_good_2', 'tac_good_3'], [0, 0, 1, 2], True)
      >>> desc.data_model.name == TAC_SELLER_DATAMODEL_NAME
      True
      >>> desc.values == {
-     ...    "good_0": 0,
-     ...    "good_1": 0,
-     ...    "good_2": 1,
-     ...    "good_3": 2}
+     ...    "tac_good_0": 0,
+     ...    "tac_good_1": 0,
+     ...    "tac_good_2": 1,
+     ...    "tac_good_3": 2}
      ...
      True
 
+    :param good_pbks: the pbks of the goods.
     :param good_quantities: the quantities per good.
     :param is_seller: True if the description is of a seller, False if it's of a buyer.
     :return: the description to advertise on the Service Directory.
     """
-    nb_goods = len(good_quantities)
-    data_model = build_datamodel(nb_goods, is_seller)
-    desc = Description({format_good_attribute_name(i, nb_goods): q for i, q in enumerate(good_quantities)},
+    data_model = build_datamodel(good_pbks, is_seller)
+    desc = Description({good_pbk: quantity for good_pbk, quantity in zip(good_pbks, good_quantities)},
                        data_model=data_model)
     return desc
 
 
-def build_query(good_ids: Set[int], is_seller: bool, nb_goods: Optional[int] = None) -> Query:
+def build_query(good_pbks: Set[int], is_seller: bool) -> Query:
     """
     Build the query that the buyer can send to look for goods.
 
-    In particular, if the needed good ids are {0, 2, 3}, the resulting constraint expression is:
+    In particular, if the needed good pbks are {'tac_good_0', 'tac_good_2', 'tac_good_3'}, the resulting constraint expression is:
 
-        good_0 >= 1 OR good_2 >= 1 OR good_3 >= 1
+        tac_good_0 >= 1 OR tac_good_2 >= 1 OR tac_good_3 >= 1
 
     That is, the OEF will return all the sellers that have at least one of the good in the query
     (assuming that the sellers are registered with the data model for baseline sellers.
 
-    :param good_ids: the good ids to put in the query.
+    :param good_pbks: the good pbks to put in the query.
     :param is_seller: bool indicating whether it's a seller or buyer query
     :param nb_goods: the total number of goods (to build the data model, optional)
     :return: the query.
     """
-    data_model = None if nb_goods is None else build_datamodel(nb_goods, is_seller)
-    constraints = [Constraint(format_good_attribute_name(good_id, nb_goods), GtEq(1)) for good_id in good_ids]
+    data_model = None if good_pbks is None else build_datamodel(good_pbks, is_seller)
+    constraints = [Constraint(good_pbk, GtEq(1)) for good_pbk in good_pbks]
 
-    if len(good_ids) > 1:
+    if len(good_pbks) > 1:
         constraints = [Or(constraints)]
 
     query = Query(constraints, model=data_model)
@@ -296,9 +253,9 @@ def from_iso_format(date_string: str) -> datetime.datetime:
 
 def generate_pbks(nb_things: int, thing_name: str) -> List[str]:
     """
-    Generate ids for things.
+    Generate pbks for things.
     :param nb_things: the number of things.
-    :return: a list of labels.
+    :return: a list of pbks.
     """
     max_number_of_digits = math.ceil(math.log10(nb_things))
     string_format = "tac_" + thing_name + "_{:0" + str(max_number_of_digits) + "}"

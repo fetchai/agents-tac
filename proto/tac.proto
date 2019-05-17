@@ -4,8 +4,8 @@ package fetch.oef.pb;
 
 import "google/protobuf/struct.proto";
 
-message IntPair {
-    int32 first = 1;
+message StrIntPair {
+    string first = 1;
     int32 second = 2;
 }
 
@@ -73,7 +73,7 @@ message TACAgent {
         bool buyer = 2;  // is the sender of this message a buyer?
         string counterparty = 3;
         double amount = 4;
-        repeated IntPair quantities = 5;
+        repeated StrIntPair quantities = 5;
     }
 
     message Message {

@@ -19,6 +19,7 @@
 # ------------------------------------------------------------------------------
 
 """Schemas for the protocol to communicate with the controller."""
+import copy
 import logging
 import pprint
 from abc import ABC, abstractmethod
@@ -32,17 +33,19 @@ from google.protobuf.message import DecodeError
 import tac.tac_pb2 as tac_pb2
 from tac.helpers.misc import TacError
 
+from oef.schema import Description
+
 logger = logging.getLogger(__name__)
 
 
-def _make_int_pair(key: int, value: int) -> tac_pb2.IntPair:
+def _make_str_int_pair(key: str, value: int) -> tac_pb2.StrIntPair:
     """
-    Helper method to make a Protobuf IntPair.
+    Helper method to make a Protobuf StrIntPair.
     :param key: the first element of the pair.
     :param value: the second element of the pair.
-    :return: a IntPair protobuf object.
+    :return: a StrIntPair protobuf object.
     """
-    pair = tac_pb2.IntPair()
+    pair = tac_pb2.StrIntPair()
     pair.first = key
     pair.second = value
     return pair
@@ -134,7 +137,7 @@ class Unregister(Request):
 class Transaction(Request):
 
     def __init__(self, transaction_id: str, buyer: bool, counterparty: str,
-                 amount: int, quantities_by_good_id: Dict[int, int], sender: Optional[str] = None):
+                 amount: int, quantities_by_good_pbk: Dict[str, int], sender: Optional[str] = None):
         """
         A transaction request.
 
@@ -143,13 +146,13 @@ class Transaction(Request):
         :param sender: the sender of the transaction request.
         :param counterparty: the counterparty of the transaction.
         :param amount: the amount of money involved.
-        :param quantities_by_good_id: a map from good id to the quantity of that good involved in the transaction.
+        :param quantities_by_good_pbk: a map from good pbk to the quantity of that good involved in the transaction.
         """
         self.transaction_id = transaction_id
         self.buyer = buyer
         self.counterparty = counterparty
         self.amount = amount
-        self.quantities_by_good_id = quantities_by_good_id
+        self.quantities_by_good_pbk = quantities_by_good_pbk
 
         self.sender = sender
 
@@ -160,8 +163,8 @@ class Transaction(Request):
         msg.counterparty = self.counterparty
         msg.amount = self.amount
 
-        good_id_quantity_pairs = [_make_int_pair(gid, q) for gid, q in self.quantities_by_good_id.items()]
-        msg.quantities.extend(good_id_quantity_pairs)
+        good_pbk_quantity_pairs = [_make_str_int_pair(good_pbk, quantity) for good_pbk, quantity in self.quantities_by_good_pbk.items()]
+        msg.quantities.extend(good_pbk_quantity_pairs)
 
         envelope = tac_pb2.TACAgent.Message()
         envelope.transaction.CopyFrom(msg)
@@ -172,13 +175,32 @@ class Transaction(Request):
         msg = tac_pb2.TACAgent.Message()
         msg.ParseFromString(obj)
 
-        quantities_per_good_id = {pair.first: pair.second for pair in msg.transaction.quantities}
+        quantities_per_good_pbk = {pair.first: pair.second for pair in msg.transaction.quantities}
 
         return Transaction(msg.transaction.transaction_id,
                            msg.transaction.buyer,
                            msg.transaction.counterparty,
                            msg.transaction.amount,
-                           quantities_per_good_id)
+                           quantities_per_good_pbk)
+
+    @classmethod
+    def from_proposal(cls, proposal: Description, transaction_id: str,
+                      is_buyer: bool, counterparty: str, sender: str) -> 'Request':
+        """
+        Create a transaction from a proposal.
+
+        :param proposal:
+        :param transaction_id:
+        :param is_buyer:
+        :param counterparty:
+        :param sender:
+        :return: Transaction
+        """
+        data = copy.deepcopy(proposal.values)
+        price = data.pop("price")
+        quantity_by_good_pbk = {key: value for key, value in data.items()}
+        return Transaction(transaction_id, is_buyer, counterparty, price, quantity_by_good_pbk,
+                           sender=sender)
 
     def matches(self, other: 'Transaction') -> bool:
         """
@@ -199,7 +221,7 @@ class Transaction(Request):
         result = result and self.counterparty == other.sender
         result = result and other.counterparty == self.sender
         result = result and self.amount == other.amount
-        result = result and self.quantities_by_good_id == other.quantities_by_good_id
+        result = result and self.quantities_by_good_pbk == other.quantities_by_good_pbk
 
         return result
 
@@ -209,7 +231,7 @@ class Transaction(Request):
             buyer=self.buyer,
             counterparty=self.counterparty,
             amount=self.amount,
-            good_id_quantity_pairs=self.quantities_by_good_id
+            good_pbk_quantity_pairs=self.quantities_by_good_pbk
         )
 
 

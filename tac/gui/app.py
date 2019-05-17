@@ -73,7 +73,7 @@ def upload():
                            nb_agents=game.configuration.nb_agents,
                            nb_goods=game.configuration.nb_goods,
                            initial_money_amounts=game.configuration.initial_money_amounts,
-                           fee=game.configuration.fee,
+                           tx_fee=game.configuration.tx_fee,
                            agent_pbks_agent_states=game.agent_states.items(),
                            game=game,
                            nb_transactions=len(game.transactions),

@@ -1,4 +1,8 @@
 on_start
+	> _start_loop
+
+
+_start_loop
 	> _register_as_seller
 		> _get_goods_supplied_description
 			> _get_supplied_goods_quantities
@@ -10,65 +14,93 @@ on_start
 	> _search_for_sellers
 		> _build_sellers_query
 			> _get_demanded_goods_ids
+			> build_query
 		> _search_services
 	> _search_for_buyers
 		> _build_buyers_query
 			> _get_supplied_goods_ids
+			> build_query
 		> _search_services
+
+on_cancelled
 
 on_search_results
 	> _on_sellers_search_result
 		> _build_sellers_query
 		> send_cfp (as buyer)
+		> _save_dialogue_id_as_buyer
 	> _on_buyers_search_result
 		> _build_buyers_query
 		> send_cfp (as seller)
+		> _save_dialogue_id_as_seller
 
 on_cfp
 	> _on_cfp_as_seller
 		> _save_dialogue_id_as_seller
 		> _get_goods_supplied_description
 		> send_decline (as seller)
+		> _get_seller_proposals
 		> send_propose (as seller)
 	> _on_cfp_as_buyer
+		> _save_dialogue_id_as_buyer
 		> _get_goods_demanded_description
 		> send_decline (as buyer)
+		> _get_buyer_proposals
 		> send_propose (as buyer)
 
 on_propose
 	> _on_propose_as_buyer
-		> _accept_propose_as_buyer
-			> start_lock_as_buyer
+		> _is_profitable_transaction_as_buyer
+			> _state_after_locks_as_buyer
+			> check_transaction_is_consistent
+			> get_score_diff_from_transaction
+		|> _accept_propose_as_buyer
+			> _lock_state_as_buyer
 			> send_accept (as buyer)
-		> send_decline (as buyer)
+		> _lock_state_as_buyer
+		> send_accept (as buyer)
+		|> send_decline (as buyer)
+		> _delete_dialogue_id
 	> _on_propose_as_seller
-		> _accept_propose_as_seller
-			> start_lock_as_seller
+		> _is_profitable_transaction_as_seller
+			> _state_after_locks_as_seller
+			> check_transaction_is_consistent
+			> get_score_diff_from_transaction
+		|> _accept_propose_as_seller
+			> _lock_state_as_seller
 			> send_accept (as seller)
-		> send_decline (as seller)
+		> _lock_state_as_seller
+		> send_accept (as seller)
+		|> send_decline (as seller)
+		> _delete_dialogue_id
 
 on_decline
+	> _remove_lock
+	> _delete_dialogue_id
+	> _start_loop
 
 on_accept
-	> _on_accept_as_seller
-		> start_lock_as_seller
-		> submit_transaction (as seller)
-		> match_accept (as seller)
-	> _on_accept_as_buyer
-		> start_lock_as_buyer
-		> submit_transaction (as buyer)
-		> match_accept (as buyer)
-
-on_match_accept
-	> _on_match_accept_as_buyer
-		> submit_transaction (as buyer)
-	> _on_match_accept_as_seller
-		> submit_transaction (as seller)
+	> _on_accept
+		> _on_accept_as_seller
+			> _recover_pending_proposal
+			> _is_profitable_transaction_as_seller
+			|> _lock_state_as_seller
+				> submit_transaction_to_controller (as seller)
+			|> send_decline (as seller)
+		> _on_accept_as_buyer
+			> _recover_pending_proposal
+			> _is_profitable_transaction_as_buyer
+			|> _lock_state_as_buyer
+				> submit_transaction_to_controller (as buyer)
+			|> send_decline (as buyer)
+	> _on_match_accept
+		> _on_match_accept (as buyer or seller)
+			> _recover_pending_acceptance
+			> submit_transaction_to_controller
 
 on_transaction_confirmed
-	> _on_confirmed_as_seller
-		> end_lock_as_seller
-	> _on_confirmed_as_buyer
-		> end_lock_as_buyer
+	> update (state)
+	> _remove_lock
+	> _start_loop
 
 on_tac_error
