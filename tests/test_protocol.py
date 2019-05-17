@@ -28,7 +28,7 @@ class TestRequest:
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
-            expected_msg = Transaction("transaction_id", True, "seller", 10, {0: 1, 1: 1})
+            expected_msg = Transaction("transaction_id", True, "seller", 10, {'tac_good_0': 1, 'tac_good_1': 1})
             actual_msg = Request.from_pb(expected_msg.serialize())
 
             assert expected_msg == actual_msg

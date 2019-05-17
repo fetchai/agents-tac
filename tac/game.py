@@ -401,7 +401,7 @@ class Game:
         (20, [2, 1, 1])
         >>> agent_state_2.balance, agent_state_2.current_holdings
         (20, [1, 1, 2])
-        >>> game.settle_transaction(GameTransaction('tac_agent_0', 'tac_agent_1', 15, {0: 1, 1: 0, 2: 0}))
+        >>> game.settle_transaction(GameTransaction('tac_agent_0', 'tac_agent_1', 15, {'tac_good_0': 1, 'tac_good_1': 0, 'tac_good_2': 0}))
         >>> agent_state_0.balance, agent_state_0.current_holdings
         (4.0, [2, 1, 1])
         >>> agent_state_1.balance, agent_state_1.current_holdings
@@ -419,7 +419,7 @@ class Game:
         nb_instances_traded = sum(tx.quantities_by_good_pbk.values())
 
         # update holdings and prices
-        for good_id, good_pbk, quantity in enumerate(tx.quantities_by_good_pbk.items()):
+        for good_id, (good_pbk, quantity) in enumerate(tx.quantities_by_good_pbk.items()):
             buyer_state._current_holdings[good_id] += quantity
             seller_state._current_holdings[good_id] -= quantity
             if quantity > 0:
@@ -703,7 +703,7 @@ class GameTransaction:
             buyer_pbk=d["buyer_pbk"],
             seller_pbk=d["seller_pbk"],
             amount=d["amount"],
-            quantities_by_good_pbk=quantities_by_good_pbk,
+            quantities_by_good_pbk=d["quantities_by_good_pbk"],
             timestamp=from_iso_format(d["timestamp"])
         )
 

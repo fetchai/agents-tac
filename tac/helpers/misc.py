@@ -20,7 +20,7 @@
 import datetime
 import logging
 import random
-from typing import List, Set, Optional
+from typing import List, Set
 
 import dateutil.parser
 import math

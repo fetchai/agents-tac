@@ -19,6 +19,7 @@
 # ------------------------------------------------------------------------------
 
 """Schemas for the protocol to communicate with the controller."""
+import copy
 import logging
 import pprint
 from abc import ABC, abstractmethod
@@ -136,7 +137,7 @@ class Unregister(Request):
 class Transaction(Request):
 
     def __init__(self, transaction_id: str, buyer: bool, counterparty: str,
-                 amount: int, quantities_by_good_pbk: Dict[int, int], sender: Optional[str] = None):
+                 amount: int, quantities_by_good_pbk: Dict[str, int], sender: Optional[str] = None):
         """
         A transaction request.
 
@@ -182,8 +183,7 @@ class Transaction(Request):
                            msg.transaction.amount,
                            quantities_per_good_pbk)
 
-    @classmethod
-    def from_proposal(proposal: Description, transaction_id: str,
+    def from_proposal(self, proposal: Description, transaction_id: str,
                       is_buyer: bool, counterparty: str) -> 'Request':
         """
         Create a transaction from a proposal.

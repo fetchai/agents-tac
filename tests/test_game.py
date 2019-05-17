@@ -317,7 +317,7 @@ class TestGame:
         agent_pbks = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
         good_pbks = ['tac_good_0', 'tac_good_1', 'tac_good_2']
 
-        game = Game.generate_game(nb_agents, nb_goods, money_endowment, tx_fee, lower_bound_factor, upper_bound_factor, agent_pbks, good_pbks)
+        _ = Game.generate_game(nb_agents, nb_goods, money_endowment, tx_fee, lower_bound_factor, upper_bound_factor, agent_pbks, good_pbks)
 
         # please look at the assertions in tac.game.GameConfiguration._check_consistency()
 
@@ -398,8 +398,8 @@ class TestGame:
 
         game = Game(game_configuration, game_initialization)
 
-        game_transaction_1 = GameTransaction('tac_agent_0', 'tac_agent_1', 10, {0: 1})
-        game_transaction_2 = GameTransaction('tac_agent_1', 'tac_agent_0', 10, {0: 1})
+        game_transaction_1 = GameTransaction('tac_agent_0', 'tac_agent_1', 10, {'tac_good_0': 1})
+        game_transaction_2 = GameTransaction('tac_agent_1', 'tac_agent_0', 10, {'tac_good_0': 1})
         game.settle_transaction(game_transaction_1)
         game.settle_transaction(game_transaction_2)
 
@@ -448,8 +448,8 @@ class TestGame:
 
         expected_game = Game(game_configuration, game_initialization)
 
-        game_transaction_1 = GameTransaction('tac_agent_0', 'tac_agent_1', 10, {0: 1})
-        game_transaction_2 = GameTransaction('tac_agent_1', 'tac_agent_0', 10, {0: 1})
+        game_transaction_1 = GameTransaction('tac_agent_0', 'tac_agent_1', 10, {'tac_good_0': 1})
+        game_transaction_2 = GameTransaction('tac_agent_1', 'tac_agent_0', 10, {'tac_good_0': 1})
         expected_game.settle_transaction(game_transaction_1)
         expected_game.settle_transaction(game_transaction_2)
 

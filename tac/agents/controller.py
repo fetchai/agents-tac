@@ -120,7 +120,7 @@ class ControllerHandler(object):
         except Exception as e:
             error_msg = "Unexpected error."
             logger.exception(error_msg)
-            return Error(ErrorCode.GENERIC_ERROR, error_msg)
+            return Error(ErrorCode.GENERIC_ERROR, error_msg + str(e))
 
     def decode(self, msg: bytes, public_key: str) -> Request:
         """From bytes to a Response message"""

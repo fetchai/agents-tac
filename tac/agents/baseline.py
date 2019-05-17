@@ -19,7 +19,7 @@
 #
 # ------------------------------------------------------------------------------
 import argparse
-import asyncio
+# import asyncio
 import copy
 import logging
 import pprint
@@ -786,8 +786,6 @@ class BaselineAgent(NegotiationAgent):
                      .format(self.public_key, result, transaction.transaction_id,
                              proposal_delta_score, transaction.amount))
         return result
-
-
 
     def _lock_state_as_buyer(self, transaction: Transaction) -> None:
         """
