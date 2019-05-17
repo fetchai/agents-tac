@@ -37,14 +37,14 @@ from oef.schema import Description
 logger = logging.getLogger(__name__)
 
 
-def _make_int_pair(key: int, value: int) -> tac_pb2.IntPair:
+def _make_str_int_pair(key: str, value: int) -> tac_pb2.StrIntPair:
     """
-    Helper method to make a Protobuf IntPair.
+    Helper method to make a Protobuf StrIntPair.
     :param key: the first element of the pair.
     :param value: the second element of the pair.
-    :return: a IntPair protobuf object.
+    :return: a StrIntPair protobuf object.
     """
-    pair = tac_pb2.IntPair()
+    pair = tac_pb2.StrIntPair()
     pair.first = key
     pair.second = value
     return pair
@@ -162,7 +162,7 @@ class Transaction(Request):
         msg.counterparty = self.counterparty
         msg.amount = self.amount
 
-        good_pbk_quantity_pairs = [_make_int_pair(gid, q) for gid, q in self.quantities_by_good_pbk.items()]
+        good_pbk_quantity_pairs = [_make_str_int_pair(good_pbk, quantity) for good_pbk, quantity in self.quantities_by_good_pbk.items()]
         msg.quantities.extend(good_pbk_quantity_pairs)
 
         envelope = tac_pb2.TACAgent.Message()
