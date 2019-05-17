@@ -186,7 +186,6 @@ class ControllerHandler(object):
             #       if yes, should the senders be notified and how?
             #  don't care for now, because assuming only (properly implemented) baseline agents.
             pending_tx = self._pending_transaction_requests.pop(request.transaction_id)
-            logger.debug("GOT HERE!")
             if request.matches(pending_tx):
                 tx = self.game_handler.from_request_to_game_tx(request, public_key)
 
