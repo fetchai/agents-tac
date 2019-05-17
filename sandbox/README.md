@@ -28,7 +28,8 @@ To change the parameters:
 
       NB_BASELINE_AGENTS=2 docker-compose up
 
-- Or, specify the values in the [`.env`](.env) file.
+- Or, specify the values in the [`.env`](.env) file and then run command:
+	  docker-compose up
 
 
 To double-check whether the variable has been set successfully, use:
@@ -52,7 +53,7 @@ If you want to include your own agents:
       
 - Connect your agent to `localhost:3333`, e.g.:
 
-      python3 ../scripts/template_agent.py
+      python3 ../scripts/template_basic.py
       
 In this case, be careful of the values of `NB_AGENTS` and `NB_BASELINE_AGENTS`:
 - if `NB_AGENTS` <= `NB_BASELINE_AGENTS`, the competition might start even though you didn't register your agent;
