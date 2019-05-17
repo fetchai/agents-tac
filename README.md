@@ -1,6 +1,12 @@
 # tac-agents
 Agents for Trading Agents Competition
 
+## Cloning
+
+This repository contains submodules. Clone with recursive strategy:
+
+	  git clone git@github.com:uvue-git/tac-agents.git --recursive
+
 ## Repository structure
 
 - `data`: default folder for storage of the simulation data.
@@ -41,6 +47,10 @@ Agents for Trading Agents Competition
 - After each change to the codebase re-install package:
 
       python3 setup.py install
+
+- After changes to the protobuf schema run:
+
+	  python setup.py protoc
 
 - To run tests:
 

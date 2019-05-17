@@ -47,8 +47,8 @@ def callback(fut):
         raise e
 
 
-def generate_transaction_id(buyer, seller, dialogue_id):
-    transaction_id = "{}_{}_{}".format(buyer, seller, dialogue_id)
+def generate_transaction_id(buyer_pbk, seller_pbk, dialogue_id):
+    transaction_id = buyer_pbk + "_" + seller_pbk + "_" + "{}".format(dialogue_id)
     return transaction_id
 
 
@@ -114,7 +114,7 @@ def generate_endowments(nb_goods: int, nb_agents: int, uniform_lower_bound_facto
     return endowments
 
 
-def generate_utilities(nb_agents: int, nb_goods: int) -> List[List[float]]:
+def generate_utility_params(nb_agents: int, nb_goods: int) -> List[List[float]]:
     """
     Compute the preference matrix. That is, a generic element e_ij is the utility of good j for agent i.
 
@@ -122,8 +122,8 @@ def generate_utilities(nb_agents: int, nb_goods: int) -> List[List[float]]:
     :param nb_goods: the number of goods.
     :return: the preference matrix.
     """
-    utilities = _sample_utility_function_params(nb_goods, nb_agents)
-    return utilities
+    utility_params = _sample_utility_function_params(nb_goods, nb_agents)
+    return utility_params
 
 
 def _sample_utility_function_params(nb_goods: int, nb_agents: int, scaling_factor: float = 100.0) -> List[List[float]]:
@@ -131,7 +131,7 @@ def _sample_utility_function_params(nb_goods: int, nb_agents: int, scaling_facto
     Sample utility function params for each agent.
     :param nb_goods: the number of goods
     :param nb_agents: the number of agents
-    :param scaling_factor: a scaling factor for all the utilities generated.
+    :param scaling_factor: a scaling factor for all the utility params generated.
     :return: a matrix with utility function params for each agent
     """
     decimals = 4 if nb_goods < 100 else 8
@@ -144,7 +144,7 @@ def _sample_utility_function_params(nb_goods: int, nb_agents: int, scaling_facto
             normalized_fractions[-1] = round(1.0 - sum(normalized_fractions[0:-1]), decimals)
         utility_function_params.append(normalized_fractions)
 
-    # scale the utilities
+    # scale the utility params
     for i in range(len(utility_function_params)):
         for j in range(len(utility_function_params[i])):
             utility_function_params[i][j] *= scaling_factor
@@ -292,3 +292,14 @@ def from_iso_format(date_string: str) -> datetime.datetime:
     :return: the datetime object.
     """
     return dateutil.parser.parse(date_string)
+
+
+def generate_pbks(nb_things: int, thing_name: str) -> List[str]:
+    """
+    Generate ids for things.
+    :param nb_things: the number of things.
+    :return: a list of labels.
+    """
+    max_number_of_digits = math.ceil(math.log10(nb_things))
+    string_format = "tac_" + thing_name + "_{:0" + str(max_number_of_digits) + "}"
+    return [string_format.format(i) for i in range(nb_things)]

@@ -91,10 +91,7 @@ class PlantUMLGenerator:
                                       .format(", ".join(sorted(map(lambda x: '"' + x + '"', agents))))))
 
     def start_competition(self, public_key, current_game):
-        agent_pbk_to_id = current_game.configuration._from_agent_pbk_to_agent_id
-        agent_id_to_pbk = dict(map(reversed, agent_pbk_to_id.items()))
-        for agent_id, agent_state in enumerate(current_game.agent_states):
-            agent_pbk = agent_id_to_pbk[agent_id]
+        for agent_pbk, agent_state in current_game.agent_states.items():
             self.add_drawable(PlantUMLGenerator.Note("{} game state: \n".format(agent_pbk) + str(agent_state) + "\nScore: {}".format(agent_state.get_score()),
                                                      public_key))
             self.add_drawable(PlantUMLGenerator.Transition(public_key, agent_pbk,
@@ -107,7 +104,7 @@ class PlantUMLGenerator:
                                                  public_key))
         self.add_drawable(PlantUMLGenerator.Note("Details:\n" + "\n"
                                                  .join(["score={}, money={}".format(g.get_score(), g.balance)
-                                                        for g in _current_game.agent_states]),
+                                                        for g in _current_game.agent_states.values()]),
                                                  public_key))
 
         self.add_drawable(PlantUMLGenerator.Transition(

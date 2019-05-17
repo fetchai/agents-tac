@@ -12,7 +12,7 @@ This tutorial shows how to simulate a simple TAC.
 
 - Run the simulation example with the gui flag to visualize data in realtime
 
-      python examples/simulation_demo/tac_agent_spawner.py --gui  
+      python examples/simulation_demo/tac_agent_spawner.py --gui
 
 and then open `http://localhost:8097` in your browser.
 
@@ -22,6 +22,7 @@ and then open `http://localhost:8097` in your browser.
 - `--nb-goods` is the number of goods in the competition.
 - `--nb-baseline-agents` is the number of number of baseline agents to participate in the competition.
 - `--oef-addr` and `--oef-port` allow you to specify a different OEF Node to use for the simulation.
+- `--service-registration-strategy` the string indicates whether the baseline agent registers supply, demand or both services on the oef.
 - `--uml` specifies whether or not to store the activity of the simulation in PlantUML syntax.
 - `--data-output-dir` is the output directory to use for storing simulation data in `${data_output_dir}/${experiment_id}`.
 - `--experiment-id` is the name to give to the simulation.

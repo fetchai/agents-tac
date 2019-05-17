@@ -52,10 +52,10 @@ class GameStats:
         nb_goods = self.game.configuration.nb_goods
         result = np.zeros((nb_transactions + 1, nb_agents, nb_goods), dtype=np.int32)
 
-        temp_game = Game(self.game.configuration)
+        temp_game = Game(self.game.configuration, self.game.initialization)
 
         # initial holdings
-        result[0, :] = np.asarray(temp_game.configuration.endowments, dtype=np.int32)
+        result[0, :] = np.asarray(temp_game.initialization.endowments, dtype=np.int32)
 
         # compute the partial scores for every agent after every transaction
         # (remember that indexes of the transaction start from one, because index 0 is reserved for the initial scores)
@@ -79,7 +79,7 @@ class GameStats:
         nb_agents = self.game.configuration.nb_agents
         result = np.zeros((nb_transactions + 1, nb_agents))
 
-        temp_game = Game(self.game.configuration)
+        temp_game = Game(self.game.configuration, self.game.initialization)
 
         # initial scores
         result[0, :] = temp_game.get_scores()
@@ -97,10 +97,10 @@ class GameStats:
         nb_agents = self.game.configuration.nb_agents
         result = np.zeros((nb_transactions + 1, nb_agents), dtype=np.int32)
 
-        temp_game = Game(self.game.configuration)
+        temp_game = Game(self.game.configuration, self.game.initialization)
 
-        # initial balance
-        result[0, :] = np.asarray(temp_game.configuration.initial_money_amounts, dtype=np.int32)
+        # initial balances
+        result[0, :] = np.asarray(temp_game.initialization.initial_money_amounts, dtype=np.int32)
 
         # compute the partial scores for every agent after every transaction
         # (remember that indexes of the transaction start from one, because index 0 is reserved for the initial scores)
@@ -115,9 +115,9 @@ class GameStats:
         nb_goods = self.game.configuration.nb_goods
         result = np.zeros((nb_transactions + 1, nb_goods), dtype=np.float32)
 
-        temp_game = Game(self.game.configuration)
+        temp_game = Game(self.game.configuration, self.game.initialization)
 
-        # initial balance
+        # initial prices
         result[0, :] = np.asarray(0, dtype=np.float32)
 
         for idx, tx in enumerate(self.game.transactions):
@@ -137,9 +137,8 @@ class GameStats:
 
         plt.clf()
         plt.plot(history)
-        # labels = ["agent_{:02d}".format(idx) for idx in range(self.game.nb_agents)]
-        labels = self.game.configuration.agent_labels
-        plt.legend(labels, loc="best")
+        pbks = self.game.configuration.agent_pbks
+        plt.legend(pbks, loc="best")
         plt.xlabel("Transactions")
         plt.ylabel("Score")
 

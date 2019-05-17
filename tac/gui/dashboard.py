@@ -55,7 +55,7 @@ class Dashboard(object):
 
     def update(self):
         self._update_info()
-        self._update_utilities()
+        self._update_utility_params()
         self._update_current_holdings()
         self._update_initial_holdings()
         self._update_plot_scores()
@@ -77,26 +77,20 @@ class Dashboard(object):
         self.viz.properties([
             {'type': 'number', 'name': '# agents', 'value': self.game_stats.game.configuration.nb_agents},
             {'type': 'number', 'name': '# goods', 'value': self.game_stats.game.configuration.nb_goods},
-            {'type': 'number', 'name': 'fee', 'value': self.game_stats.game.configuration.fee},
-            {'type': 'number', 'name': 'initial balance',
-             'value': self.game_stats.game.configuration.initial_money_amounts[0]},
+            {'type': 'number', 'name': 'tx fee', 'value': self.game_stats.game.configuration.tx_fee},
             {'type': 'number', 'name': '# transactions', 'value': len(self.game_stats.game.transactions)},
         ], env=env_main_name, win=window_name, opts=dict(title="Configuration"))
 
-    def _update_utilities(self):
-        utilities = self.game_stats.game.configuration.utilities
-        utilities = np.asarray(utilities)
+    def _update_utility_params(self):
+        utility_params = self.game_stats.game.initialization.utility_params
+        utility_params = np.asarray(utility_params)
 
-        window_name = "utilities"
-        self.viz.heatmap(utilities, env=env_main_name, win=window_name, opts=dict(
-            title="Utilities",
+        window_name = "utility_params"
+        self.viz.heatmap(utility_params, env=env_main_name, win=window_name, opts=dict(
+            title="Utility Parameters",
             xlabel="Goods",
             ylabel="Agents"
         ))
-
-    # def _update_current_balances(self):
-    #     balances = np.asarray([state.balance for state in self.game_stats.game.agent_states])
-    #     self.viz.bar(X=balances, env=env_main_name, win="balances", opts=dict(title="Balances"))
 
     def _update_initial_holdings(self):
         initial_holdings = self.game_stats.holdings_history()[0]
@@ -127,7 +121,7 @@ class Dashboard(object):
         window_name = "score_history"
         self.viz.line(X=np.arange(score_history.shape[0]), Y=score_history, env=env_main_name, win=window_name,
                       opts=dict(
-                          legend=self.game_stats.game.configuration.agent_labels,
+                          legend=self.game_stats.game.configuration.agent_pbks,
                           title="Scores",
                           xlabel="Transactions",
                           ylabel="Score")
@@ -139,7 +133,7 @@ class Dashboard(object):
         window_name = "balance_history"
         self.viz.line(X=np.arange(balance_history.shape[0]), Y=balance_history, env=env_main_name, win=window_name,
                       opts=dict(
-                          legend=self.game_stats.game.configuration.agent_labels,
+                          legend=self.game_stats.game.configuration.agent_pbks,
                           title="Balance history",
                           xlabel="Transactions",
                           ylabel="Money")
@@ -151,7 +145,7 @@ class Dashboard(object):
         window_name = "price_history"
         self.viz.line(X=np.arange(price_history.shape[0]), Y=price_history, env=env_main_name, win=window_name,
                       opts=dict(
-                          legend=self.game_stats.game.configuration.good_labels,
+                          legend=self.game_stats.game.configuration.good_pbks,
                           title="Price history",
                           xlabel="Transactions",
                           ylabel="Price")

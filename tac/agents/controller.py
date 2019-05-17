@@ -37,11 +37,12 @@ from threading import Thread
 from typing import Dict
 from typing import Optional, Set
 
+from oef.agents import OEFAgent
 from oef.schema import Description, DataModel, AttributeSchema
 
-from tac.core import TACAgent
 from tac.game import Game, GameTransaction
 from tac.gui.dashboard import Dashboard
+from tac.helpers.misc import generate_pbks
 from tac.helpers.plantuml import plantuml_gen
 from tac.protocol import Response, Request, Register, Unregister, Error, GameData, \
     Transaction, TransactionConfirmation, ErrorCode, Cancelled
@@ -174,9 +175,11 @@ class ControllerHandler(object):
         """
         logger.debug("Handling transaction: {}".format(request))
 
+        # if transaction arrives first time then put it into the pending pool
         if request.transaction_id not in self._pending_transaction_requests:
             logger.debug("Put transaction request in the pool: {}".format(request.transaction_id))
             self._pending_transaction_requests[request.transaction_id] = request
+        # if transaction arrives second time then process it
         else:
             # TODO how to handle failures in matching transaction?
             #   that is, should the pending txs be removed from the pool?
@@ -185,6 +188,7 @@ class ControllerHandler(object):
             pending_tx = self._pending_transaction_requests.pop(request.transaction_id)
             if request.matches(pending_tx):
                 tx = self.game_handler.from_request_to_game_tx(request, public_key)
+
                 if self.game_handler.current_game.is_transaction_valid(tx):
                     return self._handle_valid_transaction(request, public_key)
                 else:
@@ -277,20 +281,19 @@ class GameHandler:
         """
         return self.current_game is not None
 
-    def from_request_to_game_tx(self, transaction: Transaction, agent_label: str) -> GameTransaction:
+    def from_request_to_game_tx(self, transaction: Transaction, sender_pbk: str) -> GameTransaction:
         """
         From a transaction request message to a game transaction
         :param transaction: the request message for a transaction.
-        :param agent_label: the agent label that sent the transaction.
+        :param sender_pbk: the agent pbk that sent the transaction.
         :return: the game transaction.
         """
-        sender_id = self.controller_agent.game_handler.current_game.configuration.agent_id_from_label(agent_label)
-        receiver_id = self.current_game.agent_id_from_label(transaction.counterparty)
-        buyer_id, seller_id = (sender_id, receiver_id) if transaction.buyer else (receiver_id, sender_id)
+        receiver_pbk = transaction.counterparty
+        buyer_pbk, seller_pbk = (sender_pbk, receiver_pbk) if transaction.buyer else (receiver_pbk, sender_pbk)
 
         tx = GameTransaction(
-            buyer_id,
-            seller_id,
+            buyer_pbk,
+            seller_pbk,
             transaction.amount,
             transaction.quantities_by_good_id
         )
@@ -323,9 +326,15 @@ class GameHandler:
 
         :return: a Game instance.
         """
-        agents_ids = sorted(self.registered_agents)
-        nb_agents = len(agents_ids)
-        game = Game.generate_game(nb_agents, self.nb_goods, self.money_endowment, self.fee, self.lower_bound_factor, self.upper_bound_factor, agent_ids=agents_ids)
+        agent_pbks = sorted(self.registered_agents)
+        nb_agents = len(agent_pbks)
+
+        # TODO these pbks need to come externally, should not be set here!
+        # if agent_pbks is None:
+        #     agent_pbks = generate_pbks(self.nb_agents, 'agent')
+        good_pbks = generate_pbks(self.nb_goods, 'good')
+
+        game = Game.generate_game(nb_agents, self.nb_goods, self.money_endowment, self.fee, self.lower_bound_factor, self.upper_bound_factor, agent_pbks, good_pbks)
         return game
 
     def _send_game_data_to_agents(self) -> None:
@@ -335,13 +344,17 @@ class GameHandler:
 
         :return: None.
         """
-        for public_key in self.current_game.configuration.agent_labels:
-            game_data = self.current_game.get_agent_state_from_agent_label(public_key)
+        for public_key in self.current_game.configuration.agent_pbks:
+            agent_state = self.current_game.get_agent_state_from_agent_pbk(public_key)
             game_data_response = GameData(
-                game_data.balance,
-                game_data.current_holdings,
-                game_data.utilities,
-                self.fee,
+                agent_state.balance,
+                agent_state.current_holdings,
+                agent_state.utility_params,
+                self.current_game.configuration.nb_agents,
+                self.current_game.configuration.nb_goods,
+                self.current_game.configuration.tx_fee,
+                self.current_game.configuration.agent_pbks,
+                self.current_game.configuration.good_pbks
             )
             logger.debug("[{}]: sending GameData to '{}': {}"
                          .format(self.controller_agent.public_key, public_key, str(game_data_response)))
@@ -375,7 +388,7 @@ class GameHandler:
             self.controller_agent.send_message(0, 0, tac_agent, Cancelled().serialize())
 
 
-class ControllerAgent(TACAgent):
+class ControllerAgent(OEFAgent):
     CONTROLLER_DATAMODEL = DataModel("tac", [
         AttributeSchema("version", int, True, "Version number of the TAC Controller Agent."),
     ])
