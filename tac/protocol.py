@@ -183,8 +183,9 @@ class Transaction(Request):
                            msg.transaction.amount,
                            quantities_per_good_pbk)
 
-    def from_proposal(self, proposal: Description, transaction_id: str,
-                      is_buyer: bool, counterparty: str) -> 'Request':
+    @classmethod
+    def from_proposal(cls, proposal: Description, transaction_id: str,
+                      is_buyer: bool, counterparty: str, sender: str) -> 'Request':
         """
         Create a transaction from a proposal.
 
@@ -192,13 +193,14 @@ class Transaction(Request):
         :param transaction_id:
         :param is_buyer:
         :param counterparty:
+        :param sender:
         :return: Transaction
         """
         data = copy.deepcopy(proposal.values)
         price = data.pop("price")
         quantity_by_good_pbk = {key: value for key, value in data.items()}
         return Transaction(transaction_id, is_buyer, counterparty, price, quantity_by_good_pbk,
-                           sender=self.public_key)
+                           sender=sender)
 
     def matches(self, other: 'Transaction') -> bool:
         """

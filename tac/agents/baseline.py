@@ -351,7 +351,8 @@ class BaselineAgent(NegotiationAgent):
                 transaction = Transaction.from_proposal(proposal=proposal,
                                                         transaction_id=transaction_id,
                                                         is_buyer=False,
-                                                        counterparty=origin)
+                                                        counterparty=origin,
+                                                        sender=self.public_key)
                 self._pending_proposals[dialogue_label][proposal_id] = transaction
             logger.debug("[{}]: sending to {} a Propose{}".format(self.public_key, origin,
                                                                   pprint.pformat({
@@ -400,7 +401,8 @@ class BaselineAgent(NegotiationAgent):
                 transaction = Transaction.from_proposal(proposal=proposal,
                                                         transaction_id=transaction_id,
                                                         is_buyer=True,
-                                                        counterparty=origin)
+                                                        counterparty=origin,
+                                                        sender=self.public_key)
                 self._pending_proposals[dialogue_label][proposal_id] = transaction
             logger.debug("[{}]: sending to {} a Propose{}".format(self.public_key, origin,
                                                                   pprint.pformat({
@@ -460,7 +462,8 @@ class BaselineAgent(NegotiationAgent):
         transaction = Transaction.from_proposal(proposal,
                                                 transaction_id,
                                                 is_buyer=True,
-                                                counterparty=origin)
+                                                counterparty=origin,
+                                                sender=self.public_key)
         if self._is_profitable_transaction_as_buyer(transaction):
             logger.debug("[{}]: Accepting propose (as buyer).".format(self.public_key))
             self._accept_propose_as_buyer(msg_id, dialogue_id, origin, target, proposals)
@@ -494,7 +497,8 @@ class BaselineAgent(NegotiationAgent):
         transaction = Transaction.from_proposal(proposal,
                                                 transaction_id,
                                                 is_buyer=False,
-                                                counterparty=origin)
+                                                counterparty=origin,
+                                                sender=self.public_key)
         if self._is_profitable_transaction_as_seller(transaction):
             logger.debug("[{}]: Accepting propose (as seller).".format(self.public_key))
             self._accept_propose_as_seller(msg_id, dialogue_id, origin, target, proposals)
@@ -520,7 +524,8 @@ class BaselineAgent(NegotiationAgent):
         transaction = Transaction.from_proposal(proposal=proposal,
                                                 transaction_id=transaction_id,
                                                 is_buyer=False,
-                                                counterparty=origin)
+                                                counterparty=origin,
+                                                sender=self.public_key)
         # lock state
         logger.debug("[{}]: Locking the current state (as seller).".format(self.public_key))
         self._lock_state_as_seller(transaction)
@@ -548,7 +553,8 @@ class BaselineAgent(NegotiationAgent):
         transaction = Transaction.from_proposal(proposal=proposal,
                                                 transaction_id=transaction_id,
                                                 is_buyer=True,
-                                                counterparty=origin)
+                                                counterparty=origin,
+                                                sender=self.public_key)
         # lock state
         logger.debug("[{}]: Locking the current state (as buyer).".format(self.public_key))
         self._lock_state_as_buyer(transaction)
@@ -857,7 +863,7 @@ class BaselineAgent(NegotiationAgent):
         :return: a list of supplied good pbks
         """
         state_after_locks = self._state_after_locks_as_seller()
-        return BaselineStrategy.supplied_good_pbks(state_after_locks.current_holdings)
+        return BaselineStrategy.supplied_good_pbks(self.game_configuration.good_pbks, state_after_locks.current_holdings)
 
     def _get_demanded_goods_quantities(self) -> List[int]:
         """
@@ -877,7 +883,7 @@ class BaselineAgent(NegotiationAgent):
         :return: a list of demanded good pbks
         """
         state_after_locks = self._state_after_locks_as_buyer()
-        return BaselineStrategy.demanded_good_pbks(state_after_locks.current_holdings)
+        return BaselineStrategy.demanded_good_pbks(self.game_configuration.good_pbks, state_after_locks.current_holdings)
 
     def _get_seller_proposals(self) -> List[Description]:
         """
