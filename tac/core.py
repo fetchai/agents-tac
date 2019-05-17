@@ -33,6 +33,9 @@ logger = logging.getLogger(__name__)
 
 
 class NegotiationAgent(OEFAgent):
+    """
+    The negotiation agent is an agent class that is TAC compatible and defines a FIPA complient interface.
+    """
 
     TAC_CONTROLLER_SEARCH_ID = 1
 

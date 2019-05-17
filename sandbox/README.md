@@ -15,7 +15,19 @@ To configure the execution of TAC, you can tune the following parameters:
 - `NB_AGENTS` is the minimum number of agents required for the competition to start.
 - `NB_GOODS` is the number of types of goods available for trade in the competition.
 - `NB_BASELINE_AGENTS` is the number of baseline agents spawned in the TAC instance. 
-- `REGISTRATION_TIME` is the time (in seconds) that the controller waits for agent registrations for TAC. 
+- `OEF_ADDR` and `OEF_PORT` allow you to specify a different OEF Node to use for the sandbox. 
+- `SERVICE_REGISTRATION_STRATEGY` indicates whether the baseline agent registers supply, demand or both services on the oef.
+- `UML` specifies whether or not to store the activity of the simulation in PlantUML syntax.
+- `DATA_OUTPUT_DIR` is the output directory to use for storing simulation data in `${DATA_OUTPUT_DIR}/${EXPERIMENT_ID}`.
+- `EXPERIMENT_ID` is the name to give to the simulation.
+- `PLOT` specifies whether to plot a summary of the game.
+- `LOWER_BOUND_FACTOR` is the lower bound factor of a uniform distribution used for generating good instances.
+- `UPPER_BOUND_FACTOR` is the upper bound factor of a uniform distribution used for generating good instances.
+- `TX_FEE` is the transaction fee.
+- `REGISTRATION_TIMEOUT` is the amount of time (in seconds) to wait for agents to register before attempting to start the competition.
+- `INACTIVITY_TIMEOUT` is the amount of time (in seconds) to wait during inactivity until the termination of the competition.
+- `COMPETITION_TIMEOUT` is the amount of time (in seconds) to wait from the start of the competition until the termination of the competition.
+- `SEED` is the seed for the random module.
 
 To change the parameters:
 
@@ -28,12 +40,13 @@ To change the parameters:
 
       NB_BASELINE_AGENTS=2 docker-compose up
 
-- Or, specify the values in the [`.env`](.env) file.
+- Or, specify the values in the [`.env`](.env) file and then run command:
+	  docker-compose up
 
 
 To double-check whether the variable has been set successfully, use:
 
-    docker-compose config
+      docker-compose config
 
 ### Run TAC with baseline agents only
 
@@ -52,7 +65,11 @@ If you want to include your own agents:
       
 - Connect your agent to `localhost:3333`, e.g.:
 
-      python3 ../scripts/template_agent.py
+      python3 ../scripts/template_basic.py
+
+- Or connect our baseline agent to `localhost:3333`, e.g.:
+
+	  python3 ../scripts/template_baseline.py
       
 In this case, be careful of the values of `NB_AGENTS` and `NB_BASELINE_AGENTS`:
 - if `NB_AGENTS` <= `NB_BASELINE_AGENTS`, the competition might start even though you didn't register your agent;
