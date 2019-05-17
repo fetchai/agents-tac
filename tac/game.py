@@ -355,7 +355,7 @@ class Game:
 
         # check if we have enough instances of goods, for every good involved in the transaction.
         seller_holdings = self.agent_states[tx.seller_pbk].current_holdings
-        for good_id, good_pbk, bought_quantity in enumerate(tx.quantities_by_good_pbk.items()):
+        for good_id, bought_quantity in enumerate(tx.quantities_by_good_pbk.values()):
             if seller_holdings[good_id] < bought_quantity:
                 return False
 
@@ -581,7 +581,7 @@ class AgentState:
         else:
             # check if we have the goods.
             result = True
-            for good_id, good_pbk, quantity in enumerate(tx.quantities_by_good_pbk.items()):
+            for good_id, quantity in enumerate(tx.quantities_by_good_pbk.values()):
                 result = result and (self._current_holdings[good_id] >= quantity)
         return result
 
@@ -611,7 +611,7 @@ class AgentState:
         else:
             self.balance += tx.amount
 
-        for good_id, good_pbk, quantity in enumerate(tx.quantities_by_good_pbk.items()):
+        for good_id, quantity in enumerate(tx.quantities_by_good_pbk.values()):
             quantity_delta = quantity if tx.buyer else -quantity
             self._current_holdings[good_id] += quantity_delta
 

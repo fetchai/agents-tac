@@ -44,7 +44,20 @@ class NegotiationAgent(OEFAgent):
 
         self._controller_pbk = None  # type: Optional[str]
         self._game_configuration = None  # type: Optional[GameConfiguration]
+        self._initial_agent_state = None  # type: Optional[AgentState]
         self._agent_state = None  # type: Optional[AgentState]
+
+    @property
+    def controller_pbk(self):
+        return self._controller_pbk
+
+    @property
+    def game_configuration(self):
+        return self._game_configuration
+
+    @property
+    def initial_agent_state(self):
+        return self._initial_agent_state
 
     @abstractmethod
     def on_start(self, game_data: GameData) -> None:
@@ -197,6 +210,7 @@ class NegotiationAgent(OEFAgent):
         # populate data structures about the started competition
         self._controller_pbk = controller_public_key
         self._game_configuration = GameConfiguration(game_data.nb_agents, game_data.nb_goods, game_data.tx_fee, game_data.agent_pbks, game_data.good_pbks)
+        self._initial_agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
         self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
 
         # dispatch the handling to the developer's implementation.
@@ -240,7 +254,7 @@ class NegotiationAgent(OEFAgent):
         :return: None
         :raises AssertionError: if the agent is already registered.
         """
-        assert self._controller_pbk is None and self._game_configuration is None and self._agent_state is None
+        assert self.controller_pbk is None and self.game_configuration is None and self._agent_state is None
         msg = Register().serialize()
         self.send_message(0, 0, tac_controller_pk, msg)
 

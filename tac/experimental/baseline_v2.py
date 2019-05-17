@@ -206,7 +206,7 @@ class BaselineAgentV2(NegotiationAgent):
 
     @property
     def seller_data_model(self) -> DataModel:
-        return build_datamodel(self._game_configuration.nb_goods, seller=True)
+        return build_datamodel(self._game_configuration.good_pbks, seller=True)
 
     def on_start(self, game_data: GameData) -> None:
 

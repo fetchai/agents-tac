@@ -152,7 +152,7 @@ class BaselineAgent(NegotiationAgent):
 
         :return: the description (to advertise on the Service Directory).
         """
-        desc = get_goods_quantities_description(self._game_configuration.good_pbks, self._get_supplied_goods_quantities(), True)
+        desc = get_goods_quantities_description(self.game_configuration.good_pbks, self._get_supplied_goods_quantities(), True)
         return desc
 
     def _get_goods_demanded_description(self) -> Description:
@@ -161,7 +161,7 @@ class BaselineAgent(NegotiationAgent):
 
         :return: the description (to advertise on the Service Directory).
         """
-        desc = get_goods_quantities_description(self._game_configuration.good_pbks, self._get_demanded_goods_quantities(), False)
+        desc = get_goods_quantities_description(self.game_configuration.good_pbks, self._get_demanded_goods_quantities(), False)
         return desc
 
     def _search_for_sellers(self) -> None:
@@ -198,12 +198,12 @@ class BaselineAgent(NegotiationAgent):
 
         :return the Query, or None.
         """
-        demanded_goods_ids = self._get_demanded_goods_ids()
+        demanded_goods_pbks = self._get_demanded_goods_pbks()
 
-        if len(demanded_goods_ids) == 0:
+        if len(demanded_goods_pbks) == 0:
             return None
         else:
-            return build_query(demanded_goods_ids, True, self._game_configuration.nb_goods)
+            return build_query(demanded_goods_pbks, True)
 
     def _build_buyers_query(self) -> Optional[Query]:
         """
@@ -211,12 +211,12 @@ class BaselineAgent(NegotiationAgent):
 
         :return the Query, or None.
         """
-        supplied_goods_ids = self._get_supplied_goods_ids()
+        supplied_goods_pbks = self._get_supplied_goods_pbks()
 
-        if len(supplied_goods_ids) == 0:
+        if len(supplied_goods_pbks) == 0:
             return None
         else:
-            return build_query(supplied_goods_ids, False, self._game_configuration.nb_goods)
+            return build_query(supplied_goods_pbks, False)
 
     def on_search_results(self, search_id: int, agents: List[str]) -> None:
         """
@@ -687,7 +687,7 @@ class BaselineAgent(NegotiationAgent):
         """
         logger.debug("[{}]: on transaction confirmed.".format(self.public_key))
         transaction = self._locks[tx_confirmation.transaction_id]
-        self._agent_state.update(transaction, self._game_configuration.tx_fee)
+        self._agent_state.update(transaction, self.game_configuration.tx_fee)
         self._remove_lock(tx_confirmation.transaction_id)
 
         self._start_loop()
@@ -745,11 +745,11 @@ class BaselineAgent(NegotiationAgent):
 
         state_after_locks = self._state_after_locks_as_buyer()
 
-        if not state_after_locks.check_transaction_is_consistent(transaction, self._game_configuration.tx_fee):
+        if not state_after_locks.check_transaction_is_consistent(transaction, self.game_configuration.tx_fee):
             logger.debug("[{}]: the proposed transaction is not consistent with the state after locks.".format(self.public_key))
             return False
 
-        proposal_delta_score = state_after_locks.get_score_diff_from_transaction(transaction, self._game_configuration.tx_fee)
+        proposal_delta_score = state_after_locks.get_score_diff_from_transaction(transaction, self.game_configuration.tx_fee)
 
         result = proposal_delta_score >= 0
         logger.debug("[{}]: is good proposal for buyer? {}: tx_id={}, "
@@ -775,11 +775,11 @@ class BaselineAgent(NegotiationAgent):
 
         state_after_locks = self._state_after_locks_as_seller()
 
-        if not state_after_locks.check_transaction_is_consistent(transaction, self._game_configuration.tx_fee):
+        if not state_after_locks.check_transaction_is_consistent(transaction, self.game_configuration.tx_fee):
             logger.debug("[{}]: the proposed transaction is not consistent with the state after locks.".format(self.public_key))
             return False
 
-        proposal_delta_score = state_after_locks.get_score_diff_from_transaction(transaction, self._game_configuration.tx_fee)
+        proposal_delta_score = state_after_locks.get_score_diff_from_transaction(transaction, self.game_configuration.tx_fee)
 
         result = proposal_delta_score >= 0
         logger.debug("[{}]: is good proposal for seller? {}: tx_id={}, delta_score={}, amount={}"
@@ -819,7 +819,7 @@ class BaselineAgent(NegotiationAgent):
         :return: the agent state with the locks applied to current state
         """
         transactions = list(self._locks.values())
-        state_after_locks = self._agent_state.apply(transactions, self._game_configuration.tx_fee)
+        state_after_locks = self._agent_state.apply(transactions, self.game_configuration.tx_fee)
         return state_after_locks
 
     def _state_after_locks_as_buyer(self):
@@ -829,7 +829,7 @@ class BaselineAgent(NegotiationAgent):
         :return: the agent state with the locks applied to current state
         """
         transactions = list(self._locks.values())
-        state_after_locks = self._agent_state.apply(transactions, self._game_configuration.tx_fee)
+        state_after_locks = self._agent_state.apply(transactions, self.game_configuration.tx_fee)
         return state_after_locks
 
     def _remove_lock(self, transaction_id: str):
@@ -870,7 +870,7 @@ class BaselineAgent(NegotiationAgent):
         state_after_locks = self._state_after_locks_as_buyer()
         return BaselineStrategy.demanded_good_quantities(state_after_locks.current_holdings)
 
-    def _get_demanded_goods_ids(self) -> Set[str]:
+    def _get_demanded_goods_pbks(self) -> Set[str]:
         """
         Wraps the function which determines demand.
 
@@ -890,7 +890,7 @@ class BaselineAgent(NegotiationAgent):
         :return: a list of descriptions
         """
         state_after_locks = self._state_after_locks_as_seller()
-        return BaselineStrategy.get_seller_proposals(state_after_locks.current_holdings, state_after_locks.utility_params)
+        return BaselineStrategy.get_seller_proposals(self.game_configuration.good_pbks, state_after_locks.current_holdings, state_after_locks.utility_params)
 
     def _get_buyer_proposals(self) -> List[Description]:
         """
@@ -901,7 +901,7 @@ class BaselineAgent(NegotiationAgent):
         :return: a list of descriptions
         """
         state_after_locks = self._state_after_locks_as_buyer()
-        return BaselineStrategy.get_buyer_proposals(state_after_locks.current_holdings, state_after_locks.utility_params, self._game_configuration.tx_fee)
+        return BaselineStrategy.get_buyer_proposals(self.game_configuration.good_pbks, state_after_locks.current_holdings, state_after_locks.utility_params, self.game_configuration.tx_fee)
 
 
 class BaselineStrategy:

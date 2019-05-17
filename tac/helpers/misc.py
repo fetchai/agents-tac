@@ -38,16 +38,14 @@ class TacError(Exception):
     """General purpose exception to detect exception associated with the logic of the TAC application."""
 
 
-def callback(fut):
-    """Callback to audit exceptions from asyncio tasks."""
-    try:
-        _ = fut.result()
-    except Exception as e:
-        logger.exception('Unexpected error')
-        raise e
-
-
-def generate_transaction_id(buyer_pbk, seller_pbk, dialogue_id):
+def generate_transaction_id(buyer_pbk: str, seller_pbk: str, dialogue_id: int) -> str:
+    """
+    Generate a transaction id.
+    :param buyer_pbk: the pbk of the buyer.
+    :param seller_pbk: the pbk of the seller.
+    :param dialogue_id: the id of the dialogue.
+    :return: a transaction id
+    """
     transaction_id = buyer_pbk + "_" + seller_pbk + "_" + "{}".format(dialogue_id)
     return transaction_id
 
@@ -186,29 +184,28 @@ def get_goods_quantities_description(good_pbks: List[str], good_quantities: List
     """
     Get the TAC seller description, following a baseline policy.
     That is, a description with the following structure:
-    >>> desciption = {
-    ...     "good_01": 1,
-    ...     "good_02": 0,
+    >>> description = {
+    ...     "tac_good_0": 1,
+    ...     "tac_good_1": 0,
     ...     #...
     ...
     ... }
     >>>
 
-     where the keys indicate the good and the values the quantity that the seller wants to sell.
+     where the keys indicate the good_pbk and the values the quantity.
 
-     The baseline agent decides to sell everything in excess, but keeping the goods that
-
-     >>> desc = get_goods_quantities_description([0, 0, 1, 2], True)
+     >>> desc = get_goods_quantities_description(['tac_good_0', 'tac_good_1', 'tac_good_2', 'tac_good_3'], [0, 0, 1, 2], True)
      >>> desc.data_model.name == TAC_SELLER_DATAMODEL_NAME
      True
      >>> desc.values == {
-     ...    "good_0": 0,
-     ...    "good_1": 0,
-     ...    "good_2": 1,
-     ...    "good_3": 2}
+     ...    "tac_good_0": 0,
+     ...    "tac_good_1": 0,
+     ...    "tac_good_2": 1,
+     ...    "tac_good_3": 2}
      ...
      True
 
+    :param good_pbks: the pbks of the goods.
     :param good_quantities: the quantities per good.
     :param is_seller: True if the description is of a seller, False if it's of a buyer.
     :return: the description to advertise on the Service Directory.
@@ -219,13 +216,13 @@ def get_goods_quantities_description(good_pbks: List[str], good_quantities: List
     return desc
 
 
-def build_query(good_pbks: Set[int], is_seller: bool, ) -> Query:
+def build_query(good_pbks: Set[int], is_seller: bool) -> Query:
     """
     Build the query that the buyer can send to look for goods.
 
-    In particular, if the needed good ids are {0, 2, 3}, the resulting constraint expression is:
+    In particular, if the needed good pbks are {'tac_good_0', 'tac_good_2', 'tac_good_3'}, the resulting constraint expression is:
 
-        good_0 >= 1 OR good_2 >= 1 OR good_3 >= 1
+        tac_good_0 >= 1 OR tac_good_2 >= 1 OR tac_good_3 >= 1
 
     That is, the OEF will return all the sellers that have at least one of the good in the query
     (assuming that the sellers are registered with the data model for baseline sellers.
@@ -235,7 +232,7 @@ def build_query(good_pbks: Set[int], is_seller: bool, ) -> Query:
     :param nb_goods: the total number of goods (to build the data model, optional)
     :return: the query.
     """
-    data_model = None if nb_goods is None else build_datamodel(good_pbks, is_seller)
+    data_model = None if good_pbks is None else build_datamodel(good_pbks, is_seller)
     constraints = [Constraint(good_pbk, GtEq(1)) for good_pbk in good_pbks]
 
     if len(good_pbks) > 1:
@@ -256,9 +253,9 @@ def from_iso_format(date_string: str) -> datetime.datetime:
 
 def generate_pbks(nb_things: int, thing_name: str) -> List[str]:
     """
-    Generate ids for things.
+    Generate pbks for things.
     :param nb_things: the number of things.
-    :return: a list of labels.
+    :return: a list of pbks.
     """
     max_number_of_digits = math.ceil(math.log10(nb_things))
     string_format = "tac_" + thing_name + "_{:0" + str(max_number_of_digits) + "}"
