@@ -29,7 +29,7 @@ and then open `http://localhost:8097` in your browser.
 - `--plot` specifies whether to plot a summary of the game.
 - `--lower-bound-factor` is the lower bound factor of a uniform distribution used for generating good instances.
 - `--upper-bound-factor` is the upper bound factor of a uniform distribution used for generating good instances.
-- `--fee` is the transaction fee.
+- `--tx_fee` is the transaction fee.
 - `--registration-timeout` is the amount of time (in seconds) to wait for agents to register before attempting to start the competition.
 - `--inactivity-timeout` is the amount of time (in seconds) to wait during inactivity until the termination of the competition.
 - `--competition-timeout` is the amount of time (in seconds) to wait from the start of the competition until the termination of the competition.
@@ -46,16 +46,18 @@ Example:
           --nb-baseline-agents 10
           --oef-addr oef.economicagents.com 
           --oef-port 3333
+          --service-registration-strategy both
           --uml True
           --data-output-dir data
           --experiment-id my_experiment
           --plot True
           --lower-bound-factor 1
           --upper-bound-factor 1
-          --fee 1
+          --tx-fee 1
           --registration-timeout 10
           --inactivity-timeout 20
           --competition-timeout 120
+          --gui
           --seed 42
       
 It generates a `game.json` file in the `${data_output_dir}/${experiment_id}` that can be inspected with a GUI (see `tac/gui`).

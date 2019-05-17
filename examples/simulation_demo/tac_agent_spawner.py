@@ -53,7 +53,7 @@ def parse_arguments():
     parser.add_argument("--plot", default=True, type=bool, help="Plot sequence of transactions and the changes in scores.")
     parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
     parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
-    parser.add_argument("--fee", default=1, type=int, help="The transaction fee.")
+    parser.add_argument("--tx-fee", default=1, type=int, help="The transaction fee.")
     parser.add_argument("--registration-timeout", default=10, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
     parser.add_argument("--inactivity-timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
     parser.add_argument("--competition-timeout", default=120, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
@@ -88,7 +88,7 @@ def initialize_controller_agent(public_key: str,
                                 oef_port: int,
                                 min_nb_agents: int,
                                 nb_goods: int,
-                                fee: int,
+                                tx_fee: int,
                                 lower_bound_factor: int,
                                 upper_bound_factor: int,
                                 registration_timeout: int,
@@ -102,7 +102,7 @@ def initialize_controller_agent(public_key: str,
     :param oef_port: the TCP/IP port of the OEF Node.
     :param min_nb_agents: the minimum number of agents to run the competition.
     :param nb_goods: the number of goods.
-    :param fee: the transaction fee.
+    :param tx_fee: the transaction fee.
     :param lower_bound_factor: the lower bound factor of a uniform distribution.
     :param upper_bound_factor: the upper bound factor of a uniform distribution.
     :param registration_timeout: the amount of time (in seconds) to wait for agents to register before attempting to start the competition.
@@ -116,7 +116,7 @@ def initialize_controller_agent(public_key: str,
 
     tac_controller = ControllerAgent(public_key=public_key, oef_addr=oef_addr,
                                      oef_port=oef_port, min_nb_agents=min_nb_agents,
-                                     nb_goods=nb_goods, fee=fee, lower_bound_factor=lower_bound_factor,
+                                     nb_goods=nb_goods, tx_fee=tx_fee, lower_bound_factor=lower_bound_factor,
                                      upper_bound_factor=upper_bound_factor, start_time=start_time, end_time=end_time,
                                      inactivity_timeout=inactivity_timeout, gui=gui)
     tac_controller.connect()
@@ -222,7 +222,7 @@ if __name__ == '__main__':
     try:
 
         tac_controller = initialize_controller_agent("tac_controller", arguments.oef_addr, arguments.oef_port,
-                                                     arguments.nb_agents, arguments.nb_goods, arguments.fee,
+                                                     arguments.nb_agents, arguments.nb_goods, arguments.tx_fee,
                                                      arguments.lower_bound_factor, arguments.upper_bound_factor,
                                                      arguments.registration_timeout, arguments.inactivity_timeout, arguments.competition_timeout,
                                                      arguments.gui)
