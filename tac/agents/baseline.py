@@ -67,9 +67,9 @@ class BaselineAgent(NegotiationAgent):
     to their marginal utility and buying goods at a price plus fee equal or below their marginal utility.
     """
 
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, register_supply: bool = True, **kwargs):
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, service_registration_strategy: str = 'both', **kwargs):
         super().__init__(public_key, oef_addr, oef_port, **kwargs)
-        self._register_supply = register_supply
+        self._service_registration_strategy = service_registration_strategy
 
         self.tac_search_id = set()
 
@@ -110,14 +110,14 @@ class BaselineAgent(NegotiationAgent):
             return
 
         logger.debug("[{}]: Updating service directory and searching for sellers.".format(self.public_key))
-        if self._register_supply:
+        if self._service_registration_strategy == 'supply' or self._service_registration_strategy == 'both':
             self._register_as_seller()
-        else:
+        if self._service_registration_strategy == 'demand' or self._service_registration_strategy == 'both':
             self._register_as_buyer()
         time.sleep(1.0)
-        if self._register_supply:
+        if self._service_registration_strategy == 'supply' or self._service_registration_strategy == 'both':
             self._search_for_sellers()
-        else:
+        if self._service_registration_strategy == 'demand' or self._service_registration_strategy == 'both':
             self._search_for_buyers()
 
     def on_cancelled(self):

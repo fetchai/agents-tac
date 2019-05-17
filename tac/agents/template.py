@@ -41,8 +41,8 @@ class MyAgent(BaselineAgent, BaselineStrategy):
     My agent implementation.
     """
 
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, register_supply: bool = True, **kwargs):
-        super().__init__(public_key, oef_addr, oef_port, register_supply, **kwargs)
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, service_registration_strategy: str = 'both', **kwargs):
+        super().__init__(public_key, oef_addr, oef_port, service_registration_strategy, **kwargs)
 
 
 def main():
