@@ -243,7 +243,7 @@ class GameHandler:
                  min_nb_agents: int,
                  money_endowment: int,
                  nb_goods: int,
-                 tx_fee: int,
+                 tx_fee: float,
                  lower_bound_factor: int,
                  upper_bound_factor: int,
                  start_time: Optional[datetime.datetime] = None):
@@ -295,7 +295,7 @@ class GameHandler:
             buyer_pbk,
             seller_pbk,
             transaction.amount,
-            transaction.quantities_by_good_id
+            transaction.quantities_by_good_pbk
         )
         return tx
 
@@ -400,7 +400,7 @@ class ControllerAgent(OEFAgent):
                  min_nb_agents: int = 5,
                  money_endowment: int = 200,
                  nb_goods: int = 5,
-                 tx_fee: int = 1,
+                 tx_fee: float = 1.0,
                  lower_bound_factor: int = 1,
                  upper_bound_factor: int = 1,
                  version: int = 1,

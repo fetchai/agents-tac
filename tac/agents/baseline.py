@@ -34,7 +34,7 @@ from oef.schema import Description
 
 from tac.core import NegotiationAgent
 from tac.helpers.misc import generate_transaction_id, build_query, get_goods_quantities_description, \
-    from_good_attribute_name_to_good_id, TAC_SELLER_DATAMODEL_NAME, marginal_utility
+    TAC_SELLER_DATAMODEL_NAME, marginal_utility
 from tac.protocol import GameData, Transaction, TransactionConfirmation, Error, ErrorCode
 
 logger = logging.getLogger(__name__)
@@ -152,7 +152,7 @@ class BaselineAgent(NegotiationAgent):
 
         :return: the description (to advertise on the Service Directory).
         """
-        desc = get_goods_quantities_description(self._get_supplied_goods_quantities(), True)
+        desc = get_goods_quantities_description(self._game_configuration.good_pbks, self._get_supplied_goods_quantities(), True)
         return desc
 
     def _get_goods_demanded_description(self) -> Description:
@@ -161,7 +161,7 @@ class BaselineAgent(NegotiationAgent):
 
         :return: the description (to advertise on the Service Directory).
         """
-        desc = get_goods_quantities_description(self._get_demanded_goods_quantities(), False)
+        desc = get_goods_quantities_description(self._game_configuration.good_pbks, self._get_demanded_goods_quantities(), False)
         return desc
 
     def _search_for_sellers(self) -> None:
@@ -348,10 +348,10 @@ class BaselineAgent(NegotiationAgent):
             for proposal in proposals:
                 proposal_id = new_msg_id  # TODO fix if more than one proposal!
                 transaction_id = generate_transaction_id(origin, self.public_key, dialogue_id)  # TODO fix if more than one proposal!
-                transaction = self._from_proposal_to_transaction(proposal=proposal,
-                                                                 transaction_id=transaction_id,
-                                                                 is_buyer=False,
-                                                                 counterparty=origin)
+                transaction = Transaction.from_proposal(proposal=proposal,
+                                                        transaction_id=transaction_id,
+                                                        is_buyer=False,
+                                                        counterparty=origin)
                 self._pending_proposals[dialogue_label][proposal_id] = transaction
             logger.debug("[{}]: sending to {} a Propose{}".format(self.public_key, origin,
                                                                   pprint.pformat({
@@ -397,10 +397,10 @@ class BaselineAgent(NegotiationAgent):
             for proposal in proposals:
                 proposal_id = new_msg_id  # TODO fix if more than one proposal!
                 transaction_id = generate_transaction_id(origin, self.public_key, dialogue_id)  # TODO fix if more than one proposal!
-                transaction = self._from_proposal_to_transaction(proposal=proposal,
-                                                                 transaction_id=transaction_id,
-                                                                 is_buyer=True,
-                                                                 counterparty=origin)
+                transaction = Transaction.from_proposal(proposal=proposal,
+                                                        transaction_id=transaction_id,
+                                                        is_buyer=True,
+                                                        counterparty=origin)
                 self._pending_proposals[dialogue_label][proposal_id] = transaction
             logger.debug("[{}]: sending to {} a Propose{}".format(self.public_key, origin,
                                                                   pprint.pformat({
@@ -457,10 +457,10 @@ class BaselineAgent(NegotiationAgent):
         logger.debug("[{}]: on propose as buyer.".format(self.public_key))
         proposal = proposals[0]
         transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id)
-        transaction = self._from_proposal_to_transaction(proposal,
-                                                         transaction_id,
-                                                         is_buyer=True,
-                                                         counterparty=origin)
+        transaction = Transaction.from_proposal(proposal,
+                                                transaction_id,
+                                                is_buyer=True,
+                                                counterparty=origin)
         if self._is_profitable_transaction_as_buyer(transaction):
             logger.debug("[{}]: Accepting propose (as buyer).".format(self.public_key))
             self._accept_propose_as_buyer(msg_id, dialogue_id, origin, target, proposals)
@@ -491,10 +491,10 @@ class BaselineAgent(NegotiationAgent):
         logger.debug("[{}]: on propose as seller.".format(self.public_key))
         proposal = proposals[0]
         transaction_id = generate_transaction_id(origin, self.public_key, dialogue_id)
-        transaction = self._from_proposal_to_transaction(proposal,
-                                                         transaction_id,
-                                                         is_buyer=False,
-                                                         counterparty=origin)
+        transaction = Transaction.from_proposal(proposal,
+                                                transaction_id,
+                                                is_buyer=False,
+                                                counterparty=origin)
         if self._is_profitable_transaction_as_seller(transaction):
             logger.debug("[{}]: Accepting propose (as seller).".format(self.public_key))
             self._accept_propose_as_seller(msg_id, dialogue_id, origin, target, proposals)
@@ -517,10 +517,10 @@ class BaselineAgent(NegotiationAgent):
         proposal = proposals[0]
         dialogue_label = (origin, dialogue_id)
         transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id)
-        transaction = self._from_proposal_to_transaction(proposal=proposal,
-                                                         transaction_id=transaction_id,
-                                                         is_buyer=False,
-                                                         counterparty=origin)
+        transaction = Transaction.from_proposal(proposal=proposal,
+                                                transaction_id=transaction_id,
+                                                is_buyer=False,
+                                                counterparty=origin)
         # lock state
         logger.debug("[{}]: Locking the current state (as seller).".format(self.public_key))
         self._lock_state_as_seller(transaction)
@@ -545,10 +545,10 @@ class BaselineAgent(NegotiationAgent):
         proposal = proposals[0]
         dialogue_label = (origin, dialogue_id)
         transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id)
-        transaction = self._from_proposal_to_transaction(proposal=proposal,
-                                                         transaction_id=transaction_id,
-                                                         is_buyer=True,
-                                                         counterparty=origin)
+        transaction = Transaction.from_proposal(proposal=proposal,
+                                                transaction_id=transaction_id,
+                                                is_buyer=True,
+                                                counterparty=origin)
         # lock state
         logger.debug("[{}]: Locking the current state (as buyer).".format(self.public_key))
         self._lock_state_as_buyer(transaction)
@@ -732,18 +732,6 @@ class BaselineAgent(NegotiationAgent):
         else:
             assert False
 
-    def _extract_info_from_propose(self, proposal: Description) -> Tuple[int, Dict[int, int]]:
-        """
-        From a propose (description), extract the price, the good ids and the quantities proposed.
-
-        :param proposal: the description.
-        :return: a tuple with (price, good ids, quantities)
-        """
-        data = copy.deepcopy(proposal.values)
-        price = data.pop("price")
-        quantity_by_good_id = {from_good_attribute_name_to_good_id(key): value for key, value in data.items()}
-        return price, quantity_by_good_id
-
     def _is_profitable_transaction_as_buyer(self, transaction: Transaction) -> bool:
         """
         Is a profitable transaction for a buyer?
@@ -799,21 +787,7 @@ class BaselineAgent(NegotiationAgent):
                              proposal_delta_score, transaction.amount))
         return result
 
-    def _from_proposal_to_transaction(self, proposal: Description, transaction_id: str,
-                                      is_buyer: bool, counterparty: str) -> Transaction:
-        """
-        Create a transaction from a proposal.
 
-        :param proposal:
-        :param transaction_id:
-        :param is_buyer:
-        :param counterparty:
-        :return: Transaction
-        """
-        price, quantity_by_good_id = self._extract_info_from_propose(proposal)
-        transaction = Transaction(transaction_id, is_buyer, counterparty, price, quantity_by_good_id,
-                                  sender=self.public_key)
-        return transaction
 
     def _lock_state_as_buyer(self, transaction: Transaction) -> None:
         """
@@ -844,7 +818,7 @@ class BaselineAgent(NegotiationAgent):
 
         :return: the agent state with the locks applied to current state
         """
-        transactions = list(self._locks_as_seller.values())
+        transactions = list(self._locks.values())
         state_after_locks = self._agent_state.apply(transactions, self._game_configuration.tx_fee)
         return state_after_locks
 
@@ -854,7 +828,7 @@ class BaselineAgent(NegotiationAgent):
 
         :return: the agent state with the locks applied to current state
         """
-        transactions = list(self._locks_as_buyer.values())
+        transactions = list(self._locks.values())
         state_after_locks = self._agent_state.apply(transactions, self._game_configuration.tx_fee)
         return state_after_locks
 
@@ -878,14 +852,14 @@ class BaselineAgent(NegotiationAgent):
         state_after_locks = self._state_after_locks_as_seller()
         return BaselineStrategy.supplied_good_quantities(state_after_locks.current_holdings)
 
-    def _get_supplied_goods_ids(self) -> Set[int]:
+    def _get_supplied_goods_pbks(self) -> Set[str]:
         """
         Wraps the function which determines supplied good ids.
 
-        :return: a list of supplied good ids
+        :return: a list of supplied good pbks
         """
         state_after_locks = self._state_after_locks_as_seller()
-        return BaselineStrategy.supplied_good_ids(state_after_locks.current_holdings)
+        return BaselineStrategy.supplied_good_pbks(state_after_locks.current_holdings)
 
     def _get_demanded_goods_quantities(self) -> List[int]:
         """
@@ -896,16 +870,16 @@ class BaselineAgent(NegotiationAgent):
         state_after_locks = self._state_after_locks_as_buyer()
         return BaselineStrategy.demanded_good_quantities(state_after_locks.current_holdings)
 
-    def _get_demanded_goods_ids(self) -> Set[int]:
+    def _get_demanded_goods_ids(self) -> Set[str]:
         """
         Wraps the function which determines demand.
 
         If there are locks as buyer, apply them.
 
-        :return: a list of demanded good ids
+        :return: a list of demanded good pbks
         """
         state_after_locks = self._state_after_locks_as_buyer()
-        return BaselineStrategy.demanded_good_ids(state_after_locks.current_holdings)
+        return BaselineStrategy.demanded_good_pbks(state_after_locks.current_holdings)
 
     def _get_seller_proposals(self) -> List[Description]:
         """
@@ -938,16 +912,17 @@ class BaselineStrategy:
         :param current_holdings: a list of current good holdings
         :return: a list of quantities
         """
-        return [q - 1 for q in current_holdings]
+        return [quantity - 1 for quantity in current_holdings]
 
-    def supplied_good_ids(current_holdings: List[int]) -> Set[int]:
+    def supplied_good_pbks(good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
         """
-        Generates set of good ids which are supplied.
+        Generates set of good pbks which are supplied.
 
+        :param good_pbks: a list of good pbks
         :param current_holdings: a list of current good holdings
-        :return: a set of ids
+        :return: a set of pbks
         """
-        return {good_id for good_id, quantity in enumerate(current_holdings) if quantity > 1}
+        return {good_pbk for good_pbk, quantity in zip(good_pbks, current_holdings) if quantity > 1}
 
     def demanded_good_quantities(current_holdings: List[int]) -> List[int]:
         """
@@ -958,19 +933,21 @@ class BaselineStrategy:
         """
         return [1 for _ in current_holdings]
 
-    def demanded_good_ids(current_holdings: List[int]) -> Set[int]:
+    def demanded_good_pbks(good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
         """
-        Generates set of good ids which are demanded.
+        Generates set of good pbks which are demanded.
 
+        :param good_pbks: a list of good pbks
         :param current_holdings: a list of current good holdings
-        :return: a set of ids
+        :return: a set of pbks
         """
-        return {good_id for good_id, quantity in enumerate(current_holdings)}
+        return {good_pbk for good_pbk, quantity in zip(good_pbks, current_holdings)}
 
-    def get_seller_proposals(current_holdings: List[int], utility_params: List[int]) -> List[Description]:
+    def get_seller_proposals(good_pbks: List[str], current_holdings: List[int], utility_params: List[int]) -> List[Description]:
         """
         Generates proposals from the seller.
 
+        :param good_pbks: a list of good pbks
         :param current_holdings: a list of current good holdings
         :param utility_params: a list of utility params
         :param tx_fee: the transaction fee
@@ -984,17 +961,18 @@ class BaselineStrategy:
             if quantities[good_id] == 0: continue
             lis = copy.deepcopy(zeroslist)
             lis[good_id] = 1
-            desc = get_goods_quantities_description(lis, True)
+            desc = get_goods_quantities_description(good_pbks, lis, True)
             delta_holdings = [i * -1 for i in lis]
             marginal_utility_from_single_good = marginal_utility(utility_params, current_holdings, delta_holdings) * -1
             desc.values["price"] = round(marginal_utility_from_single_good, 2) + rounding_adjustment
             proposals.append(desc)
         return proposals
 
-    def get_buyer_proposals(current_holdings: List[int], utility_params: List[int], tx_fee: float) -> List[Description]:
+    def get_buyer_proposals(good_pbks: List[str], current_holdings: List[int], utility_params: List[int], tx_fee: float) -> List[Description]:
         """
         Generates proposals from the buyer.
 
+        :param good_pbks: a list of good pbks
         :param current_holdings: a list of current good holdings
         :param utility_params: a list of utility params
         :param tx_fee: the transaction fee
@@ -1007,7 +985,7 @@ class BaselineStrategy:
         for good_id in range(len(quantities)):
             lis = copy.deepcopy(zeroslist)
             lis[good_id] = 1
-            desc = get_goods_quantities_description(lis, True)
+            desc = get_goods_quantities_description(good_pbks, lis, True)
             delta_holdings = lis
             marginal_utility_from_single_good = marginal_utility(utility_params, current_holdings, delta_holdings)
             desc.values["price"] = round(marginal_utility_from_single_good, 2) - tx_fee - rounding_adjustment
