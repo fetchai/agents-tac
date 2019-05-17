@@ -346,7 +346,7 @@ class GameHandler:
         :return: None.
         """
         for public_key in self.current_game.configuration.agent_pbks:
-            agent_state = self.current_game.get_agent_state_from_agent_label(public_key)
+            agent_state = self.current_game.get_agent_state_from_agent_pbk(public_key)
             game_data_response = GameData(
                 agent_state.balance,
                 agent_state.current_holdings,

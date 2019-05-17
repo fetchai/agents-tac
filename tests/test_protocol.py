@@ -77,7 +77,7 @@ class TestResponse:
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
-            expected_msg = GameData(10, [1, 1, 2], [0.04, 0.80, 0.16], 1)
+            expected_msg = GameData(10, [1, 1, 2], [0.04, 0.80, 0.16], 3, 3, 1.0, ['tac_agent_0', 'tac_agent_1', 'tac_agent_2'], ['tag_good_0', 'tag_good_1', 'tag_good_2'])
             actual_msg = Response.from_pb(expected_msg.serialize())
 
             assert expected_msg == actual_msg

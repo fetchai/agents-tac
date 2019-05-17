@@ -180,8 +180,8 @@ class GameInitialization:
         """
 
         assert all(money >= 0 for money in self.initial_money_amounts), "Money must be non-negative."
-        assert all(e >= 0 for row in self.endowments for e in row), "Endowments must be non-negative."
-        assert all(e >= 0 for row in self.utility_params for e in row), "UtilityParams must be non-negative."
+        assert all(e > 0 for row in self.endowments for e in row), "Endowments must be strictly positive."
+        assert all(e > 0 for row in self.utility_params for e in row), "UtilityParams must be strictly positive."
 
         assert len(self.endowments) == len(self.initial_money_amounts), "Length of endowments and initial_money_amounts must be the same."
         assert len(self.endowments) == len(self.utility_params), "Length of endowments and utility_params must be the same."
@@ -213,9 +213,13 @@ class GameInitialization:
             self.utility_params == other.utility_params
 
 
-# TODO this is actually a GameState and Game separate; rename
 class Game:
     """
+    >>> nb_agents = 3
+    >>> nb_goods = 3
+    >>> tx_fee = 1.0
+    >>> agent_pbks = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
+    >>> good_pbks = ['tac_good_0', 'tac_good_1', 'tac_good_2']
     >>> money_amounts = [20, 20, 20]
     >>> endowments = [
     ... [1, 1, 1],
@@ -225,17 +229,23 @@ class Game:
     ... [20.0, 40.0, 40.0],
     ... [10.0, 50.0, 40.0],
     ... [40.0, 30.0, 30.0]]
-    >>> fee = 1
+    >>> game_configuration = GameConfiguration(
+    ...     nb_agents,
+    ...     nb_goods,
+    ...     tx_fee,
+    ...     agent_pbks,
+    ...     good_pbks,
+    ... )
     >>> game_initialization = GameInitialization(
     ...     money_amounts,
     ...     endowments,
     ...     utility_params
     ... )
-    >>> game = Game(game_initialization)
+    >>> game = Game(game_configuration, game_initialization)
 
     Get the scores:
     >>> game.get_scores()
-    [20.0, 33.86294361119891, 61.58883083359672]
+    [20.0, 26.931471805599454, 40.79441541679836]
     """
 
     def __init__(self, configuration: GameConfiguration, initialization: GameInitialization):
@@ -244,11 +254,19 @@ class Game:
         :param configuration: the game configuration.
         :param initialization: the game initialization.
         """
-        self.configuration = configuration
-        self.initialization = initialization
+        self._configuration = configuration  # type GameConfiguration
+        self._initialization = initialization  # type: GameInitialization
         self.transactions = []  # type: List[GameTransaction]
 
-        # instantiate the agent state for every agent.
+        self._initial_agent_states = dict(
+            (agent_pbk,
+                AgentState(
+                    initialization.initial_money_amounts[i],
+                    initialization.endowments[i],
+                    initialization.utility_params[i]
+                ))
+            for agent_pbk, i in zip(configuration.agent_pbks, range(configuration.nb_agents)))  # type: Dict[str, AgentState]
+
         self.agent_states = dict(
             (agent_pbk,
                 AgentState(
@@ -258,24 +276,24 @@ class Game:
                 ))
             for agent_pbk, i in zip(configuration.agent_pbks, range(configuration.nb_agents)))  # type: Dict[str, AgentState]
 
-        # TODO remove this!
-        # instantiate the initial agent state for every agent.
-        self.initial_agent_states = dict(
-            (agent_pbk,
-                AgentState(
-                    initialization.initial_money_amounts[i],
-                    initialization.endowments[i],
-                    initialization.utility_params[i]
-                ))
-            for agent_pbk, i in zip(configuration.agent_pbks, range(configuration.nb_agents)))  # type: Dict[str, AgentState]
-
-        # instantiate the good state for every good.
         self.good_states = dict(
             (good_pbk,
                 GoodState(
                     DEFAULT_PRICE
                 ))
             for good_pbk in configuration.good_pbks)  # type: Dict[str, GoodState]
+
+    @property
+    def initialization(self) -> GameInitialization:
+        return self._initialization
+
+    @property
+    def configuration(self) -> GameConfiguration:
+        return self._configuration
+
+    @property
+    def initial_agent_states(self) -> Dict[str, 'AgentState']:
+        return self._initial_agent_states
 
     @staticmethod
     def generate_game(nb_agents: int,
@@ -315,7 +333,7 @@ class Game:
         """Get the current scores for every agent."""
         return [agent_state.get_score() for agent_state in self.agent_states.values()]
 
-    def get_agent_state_from_agent_label(self, agent_pbk: str) -> 'AgentState':
+    def get_agent_state_from_agent_pbk(self, agent_pbk: str) -> 'AgentState':
         """
         Get agent state from agent pbk.
         :param agent_pbk: the agent's pbk.
@@ -347,22 +365,47 @@ class Game:
         """
         Settle a valid transaction.
 
-        >>> game = Game(GameConfiguration(
-        ... initial_money_amounts = [20, 20],
-        ... endowments = [[0, 0], [1, 1]],
-        ... utility_params = [[80.0, 20.0], [10.0, 90.0]],
-        ... fee = 0))
-        >>> agent_state_1 = game.agent_states['agent_0'] # agent state of agent_0
-        >>> agent_state_2 = game.agent_states['agent_1'] # agent state of agent_1
+        >>> nb_agents = 3
+        >>> nb_goods = 3
+        >>> tx_fee = 1.0
+        >>> agent_pbks = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
+        >>> good_pbks = ['tac_good_0', 'tac_good_1', 'tac_good_2']
+        >>> money_amounts = [20, 20, 20]
+        >>> endowments = [
+        ... [1, 1, 1],
+        ... [2, 1, 1],
+        ... [1, 1, 2]]
+        >>> utility_params = [
+        ... [20.0, 40.0, 40.0],
+        ... [10.0, 50.0, 40.0],
+        ... [40.0, 30.0, 30.0]]
+        >>> game_configuration = GameConfiguration(
+        ...     nb_agents,
+        ...     nb_goods,
+        ...     tx_fee,
+        ...     agent_pbks,
+        ...     good_pbks,
+        ... )
+        >>> game_initialization = GameInitialization(
+        ...     money_amounts,
+        ...     endowments,
+        ...     utility_params
+        ... )
+        >>> game = Game(game_configuration, game_initialization)
+        >>> agent_state_0 = game.agent_states['tac_agent_0'] # agent state of tac_agent_0
+        >>> agent_state_1 = game.agent_states['tac_agent_1'] # agent state of tac_agent_1
+        >>> agent_state_2 = game.agent_states['tac_agent_2'] # agent state of tac_agent_2
+        >>> agent_state_0.balance, agent_state_0.current_holdings
+        (20, [1, 1, 1])
         >>> agent_state_1.balance, agent_state_1.current_holdings
-        (20, [0, 0])
+        (20, [2, 1, 1])
         >>> agent_state_2.balance, agent_state_2.current_holdings
-        (20, [1, 1])
-        >>> game.settle_transaction(GameTransaction(0, 1, 20, {0: 1, 1: 1}))
+        (20, [1, 1, 2])
+        >>> game.settle_transaction(GameTransaction('tac_agent_0', 'tac_agent_1', 15, {0: 1, 1: 0, 2: 0}))
+        >>> agent_state_0.balance, agent_state_0.current_holdings
+        (4.0, [2, 1, 1])
         >>> agent_state_1.balance, agent_state_1.current_holdings
-        (0, [1, 1])
-        >>> agent_state_2.balance, agent_state_2.current_holdings
-        (40, [0, 0])
+        (35, [1, 1, 1])
 
         :param tx: the game transaction.
         :return: None
@@ -412,25 +455,37 @@ class Game:
         """
         Get holdings summary.
 
+        >>> nb_agents = 3
+        >>> nb_goods = 3
+        >>> tx_fee = 1.0
+        >>> agent_pbks = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
+        >>> good_pbks = ['tac_good_0', 'tac_good_1', 'tac_good_2']
         >>> money_amounts = [20, 20, 20]
-        >>> endowment = [
-        ... [1, 1, 0],
-        ... [1, 0, 0],
-        ... [0, 1, 2]]
+        >>> endowments = [
+        ... [1, 1, 1],
+        ... [2, 1, 1],
+        ... [1, 1, 2]]
         >>> utility_params = [
-        ... [20.0, 20.0, 60.0],
+        ... [20.0, 40.0, 40.0],
         ... [10.0, 50.0, 40.0],
-        ... [30.0, 20.0, 50.0]]
-        >>> fee = 1
+        ... [40.0, 30.0, 30.0]]
+        >>> game_configuration = GameConfiguration(
+        ...     nb_agents,
+        ...     nb_goods,
+        ...     tx_fee,
+        ...     agent_pbks,
+        ...     good_pbks,
+        ... )
         >>> game_initialization = GameInitialization(
-        ... money_amounts,
-        ... endowment,
-        ... utility_params)
-        >>> game = Game(game_initialization)
+        ...     money_amounts,
+        ...     endowments,
+        ...     utility_params
+        ... )
+        >>> game = Game(game_configuration, game_initialization)
         >>> print(game.get_holdings_summary(), end="")
-        00 [1, 1, 0]
-        01 [1, 0, 0]
-        02 [0, 1, 2]
+        tac_agent_0 [1, 1, 1]
+        tac_agent_1 [2, 1, 1]
+        tac_agent_2 [1, 1, 2]
 
         :return: a string representing the holdings for every agent.
         """
@@ -588,6 +643,16 @@ class GoodState:
         :param price: price of the good in this state.
         """
         self.price = price
+
+        self._check_consistency()
+
+    def _check_consistency(self):
+        """
+        Check the consistency of the good state.
+        :return: None
+        :raises: AssertionError: if some constraint is not satisfied.
+        """
+        assert self.price >= 0, "The price must be non-negative."
 
 
 class GameTransaction:
