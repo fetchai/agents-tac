@@ -22,14 +22,15 @@ and then open `http://localhost:8097` in your browser.
 - `--nb-goods` is the number of goods in the competition.
 - `--nb-baseline-agents` is the number of number of baseline agents to participate in the competition.
 - `--oef-addr` and `--oef-port` allow you to specify a different OEF Node to use for the simulation.
-- `--service-registration-strategy` the string indicates whether the baseline agent registers supply, demand or both services on the oef.
+- `--register-as`  the string indicates whether the baseline agent registers as seller, buyer or both on the oef.
+- `--search-for`  the string indicates whether the baseline agent searches for sellers, buyers or both on the oef.
 - `--uml` specifies whether or not to store the activity of the simulation in PlantUML syntax.
 - `--data-output-dir` is the output directory to use for storing simulation data in `${data_output_dir}/${experiment_id}`.
 - `--experiment-id` is the name to give to the simulation.
 - `--plot` specifies whether to plot a summary of the game.
 - `--lower-bound-factor` is the lower bound factor of a uniform distribution used for generating good instances.
 - `--upper-bound-factor` is the upper bound factor of a uniform distribution used for generating good instances.
-- `--tx_fee` is the transaction fee.
+- `--tx-fee` is the transaction fee.
 - `--registration-timeout` is the amount of time (in seconds) to wait for agents to register before attempting to start the competition.
 - `--inactivity-timeout` is the amount of time (in seconds) to wait during inactivity until the termination of the competition.
 - `--competition-timeout` is the amount of time (in seconds) to wait from the start of the competition until the termination of the competition.

@@ -19,7 +19,6 @@
 #
 # ------------------------------------------------------------------------------
 import argparse
-# import asyncio
 import copy
 import logging
 import pprint
@@ -34,8 +33,8 @@ from oef.schema import Description
 
 from tac.core import NegotiationAgent
 from tac.helpers.misc import generate_transaction_id, build_query, get_goods_quantities_description, \
-    TAC_SELLER_DATAMODEL_NAME, marginal_utility
-from tac.protocol import GameData, Transaction, TransactionConfirmation, Error, ErrorCode
+    TAC_SUPPLY_DATAMODEL_NAME, marginal_utility
+from tac.protocol import Transaction, TransactionConfirmation, Error, ErrorCode
 
 logger = logging.getLogger(__name__)
 
@@ -67,9 +66,10 @@ class BaselineAgent(NegotiationAgent):
     to their marginal utility and buying goods at a price plus fee equal or below their marginal utility.
     """
 
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, service_registration_strategy: str = 'both', **kwargs):
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, register_as: str = 'both', search_for: str = 'both', **kwargs):
         super().__init__(public_key, oef_addr, oef_port, **kwargs)
-        self._service_registration_strategy = service_registration_strategy
+        self._register_as = register_as
+        self._search_for = search_for
 
         self._all_dialogues = set()  # type: Set[DIALOGUE_LABEL]
         self._dialogues_as_buyer = set()  # type: Set[DIALOGUE_LABEL]
@@ -85,16 +85,24 @@ class BaselineAgent(NegotiationAgent):
         self._stopped = False
 
     @property
-    def is_supply_registering_and_supply_searching(self):
-        return self._service_registration_strategy == 'supply' or self._service_registration_strategy == 'both'
+    def is_registering_as_seller(self):
+        return self._register_as == 'seller' or self._register_as == 'both'
 
     @property
-    def is_demand_registering_and_demand_searching(self):
-        return self._service_registration_strategy == 'demand' or self._service_registration_strategy == 'both'
+    def is_searching_for_sellers(self):
+        return self._search_for == 'sellers' or self._search_for == 'both'
+
+    @property
+    def is_registering_as_buyer(self):
+        return self._register_as == 'buyer' or self._register_as == 'both'
+
+    @property
+    def is_searching_for_buyers(self):
+        return self._search_for == 'buyers' or self._search_for == 'both'
 
     def on_start(self) -> None:
         """
-        Handle the 'start' event (baseline agent):
+        Handle the 'start' event.
 
         :return: None
         """
@@ -102,7 +110,7 @@ class BaselineAgent(NegotiationAgent):
 
     def _start_loop(self) -> None:
         """
-        Start loop.
+        Start loop:
 
         - Register to the OEF Service Directory
         - Search on OEF Service Directory
@@ -117,7 +125,12 @@ class BaselineAgent(NegotiationAgent):
         time.sleep(1.0)
         self._search_services()
 
-    def on_cancelled(self):
+    def on_cancelled(self) -> None:
+        """
+        Handle the 'cancel' event.
+
+        :return: None
+        """
         logger.debug("[{}]: Received cancellation from the controller. Stopping...".format(self.public_key))
         self._loop.call_soon_threadsafe(self._task.cancel)
         self._stopped = True
@@ -125,76 +138,72 @@ class BaselineAgent(NegotiationAgent):
     def _register_services(self) -> None:
         """
         Register to the OEF Service Directory
-            - as a seller, listing the goods supplied,
+            - as a seller, listing the goods supplied, or
             - as a buyer, listing the goods demanded, or
             - as both.
 
         :return: None
         """
-        if self.is_supply_registering_and_supply_searching:
-            logger.debug("[{}]: Updating service directory as seller .".format(self.public_key))
-            goods_supplied_description = self._get_goods_supplied_description()
+        if self.is_registering_as_seller:
+            logger.debug("[{}]: Updating service directory as seller with goods supplied.".format(self.public_key))
+            goods_supplied_description = self._get_goods_description(is_supply=True)
             self.register_service(STARTING_MESSAGE_REF, goods_supplied_description)
-        if self.is_demand_registering_and_demand_searching:
-            logger.debug("[{}]: Updating service directory as buyer.".format(self.public_key))
-            goods_demanded_description = self._get_goods_demanded_description()
+        if self.is_registering_as_buyer:
+            logger.debug("[{}]: Updating service directory as buyer with goods demanded.".format(self.public_key))
+            goods_demanded_description = self._get_goods_description(is_supply=False)
             self.register_service(STARTING_MESSAGE_REF, goods_demanded_description)
 
-    def _get_goods_supplied_description(self) -> Description:
+    def _get_goods_description(self, is_supply: bool) -> Description:
         """
-        Get the description of the supplied goods.
+        Get the description of
+            - the supplied goods (as a seller), or
+            - the demanded goods (as a buyer).
+
+        :param is_supply: Boolean indicating whether it is supply or demand.
 
         :return: the description (to advertise on the Service Directory).
         """
-        desc = get_goods_quantities_description(self.game_configuration.good_pbks,
-                                                self._get_supplied_goods_quantities(),
-                                                is_seller=True)
-        return desc
 
-    def _get_goods_demanded_description(self) -> Description:
-        """
-        Get the description of the demanded goods.
-
-        :return: the description (to advertise on the Service Directory).
-        """
+        quantities = self._get_supplied_goods_quantities() if is_supply else self._get_demanded_goods_quantities()
         desc = get_goods_quantities_description(self.game_configuration.good_pbks,
-                                                self._get_demanded_goods_quantities(),
-                                                is_seller=False)
+                                                quantities,
+                                                is_supply=is_supply)
         return desc
 
     def _search_services(self) -> None:
         """
         Search on OEF Service Directory
-            - for sellers and their supply,
+            - for sellers and their supply, or
             - for buyers and their demand, or
             - for both.
 
         :return: None
         """
-        if self.is_supply_registering_and_supply_searching:
+        if self.is_searching_for_sellers:
             query = self._build_query(is_searching_for_sellers=True)
             if query is None:
-                logger.warning("[{}]: Not sending the query to the OEF because the agent demands no goods.".format(self.public_key))
+                logger.warning("[{}]: Not searching the OEF for sellers because the agent demands no goods.".format(self.public_key))
                 return None
             else:
-                logger.debug("[{}]: Search for sellers.".format(self.public_key))
+                logger.debug("[{}]: Searching for sellers which match the demand of the agent.".format(self.public_key))
                 self.search_services(TAC_SELLERS_SEARCH_ID, query)
-        if self.is_demand_registering_and_demand_searching:
+        if self.is_searching_for_buyers:
             query = self._build_query(is_searching_for_sellers=False)
             if query is None:
-                logger.warning("[{}]: Not sending the query to the OEF because the agent supplies no goods.".format(self.public_key))
+                logger.warning("[{}]: Not searching the OEF for buyers because the agent supplies no goods.".format(self.public_key))
                 return None
             else:
-                logger.debug("[{}]: Search for buyers.".format(self.public_key))
+                logger.debug("[{}]: Searching for buyers which match the supply of the agent.".format(self.public_key))
                 self.search_services(TAC_BUYERS_SEARCH_ID, query)
 
     def _build_query(self, is_searching_for_sellers: bool) -> Optional[Query]:
         """
         Build the query to look for agents
-            - which supply the agent's demanded goods (i.e. sellers).
+            - which supply the agent's demanded goods (i.e. sellers), or
             - which demand the agent's supplied goods (i.e. buyers).
 
-        :param is_searching_for_sellers: Boolean indicating whether search is for sellers or buyers.
+        :param is_searching_for_sellers: Boolean indicating whether the search is for sellers or buyers.
+
         :return: the Query, or None.
         """
         good_pbks = self._get_demanded_goods_pbks() if is_searching_for_sellers else self._get_supplied_goods_pbks()
@@ -238,24 +247,24 @@ class BaselineAgent(NegotiationAgent):
         :return: None
         """
         searched_for = 'sellers' if is_searching_for_sellers else 'buyers'
-        logger.debug("[{}]: Found potential " + searched_for + ": {}".format(self.public_key, agent_pbks))
+        role = 'buyer' if is_searching_for_sellers else 'seller'
+        is_seller = False if is_searching_for_sellers else True
+        logger.debug("[{}]: Found potential {}: {}".format(self.public_key, searched_for, agent_pbks))
 
         query = self._build_query(is_searching_for_sellers)
         if query is None:
             response = 'demanding' if is_searching_for_sellers else 'supplying'
-            logger.debug("[{}]: No longer " + response + " any goods...".format(self.public_key))
+            logger.debug("[{}]: No longer {} any goods...".format(self.public_key, response))
 
             self._start_loop()
             return
-        role = 'buyer' if is_searching_for_sellers else 'seller'
-        is_buyer = True if is_searching_for_sellers else False
         for agent_pbk in agent_pbks:
             if agent_pbk == self.public_key: continue
             dialogue_id = random.randint(0, 2 ** 31)
-            logger.debug("[{}]: send_cfp_as_" + role + ": msg_id={}, dialogue_id={}, destination={}, target={}, query={}"
-                         .format(self.public_key, STARTING_MESSAGE_ID, dialogue_id, agent_pbk, STARTING_MESSAGE_REF, query))
+            logger.debug("[{}]: send_cfp_as_{}: msg_id={}, dialogue_id={}, destination={}, target={}, query={}"
+                         .format(self.public_key, role, STARTING_MESSAGE_ID, dialogue_id, agent_pbk, STARTING_MESSAGE_REF, query))
             self.send_cfp(STARTING_MESSAGE_ID, dialogue_id, agent_pbk, STARTING_MESSAGE_REF, query)
-            self._save_dialogue_id(agent_pbk, dialogue_id, not is_buyer)
+            self._save_dialogue_id(agent_pbk, dialogue_id, is_seller)
 
     def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES) -> None:
         """
@@ -272,8 +281,8 @@ class BaselineAgent(NegotiationAgent):
         logger.debug("[{}]: on_cfp: msg_id={}, dialogue_id={}, origin={}, target={}, query={}"
                      .format(self.public_key, msg_id, dialogue_id, origin, target, query))
 
-        is_cfp_from_buyer = query.model.name == TAC_SELLER_DATAMODEL_NAME
-        is_seller = is_cfp_from_buyer
+        # if the cfp is from a buyer, then the buyer query references the seller/supply model (i.e. the buyer is searching for sellers)
+        is_seller = query.model.name == TAC_SUPPLY_DATAMODEL_NAME
         self._on_cfp(msg_id, dialogue_id, origin, target, query, is_seller)
 
     def _on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES, is_seller: bool) -> None:
@@ -293,7 +302,7 @@ class BaselineAgent(NegotiationAgent):
         :return: None
         """
         self._save_dialogue_id(origin, dialogue_id, is_seller)
-        goods_description = self._get_goods_supplied_description() if is_seller else self._get_goods_demanded_description()
+        goods_description = self._get_goods_description(is_supply=is_seller)
         new_msg_id = msg_id + 1
         if not query.check(goods_description):
             logger.debug("[{}]: Current holdings do not satisfy CFP query.".format(self.public_key))
@@ -382,7 +391,7 @@ class BaselineAgent(NegotiationAgent):
         :return: None
         """
         role = 'seller' if is_seller else 'buyer'
-        logger.debug("[{}]: on propose as " + role + ".".format(self.public_key))
+        logger.debug("[{}]: on propose as {}.".format(self.public_key, role))
         proposal = proposals[0]
         transaction_id = generate_transaction_id(origin, self.public_key, dialogue_id)
         transaction = Transaction.from_proposal(proposal,
@@ -391,11 +400,11 @@ class BaselineAgent(NegotiationAgent):
                                                 counterparty=origin,
                                                 sender=self.public_key)
         if self._is_profitable_transaction(transaction, is_seller):
-            logger.debug("[{}]: Accepting propose (as " + role + ").".format(self.public_key))
+            logger.debug("[{}]: Accepting propose (as {}).".format(self.public_key, role))
             self._accept_propose(msg_id, dialogue_id, origin, target, proposals, is_seller)
         # TODO counter-propose
         else:
-            logger.debug("[{}]: Declining propose (as " + role + ")".format(self.public_key))
+            logger.debug("[{}]: Declining propose (as {})".format(self.public_key, role))
             self.send_decline(msg_id + 1, dialogue_id, origin, msg_id)
             self._delete_dialogue_id(origin, dialogue_id)
 
@@ -413,7 +422,7 @@ class BaselineAgent(NegotiationAgent):
         :return: None
         """
         role = 'seller' if is_seller else 'buyer'
-        logger.debug("[{}]: accept propose as " + "role".format(self.public_key))
+        logger.debug("[{}]: accept propose as {}".format(self.public_key, role))
 
         # compute the transaction request from the propose.
         proposal = proposals[0]
@@ -425,7 +434,7 @@ class BaselineAgent(NegotiationAgent):
                                                 counterparty=origin,
                                                 sender=self.public_key)
 
-        logger.debug("[{}]: Locking the current state (as " + role + ").".format(self.public_key))
+        logger.debug("[{}]: Locking the current state (as {}).".format(self.public_key, role))
         self._lock_state(transaction, is_seller)
 
         # add to pending acceptances
@@ -512,12 +521,12 @@ class BaselineAgent(NegotiationAgent):
         role = 'seller' if is_seller else 'buyer'
         transaction = self._recover_pending_proposal(dialogue_id, origin, target)
         if self._is_profitable_transaction(transaction, is_seller):
-            logger.debug("[{}]: Locking the current state (as " + role + ").".format(self.public_key))
+            logger.debug("[{}]: Locking the current state (as {}).".format(self.public_key, role))
             self._lock_state(transaction, is_seller)
             self.submit_transaction_to_controller(transaction)
             self.send_accept(msg_id + 1, dialogue_id, origin, msg_id)
         else:
-            logger.debug("[{}]: Decline the accept (as " + role + ").".format(self.public_key))
+            logger.debug("[{}]: Decline the accept (as {}).".format(self.public_key, role))
             self.send_decline(msg_id + 1, dialogue_id, origin, msg_id)
 
     def _recover_pending_proposal(self, dialogue_id: int, origin: str, proposal_id: int) -> Transaction:
@@ -645,9 +654,9 @@ class BaselineAgent(NegotiationAgent):
         proposal_delta_score = state_after_locks.get_score_diff_from_transaction(transaction, self.game_configuration.tx_fee)
 
         result = proposal_delta_score >= 0
-        logger.debug("[{}]: is good proposal for " + role + "? {}: tx_id={}, "
+        logger.debug("[{}]: is good proposal for {}? {}: tx_id={}, "
                      "delta_score={}, amount={}"
-                     .format(self.public_key, result, transaction.transaction_id,
+                     .format(self.public_key, role, result, transaction.transaction_id,
                              proposal_delta_score, transaction.amount))
         return result
 
@@ -813,7 +822,7 @@ class BaselineStrategy:
             if quantities[good_id] == 0: continue
             lis = copy.deepcopy(zeroslist)
             lis[good_id] = 1
-            desc = get_goods_quantities_description(good_pbks, lis, True)
+            desc = get_goods_quantities_description(good_pbks, lis, is_supply=True)
             delta_holdings = [i * -1 for i in lis]
             marginal_utility_from_single_good = marginal_utility(utility_params, current_holdings, delta_holdings) * -1
             desc.values["price"] = round(marginal_utility_from_single_good, 2) + rounding_adjustment
@@ -837,7 +846,7 @@ class BaselineStrategy:
         for good_id in range(len(quantities)):
             lis = copy.deepcopy(zeroslist)
             lis[good_id] = 1
-            desc = get_goods_quantities_description(good_pbks, lis, True)
+            desc = get_goods_quantities_description(good_pbks, lis, is_supply=False)
             delta_holdings = lis
             marginal_utility_from_single_good = marginal_utility(utility_params, current_holdings, delta_holdings)
             desc.values["price"] = round(marginal_utility_from_single_good, 2) - tx_fee - rounding_adjustment

@@ -44,7 +44,8 @@ def parse_arguments():
     parser.add_argument("--nb-agents", type=int, default=10, help="(minimum) number of TAC agent to wait for the competition.")
     parser.add_argument("--nb-goods", type=int, default=10, help="Number of TAC agent to run.")
     parser.add_argument("--nb-baseline-agents", type=int, default=10, help="Number of baseline agent to run. Defaults to the number of agents of the competition.")
-    parser.add_argument("--service-registration-strategy", choices=['supply', 'demand', 'both'], default='supply', help="The string indicates whether the baseline agent registers supply, demand or both services on the oef.")
+    parser.add_argument("--register-as", choices=['seller', 'buyer', 'both'], default='seller', help="The string indicates whether the baseline agent registers as seller, buyer or both on the oef.")
+    parser.add_argument("--search-for", choices=['sellers', 'buyers', 'both'], default='sellers', help="The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
     parser.add_argument("--uml", default=True, help="Plot uml file")
@@ -149,30 +150,31 @@ def _make_id(agent_id: int, nb_agents: int) -> str:
     return result
 
 
-def initialize_baseline_agent(agent_pbk: str, oef_addr: str, oef_port: int, service_registration_strategy: str) -> BaselineAgent:
+def initialize_baseline_agent(agent_pbk: str, oef_addr: str, oef_port: int, register_as: str, search_for: str) -> BaselineAgent:
     """
     Initialize one baseline agent.
     :param agent_pbk: the public key of the Baseline agent.
     :param oef_addr: IP address of the OEF Node.
     :param oef_port: TCP port of the OEF Node.
-    :param service_registration_strategy: the string indicates whether the baseline agent registers supply, demand or both services on the oef.
+    :param register_as: the string indicates whether the baseline agent registers as seller, buyer or both on the oef.
+    :param search_for: the string indicates whether the baseline agent searches for sellers, buyers or both on the oef.
     :return: the baseline agent.
     """
 
     # Notice: we create a new asyncio loop, so we can run it in an independent thread.
-    return BaselineAgent(agent_pbk, oef_addr, oef_port, loop=asyncio.new_event_loop(), service_registration_strategy=service_registration_strategy)
+    return BaselineAgent(agent_pbk, oef_addr, oef_port, loop=asyncio.new_event_loop(), register_as=register_as, search_for=search_for)
 
 
-def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port: int, service_registration_strategy: str) -> List[BaselineAgent]:
+def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port: int, register_as: str, search_for: str) -> List[BaselineAgent]:
     """
     Initialize a list of baseline agents.
     :param nb_baseline_agents: number of agents to initialize.
     :param oef_addr: IP address of the OEF Node.
     :param oef_port: TCP port of the OEF Node.
-    :param service_registration_strategy: the string indicates whether the baseline agent registers supply, demand or both services on the oef.
-    :return: A list of baseline agents.
+    :param register_as: the string indicates whether the baseline agent registers as seller, buyer or both on the oef.
+    :param search_for: the string indicates whether the baseline agent searches for sellers, buyers or both on the oef.    :return: A list of baseline agents.
     """
-    baseline_agents = [initialize_baseline_agent(_make_id(i, nb_baseline_agents), oef_addr, oef_port, service_registration_strategy)
+    baseline_agents = [initialize_baseline_agent(_make_id(i, nb_baseline_agents), oef_addr, oef_port, register_as, search_for)
                        for i in range(nb_baseline_agents)]
     return baseline_agents
 
@@ -226,7 +228,7 @@ if __name__ == '__main__':
                                                      arguments.lower_bound_factor, arguments.upper_bound_factor,
                                                      arguments.registration_timeout, arguments.inactivity_timeout, arguments.competition_timeout,
                                                      arguments.gui)
-        baseline_agents = initialize_baseline_agents(arguments.nb_baseline_agents, arguments.oef_addr, arguments.oef_port, arguments.service_registration_strategy)
+        baseline_agents = initialize_baseline_agents(arguments.nb_baseline_agents, arguments.oef_addr, arguments.oef_port, arguments.register_as, arguments.search_for)
         run(tac_controller, baseline_agents)
 
     except KeyboardInterrupt:
