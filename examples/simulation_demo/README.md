@@ -22,8 +22,8 @@ and then open `http://localhost:8097` in your browser.
 - `--nb-goods` is the number of goods in the competition.
 - `--nb-baseline-agents` is the number of number of baseline agents to participate in the competition.
 - `--oef-addr` and `--oef-port` allow you to specify a different OEF Node to use for the simulation.
-- `--register-as`  the string indicates whether the baseline agent registers as seller, buyer or both on the oef.
-- `--search-for`  the string indicates whether the baseline agent searches for sellers, buyers or both on the oef.
+- `--register-as` the string indicates whether the baseline agent registers as seller, buyer or both on the oef.
+- `--search-for` the string indicates whether the baseline agent searches for sellers, buyers or both on the oef.
 - `--uml` specifies whether or not to store the activity of the simulation in PlantUML syntax.
 - `--data-output-dir` is the output directory to use for storing simulation data in `${data_output_dir}/${experiment_id}`.
 - `--experiment-id` is the name to give to the simulation.

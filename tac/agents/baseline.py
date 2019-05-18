@@ -164,9 +164,8 @@ class BaselineAgent(NegotiationAgent):
         :return: the description (to advertise on the Service Directory).
         """
 
-        quantities = self._get_supplied_goods_quantities() if is_supply else self._get_demanded_goods_quantities()
         desc = get_goods_quantities_description(self.game_configuration.good_pbks,
-                                                quantities,
+                                                self._get_goods_quantities(is_supply),
                                                 is_supply=is_supply)
         return desc
 
@@ -704,14 +703,17 @@ class BaselineAgent(NegotiationAgent):
     # Strategy wrappers
     ###
 
-    def _get_supplied_goods_quantities(self) -> List[int]:
+    def _get_goods_quantities(self, is_supply: bool) -> List[int]:
         """
-        Wraps the function which determines supplied good quantities.
+        Wraps the function which determines supplied and demanded good quantities.
 
-        :return: the vector of good quantities offered.
+        :param is_supply: Boolean indicating whether it is referencing the supplied or demanded quantities.
+
+        :return: the vector of good quantities offered/requested.
         """
-        state_after_locks = self._state_after_locks(is_seller=True)
-        return BaselineStrategy.supplied_good_quantities(state_after_locks.current_holdings)
+        state_after_locks = self._state_after_locks(is_seller=is_supply)
+        quantities = BaselineStrategy.supplied_good_quantities(state_after_locks.current_holdings) if is_supply else BaselineStrategy.demanded_good_quantities(state_after_locks.current_holdings)            
+        return quantities
 
     def _get_supplied_goods_pbks(self) -> Set[str]:
         """
@@ -721,15 +723,6 @@ class BaselineAgent(NegotiationAgent):
         """
         state_after_locks = self._state_after_locks(is_seller=True)
         return BaselineStrategy.supplied_good_pbks(self.game_configuration.good_pbks, state_after_locks.current_holdings)
-
-    def _get_demanded_goods_quantities(self) -> List[int]:
-        """
-        Wraps the function which determines demanded good quantities.
-
-        :return: the vector of good quantities requested.
-        """
-        state_after_locks = self._state_after_locks(is_seller=False)
-        return BaselineStrategy.demanded_good_quantities(state_after_locks.current_holdings)
 
     def _get_demanded_goods_pbks(self) -> Set[str]:
         """
