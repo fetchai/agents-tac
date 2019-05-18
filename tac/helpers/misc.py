@@ -216,7 +216,7 @@ def get_goods_quantities_description(good_pbks: List[str], good_quantities: List
     return desc
 
 
-def build_query(good_pbks: Set[int], is_seller: bool) -> Query:
+def build_query(good_pbks: Set[int], is_searching_for_sellers: bool) -> Query:
     """
     Build the query that the buyer can send to look for goods.
 
@@ -228,10 +228,11 @@ def build_query(good_pbks: Set[int], is_seller: bool) -> Query:
     (assuming that the sellers are registered with the data model for baseline sellers.
 
     :param good_pbks: the good pbks to put in the query.
-    :param is_seller: bool indicating whether it's a seller or buyer query
+    :param is_searching_for_sellers: bool indicating whether it's a query for sellers or buyers
     :param nb_goods: the total number of goods (to build the data model, optional)
     :return: the query.
     """
+    is_seller = not is_searching_for_sellers
     data_model = None if good_pbks is None else build_datamodel(good_pbks, is_seller)
     constraints = [Constraint(good_pbk, GtEq(1)) for good_pbk in good_pbks]
 
