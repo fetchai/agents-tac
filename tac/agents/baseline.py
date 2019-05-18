@@ -314,7 +314,7 @@ class BaselineAgent(NegotiationAgent):
                                                                   })))
             self.send_decline(new_msg_id, dialogue_id, origin, msg_id)
         else:
-            proposals = [random.choice(self._get_seller_proposals())] if is_seller else [random.choice(self._get_buyer_proposals())]  # ToDo check proposal is consistent with query. (e.g. select the subset of proposals which match the query)
+            proposals = [random.choice(self._get_proposals(is_seller))]  # ToDo check proposal is consistent with query. (e.g. select the subset of proposals which match the query)
             self._store_proposals(proposals, new_msg_id, dialogue_id, origin, is_buyer=not is_seller)
             logger.debug("[{}]: sending to {} a Propose{}".format(self.public_key, origin,
                                                                   pprint.pformat({
@@ -712,7 +712,7 @@ class BaselineAgent(NegotiationAgent):
         :return: the vector of good quantities offered/requested.
         """
         state_after_locks = self._state_after_locks(is_seller=is_supply)
-        quantities = BaselineStrategy.supplied_good_quantities(state_after_locks.current_holdings) if is_supply else BaselineStrategy.demanded_good_quantities(state_after_locks.current_holdings)            
+        quantities = BaselineStrategy.supplied_good_quantities(state_after_locks.current_holdings) if is_supply else BaselineStrategy.demanded_good_quantities(state_after_locks.current_holdings)
         return quantities
 
     def _get_supplied_goods_pbks(self) -> Set[str]:
@@ -735,27 +735,19 @@ class BaselineAgent(NegotiationAgent):
         state_after_locks = self._state_after_locks(is_seller=False)
         return BaselineStrategy.demanded_good_pbks(self.game_configuration.good_pbks, state_after_locks.current_holdings)
 
-    def _get_seller_proposals(self) -> List[Description]:
+    def _get_proposals(self, is_seller) -> List[Description]:
         """
-        Wraps the function which generates proposals from a seller.
+        Wraps the function which generates proposals from a seller or buyer.
 
         If there are locks as seller, it applies them.
 
-        :return: a list of descriptions
-        """
-        state_after_locks = self._state_after_locks(is_seller=True)
-        return BaselineStrategy.get_seller_proposals(self.game_configuration.good_pbks, state_after_locks.current_holdings, state_after_locks.utility_params)
-
-    def _get_buyer_proposals(self) -> List[Description]:
-        """
-        Wraps the function which generates proposals from a buyer.
-
-        If there are locks as buyer, it applies them.
+        :param is_seller: Boolean indicating the role of the agent.
 
         :return: a list of descriptions
         """
-        state_after_locks = self._state_after_locks(is_seller=False)
-        return BaselineStrategy.get_buyer_proposals(self.game_configuration.good_pbks, state_after_locks.current_holdings, state_after_locks.utility_params, self.game_configuration.tx_fee)
+        state_after_locks = self._state_after_locks(is_seller=is_seller)
+        proposals = BaselineStrategy.get_seller_proposals(self.game_configuration.good_pbks, state_after_locks.current_holdings, state_after_locks.utility_params) if is_seller else BaselineStrategy.get_buyer_proposals(self.game_configuration.good_pbks, state_after_locks.current_holdings, state_after_locks.utility_params, self.game_configuration.tx_fee)
+        return proposals
 
 
 class BaselineStrategy:
