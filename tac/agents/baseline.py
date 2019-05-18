@@ -260,10 +260,10 @@ class BaselineAgent(NegotiationAgent):
         for agent_pbk in agent_pbks:
             if agent_pbk == self.public_key: continue
             dialogue_id = random.randint(0, 2 ** 31)
+            self._save_dialogue_id(agent_pbk, dialogue_id, is_seller)
             logger.debug("[{}]: send_cfp_as_{}: msg_id={}, dialogue_id={}, destination={}, target={}, query={}"
                          .format(self.public_key, role, STARTING_MESSAGE_ID, dialogue_id, agent_pbk, STARTING_MESSAGE_REF, query))
             self.send_cfp(STARTING_MESSAGE_ID, dialogue_id, agent_pbk, STARTING_MESSAGE_REF, query)
-            self._save_dialogue_id(agent_pbk, dialogue_id, is_seller)
 
     def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES) -> None:
         """
@@ -340,7 +340,7 @@ class BaselineAgent(NegotiationAgent):
         dialogue_label = (origin, dialogue_id)
         for proposal in proposals:
             proposal_id = new_msg_id  # TODO fix if more than one proposal!
-            transaction_id = generate_transaction_id(origin, self.public_key, dialogue_id)  # TODO fix if more than one proposal!
+            transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id, is_seller)  # TODO fix if more than one proposal!
             transaction = Transaction.from_proposal(proposal=proposal,
                                                     transaction_id=transaction_id,
                                                     is_buyer=not is_seller,
@@ -363,12 +363,8 @@ class BaselineAgent(NegotiationAgent):
         logger.debug("[{}]: on_propose: msg_id={}, dialogue_id={}, origin={}, target={}, proposals={}"
                      .format(self.public_key, msg_id, dialogue_id, origin, target, proposals))
 
-        is_buyer = (origin, dialogue_id) in self._dialogues_as_buyer
-        is_seller = (origin, dialogue_id) in self._dialogues_as_seller
-        if is_buyer == (not is_seller):
-            self._on_propose(msg_id, dialogue_id, origin, target, proposals, is_seller)
-        else:
-            raise Exception("This role is not specified.")
+        is_seller = self._is_seller(dialogue_id, origin)
+        self._on_propose(msg_id, dialogue_id, origin, target, proposals, is_seller)
 
     def _on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES, is_seller: bool) -> None:
         """
@@ -392,7 +388,7 @@ class BaselineAgent(NegotiationAgent):
         role = 'seller' if is_seller else 'buyer'
         logger.debug("[{}]: on propose as {}.".format(self.public_key, role))
         proposal = proposals[0]
-        transaction_id = generate_transaction_id(origin, self.public_key, dialogue_id)
+        transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id, is_seller)
         transaction = Transaction.from_proposal(proposal,
                                                 transaction_id,
                                                 is_buyer=not is_seller,
@@ -426,7 +422,7 @@ class BaselineAgent(NegotiationAgent):
         # compute the transaction request from the propose.
         proposal = proposals[0]
         dialogue_label = (origin, dialogue_id)
-        transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id)
+        transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id, is_seller)
         transaction = Transaction.from_proposal(proposal=proposal,
                                                 transaction_id=transaction_id,
                                                 is_buyer=not is_seller,
@@ -456,9 +452,8 @@ class BaselineAgent(NegotiationAgent):
         logger.debug("[{}]: on_decline: msg_id={}, dialogue_id={}, origin={}, target={}"
                      .format(self.public_key, msg_id, dialogue_id, origin, target))
 
-        buyer_pbk, seller_pbk = (self.public_key, origin) if dialogue_id in self._dialogues_as_buyer \
-            else (origin, self.public_key)
-        transaction_id = generate_transaction_id(buyer_pbk, seller_pbk, dialogue_id)
+        is_seller = self._is_seller(dialogue_id, origin)
+        transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id, is_seller)
         self._remove_lock(transaction_id)
 
         self._delete_dialogue_id(origin, dialogue_id)
@@ -497,13 +492,8 @@ class BaselineAgent(NegotiationAgent):
 
         :return: None
         """
-        dialogue_label = (origin, dialogue_id)  # type: DIALOGUE_LABEL
-        is_buyer = dialogue_label in self._dialogues_as_buyer
-        is_seller = dialogue_label in self._dialogues_as_seller
-        if is_buyer == (not is_seller):
-            self._on_accept_as_role(msg_id, dialogue_id, origin, target, is_seller)
-        else:
-            raise Exception("This dialogue id is not specified.")
+        is_seller = self._is_seller(dialogue_id, origin)
+        self._on_accept_as_role(msg_id, dialogue_id, origin, target, is_seller)
 
     def _on_accept_as_role(self, msg_id: int, dialogue_id: int, origin: str, target: int, is_seller: bool):
         """
@@ -602,11 +592,17 @@ class BaselineAgent(NegotiationAgent):
             else:
                 logger.warning("[{}]: Received error on unknown transaction id: {}".format(self.public_key, transaction_id))
 
-    def _save_dialogue_id(self, origin: str, dialogue_id: int, is_seller: bool):
+    def _save_dialogue_id(self, dialogue_starter_pbk: str, dialogue_id: int, is_seller: bool):
         """
+        Saves the dialogue id.
+
+        :param dialogue_starter_pbk: the pbk of the agent which started the dialogue
+        :param dialogue_id: the dialogue id
+        :param is_seller: boolean indicating the agent role
+
         :return: None
         """
-        dialogue_label = (origin, dialogue_id)
+        dialogue_label = (dialogue_starter_pbk, dialogue_id)
         assert dialogue_label not in self._all_dialogues
         if is_seller:
             assert dialogue_label not in self._dialogues_as_seller
@@ -618,6 +614,14 @@ class BaselineAgent(NegotiationAgent):
         self._all_dialogues.add(dialogue_label)
 
     def _delete_dialogue_id(self, origin: str, dialogue_id: int):
+        """
+        Deletes the dialogue id.
+
+        :param origin: the public key of the message sender.
+        :param dialogue_id: the dialogue id
+
+        :return: None
+        """
         dialogue_label = (origin, dialogue_id)
         logger.debug("[{}]: deleting dialogue {}".format(self.public_key, dialogue_label))
         assert dialogue_label in self._all_dialogues
@@ -640,6 +644,7 @@ class BaselineAgent(NegotiationAgent):
 
         :param transaction: the transaction
         :param is_seller: Boolean indicating the role of the agent.
+
         :return: True if the transaction is good (as stated above), False otherwise.
         """
 
@@ -698,6 +703,20 @@ class BaselineAgent(NegotiationAgent):
         self._locks.pop(transaction_id, None)
         self._locks_as_buyer.pop(transaction_id, None)
         self._locks_as_seller.pop(transaction_id, None)
+
+    def _is_seller(self, dialogue_id: int, origin: str) -> bool:
+        """
+        Check if the agent has the seller role.
+
+        :param dialogue_id: the dialogue id
+        :param origin: the public key of the message sender.
+
+        :return: boolean indicating whether the agent is a seller or buyer.
+        """
+        is_buyer = (origin, dialogue_id) in self._dialogues_as_buyer
+        is_seller = (origin, dialogue_id) in self._dialogues_as_seller
+        assert is_buyer == (not is_seller), "This dialogue is not specified."
+        return is_seller
 
     ###
     # Strategy wrappers

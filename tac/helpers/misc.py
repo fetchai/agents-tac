@@ -38,15 +38,20 @@ class TacError(Exception):
     """General purpose exception to detect exception associated with the logic of the TAC application."""
 
 
-def generate_transaction_id(buyer_pbk: str, seller_pbk: str, dialogue_id: int) -> str:
+def generate_transaction_id(agent_pbk: str, origin: str, dialogue_id: int, agent_is_seller: bool) -> str:
     """
     Generate a transaction id.
-    :param buyer_pbk: the pbk of the buyer.
-    :param seller_pbk: the pbk of the seller.
-    :param dialogue_id: the id of the dialogue.
+    :param agent_pbk: the pbk of the agent.
+    :param origin: the public key of the message sender.
+    :param dialogue_id: the dialogue id
+    :param agent_is_seller: boolean indicating
     :return: a transaction id
     """
-    transaction_id = buyer_pbk + "_" + seller_pbk + "_" + "{}".format(dialogue_id)
+    # the format is {buyer_pbk}_{seller_pbk}_{dialogue_id}
+    if agent_is_seller:
+        transaction_id = "{}_{}_{}".format(origin, agent_pbk, dialogue_id)
+    else:
+        transaction_id = "{}_{}_{}".format(agent_pbk, origin, dialogue_id)
     return transaction_id
 
 
