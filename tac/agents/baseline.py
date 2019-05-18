@@ -688,7 +688,7 @@ class BaselineAgent(NegotiationAgent):
 
         :return: the agent state with the locks applied to current state
         """
-        transactions = list(self._locks.values())
+        transactions = list(self._locks_as_seller.values()) if is_seller else list(self._locks_as_buyer.values())
         state_after_locks = self._agent_state.apply(transactions, self.game_configuration.tx_fee)
         return state_after_locks
 

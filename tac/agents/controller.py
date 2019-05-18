@@ -261,6 +261,7 @@ class GameHandler:
         self.min_nb_agents = min_nb_agents
         self.money_endowment = money_endowment
         self.nb_goods = nb_goods
+        self.base_amount = 2
         self.tx_fee = tx_fee
         self.lower_bound_factor = lower_bound_factor
         self.upper_bound_factor = upper_bound_factor
@@ -334,7 +335,7 @@ class GameHandler:
         #     agent_pbks = generate_pbks(self.nb_agents, 'agent')
         good_pbks = generate_pbks(self.nb_goods, 'good')
 
-        game = Game.generate_game(nb_agents, self.nb_goods, self.money_endowment, self.tx_fee, self.lower_bound_factor, self.upper_bound_factor, agent_pbks, good_pbks)
+        game = Game.generate_game(nb_agents, self.nb_goods, self.money_endowment, self.tx_fee, self.base_amount, self.lower_bound_factor, self.upper_bound_factor, agent_pbks, good_pbks)
         return game
 
     def _send_game_data_to_agents(self) -> None:

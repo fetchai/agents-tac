@@ -300,6 +300,7 @@ class Game:
                       nb_goods: int,
                       money_endowment: int,
                       tx_fee: int,
+                      base_amount: int,
                       lower_bound_factor: int,
                       upper_bound_factor: int,
                       agent_pbks: List[str],
@@ -310,6 +311,7 @@ class Game:
         :param nb_goods: the number of goods.
         :param money_endowment: the initial amount of money for every agent.
         :param tx_fee: the fee to pay per transaction.
+        :param base_amount: the base amount of instances per good.
         :param lower_bound_factor: the lower bound of a uniform distribution.
         :param upper_bound_factor: the upper bound of a uniform distribution
         :param agent_pbks: the pbks for the agents.
@@ -319,7 +321,7 @@ class Game:
         game_configuration = GameConfiguration(nb_agents, nb_goods, tx_fee, agent_pbks, good_pbks)
 
         initial_money_amounts = generate_initial_money_amounts(nb_agents, money_endowment)
-        endowments = generate_endowments(nb_goods, nb_agents, lower_bound_factor, upper_bound_factor)
+        endowments = generate_endowments(nb_goods, nb_agents, base_amount, lower_bound_factor, upper_bound_factor)
         utility_params = generate_utility_params(nb_agents, nb_goods)
         game_initialization = GameInitialization(initial_money_amounts, endowments, utility_params)
 

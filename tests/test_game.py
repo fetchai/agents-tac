@@ -312,12 +312,13 @@ class TestGame:
         nb_goods = 3
         money_endowment = 20
         tx_fee = 2.5
+        base_amount = 2
         lower_bound_factor = 1
         upper_bound_factor = 3
         agent_pbks = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
         good_pbks = ['tac_good_0', 'tac_good_1', 'tac_good_2']
 
-        _ = Game.generate_game(nb_agents, nb_goods, money_endowment, tx_fee, lower_bound_factor, upper_bound_factor, agent_pbks, good_pbks)
+        _ = Game.generate_game(nb_agents, nb_goods, money_endowment, tx_fee, base_amount, lower_bound_factor, upper_bound_factor, agent_pbks, good_pbks)
 
         # please look at the assertions in tac.game.GameConfiguration._check_consistency()
 

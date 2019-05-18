@@ -55,24 +55,25 @@ def generate_transaction_id(agent_pbk: str, origin: str, dialogue_id: int, agent
     return transaction_id
 
 
-def generate_endowments(nb_goods: int, nb_agents: int, uniform_lower_bound_factor: int, uniform_upper_bound_factor: int) -> List[List[int]]:
+def generate_endowments(nb_goods: int, nb_agents: int, base_amount: int, uniform_lower_bound_factor: int, uniform_upper_bound_factor: int) -> List[List[int]]:
     """
     Compute endowments per agent. That is, a matrix of shape (nb_agents, nb_goods)
 
     :param nb_goods: the number of goods.
     :param nb_agents: the number of agents.
+    :param base_amount: the base amount of instances per good
     :param uniform_lower_bound_factor: the lower bound of the uniform distribution for the sampling of the good instance number.
     :param uniform_upper_bound_factor: the upper bound of the uniform distribution for the sampling of the good instance number.
     :return: the endowments matrix.
     """
     # sample good instances
-    instances_per_good = _sample_good_instances(nb_agents, nb_goods,
+    instances_per_good = _sample_good_instances(nb_agents, nb_goods, base_amount,
                                                 uniform_lower_bound_factor, uniform_upper_bound_factor)
-    # each agent receives at least one good
-    endowments = [[1] * nb_goods for _ in range(nb_agents)]
+    # each agent receives at least two good
+    endowments = [[base_amount] * nb_goods for _ in range(nb_agents)]
     # randomly assign additional goods to create differences
     for good_id in range(nb_goods):
-        for _ in range(instances_per_good[good_id] - nb_agents):
+        for _ in range(instances_per_good[good_id] - (base_amount * nb_agents)):
             agent_id = random.randint(0, nb_agents - 1)
             endowments[agent_id][good_id] += 1
     return endowments
@@ -116,17 +117,19 @@ def _sample_utility_function_params(nb_goods: int, nb_agents: int, scaling_facto
     return utility_function_params
 
 
-def _sample_good_instances(nb_agents: int, nb_goods: int,
+def _sample_good_instances(nb_agents: int, nb_goods: int, base_amount: int,
                            uniform_lower_bound_factor: int, uniform_upper_bound_factor: int) -> List[int]:
     """
     Sample the number of instances for a good.
     :param nb_agents: the number of agents
+    :param nb_goods: the number of goods
+    :param base_amount: the base amount of instances per good
     :param uniform_lower_bound_factor: the lower bound factor of a uniform distribution
     :param uniform_upper_bound_factor: the upper bound factor of a uniform distribution
     :return: the number of instances I sampled.
     """
-    a = nb_agents + nb_agents * uniform_lower_bound_factor
-    b = nb_agents + nb_agents * uniform_upper_bound_factor
+    a = base_amount * nb_agents + nb_agents * uniform_lower_bound_factor
+    b = base_amount * nb_agents + nb_agents * uniform_upper_bound_factor
     # Return random integer in range [a, b]
     nb_instances = [round(np.random.uniform(a, b)) for _ in range(nb_goods)]
     return nb_instances
