@@ -60,12 +60,11 @@ class NegotiationAgent(OEFAgent):
         return self._initial_agent_state
 
     @abstractmethod
-    def on_start(self, game_data: GameData) -> None:
+    def on_start(self) -> None:
         """
-        On receiving game data from the TAC controller, do the setup.
+        On start of the competition, do the setup.
 
-        :param game_data: the set of parameters assigned to this agent by the TAC controller.
-        :return: ``None``
+        :return: None
         """
 
     @abstractmethod
@@ -214,7 +213,7 @@ class NegotiationAgent(OEFAgent):
         self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
 
         # dispatch the handling to the developer's implementation.
-        self.on_start(game_data)
+        self.on_start()
 
     def on_search_result(self, search_id: int, agent_pbks: List[str]) -> None:
         """

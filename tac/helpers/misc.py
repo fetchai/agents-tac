@@ -30,23 +30,28 @@ from oef.schema import AttributeSchema, DataModel, Description
 
 
 logger = logging.getLogger("tac")
-TAC_SELLER_DATAMODEL_NAME = "tac_seller"
-TAC_BUYER_DATAMODEL_NAME = "tac_buyer"
+TAC_SUPPLY_DATAMODEL_NAME = "tac_supply"
+TAC_DEMAND_DATAMODEL_NAME = "tac_demand"
 
 
 class TacError(Exception):
     """General purpose exception to detect exception associated with the logic of the TAC application."""
 
 
-def generate_transaction_id(buyer_pbk: str, seller_pbk: str, dialogue_id: int) -> str:
+def generate_transaction_id(agent_pbk: str, origin: str, dialogue_id: int, agent_is_seller: bool) -> str:
     """
     Generate a transaction id.
-    :param buyer_pbk: the pbk of the buyer.
-    :param seller_pbk: the pbk of the seller.
-    :param dialogue_id: the id of the dialogue.
+    :param agent_pbk: the pbk of the agent.
+    :param origin: the public key of the message sender.
+    :param dialogue_id: the dialogue id
+    :param agent_is_seller: boolean indicating
     :return: a transaction id
     """
-    transaction_id = buyer_pbk + "_" + seller_pbk + "_" + "{}".format(dialogue_id)
+    # the format is {buyer_pbk}_{seller_pbk}_{dialogue_id}
+    if agent_is_seller:
+        transaction_id = "{}_{}_{}".format(origin, agent_pbk, dialogue_id)
+    else:
+        transaction_id = "{}_{}_{}".format(agent_pbk, origin, dialogue_id)
     return transaction_id
 
 
@@ -164,25 +169,26 @@ def marginal_utility(utility_function_params: List[float], current_holdings: Lis
     return new_utility - current_utility
 
 
-def build_datamodel(good_pbks: List[str], is_seller: bool) -> DataModel:
+def build_datamodel(good_pbks: List[str], is_supply: bool) -> DataModel:
     """
-    Build a data model for buyers or sellers.
+    Build a data model for supply and demand (i.e. for offered or requested goods).
 
-    :param good_pbks: the list of good pbks.
-    :param is_seller: bool indicating whether a seller or buyer data model
+    :param good_pbks: the list of good pbks
+    :param is_supply: Boolean indicating whether it is a supply or demand data model
+
     :return: the data model.
     """
     goods_quantities_attributes = [AttributeSchema(good_pbk, int, False)
                                    for good_pbk in good_pbks]
     price_attribute = AttributeSchema("price", float, False)
-    description = TAC_SELLER_DATAMODEL_NAME if is_seller else TAC_BUYER_DATAMODEL_NAME
+    description = TAC_SUPPLY_DATAMODEL_NAME if is_supply else TAC_DEMAND_DATAMODEL_NAME
     data_model = DataModel(description, goods_quantities_attributes + [price_attribute])
     return data_model
 
 
-def get_goods_quantities_description(good_pbks: List[str], good_quantities: List[int], is_seller: bool) -> Description:
+def get_goods_quantities_description(good_pbks: List[str], good_quantities: List[int], is_supply: bool) -> Description:
     """
-    Get the TAC seller description, following a baseline policy.
+    Get the TAC description for supply or demand.
     That is, a description with the following structure:
     >>> description = {
     ...     "tac_good_0": 1,
@@ -195,7 +201,7 @@ def get_goods_quantities_description(good_pbks: List[str], good_quantities: List
      where the keys indicate the good_pbk and the values the quantity.
 
      >>> desc = get_goods_quantities_description(['tac_good_0', 'tac_good_1', 'tac_good_2', 'tac_good_3'], [0, 0, 1, 2], True)
-     >>> desc.data_model.name == TAC_SELLER_DATAMODEL_NAME
+     >>> desc.data_model.name == TAC_SUPPLY_DATAMODEL_NAME
      True
      >>> desc.values == {
      ...    "tac_good_0": 0,
@@ -207,32 +213,35 @@ def get_goods_quantities_description(good_pbks: List[str], good_quantities: List
 
     :param good_pbks: the pbks of the goods.
     :param good_quantities: the quantities per good.
-    :param is_seller: True if the description is of a seller, False if it's of a buyer.
+    :param is_supply: True if the description is indicating supply, False if it's indicating demand.
+
     :return: the description to advertise on the Service Directory.
     """
-    data_model = build_datamodel(good_pbks, is_seller)
+    data_model = build_datamodel(good_pbks, is_supply=is_supply)
     desc = Description({good_pbk: quantity for good_pbk, quantity in zip(good_pbks, good_quantities)},
                        data_model=data_model)
     return desc
 
 
-def build_query(good_pbks: Set[int], is_seller: bool) -> Query:
+def build_query(good_pbks: Set[int], is_searching_for_sellers: bool) -> Query:
     """
-    Build the query that the buyer can send to look for goods.
+    Build the search query
+        - to look for sellers if the agent is a buyer, or
+        - to look for buyers if the agent is a seller.
 
-    In particular, if the needed good pbks are {'tac_good_0', 'tac_good_2', 'tac_good_3'}, the resulting constraint expression is:
+    In particular, if the agent is a buyer and the demanded good pbks are {'tac_good_0', 'tac_good_2', 'tac_good_3'}, the resulting constraint expression is:
 
         tac_good_0 >= 1 OR tac_good_2 >= 1 OR tac_good_3 >= 1
 
     That is, the OEF will return all the sellers that have at least one of the good in the query
-    (assuming that the sellers are registered with the data model for baseline sellers.
+    (assuming that the sellers are registered with the data model specified).
 
-    :param good_pbks: the good pbks to put in the query.
-    :param is_seller: bool indicating whether it's a seller or buyer query
-    :param nb_goods: the total number of goods (to build the data model, optional)
-    :return: the query.
+    :param good_pbks: the good pbks to put in the query
+    :param is_searching_for_sellers: Boolean indicating whether the query is for sellers (supply) or buyers (demand).
+
+    :return: the query
     """
-    data_model = None if good_pbks is None else build_datamodel(good_pbks, is_seller)
+    data_model = None if good_pbks is None else build_datamodel(good_pbks, is_supply=is_searching_for_sellers)
     constraints = [Constraint(good_pbk, GtEq(1)) for good_pbk in good_pbks]
 
     if len(good_pbks) > 1:
