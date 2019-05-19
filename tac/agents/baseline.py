@@ -314,7 +314,7 @@ class BaselineAgent(NegotiationAgent):
                                                                   })))
             self.send_decline(new_msg_id, dialogue_id, origin, msg_id)
         else:
-            proposals = [random.choice(self._get_proposals(is_seller))]  # ToDo check proposal is consistent with query. (e.g. select the subset of proposals which match the query)
+            proposals = [random.choice(self._get_proposals(query, is_seller))]
             self._store_proposals(proposals, new_msg_id, dialogue_id, origin, is_seller)
             logger.debug("[{}]: sending to {} a Propose{}".format(self.public_key, origin,
                                                                   pprint.pformat({
@@ -746,18 +746,25 @@ class BaselineAgent(NegotiationAgent):
         pbks = BaselineStrategy.supplied_good_pbks(self.game_configuration.good_pbks, state_after_locks.current_holdings) if is_supply else BaselineStrategy.demanded_good_pbks(self.game_configuration.good_pbks, state_after_locks.current_holdings)
         return pbks
 
-    def _get_proposals(self, is_seller: bool) -> List[Description]:
+    def _get_proposals(self, query: CFP_TYPES, is_seller: bool) -> List[Description]:
         """
         Wraps the function which generates proposals from a seller or buyer.
 
         If there are locks as seller, it applies them.
 
+        :param query: the query associated with the cfp.
         :param is_seller: Boolean indicating the role of the agent.
 
         :return: a list of descriptions
         """
         state_after_locks = self._state_after_locks(is_seller=is_seller)
-        proposals = BaselineStrategy.get_proposals(self.game_configuration.good_pbks, state_after_locks.current_holdings, state_after_locks.utility_params, self.game_configuration.tx_fee, is_seller)
+        candidate_proposals = BaselineStrategy.get_proposals(self.game_configuration.good_pbks, state_after_locks.current_holdings, state_after_locks.utility_params, self.game_configuration.tx_fee, is_seller)
+        proposals = []
+        for proposal in candidate_proposals:
+            if not query.check(proposal): continue
+            proposals.append(proposal)
+        if proposals == []:
+            proposals.append(candidate_proposals[0])  # TODO remove this
         return proposals
 
 
