@@ -67,7 +67,6 @@ RUN sed -i 's/^oef =.*//' ./Pipfile
 
 # TODO remove when new SDK version will be public
 RUN pipenv --python python3.7
-RUN pipenv run pip3 install oef-sdk-python/
 RUN pipenv install --dev --skip-lock
 RUN pipenv run python3 setup.py install
 

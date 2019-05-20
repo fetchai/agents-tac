@@ -21,16 +21,12 @@
 import fileinput
 import glob
 import os
-
 import re
 import shutil
 import subprocess
 import sys
 
 from setuptools import setup, find_packages, Command
-from setuptools.command.build_py import build_py as _build_py
-from setuptools.command.develop import develop as _develop
-
 
 PACKAGE_NAME = "tac"
 
@@ -126,9 +122,6 @@ setup(
         "flask",
         "python-dateutil",
         "visdom",
-    ],
-    dependency_links=[
-        "git+ssh://git@github.com/uvue-git/oef-sdk-python.git#egg=oef",
     ],
     tests_require=["tox"],
     entry_points={

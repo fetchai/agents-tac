@@ -1,9 +1,3 @@
 [submodule "docker-images"]
 	path = docker-images
 	url = https://github.com/uvue-git/docker-images.git
-[submodule "oef-core"]
-	path = oef-core
-	url = https://github.com/fetchai/oef-core.git
-[submodule "oef-sdk-python"]
-	path = oef-sdk-python
-	url = ../oef-sdk-python.git
