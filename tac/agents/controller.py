@@ -409,6 +409,8 @@ class ControllerAgent(OEFAgent):
                  start_time: datetime.datetime = None,
                  end_time: datetime.datetime = None,
                  inactivity_timeout: Optional[int] = None,
+                 visdom_addr: str = "localhost",
+                 visdom_port: int = 8097,
                  gui: bool = False,
                  **kwargs):
         """
@@ -426,6 +428,8 @@ class ControllerAgent(OEFAgent):
         :param start_time: the time when the competition will start.
         :param end_time: the time when the competition will end.
         :param inactivity_timeout: the time when the competition will start.
+        :param visdom_addr: TCP/IP address of the Visdom server.
+        :param visdom_port: TCP/IP port of the Visdom server.
         :param gui: show the GUI.
         """
         super().__init__(public_key, oef_addr, oef_port, loop=asyncio.new_event_loop())
@@ -445,11 +449,13 @@ class ControllerAgent(OEFAgent):
 
         self._terminated = False
 
+        self.visdom_addr = visdom_addr
+        self.visdom_port = visdom_port
         self.dashboard = None  # type: Optional[Dashboard]
 
     def _start_dashboard(self, game_stats: GameStats):
         if self.gui:
-            d = Dashboard(game_stats)
+            d = Dashboard(game_stats, visdom_addr=self.visdom_addr, visdom_port=self.visdom_port)
             d.start()
             self.dashboard = d
             self.dashboard.update()
@@ -565,25 +571,29 @@ def main():
     else:
         logger.setLevel(logging.INFO)
 
-    agent = ControllerAgent(public_key=args.public_key,
-                            oef_addr=args.oef_addr,
-                            oef_port=args.oef_port,
-                            min_nb_agents=args.nb_agents,
-                            money_endowment=args.money_endowment,
-                            nb_goods=args.nb_goods,
-                            tx_fee=args.tx_fee,
-                            lower_bound_factor=args.lower_bound_factor,
-                            upper_bound_factor=args.upper_bound_factor,
-                            version=args.version,
-                            start_time=args.start_time,
-                            end_time=args.end_time,
-                            inactivity_timeout=args.inactivity_timeout,
-                            gui=args.gui)
+    try:
+        agent = ControllerAgent(public_key=args.public_key,
+                                oef_addr=args.oef_addr,
+                                oef_port=args.oef_port,
+                                min_nb_agents=args.nb_agents,
+                                money_endowment=args.money_endowment,
+                                nb_goods=args.nb_goods,
+                                tx_fee=args.tx_fee,
+                                lower_bound_factor=args.lower_bound_factor,
+                                upper_bound_factor=args.upper_bound_factor,
+                                version=args.version,
+                                start_time=args.start_time,
+                                end_time=args.end_time,
+                                inactivity_timeout=args.inactivity_timeout,
+                                gui=args.gui)
 
-    agent.connect()
-    agent.register()
+        agent.connect()
+        agent.register()
 
-    agent.run_controller()
+        agent.run_controller()
+
+    finally:
+        agent.terminate()
 
 
 if __name__ == '__main__':

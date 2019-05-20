@@ -20,13 +20,21 @@ docker run -it -p 20000:20000 -p 3333:3333 -p 40000:40000 qati/oef:latest node n
 
       python examples/simulation_demo/tac_agent_spawner.py
 
-- Run the simulation example with the gui flag to visualize data in realtime
+#### Visualize data in realtime
 
+- Start a `visdom` server:
+
+      python -m visdom.server 
+    
+- Run the simulation example with the gui flag to visualize data in realtime
+      
       python examples/simulation_demo/tac_agent_spawner.py --gui
 
 and then open `http://localhost:8097` in your browser.
 
-### Optional parameters
+### Optional parameters/flags
+
+For a full list, do `python examples/simulation_demo/tac_agent_spawner.py -h`
 
 - `--nb-agents` is the number of agents to participate in the competition.
 - `--nb-goods` is the number of goods in the competition.
@@ -44,10 +52,10 @@ and then open `http://localhost:8097` in your browser.
 - `--registration-timeout` is the amount of time (in seconds) to wait for agents to register before attempting to start the competition.
 - `--inactivity-timeout` is the amount of time (in seconds) to wait during inactivity until the termination of the competition.
 - `--competition-timeout` is the amount of time (in seconds) to wait from the start of the competition until the termination of the competition.
-- `--seed` is the seed for the random module.
-
-### Optional flags
+- `--visdom-addr` is the TCP/IP address of the Visdom server
+- `--visdom-port` is the TCP/IP port of the Visdom server
 - `--gui` is a flag to specify that the gui is live and expecting an event stream.
+- `--seed` is the seed for the random module.
 
 Example:
 

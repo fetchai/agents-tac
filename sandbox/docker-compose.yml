@@ -29,6 +29,15 @@ services:
       - "--director_api_port"
       - "40000"
 
+  visdom:
+    image: "hypnosapos/visdom:latest"
+    ports:
+      - "8097:8097"
+    networks:
+      main_net:
+        ipv4_address: 172.28.1.2
+
+
   baseline:
     image: "baseline-image"
     env_file:
@@ -42,7 +51,7 @@ services:
       dockerfile: docker-tac-develop/Dockerfile
     networks:
       main_net:
-        ipv4_address: 172.28.1.2
+        ipv4_address: 172.28.1.3
     entrypoint:
       - "pipenv"
       - "run"
@@ -54,8 +63,6 @@ services:
       - "${NB_GOODS}"
       - "--nb-baseline-agents"
       - "${NB_BASELINE_AGENTS}"
-#      - "--service-registration-strategy"
-#      - "${SERVICE_REGISTRATION_STRATEGY}"
       - "--oef-addr"
       - "${OEF_ADDR}"
       - "--oef-port"
@@ -81,6 +88,10 @@ services:
       - "--competition-timeout"
       - "${COMPETITION_TIMEOUT}"
       - "--gui"
+      - "--visdom-addr"
+      - "172.28.1.2"
+      - "--visdom-port"
+      - "8097"
       - "--seed"
       - "${SEED}"
 networks:
