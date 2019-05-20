@@ -38,7 +38,7 @@ import pprint
 from typing import List, Dict, Any, Optional
 
 from tac.helpers.misc import generate_initial_money_amounts, generate_endowments, generate_utility_params, from_iso_format, \
-    logarithmic_utility
+    logarithmic_utility, generate_equilibrium_prices_and_allocation
 from tac.protocol import Transaction
 
 Endowment = List[int]  # an element e_j is the endowment of good j.
@@ -323,6 +323,7 @@ class Game:
         initial_money_amounts = generate_initial_money_amounts(nb_agents, money_endowment)
         endowments = generate_endowments(nb_goods, nb_agents, base_amount, lower_bound_factor, upper_bound_factor)
         utility_params = generate_utility_params(nb_agents, nb_goods)
+        eq_prices, eq_allocation = generate_equilibrium_prices_and_allocation(endowments, utility_params)
         game_initialization = GameInitialization(initial_money_amounts, endowments, utility_params)
 
         return Game(game_configuration, game_initialization)

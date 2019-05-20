@@ -146,6 +146,19 @@ def generate_initial_money_amounts(nb_agents: int, money_endowment: int) -> List
     return [money_endowment] * nb_agents
 
 
+def generate_equilibrium_prices_and_allocation(endowments: List[List[int]], utility_function_params: List[List[float]], scaling_factor: float = 100.0) -> (List[float], List[float]):
+    """
+    Computes the competitive equilibrium prices and allocation.
+    """
+    endowments_a = np.array(endowments, dtype=np.int)
+    utility_function_params_a = np.array(utility_function_params, dtype=np.float) * scaling_factor
+    endowments_by_good = np.sum(endowments_a, axis=0)
+    scaled_params_by_good = np.sum(utility_function_params_a, axis=0)
+    eq_prices = scaled_params_by_good / endowments_by_good
+    eq_allocation = np.divide(utility_function_params_a, eq_prices)
+    return eq_prices.tolist(), eq_allocation.tolist()
+
+
 def logarithmic_utility(utility_function_params: List[float], good_bundle: List[int]) -> float:
     """
     Compute agent's utility given her utility function params and a good bundle.
