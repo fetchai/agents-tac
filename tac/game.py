@@ -737,6 +737,50 @@ class GoodState:
         assert self.price >= 0, "The price must be non-negative."
 
 
+class WorldState:
+    """Represent the state of the world from the perspective of the agent."""
+
+    def __init__(self, opponent_pbks: List[str], good_pbks: List[str], initial_money_amount: float):
+        """
+        Instantiate an agent state object.
+
+        :param opponent_pbks: the pbks of the opponents
+        """
+        self.opponent_states = dict(
+            (agent_pbk,
+                AgentState(
+                    self._expected_initial_money_amounts(initial_money_amount),
+                    self._expected_endowments(),
+                    self._expected_utility_params()
+                ))
+            for agent_pbk in opponent_pbks)  # type: Dict[str, AgentState]
+
+        self.good_states = dict(
+            (good_pbk,
+                GoodState(
+                    self._expected_price()
+                ))
+            for good_pbk in good_pbks)
+
+    def update(self):
+        """
+        Update the world state when new information is received.
+        """
+        pass
+
+    def _expected_initial_money_amounts(self, initial_money_amount: float):
+        pass
+
+    def _expected_endowments(self):
+        pass
+
+    def _expected_utility_params(self):
+        pass
+
+    def _expected_price(self):
+        pass
+
+
 class GameTransaction:
     """Represent a transaction between agents"""
 
