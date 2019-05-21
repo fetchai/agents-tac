@@ -146,17 +146,24 @@ def generate_initial_money_amounts(nb_agents: int, money_endowment: int) -> List
     return [money_endowment] * nb_agents
 
 
-def generate_equilibrium_prices_and_allocation(endowments: List[List[int]], utility_function_params: List[List[float]], scaling_factor: float = 100.0) -> (List[float], List[float]):
+def generate_equilibrium_prices_and_allocation(endowments: List[List[int]], utility_function_params: List[List[float]], money_endowment: float, scaling_factor: float = 100.0) -> (List[float], List[List[float]], List[float]):
     """
     Computes the competitive equilibrium prices and allocation.
+
+    :param endowments: endowments of the agents
+    :param utility_function_params: utility function params of the agents
+    :param money_endowment: money endowment per agent.
+    :param scaling_factor: a scaling factor for all the utility params generated.
+    :return: the lists of equilibrium prices, equilibrium good holdings and equilibrium money holdings
     """
     endowments_a = np.array(endowments, dtype=np.int)
-    utility_function_params_a = np.array(utility_function_params, dtype=np.float) * scaling_factor
+    scaled_utility_function_params_a = np.array(utility_function_params, dtype=np.float) * scaling_factor
     endowments_by_good = np.sum(endowments_a, axis=0)
-    scaled_params_by_good = np.sum(utility_function_params_a, axis=0)
-    eq_prices = scaled_params_by_good / endowments_by_good
-    eq_allocation = np.divide(utility_function_params_a, eq_prices)
-    return eq_prices.tolist(), eq_allocation.tolist()
+    scaled_params_by_good = np.sum(scaled_utility_function_params_a, axis=0)
+    eq_prices = np.divide(scaled_params_by_good, endowments_by_good)
+    eq_good_holdings = np.divide(scaled_utility_function_params_a, eq_prices)
+    eq_money_holdings = np.transpose(np.dot(eq_prices, np.transpose(endowments_a))) + money_endowment - scaling_factor
+    return eq_prices.tolist(), eq_good_holdings.tolist(), eq_money_holdings.tolist()
 
 
 def logarithmic_utility(utility_function_params: List[float], good_bundle: List[int]) -> float:

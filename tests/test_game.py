@@ -117,11 +117,21 @@ class TestGameIntitialization:
             [0.1, 0.8, 0.1],
             [0.3, 0.2, 0.5]
         ]
+        eq_prices = [1.0, 1.0, 4.0]
+        eq_good_holdings = [
+            [1.0, 1.0, 4.0],
+            [1.0, 5.0, 1.0],
+            [6.0, 1.0, 2.0]
+        ]
+        eq_money_holdings = [20.0, 20.0, 20.0]
         with pytest.raises(AssertionError, match="Money must be non-negative."):
             GameInitialization(
                 initial_money_amounts,
                 endowments,
-                utility_params
+                utility_params,
+                eq_prices,
+                eq_good_holdings,
+                eq_money_holdings
             )
 
     def test_negative_endowments_raises_exception(self):
@@ -137,11 +147,21 @@ class TestGameIntitialization:
             [0.1, 0.8, 0.1],
             [0.3, 0.2, 0.5]
         ]
+        eq_prices = [1.0, 1.0, 4.0]
+        eq_good_holdings = [
+            [1.0, 1.0, 4.0],
+            [1.0, 5.0, 1.0],
+            [6.0, 1.0, 2.0]
+        ]
+        eq_money_holdings = [20.0, 20.0, 20.0]
         with pytest.raises(AssertionError, match="Endowments must be strictly positive."):
             GameInitialization(
                 initial_money_amounts,
                 endowments,
-                utility_params
+                utility_params,
+                eq_prices,
+                eq_good_holdings,
+                eq_money_holdings
             )
 
     def test_negative_utilities_raises_exception(self):
@@ -157,11 +177,21 @@ class TestGameIntitialization:
             [0.1, 0.8, 0.1],
             [0.3, 0.2, 0.5]
         ]
+        eq_prices = [1.0, 1.0, 4.0]
+        eq_good_holdings = [
+            [1.0, 1.0, 4.0],
+            [1.0, 5.0, 1.0],
+            [6.0, 1.0, 2.0]
+        ]
+        eq_money_holdings = [20.0, 20.0, 20.0]
         with pytest.raises(AssertionError, match="UtilityParams must be strictly positive."):
             GameInitialization(
                 initial_money_amounts,
                 endowments,
-                utility_params
+                utility_params,
+                eq_prices,
+                eq_good_holdings,
+                eq_money_holdings
             )
 
     def test_to_dict(self):
@@ -177,18 +207,31 @@ class TestGameIntitialization:
             [0.1, 0.8, 0.1],
             [0.3, 0.2, 0.5]
         ]
+        eq_prices = [1.0, 1.0, 4.0]
+        eq_good_holdings = [
+            [1.0, 1.0, 4.0],
+            [1.0, 5.0, 1.0],
+            [6.0, 1.0, 2.0]
+        ]
+        eq_money_holdings = [20.0, 20.0, 20.0]
 
         game_initialization = GameInitialization(
             initial_money_amounts,
             endowments,
-            utility_params
+            utility_params,
+            eq_prices,
+            eq_good_holdings,
+            eq_money_holdings
         )
 
         actual_game_initialization_dict = game_initialization.to_dict()
         expected_game_initialization_dict = {
             "initial_money_amounts": initial_money_amounts,
             "endowments": endowments,
-            "utility_params": utility_params
+            "utility_params": utility_params,
+            "eq_prices": eq_prices,
+            "eq_good_holdings": eq_good_holdings,
+            "eq_money_holdings": eq_money_holdings
         }
 
         assert actual_game_initialization_dict == expected_game_initialization_dict
@@ -206,11 +249,21 @@ class TestGameIntitialization:
             [0.1, 0.8, 0.1],
             [0.3, 0.2, 0.5]
         ]
+        eq_prices = [1.0, 1.0, 4.0]
+        eq_good_holdings = [
+            [1.0, 1.0, 4.0],
+            [1.0, 5.0, 1.0],
+            [6.0, 1.0, 2.0]
+        ]
+        eq_money_holdings = [20.0, 20.0, 20.0]
 
         expected_game_initialization = GameInitialization(
             initial_money_amounts,
             endowments,
-            utility_params
+            utility_params,
+            eq_prices,
+            eq_good_holdings,
+            eq_money_holdings
         )
         actual_game_initialization = GameInitialization.from_dict(expected_game_initialization.to_dict())
 
@@ -238,6 +291,14 @@ class TestGame:
             [10.0, 50.0, 40.0],
             [40.0, 30.0, 30.0]
         ]
+        eq_prices = [1.0, 1.0, 4.0]
+        eq_good_holdings = [
+            [1.0, 1.0, 4.0],
+            [1.0, 5.0, 1.0],
+            [6.0, 1.0, 2.0]
+        ]
+        eq_money_holdings = [20.0, 20.0, 20.0]
+
         game_configuration = GameConfiguration(
             nb_agents,
             nb_goods,
@@ -248,7 +309,10 @@ class TestGame:
         game_initialization = GameInitialization(
             money_amounts,
             endowments,
-            utility_params
+            utility_params,
+            eq_prices,
+            eq_good_holdings,
+            eq_money_holdings
         )
 
         game = Game(game_configuration, game_initialization)
@@ -282,6 +346,14 @@ class TestGame:
             [10.0, 50.0, 40.0],
             [40.0, 30.0, 30.0]
         ]
+        eq_prices = [1.0, 1.0, 4.0]
+        eq_good_holdings = [
+            [1.0, 1.0, 4.0],
+            [1.0, 5.0, 1.0],
+            [6.0, 1.0, 2.0]
+        ]
+        eq_money_holdings = [20.0, 20.0, 20.0]
+
         game_configuration = GameConfiguration(
             nb_agents,
             nb_goods,
@@ -292,7 +364,10 @@ class TestGame:
         game_initialization = GameInitialization(
             money_amounts,
             endowments,
-            utility_params
+            utility_params,
+            eq_prices,
+            eq_good_holdings,
+            eq_money_holdings
         )
 
         game = Game(game_configuration, game_initialization)
@@ -341,6 +416,14 @@ class TestGame:
             [10.0, 50.0, 40.0],
             [40.0, 30.0, 30.0]
         ]
+        eq_prices = [1.0, 1.0, 4.0]
+        eq_good_holdings = [
+            [1.0, 1.0, 4.0],
+            [1.0, 5.0, 1.0],
+            [6.0, 1.0, 2.0]
+        ]
+        eq_money_holdings = [20.0, 20.0, 20.0]
+
         game_configuration = GameConfiguration(
             nb_agents,
             nb_goods,
@@ -351,7 +434,10 @@ class TestGame:
         game_initialization = GameInitialization(
             money_amounts,
             endowments,
-            utility_params
+            utility_params,
+            eq_prices,
+            eq_good_holdings,
+            eq_money_holdings
         )
 
         game = Game(game_configuration, game_initialization)
@@ -384,6 +470,14 @@ class TestGame:
             [10.0, 50.0, 40.0],
             [40.0, 30.0, 30.0]
         ]
+        eq_prices = [1.0, 1.0, 4.0]
+        eq_good_holdings = [
+            [1.0, 1.0, 4.0],
+            [1.0, 5.0, 1.0],
+            [6.0, 1.0, 2.0]
+        ]
+        eq_money_holdings = [20.0, 20.0, 20.0]
+
         game_configuration = GameConfiguration(
             nb_agents,
             nb_goods,
@@ -394,7 +488,10 @@ class TestGame:
         game_initialization = GameInitialization(
             money_amounts,
             endowments,
-            utility_params
+            utility_params,
+            eq_prices,
+            eq_good_holdings,
+            eq_money_holdings
         )
 
         game = Game(game_configuration, game_initialization)
@@ -434,6 +531,14 @@ class TestGame:
             [10.0, 50.0, 40.0],
             [40.0, 30.0, 30.0]
         ]
+        eq_prices = [1.0, 1.0, 4.0]
+        eq_good_holdings = [
+            [1.0, 1.0, 4.0],
+            [1.0, 5.0, 1.0],
+            [6.0, 1.0, 2.0]
+        ]
+        eq_money_holdings = [20.0, 20.0, 20.0]
+
         game_configuration = GameConfiguration(
             nb_agents,
             nb_goods,
@@ -444,7 +549,10 @@ class TestGame:
         game_initialization = GameInitialization(
             money_amounts,
             endowments,
-            utility_params
+            utility_params,
+            eq_prices,
+            eq_good_holdings,
+            eq_money_holdings
         )
 
         expected_game = Game(game_configuration, game_initialization)

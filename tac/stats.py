@@ -149,6 +149,34 @@ class GameStats:
         else:
             plt.savefig(output_path)
 
+    def eq_vs_mean_price(self) -> np.ndarray:
+        """
+        Compute the mean price of each good and display it together with the equilibrium price.
+
+        :return: a matrix of shape (nb_goods, 2), where every row i contains the prices of the good.
+        """
+        nb_transactions = len(self.game.transactions)
+        eq_prices = self.game.initialization.eq_prices
+        nb_goods = len(eq_prices)
+
+        result = np.zeros((2, nb_goods), dtype=np.float32)
+        result[0, :] = np.asarray(eq_prices, dtype=np.float32)
+
+        prices_by_transactions = np.zeros((nb_transactions + 1, nb_goods), dtype=np.float32)
+
+        # initial prices
+        prices_by_transactions[0, :] = np.asarray(0, dtype=np.float32)
+
+        temp_game = Game(self.game.configuration, self.game.initialization)
+
+        for idx, tx in enumerate(self.game.transactions):
+            temp_game.settle_transaction(tx)
+            prices_by_transactions[idx + 1, :] = np.asarray(temp_game.get_prices(), dtype=np.float32)
+
+        result[1, :] = np.true_divide(prices_by_transactions.sum(0), (prices_by_transactions != 0).sum(0))
+
+        return result
+
     def dump(self, directory: str, experiment_name: str) -> None:
         """
         Dump the plot.

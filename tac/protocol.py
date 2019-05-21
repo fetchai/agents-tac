@@ -27,7 +27,6 @@ from enum import Enum
 from typing import List, Dict, Any
 from typing import Optional
 
-import google
 from google.protobuf.message import DecodeError
 
 import tac.tac_pb2 as tac_pb2

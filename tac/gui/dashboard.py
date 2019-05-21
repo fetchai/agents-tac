@@ -61,6 +61,7 @@ class Dashboard(object):
         self._update_plot_scores()
         self._update_plot_balance_history()
         self._update_plot_price_history()
+        self._update_plot_eq_vs_mean_price()
         # self._update_current_balances()
 
     @staticmethod
@@ -148,6 +149,18 @@ class Dashboard(object):
                           legend=self.game_stats.game.configuration.good_pbks,
                           title="Price history",
                           xlabel="Transactions",
+                          ylabel="Price")
+                      )
+
+    def _update_plot_eq_vs_mean_price(self):
+        eq_vs_mean_price = self.game_stats.eq_vs_mean_price()
+
+        window_name = "eq_vs_mean_price"
+        self.viz.line(X=np.arange(eq_vs_mean_price.shape[0]), Y=eq_vs_mean_price, env=env_main_name, win=window_name,
+                      opts=dict(
+                          #legend=['eq_price', 'mean_price'],
+                          title="Equilibrium vs Mean Scores",
+                          xlabel="Goods",
                           ylabel="Price")
                       )
 
