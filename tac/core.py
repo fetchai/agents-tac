@@ -22,7 +22,7 @@ from abc import abstractmethod
 from typing import List, Optional
 
 from oef.agents import OEFAgent
-from oef.messages import CFP_TYPES, PROPOSE_TYPES
+from oef.messages import CFP_TYPES, PROPOSE_TYPES, OEFErrorOperation
 from oef.query import Query, Constraint, GtEq
 
 from tac.game import AgentState, GameConfiguration
@@ -159,6 +159,9 @@ class NegotiationAgent(OEFAgent):
     ###
     # The following methods do not need to be implemented by the developer.
     ###
+
+    def on_oef_error(self, answer_id: int, operation: OEFErrorOperation):
+        logger.debug("Receiver OEF error: answer_id={}, operation={}".format(answer_id, operation))
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
         """
