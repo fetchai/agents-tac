@@ -4,7 +4,6 @@ import inspect
 import json
 import os
 import subprocess
-import threading
 import time
 from typing import Optional
 
@@ -166,7 +165,7 @@ class Dashboard(object):
         eq_vs_mean_price = self.game_stats.eq_vs_mean_price()
 
         window_name = "eq_vs_mean_price"
-        self.viz.line(X=np.arange(eq_vs_mean_price.shape[0]), Y=eq_vs_mean_price, env=env_main_name, win=window_name,
+        self.viz.line(X=np.arange(eq_vs_mean_price.shape[0]), Y=eq_vs_mean_price, env=self.env_name, win=window_name,
                       opts=dict(
                           legend=['eq_price', 'mean_price'],
                           title="Equilibrium vs Mean Prices",
@@ -178,7 +177,7 @@ class Dashboard(object):
         eq_vs_current_score = self.game_stats.eq_vs_current_score()
 
         window_name = "eq_vs_current_score"
-        self.viz.line(X=np.arange(eq_vs_current_score.shape[0]), Y=eq_vs_current_score, env=env_main_name, win=window_name,
+        self.viz.line(X=np.arange(eq_vs_current_score.shape[0]), Y=eq_vs_current_score, env=self.env_name, win=window_name,
                       opts=dict(
                           legend=['eq_score', 'current_score'],
                           title="Equilibrium vs Current Score",

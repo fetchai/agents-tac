@@ -47,6 +47,8 @@ To double-check whether the variable has been set successfully, use:
 
     docker-compose config
 
+To see realtime data visualization, connect to the Visdom server at `http://localhost:8097`.
+
 ### Run TAC with baseline agents only
 
 To run a TAC instance with only baseline agents, set `NB_AGENTS` equal to `NB_BASELINE_AGENTS`.
