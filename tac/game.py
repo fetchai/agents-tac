@@ -348,7 +348,8 @@ class Game:
                       lower_bound_factor: int,
                       upper_bound_factor: int,
                       agent_pbks: List[str],
-                      good_pbks: List[str]) -> 'Game':
+                      good_pbks: List[str],
+                      scaling_factor: float = 100.0) -> 'Game':
         """
         Generate a game, the endowments and the utilites.
         :param nb_agents: the number of agents.
@@ -366,8 +367,8 @@ class Game:
 
         initial_money_amounts = generate_initial_money_amounts(nb_agents, money_endowment)
         endowments = generate_endowments(nb_goods, nb_agents, base_amount, lower_bound_factor, upper_bound_factor)
-        utility_params = generate_utility_params(nb_agents, nb_goods)
-        eq_prices, eq_good_holdings, eq_money_holdings = generate_equilibrium_prices_and_allocation(endowments, utility_params, money_endowment)
+        utility_params = generate_utility_params(nb_agents, nb_goods, scaling_factor)
+        eq_prices, eq_good_holdings, eq_money_holdings = generate_equilibrium_prices_and_allocation(endowments, utility_params, money_endowment, scaling_factor)
         game_initialization = GameInitialization(initial_money_amounts, endowments, utility_params, eq_prices, eq_good_holdings, eq_money_holdings)
 
         return Game(game_configuration, game_initialization)
@@ -556,6 +557,23 @@ class Game:
         result = ""
         for agent_pbk, agent_state in self.agent_states.items():
             result = result + agent_pbk + " " + str(agent_state._current_holdings) + "\n"
+        return result
+
+    def get_equilibrium_summary(self) -> str:
+        """
+        Get equilibrium summary.
+        """
+        result = "Equilibrium prices: \n"
+        for good_pbk, eq_price in zip(self.configuration.good_pbks, self.initialization.eq_prices):
+            result = result + good_pbk + " " + str(eq_price) + "\n"
+        result = result + "\n"
+        result = result + "Equilibrium good allocation: \n"
+        for agent_pbk, eq_allocation in zip(self.configuration.agent_pbks, self.initialization.eq_good_holdings):
+            result = result + agent_pbk + " " + str(eq_allocation) + "\n"
+        result = result + "\n"
+        result = result + "Equilibrium money allocation: \n"
+        for agent_pbk, eq_allocation in zip(self.configuration.agent_pbks, self.initialization.eq_money_holdings):
+            result = result + agent_pbk + " " + str(eq_allocation) + "\n"
         return result
 
     def to_dict(self) -> Dict[str, Any]:

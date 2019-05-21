@@ -62,6 +62,7 @@ class Dashboard(object):
         self._update_plot_balance_history()
         self._update_plot_price_history()
         self._update_plot_eq_vs_mean_price()
+        self._update_plot_eq_vs_current_score()
         # self._update_current_balances()
 
     @staticmethod
@@ -144,7 +145,7 @@ class Dashboard(object):
         price_history = self.game_stats.price_history()
 
         window_name = "price_history"
-        self.viz.line(X=price_history, Y=np.arange(price_history.shape[1]), env=env_main_name, win=window_name,
+        self.viz.line(X=np.arange(price_history.shape[0]), Y=price_history, env=env_main_name, win=window_name,
                       opts=dict(
                           legend=self.game_stats.game.configuration.good_pbks,
                           title="Price history",
@@ -158,10 +159,22 @@ class Dashboard(object):
         window_name = "eq_vs_mean_price"
         self.viz.line(X=np.arange(eq_vs_mean_price.shape[0]), Y=eq_vs_mean_price, env=env_main_name, win=window_name,
                       opts=dict(
-                          #legend=['eq_price', 'mean_price'],
-                          title="Equilibrium vs Mean Scores",
+                          legend=['eq_price', 'mean_price'],
+                          title="Equilibrium vs Mean Prices",
                           xlabel="Goods",
                           ylabel="Price")
+                      )
+
+    def _update_plot_eq_vs_current_score(self):
+        eq_vs_current_score = self.game_stats.eq_vs_current_score()
+
+        window_name = "eq_vs_current_score"
+        self.viz.line(X=np.arange(eq_vs_current_score.shape[0]), Y=eq_vs_current_score, env=env_main_name, win=window_name,
+                      opts=dict(
+                          legend=['eq_score', 'current_score'],
+                          title="Equilibrium vs Current Score",
+                          xlabel="Agents",
+                          ylabel="Score")
                       )
 
     def __enter__(self):
