@@ -74,8 +74,8 @@ Example:
           --upper-bound-factor 1
           --tx-fee 1
           --registration-timeout 10
-          --inactivity-timeout 20
-          --competition-timeout 120
+          --inactivity-timeout 60
+          --competition-timeout 240
           --gui
           --seed 42
       

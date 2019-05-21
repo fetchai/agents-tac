@@ -15,7 +15,6 @@ tox = "*"
 pytest-cov = "*"
 
 [packages]
-oef = {path = "./oef-sdk-python"}
 flask-sqlalchemy = "*"
 sqlalchemy = "*"
 numpy = "*"

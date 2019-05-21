@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "00f91c0d3dc78ddc6d31d0c77c9bb68386c316efe8c166dc2db3292e38c35a6b"
+            "sha256": "16edc782f04f61a10b619f2e54421339667429ca565577630c2d3da855daab62"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -190,9 +190,6 @@
             "index": "pypi",
             "version": "==1.16.3"
         },
-        "oef": {
-            "path": "./oef-sdk-python"
-        },
         "pillow": {
             "hashes": [
                 "sha256:15c056bfa284c30a7f265a41ac4cbbc93bdbfc0dfe0613b9cb8a8581b51a9e55",
@@ -365,6 +362,14 @@
                 "sha256:a661d72d58e6ea8a57f7a86e37d86716863ee5e92788398526d58b26a4e4dc02"
             ],
             "version": "==0.7.12"
+        },
+        "appnope": {
+            "hashes": [
+                "sha256:5b26757dc6f79a3b7dc9fab95359328d5747fcb2409d331ea66d0272b90ab2a0",
+                "sha256:8b995ffe925347a2138d7ac0fe77155e4311a0ea6d6da4f5128fe4b3cbe5ed71"
+            ],
+            "markers": "sys_platform == 'darwin'",
+            "version": "==0.1.0"
         },
         "atomicwrites": {
             "hashes": [
