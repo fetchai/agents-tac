@@ -4,6 +4,7 @@ import inspect
 import json
 import os
 import subprocess
+import threading
 import time
 from typing import Optional
 
@@ -18,11 +19,10 @@ CUR_DIR = os.path.dirname(CUR_PATH)
 ROOT_PATH = os.path.join(CUR_DIR, "..", "..")
 
 viz = None  # type: Optional[Visdom]
-env_main_name = "sim_main"
-env_txs_name = "sim_txs"
+DEFAULT_ENV_NAME = "tac_simulation_env_main"
 
 
-def _start_visdom_server() -> subprocess.Popen:
+def start_visdom_server() -> subprocess.Popen:
     visdom_server_args = ["python", "-m", "visdom.server", "-env_path", os.path.join(CUR_DIR, ".visdom_env")]
     print(" ".join(visdom_server_args))
     prog = subprocess.Popen(visdom_server_args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -32,28 +32,37 @@ def _start_visdom_server() -> subprocess.Popen:
 
 
 class Dashboard(object):
-    """Class to manage Visdom dashboard."""
+    """
+    Class to manage Visdom dashboard.
+    It assumes that a Visdom server is running at the address and port provided in input
+    (default: http://localhost:8097)
+    """
 
-    def __init__(self, game_stats: GameStats):
+    def __init__(self, game_stats: GameStats,
+                 visdom_addr: str = "localhost",
+                 visdom_port: int = 8097,
+                 env_name: Optional[str] = None):
         self._proc = None  # type: Optional[subprocess.Popen]
         self.viz = None  # type: Optional[Visdom]
+        self.visdom_addr = visdom_addr
+        self.visdom_port = visdom_port
+        self.env_name = env_name if env_name is not None else DEFAULT_ENV_NAME
         self.game_stats = game_stats
 
     def _is_running(self):
-        return self._proc is not None and self.viz is not None
+        return self.viz is not None
 
     def start(self):
-        self._proc = _start_visdom_server()
-        self.viz = Visdom()
+        self.viz = Visdom(server=self.visdom_addr, port=self.visdom_port, env=self.env_name)
 
     def stop(self):
         if self._is_running():
-            self._proc.terminate()
             self.viz.close()
-        self._proc = None
         self.viz = None
 
     def update(self):
+        if not self._is_running():
+            raise Exception("Dashboard not running, update not allowed.")
         self._update_info()
         self._update_utility_params()
         self._update_current_holdings()
@@ -66,13 +75,13 @@ class Dashboard(object):
         # self._update_current_balances()
 
     @staticmethod
-    def from_datadir(datadir: str):
+    def from_datadir(datadir: str, env_name: str):
         game_data_json_filepath = os.path.join(datadir, "game.json")
         print("Loading data from {}".format(game_data_json_filepath))
         game_data = json.load(open(game_data_json_filepath))
         game = Game.from_dict(game_data)
         game_stats = GameStats(game)
-        return Dashboard(game_stats)
+        return Dashboard(game_stats, env_name)
 
     def _update_info(self):
         window_name = "configuration_details"
@@ -81,14 +90,14 @@ class Dashboard(object):
             {'type': 'number', 'name': '# goods', 'value': self.game_stats.game.configuration.nb_goods},
             {'type': 'number', 'name': 'tx fee', 'value': self.game_stats.game.configuration.tx_fee},
             {'type': 'number', 'name': '# transactions', 'value': len(self.game_stats.game.transactions)},
-        ], env=env_main_name, win=window_name, opts=dict(title="Configuration"))
+        ], env=self.env_name, win=window_name, opts=dict(title="Configuration"))
 
     def _update_utility_params(self):
         utility_params = self.game_stats.game.initialization.utility_params
         utility_params = np.asarray(utility_params)
 
         window_name = "utility_params"
-        self.viz.heatmap(utility_params, env=env_main_name, win=window_name, opts=dict(
+        self.viz.heatmap(utility_params, env=self.env_name, win=window_name, opts=dict(
             title="Utility Parameters",
             xlabel="Goods",
             ylabel="Agents"
@@ -98,7 +107,7 @@ class Dashboard(object):
         initial_holdings = self.game_stats.holdings_history()[0]
 
         window_name = "initial_holdings"
-        self.viz.heatmap(initial_holdings, env=env_main_name, win=window_name, opts=dict(
+        self.viz.heatmap(initial_holdings, env=self.env_name, win=window_name, opts=dict(
             title="Initial Holdings",
             xlabel="Goods",
             ylabel="Agents",
@@ -109,7 +118,7 @@ class Dashboard(object):
         initial_holdings = self.game_stats.holdings_history()[-1]
 
         window_name = "final_holdings"
-        self.viz.heatmap(initial_holdings, env=env_main_name, win=window_name,
+        self.viz.heatmap(initial_holdings, env=self.env_name, win=window_name,
                          opts=dict(
                              title="Current Holdings",
                              xlabel="Goods",
@@ -121,7 +130,7 @@ class Dashboard(object):
         score_history = self.game_stats.score_history()
 
         window_name = "score_history"
-        self.viz.line(X=np.arange(score_history.shape[0]), Y=score_history, env=env_main_name, win=window_name,
+        self.viz.line(X=np.arange(score_history.shape[0]), Y=score_history, env=self.env_name, win=window_name,
                       opts=dict(
                           legend=self.game_stats.game.configuration.agent_pbks,
                           title="Scores",
@@ -133,7 +142,7 @@ class Dashboard(object):
         balance_history = self.game_stats.balance_history()
 
         window_name = "balance_history"
-        self.viz.line(X=np.arange(balance_history.shape[0]), Y=balance_history, env=env_main_name, win=window_name,
+        self.viz.line(X=np.arange(balance_history.shape[0]), Y=balance_history, env=self.env_name, win=window_name,
                       opts=dict(
                           legend=self.game_stats.game.configuration.agent_pbks,
                           title="Balance history",
@@ -145,7 +154,7 @@ class Dashboard(object):
         price_history = self.game_stats.price_history()
 
         window_name = "price_history"
-        self.viz.line(X=np.arange(price_history.shape[0]), Y=price_history, env=env_main_name, win=window_name,
+        self.viz.line(X=np.arange(price_history.shape[0]), Y=price_history, env=self.env_name, win=window_name,
                       opts=dict(
                           legend=self.game_stats.game.configuration.good_pbks,
                           title="Price history",
@@ -188,6 +197,7 @@ class Dashboard(object):
 def parse_args():
     parser = argparse.ArgumentParser("dashboard", description="Data Visualization for the simulation outcome")
     parser.add_argument("--datadir", type=str, required=True, help="The path to the simulation data folder.")
+    parser.add_argument("--env_name", type=str, default=None, help="The name of the environment to create.")
 
     arguments = parser.parse_args()
     return arguments
@@ -196,10 +206,15 @@ def parse_args():
 if __name__ == '__main__':
 
     arguments = parse_args()
+    process = start_visdom_server()
+    d = Dashboard.from_datadir(arguments.datadir, arguments.env_name)
 
-    datadir = arguments.datadir
-    d = Dashboard.from_datadir(datadir)
-
-    with d:
-        while True:
+    d.start()
+    while True:
+        try:
             input()
+        except KeyboardInterrupt:
+            break
+        finally:
+            d.stop()
+            process.terminate()

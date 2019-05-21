@@ -58,7 +58,9 @@ def parse_arguments():
     parser.add_argument("--registration-timeout", default=10, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
     parser.add_argument("--inactivity-timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
     parser.add_argument("--competition-timeout", default=240, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
-    parser.add_argument("--gui", action="store_true", help="Show the GUI.")
+    parser.add_argument("--visdom-addr", default="localhost", help="TCP/IP address of the Visdom server")
+    parser.add_argument("--visdom-port", default=8097, help="TCP/IP port of the Visdom server")
+    parser.add_argument("--gui", action="store_true", help="Enable the GUI.")
     parser.add_argument("--seed", default=42, help="The random seed of the simulation.")
 
     arguments = parser.parse_args()
@@ -95,6 +97,8 @@ def initialize_controller_agent(public_key: str,
                                 registration_timeout: int,
                                 inactivity_timeout: int,
                                 competition_timeout: int,
+                                visdom_addr: str,
+                                visdom_port: int,
                                 gui: bool) -> ControllerAgent:
     """
     Initialize the controller agent.
@@ -109,6 +113,8 @@ def initialize_controller_agent(public_key: str,
     :param registration_timeout: the amount of time (in seconds) to wait for agents to register before attempting to start the competition.
     :param inactivity_timeout: the amount of time (in seconds) to wait during inactivity until the termination of the competition.
     :param competition_timeout: the amount of time (in seconds) to wait from the start of the competition until the termination of the competition.
+    :param visdom_addr: TCP/IP address of the Visdom server.
+    :param visdom_port: TCP/IP port of the Visdom server.
     :param gui: Show the dashboard.
     :return: the controller agent.
     """
@@ -119,7 +125,8 @@ def initialize_controller_agent(public_key: str,
                                      oef_port=oef_port, min_nb_agents=min_nb_agents,
                                      nb_goods=nb_goods, tx_fee=tx_fee, lower_bound_factor=lower_bound_factor,
                                      upper_bound_factor=upper_bound_factor, start_time=start_time, end_time=end_time,
-                                     inactivity_timeout=inactivity_timeout, gui=gui)
+                                     inactivity_timeout=inactivity_timeout,
+                                     visdom_addr=visdom_addr, visdom_port=visdom_port, gui=gui)
     tac_controller.connect()
     tac_controller.register()
     return tac_controller
@@ -223,11 +230,20 @@ if __name__ == '__main__':
     random.seed(arguments.seed)
     try:
 
-        tac_controller = initialize_controller_agent("tac_controller", arguments.oef_addr, arguments.oef_port,
-                                                     arguments.nb_agents, arguments.nb_goods, arguments.tx_fee,
-                                                     arguments.lower_bound_factor, arguments.upper_bound_factor,
-                                                     arguments.registration_timeout, arguments.inactivity_timeout, arguments.competition_timeout,
-                                                     arguments.gui)
+        tac_controller = initialize_controller_agent("tac_controller",
+                                                     oef_addr=arguments.oef_addr,
+                                                     oef_port=arguments.oef_port,
+                                                     min_nb_agents=arguments.nb_agents,
+                                                     nb_goods=arguments.nb_goods,
+                                                     tx_fee=arguments.tx_fee,
+                                                     lower_bound_factor=arguments.lower_bound_factor,
+                                                     upper_bound_factor=arguments.upper_bound_factor,
+                                                     registration_timeout=arguments.registration_timeout,
+                                                     inactivity_timeout=arguments.inactivity_timeout,
+                                                     competition_timeout=arguments.competition_timeout,
+                                                     visdom_addr=arguments.visdom_addr,
+                                                     visdom_port=arguments.visdom_port,
+                                                     gui=arguments.gui)
         baseline_agents = initialize_baseline_agents(arguments.nb_baseline_agents, arguments.oef_addr, arguments.oef_port, arguments.register_as, arguments.search_for)
         run(tac_controller, baseline_agents)
 
