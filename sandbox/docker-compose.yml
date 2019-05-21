@@ -1,15 +1,33 @@
 version: '3'
 services:
   oef-node:
-    image: "oef-core-image"
-    build:
-      context: ../oef-core/
-      dockerfile: oef-core-image/Dockerfile
+    image: "qati/oef:latest"
     ports:
       - "3333:3333"
+      - "20000:20000"
+      - "40000:40000"
     networks:
       main_net:
         ipv4_address: 172.28.1.1
+    logging:
+      driver: none
+    entrypoint:
+      - "/bin/sh"
+      - "/app/oef.sh"
+      - "node"
+      - "no_sh"
+      - "--node_key"
+      - "Search1"
+      - "--core_key"
+      - "Core1"
+      - "--search_port"
+      - "20000"
+      - "--core_port"
+      - "3333"
+      - "--dap_port"
+      - "30000"
+      - "--director_api_port"
+      - "40000"
 
   baseline:
     image: "baseline-image"
@@ -26,6 +44,8 @@ services:
       main_net:
         ipv4_address: 172.28.1.2
     entrypoint:
+      - "pipenv"
+      - "run"
       - "python3"
       - "examples/simulation_demo/tac_agent_spawner.py"
       - "--nb-agents"
@@ -34,8 +54,8 @@ services:
       - "${NB_GOODS}"
       - "--nb-baseline-agents"
       - "${NB_BASELINE_AGENTS}"
-      - "--service-registration-strategy"
-      - "${SERVICE_REGISTRATION_STRATEGY}"
+#      - "--service-registration-strategy"
+#      - "${SERVICE_REGISTRATION_STRATEGY}"
       - "--oef-addr"
       - "${OEF_ADDR}"
       - "--oef-port"
@@ -52,11 +72,11 @@ services:
       - "${LOWER_BOUND_FACTOR}"
       - "--upper-bound-factor"
       - "${UPPER_BOUND_FACTOR}"
-      - "--fee"
+      - "--tx-fee"
       - "${TX_FEE}"
       - "--registration-timeout"
       - "${REGISTRATION_TIMEOUT}"
-      - "--inactivity-timeout "
+      - "--inactivity-timeout"
       - "${INACTIVITY_TIMEOUT}"
       - "--competition-timeout"
       - "${COMPETITION_TIMEOUT}"

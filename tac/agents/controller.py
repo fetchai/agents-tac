@@ -27,6 +27,7 @@ The methods are split in three classes:
 """
 
 import argparse
+import asyncio
 import datetime
 import json
 import logging
@@ -427,7 +428,7 @@ class ControllerAgent(OEFAgent):
         :param inactivity_timeout: the time when the competition will start.
         :param gui: show the GUI.
         """
-        super().__init__(public_key, oef_addr, oef_port, **kwargs)
+        super().__init__(public_key, oef_addr, oef_port, loop=asyncio.new_event_loop())
         logger.debug("Initialized Controller Agent :\n{}".format(pprint.pformat(vars())))
 
         self.game_handler = GameHandler(self, min_nb_agents, money_endowment, nb_goods, tx_fee, lower_bound_factor, upper_bound_factor, start_time)

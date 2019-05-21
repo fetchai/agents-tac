@@ -18,7 +18,6 @@ This repository contains submodules. Clone with recursive strategy:
 - `sandbox`: setup for using Docker compose.
 - `scripts`: list of scripts for different purposes (e.g. do data analysis)
 - `tac`: the main folder containing the Python package.
-- `tac-cpp`: submodule associated with the project.
 - `tests`: tests for the package.
 
 ## Dependencies
