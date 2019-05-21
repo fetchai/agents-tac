@@ -144,7 +144,7 @@ class Dashboard(object):
         price_history = self.game_stats.price_history()
 
         window_name = "price_history"
-        self.viz.line(X=np.arange(price_history.shape[0]), Y=price_history, env=env_main_name, win=window_name,
+        self.viz.line(X=price_history, Y=np.arange(price_history.shape[1]), env=env_main_name, win=window_name,
                       opts=dict(
                           legend=self.game_stats.game.configuration.good_pbks,
                           title="Price history",
