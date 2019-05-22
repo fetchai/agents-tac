@@ -46,6 +46,8 @@ For a full list, do `python examples/simulation_demo/tac_agent_spawner.py -h`
 - `--data-output-dir` is the output directory to use for storing simulation data in `${data_output_dir}/${experiment_id}`.
 - `--experiment-id` is the name to give to the simulation.
 - `--plot` specifies whether to plot a summary of the game.
+- `--money-endowment` is the money amount every agent receives.
+- `--base-good-endowment` is the base amount of per good instances every agent receives.
 - `--lower-bound-factor` is the lower bound factor of a uniform distribution used for generating good instances.
 - `--upper-bound-factor` is the upper bound factor of a uniform distribution used for generating good instances.
 - `--tx-fee` is the transaction fee.
@@ -70,6 +72,8 @@ Example:
           --data-output-dir data
           --experiment-id my_experiment
           --plot True
+          --money-endowment 200
+          --base-good-endowment 2
           --lower-bound-factor 1
           --upper-bound-factor 1
           --tx-fee 1
