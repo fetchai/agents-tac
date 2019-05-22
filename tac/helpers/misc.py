@@ -79,19 +79,20 @@ def generate_endowments(nb_goods: int, nb_agents: int, base_amount: int, uniform
     return endowments
 
 
-def generate_utility_params(nb_agents: int, nb_goods: int) -> List[List[float]]:
+def generate_utility_params(nb_agents: int, nb_goods: int, scaling_factor: float) -> List[List[float]]:
     """
     Compute the preference matrix. That is, a generic element e_ij is the utility of good j for agent i.
 
     :param nb_agents: the number of agents.
     :param nb_goods: the number of goods.
+    :param scaling_factor: a scaling factor for all the utility params generated.
     :return: the preference matrix.
     """
-    utility_params = _sample_utility_function_params(nb_goods, nb_agents)
+    utility_params = _sample_utility_function_params(nb_goods, nb_agents, scaling_factor)
     return utility_params
 
 
-def _sample_utility_function_params(nb_goods: int, nb_agents: int, scaling_factor: float = 100.0) -> List[List[float]]:
+def _sample_utility_function_params(nb_goods: int, nb_agents: int, scaling_factor: float) -> List[List[float]]:
     """
     Sample utility function params for each agent.
     :param nb_goods: the number of goods
@@ -144,6 +145,26 @@ def generate_initial_money_amounts(nb_agents: int, money_endowment: int) -> List
     :return: the list of initial money amounts.
     """
     return [money_endowment] * nb_agents
+
+
+def generate_equilibrium_prices_and_allocation(endowments: List[List[int]], utility_function_params: List[List[float]], money_endowment: float, scaling_factor: float) -> (List[float], List[List[float]], List[float]):
+    """
+    Computes the competitive equilibrium prices and allocation.
+
+    :param endowments: endowments of the agents
+    :param utility_function_params: utility function params of the agents (already scaled)
+    :param money_endowment: money endowment per agent.
+    :param scaling_factor: a scaling factor for all the utility params generated.
+    :return: the lists of equilibrium prices, equilibrium good holdings and equilibrium money holdings
+    """
+    endowments_a = np.array(endowments, dtype=np.int)
+    scaled_utility_function_params_a = np.array(utility_function_params, dtype=np.float)  # note, they are already scaled
+    endowments_by_good = np.sum(endowments_a, axis=0)
+    scaled_params_by_good = np.sum(scaled_utility_function_params_a, axis=0)
+    eq_prices = np.divide(scaled_params_by_good, endowments_by_good)
+    eq_good_holdings = np.divide(scaled_utility_function_params_a, eq_prices)
+    eq_money_holdings = np.transpose(np.dot(eq_prices, np.transpose(endowments_a))) + money_endowment - scaling_factor
+    return eq_prices.tolist(), eq_good_holdings.tolist(), eq_money_holdings.tolist()
 
 
 def logarithmic_utility(utility_function_params: List[float], good_bundle: List[int]) -> float:

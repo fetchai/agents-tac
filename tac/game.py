@@ -38,7 +38,7 @@ import pprint
 from typing import List, Dict, Any, Optional
 
 from tac.helpers.misc import generate_initial_money_amounts, generate_endowments, generate_utility_params, from_iso_format, \
-    logarithmic_utility
+    logarithmic_utility, generate_equilibrium_prices_and_allocation
 from tac.protocol import Transaction
 
 Endowment = List[int]  # an element e_j is the endowment of good j.
@@ -142,7 +142,10 @@ class GameInitialization:
     def __init__(self,
                  initial_money_amounts: List[int],
                  endowments: List[Endowment],
-                 utility_params: List[UtilityParams]):
+                 utility_params: List[UtilityParams],
+                 eq_prices: List[float],
+                 eq_good_holdings: List[List[float]],
+                 eq_money_holdings: List[float]):
         """
         Initialization of a game.
         :param initial_money_amounts: the initial amount of money of every agent.
@@ -152,11 +155,19 @@ class GameInitialization:
         :param utility_params: the utility params representing the preferences of the agents. A matrix where the first
                             index is the agent id and the second index is the good id. A generic element e_ij
                             at row i and column j is an integer that denotes the utility of good j for agent i.
+        :param eq_prices: the competitive equilibrium prices of the goods. A list.
+        :param eq_good_holdings: the competitive equilibrium good holdings of the agents. A matrix where the first index is the agent id
+                            and the second index is the good id. A generic element g_ij at row i and column j is
+                            a float that denotes the (divisible) amount of good j for agent i.
+        :param eq_money_holdings: the competitive equilibrium money holdings of the agents. A list.
         """
 
         self._initial_money_amounts = initial_money_amounts
         self._endowments = endowments
         self._utility_params = utility_params
+        self._eq_prices = eq_prices
+        self._eq_good_holdings = eq_good_holdings
+        self._eq_money_holdings = eq_money_holdings
 
         self._check_consistency()
 
@@ -172,6 +183,18 @@ class GameInitialization:
     def utility_params(self) -> List[UtilityParams]:
         return self._utility_params
 
+    @property
+    def eq_prices(self) -> List[float]:
+        return self._eq_prices
+
+    @property
+    def eq_good_holdings(self) -> List[List[float]]:
+        return self._eq_good_holdings
+
+    @property
+    def eq_money_holdings(self) -> List[float]:
+        return self._eq_money_holdings
+
     def _check_consistency(self):
         """
         Check the consistency of the game configuration.
@@ -186,6 +209,9 @@ class GameInitialization:
         assert len(self.endowments) == len(self.initial_money_amounts), "Length of endowments and initial_money_amounts must be the same."
         assert len(self.endowments) == len(self.utility_params), "Length of endowments and utility_params must be the same."
 
+        assert len(self.eq_prices) == len(self.eq_good_holdings[0]), "Length of eq_prices and an element of eq_good_holdings must be the same."
+        assert len(self.eq_good_holdings) == len(self.eq_money_holdings), "Length of eq_good_holdings and eq_good_holdings must be the same."
+
         assert all(len(row_e) == len(row_u) for row_e, row_u in zip(self.endowments, self.utility_params)), "Dimensions for utility_params and endowments rows must be the same."
 
     def to_dict(self) -> Dict[str, Any]:
@@ -193,7 +219,10 @@ class GameInitialization:
         return {
             "initial_money_amounts": self.initial_money_amounts,
             "endowments": self.endowments,
-            "utility_params": self.utility_params
+            "utility_params": self.utility_params,
+            "eq_prices": self.eq_prices,
+            "eq_good_holdings": self.eq_good_holdings,
+            "eq_money_holdings": self.eq_money_holdings
         }
 
     @classmethod
@@ -203,6 +232,9 @@ class GameInitialization:
             d["initial_money_amounts"],
             d["endowments"],
             d["utility_params"],
+            d["eq_prices"],
+            d["eq_good_holdings"],
+            d["eq_money_holdings"]
         )
         return obj
 
@@ -210,7 +242,10 @@ class GameInitialization:
         return isinstance(other, GameInitialization) and \
             self.initial_money_amounts == other.initial_money_amounts and \
             self.endowments == other.endowments and \
-            self.utility_params == other.utility_params
+            self.utility_params == other.utility_params and \
+            self.eq_prices == other.eq_prices and \
+            self.eq_good_holdings == other.eq_good_holdings and \
+            self.eq_money_holdings == other.eq_money_holdings
 
 
 class Game:
@@ -229,6 +264,12 @@ class Game:
     ... [20.0, 40.0, 40.0],
     ... [10.0, 50.0, 40.0],
     ... [40.0, 30.0, 30.0]]
+    >>> eq_prices = [1.0, 2.0, 2.0]
+    >>> eq_good_holdings = [
+    ... [1.0, 1.0, 1.0],
+    ... [2.0, 1.0, 1.0],
+    ... [1.0, 1.0, 2.0]]
+    >>> eq_money_holdings = [20.0, 20.0, 20.0]
     >>> game_configuration = GameConfiguration(
     ...     nb_agents,
     ...     nb_goods,
@@ -239,7 +280,10 @@ class Game:
     >>> game_initialization = GameInitialization(
     ...     money_amounts,
     ...     endowments,
-    ...     utility_params
+    ...     utility_params,
+    ...     eq_prices,
+    ...     eq_good_holdings,
+    ...     eq_money_holdings,
     ... )
     >>> game = Game(game_configuration, game_initialization)
 
@@ -304,7 +348,8 @@ class Game:
                       lower_bound_factor: int,
                       upper_bound_factor: int,
                       agent_pbks: List[str],
-                      good_pbks: List[str]) -> 'Game':
+                      good_pbks: List[str],
+                      scaling_factor: float = 100.0) -> 'Game':
         """
         Generate a game, the endowments and the utilites.
         :param nb_agents: the number of agents.
@@ -322,8 +367,9 @@ class Game:
 
         initial_money_amounts = generate_initial_money_amounts(nb_agents, money_endowment)
         endowments = generate_endowments(nb_goods, nb_agents, base_amount, lower_bound_factor, upper_bound_factor)
-        utility_params = generate_utility_params(nb_agents, nb_goods)
-        game_initialization = GameInitialization(initial_money_amounts, endowments, utility_params)
+        utility_params = generate_utility_params(nb_agents, nb_goods, scaling_factor)
+        eq_prices, eq_good_holdings, eq_money_holdings = generate_equilibrium_prices_and_allocation(endowments, utility_params, money_endowment, scaling_factor)
+        game_initialization = GameInitialization(initial_money_amounts, endowments, utility_params, eq_prices, eq_good_holdings, eq_money_holdings)
 
         return Game(game_configuration, game_initialization)
 
@@ -381,6 +427,12 @@ class Game:
         ... [20.0, 40.0, 40.0],
         ... [10.0, 50.0, 40.0],
         ... [40.0, 30.0, 30.0]]
+        >>> eq_prices = [1.0, 2.0, 2.0]
+        >>> eq_good_holdings = [
+        ... [1.0, 1.0, 1.0],
+        ... [2.0, 1.0, 1.0],
+        ... [1.0, 1.0, 2.0]]
+        >>> eq_money_holdings = [20.0, 20.0, 20.0]
         >>> game_configuration = GameConfiguration(
         ...     nb_agents,
         ...     nb_goods,
@@ -391,7 +443,10 @@ class Game:
         >>> game_initialization = GameInitialization(
         ...     money_amounts,
         ...     endowments,
-        ...     utility_params
+        ...     utility_params,
+        ...     eq_prices,
+        ...     eq_good_holdings,
+        ...     eq_money_holdings
         ... )
         >>> game = Game(game_configuration, game_initialization)
         >>> agent_state_0 = game.agent_states['tac_agent_0'] # agent state of tac_agent_0
@@ -470,6 +525,12 @@ class Game:
         ... [20.0, 40.0, 40.0],
         ... [10.0, 50.0, 40.0],
         ... [40.0, 30.0, 30.0]]
+        >>> eq_prices = [1.0, 2.0, 2.0]
+        >>> eq_good_holdings = [
+        ... [1.0, 1.0, 1.0],
+        ... [2.0, 1.0, 1.0],
+        ... [1.0, 1.0, 2.0]]
+        >>> eq_money_holdings = [20.0, 20.0, 20.0]
         >>> game_configuration = GameConfiguration(
         ...     nb_agents,
         ...     nb_goods,
@@ -480,7 +541,10 @@ class Game:
         >>> game_initialization = GameInitialization(
         ...     money_amounts,
         ...     endowments,
-        ...     utility_params
+        ...     utility_params,
+        ...     eq_prices,
+        ...     eq_good_holdings,
+        ...     eq_money_holdings
         ... )
         >>> game = Game(game_configuration, game_initialization)
         >>> print(game.get_holdings_summary(), end="")
@@ -493,6 +557,23 @@ class Game:
         result = ""
         for agent_pbk, agent_state in self.agent_states.items():
             result = result + agent_pbk + " " + str(agent_state._current_holdings) + "\n"
+        return result
+
+    def get_equilibrium_summary(self) -> str:
+        """
+        Get equilibrium summary.
+        """
+        result = "Equilibrium prices: \n"
+        for good_pbk, eq_price in zip(self.configuration.good_pbks, self.initialization.eq_prices):
+            result = result + good_pbk + " " + str(eq_price) + "\n"
+        result = result + "\n"
+        result = result + "Equilibrium good allocation: \n"
+        for agent_pbk, eq_allocation in zip(self.configuration.agent_pbks, self.initialization.eq_good_holdings):
+            result = result + agent_pbk + " " + str(eq_allocation) + "\n"
+        result = result + "\n"
+        result = result + "Equilibrium money allocation: \n"
+        for agent_pbk, eq_allocation in zip(self.configuration.agent_pbks, self.initialization.eq_money_holdings):
+            result = result + agent_pbk + " " + str(eq_allocation) + "\n"
         return result
 
     def to_dict(self) -> Dict[str, Any]:

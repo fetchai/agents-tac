@@ -316,6 +316,7 @@ class GameHandler:
 
         # log messages
         logger.debug("Started competition:\n{}".format(self.current_game.get_holdings_summary()))
+        logger.debug("Computed equilibrium:\n{}".format(self.current_game.get_equilibrium_summary()))
         plantuml_gen.start_competition(self.controller_agent.public_key, self.current_game)
 
     def _create_game(self) -> Game:

@@ -4,7 +4,6 @@ import inspect
 import json
 import os
 import subprocess
-import threading
 import time
 from typing import Optional
 
@@ -70,6 +69,8 @@ class Dashboard(object):
         self._update_plot_scores()
         self._update_plot_balance_history()
         self._update_plot_price_history()
+        self._update_plot_eq_vs_mean_price()
+        self._update_plot_eq_vs_current_score()
         # self._update_current_balances()
 
     @staticmethod
@@ -158,6 +159,30 @@ class Dashboard(object):
                           title="Price history",
                           xlabel="Transactions",
                           ylabel="Price")
+                      )
+
+    def _update_plot_eq_vs_mean_price(self):
+        eq_vs_mean_price = self.game_stats.eq_vs_mean_price()
+
+        window_name = "eq_vs_mean_price"
+        self.viz.line(X=np.arange(eq_vs_mean_price.shape[0]), Y=eq_vs_mean_price, env=self.env_name, win=window_name,
+                      opts=dict(
+                          legend=['eq_price', 'mean_price'],
+                          title="Equilibrium vs Mean Prices",
+                          xlabel="Goods",
+                          ylabel="Price")
+                      )
+
+    def _update_plot_eq_vs_current_score(self):
+        eq_vs_current_score = self.game_stats.eq_vs_current_score()
+
+        window_name = "eq_vs_current_score"
+        self.viz.line(X=np.arange(eq_vs_current_score.shape[0]), Y=eq_vs_current_score, env=self.env_name, win=window_name,
+                      opts=dict(
+                          legend=['eq_score', 'current_score'],
+                          title="Equilibrium vs Current Score",
+                          xlabel="Agents",
+                          ylabel="Score")
                       )
 
     def __enter__(self):

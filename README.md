@@ -24,6 +24,9 @@ This repository contains submodules. Clone with recursive strategy:
 
 - The project requires the [Google Protocol Buffers](https://developers.google.com/protocol-buffers/) compiler. A guide on how to install it is found [here](https://fetchai.github.io/oef-sdk-python/user/install.html#protobuf-compiler).
 - All python specific dependencies are specified in the Pipfile.
+- The project requires oef-search-pluto which can be pulled here:
+
+	  docker pull qati/oef:latest
 
 ## Preliminaries
 
@@ -31,17 +34,15 @@ This repository contains submodules. Clone with recursive strategy:
 
       pipenv --python 3.7 && pipenv shell
 
-- Install the local copy of `oef-sdk-python`:
-
-      pip3 install oef-sdk-python/ 
-
 - Install the package:
 
       python3 setup.py install
 
-- In a different terminal window launch an OEF Node. You can find out how to do it [here](https://fetchai.github.io/oef-sdk-python/user/oef-node.html).
-
 ## Development
+
+- Install development dependencies:
+
+	  pipenv install --dev
 
 - After each change to the codebase re-install package:
 
@@ -54,3 +55,7 @@ This repository contains submodules. Clone with recursive strategy:
 - To run tests:
 
       tox -e py37
+
+- To run linters:
+
+      tox -e flake8

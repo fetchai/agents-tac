@@ -25,7 +25,7 @@ matplotlib.use('agg')
 import os
 import pylab as plt
 
-from tac.game import Game
+from tac.game import Game, AgentState
 
 
 class GameStats:
@@ -148,6 +148,73 @@ class GameStats:
             plt.show()
         else:
             plt.savefig(output_path)
+
+    def eq_vs_mean_price(self) -> np.ndarray:
+        """
+        Compute the mean price of each good and display it together with the equilibrium price.
+
+        :return: a matrix of shape (2, nb_goods), where every column i contains the prices of the good.
+        """
+        nb_transactions = len(self.game.transactions)
+        eq_prices = self.game.initialization.eq_prices
+        nb_goods = len(eq_prices)
+
+        result = np.zeros((2, nb_goods), dtype=np.float32)
+        result[0, :] = np.asarray(eq_prices, dtype=np.float32)
+
+        prices_by_transactions = np.zeros((nb_transactions + 1, nb_goods), dtype=np.float32)
+
+        # initial prices
+        prices_by_transactions[0, :] = np.asarray(0, dtype=np.float32)
+
+        temp_game = Game(self.game.configuration, self.game.initialization)
+
+        for idx, tx in enumerate(self.game.transactions):
+            temp_game.settle_transaction(tx)
+            prices_by_transactions[idx + 1, :] = np.asarray(temp_game.get_prices(), dtype=np.float32)
+
+        result[1, :] = np.true_divide(prices_by_transactions.sum(0), (prices_by_transactions != 0).sum(0))
+
+        result = np.transpose(result)
+
+        return result
+
+    def eq_vs_current_score(self) -> np.ndarray:
+        """
+        Compute the equilibrium score of each agent and display it together with the current score.
+
+        :return: a matrix of shape (2, nb_agents), where every column i contains the scores of the agent.
+        """
+        nb_agents = self.game.configuration.nb_agents
+        current_scores = np.zeros((1, nb_agents), dtype=np.float32)
+
+        eq_agent_states = dict(
+            (agent_pbk,
+                AgentState(
+                    self.game.initialization.eq_money_holdings[i],
+                    self.game.initialization.eq_good_holdings[i],
+                    self.game.initialization.utility_params[i]
+                ))
+            for agent_pbk, i in zip(self.game.configuration.agent_pbks, range(self.game.configuration.nb_agents)))  # type: Dict[str, AgentState]
+
+        result = np.zeros((2, nb_agents), dtype=np.float32)
+        result[0, :] = [eq_agent_state.get_score() for eq_agent_state in eq_agent_states.values()]
+
+        temp_game = Game(self.game.configuration, self.game.initialization)
+
+        # initial scores
+        current_scores[0, :] = temp_game.get_scores()
+
+        # compute the partial scores for every agent after every transaction
+        # (remember that indexes of the transaction start from one, because index 0 is reserved for the initial scores)
+        for idx, tx in enumerate(self.game.transactions):
+            temp_game.settle_transaction(tx)
+            current_scores[0, :] = temp_game.get_scores()
+
+        result[1, :] = current_scores[0, :]
+        result = np.transpose(result)
+
+        return result
 
     def dump(self, directory: str, experiment_name: str) -> None:
         """
