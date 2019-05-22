@@ -343,7 +343,7 @@ class Game:
     def generate_game(nb_agents: int,
                       nb_goods: int,
                       money_endowment: int,
-                      tx_fee: int,
+                      tx_fee: float,
                       base_amount: int,
                       lower_bound_factor: int,
                       upper_bound_factor: int,
@@ -779,6 +779,25 @@ class GameTransaction:
             "quantities_by_good_pbk": self.quantities_by_good_pbk,
             "timestamp": str(self.timestamp)
         }
+
+    @classmethod
+    def from_request_to_game_tx(self, transaction: Transaction) -> 'GameTransaction':
+        """
+        From a transaction request message to a game transaction
+        :param transaction: the request message for a transaction.
+        :return: the game transaction.
+        """
+        sender_pbk = transaction.sender
+        receiver_pbk = transaction.counterparty
+        buyer_pbk, seller_pbk = (sender_pbk, receiver_pbk) if transaction.buyer else (receiver_pbk, sender_pbk)
+
+        tx = GameTransaction(
+            buyer_pbk,
+            seller_pbk,
+            transaction.amount,
+            transaction.quantities_by_good_pbk
+        )
+        return tx
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> 'GameTransaction':

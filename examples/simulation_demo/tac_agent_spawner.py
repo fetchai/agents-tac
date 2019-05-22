@@ -32,7 +32,8 @@ from typing import List
 import math
 
 from tac.agents.baseline import BaselineAgent
-from tac.agents.controller import ControllerAgent
+from tac.agents.controller import ControllerAgent, TACParameters
+from tac.gui.monitor import VisdomMonitor, NullMonitor
 from tac.helpers.plantuml import plantuml_gen
 from tac.stats import GameStats
 
@@ -44,6 +45,7 @@ def parse_arguments():
     parser.add_argument("--nb-agents", type=int, default=10, help="(minimum) number of TAC agent to wait for the competition.")
     parser.add_argument("--nb-goods", type=int, default=10, help="Number of TAC agent to run.")
     parser.add_argument("--nb-baseline-agents", type=int, default=10, help="Number of baseline agent to run. Defaults to the number of agents of the competition.")
+    parser.add_argument("--money-endowment", type=int, default=200, help="Initial amount of money.")
     parser.add_argument("--register-as", choices=['seller', 'buyer', 'both'], default='seller', help="The string indicates whether the baseline agent registers as seller, buyer or both on the oef.")
     parser.add_argument("--search-for", choices=['sellers', 'buyers', 'both'], default='sellers', help="The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
@@ -55,6 +57,7 @@ def parse_arguments():
     parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
     parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
     parser.add_argument("--tx-fee", default=1, type=int, help="The transaction fee.")
+    parser.add_argument("--start-time", default=10, type=int, help="The start time for the competition.")
     parser.add_argument("--registration-timeout", default=10, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
     parser.add_argument("--inactivity-timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
     parser.add_argument("--competition-timeout", default=240, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
@@ -89,14 +92,6 @@ def _compute_competition_start_and_end_time(registration_timeout: int, competiti
 def initialize_controller_agent(public_key: str,
                                 oef_addr: str,
                                 oef_port: int,
-                                min_nb_agents: int,
-                                nb_goods: int,
-                                tx_fee: int,
-                                lower_bound_factor: int,
-                                upper_bound_factor: int,
-                                registration_timeout: int,
-                                inactivity_timeout: int,
-                                competition_timeout: int,
                                 visdom_addr: str,
                                 visdom_port: int,
                                 gui: bool) -> ControllerAgent:
@@ -105,28 +100,14 @@ def initialize_controller_agent(public_key: str,
     :param public_key: the public key of the controller agent.
     :param oef_addr: the TCP/IP address of the OEF Node.
     :param oef_port: the TCP/IP port of the OEF Node.
-    :param min_nb_agents: the minimum number of agents to run the competition.
-    :param nb_goods: the number of goods.
-    :param tx_fee: the transaction fee.
-    :param lower_bound_factor: the lower bound factor of a uniform distribution.
-    :param upper_bound_factor: the upper bound factor of a uniform distribution.
-    :param registration_timeout: the amount of time (in seconds) to wait for agents to register before attempting to start the competition.
-    :param inactivity_timeout: the amount of time (in seconds) to wait during inactivity until the termination of the competition.
-    :param competition_timeout: the amount of time (in seconds) to wait from the start of the competition until the termination of the competition.
     :param visdom_addr: TCP/IP address of the Visdom server.
     :param visdom_port: TCP/IP port of the Visdom server.
     :param gui: Show the dashboard.
     :return: the controller agent.
     """
 
-    start_time, end_time = _compute_competition_start_and_end_time(registration_timeout, competition_timeout)
-
-    tac_controller = ControllerAgent(public_key=public_key, oef_addr=oef_addr,
-                                     oef_port=oef_port, min_nb_agents=min_nb_agents,
-                                     nb_goods=nb_goods, tx_fee=tx_fee, lower_bound_factor=lower_bound_factor,
-                                     upper_bound_factor=upper_bound_factor, start_time=start_time, end_time=end_time,
-                                     inactivity_timeout=inactivity_timeout,
-                                     visdom_addr=visdom_addr, visdom_port=visdom_port, gui=gui)
+    monitor = VisdomMonitor(visdom_addr=visdom_addr, visdom_port=visdom_port) if gui else NullMonitor()
+    tac_controller = ControllerAgent(public_key=public_key, oef_addr=oef_addr, oef_port=oef_port, monitor=monitor)
     tac_controller.connect()
     tac_controller.register()
     return tac_controller
@@ -193,12 +174,12 @@ def run_baseline_agent(agent: BaselineAgent) -> None:
     agent.run()
 
 
-def run_controller(tac_controller: ControllerAgent) -> None:
+def run_controller(tac_controller: ControllerAgent, tac_parameters: TACParameters) -> None:
     """Run a controller agent."""
-    tac_controller.run_controller()
+    tac_controller.start_competition(tac_parameters)
 
 
-def run(tac_controller: ControllerAgent, baseline_agents: List[BaselineAgent]):
+def run_simulation(tac_controller: ControllerAgent, tac_parameters: TACParameters, baseline_agents: List[BaselineAgent]):
     """
     Run the controller agent and all the baseline agents. More specifically:
         - run a thread for every message processing loop (i.e. the one in `oef.core.OEFProxy.loop()`).
@@ -209,20 +190,52 @@ def run(tac_controller: ControllerAgent, baseline_agents: List[BaselineAgent]):
     """
 
     # generate task for the controller
-    controller_thread = Thread(target=run_controller, args=(tac_controller, ))
-    timeout_thread = Thread(target=tac_controller.game_handler.timeout_competition, args=())
+    controller_thread = Thread(target=run_controller, args=(tac_controller, tac_parameters))
 
     # generate tasks for baseline agents
     baseline_threads = [Thread(target=run_baseline_agent, args=(baseline_agent, ))for baseline_agent in baseline_agents]
 
     # launch all thread.
-    all_threads = [controller_thread, timeout_thread] + baseline_threads
+    all_threads = [controller_thread] + baseline_threads
     for thread in all_threads:
         thread.start()
 
     # wait for every thread. This part is blocking.
     for thread in all_threads:
         thread.join()
+
+
+def initialize_tac_parameters(min_nb_agents: int,
+                              nb_goods: int,
+                              tx_fee: float,
+                              lower_bound_factor: int,
+                              upper_bound_factor: int,
+                              registration_timeout: int,
+                              competition_timeout: int,
+                              inactivity_timeout: int) -> TACParameters:
+    """
+    Initialize a TACParameters object.
+    :param min_nb_agents: the minimum number of agents to run the competition.
+    :param nb_goods: the number of goods.
+    :param tx_fee: the transaction fee.
+    :param lower_bound_factor: the lower bound factor of a uniform distribution.
+    :param upper_bound_factor: the upper bound factor of a uniform distribution.
+    :param registration_timeout: the amount of time (in seconds) to wait for agents to register before attempting to start the competition.
+    :param inactivity_timeout: the amount of time (in seconds) to wait during inactivity until the termination of the competition.
+    :param competition_timeout: the amount of time (in seconds) to wait from the start of the competition until the termination of the competition.
+    :return: a TACParameters object
+    """
+    start_time, end_time = _compute_competition_start_and_end_time(registration_timeout, competition_timeout)
+    tac_parameters = TACParameters(min_nb_agents=min_nb_agents,
+                                   nb_goods=nb_goods,
+                                   tx_fee=tx_fee,
+                                   lower_bound_factor=lower_bound_factor,
+                                   upper_bound_factor=upper_bound_factor,
+                                   start_time=start_time,
+                                   end_time=end_time,
+                                   inactivity_timeout=inactivity_timeout)
+
+    return tac_parameters
 
 
 if __name__ == '__main__':
@@ -233,19 +246,26 @@ if __name__ == '__main__':
         tac_controller = initialize_controller_agent("tac_controller",
                                                      oef_addr=arguments.oef_addr,
                                                      oef_port=arguments.oef_port,
-                                                     min_nb_agents=arguments.nb_agents,
-                                                     nb_goods=arguments.nb_goods,
-                                                     tx_fee=arguments.tx_fee,
-                                                     lower_bound_factor=arguments.lower_bound_factor,
-                                                     upper_bound_factor=arguments.upper_bound_factor,
-                                                     registration_timeout=arguments.registration_timeout,
-                                                     inactivity_timeout=arguments.inactivity_timeout,
-                                                     competition_timeout=arguments.competition_timeout,
                                                      visdom_addr=arguments.visdom_addr,
                                                      visdom_port=arguments.visdom_port,
                                                      gui=arguments.gui)
-        baseline_agents = initialize_baseline_agents(arguments.nb_baseline_agents, arguments.oef_addr, arguments.oef_port, arguments.register_as, arguments.search_for)
-        run(tac_controller, baseline_agents)
+
+        baseline_agents = initialize_baseline_agents(nb_baseline_agents=arguments.nb_baseline_agents,
+                                                     oef_addr=arguments.oef_addr,
+                                                     oef_port=arguments.oef_port,
+                                                     register_as=arguments.register_as,
+                                                     search_for=arguments.search_for)
+
+        tac_parameters = initialize_tac_parameters(min_nb_agents=arguments.nb_agents,
+                                                   nb_goods=arguments.nb_goods,
+                                                   tx_fee=arguments.tx_fee,
+                                                   lower_bound_factor=arguments.lower_bound_factor,
+                                                   upper_bound_factor=arguments.upper_bound_factor,
+                                                   registration_timeout=arguments.registration_timeout,
+                                                   competition_timeout=arguments.competition_timeout,
+                                                   inactivity_timeout=arguments.inactivity_timeout)
+
+        run_simulation(tac_controller, tac_parameters, baseline_agents)
 
     except KeyboardInterrupt:
         logger.debug("Simulation interrupted...")

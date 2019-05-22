@@ -55,8 +55,6 @@ class Dashboard(object):
         self.viz = Visdom(server=self.visdom_addr, port=self.visdom_port, env=self.env_name)
 
     def stop(self):
-        if self._is_running():
-            self.viz.close()
         self.viz = None
 
     def update(self):

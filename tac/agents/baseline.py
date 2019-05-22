@@ -71,6 +71,9 @@ class BaselineAgent(NegotiationAgent):
         self._register_as = register_as
         self._search_for = search_for
 
+        self.goods_supplied_description = None
+        self.goods_demanded_description = None
+
         self._all_dialogues = set()  # type: Set[DIALOGUE_LABEL]
         self._dialogues_as_buyer = set()  # type: Set[DIALOGUE_LABEL]
         self._dialogues_as_seller = set()  # type: Set[DIALOGUE_LABEL]
@@ -121,8 +124,14 @@ class BaselineAgent(NegotiationAgent):
             logger.debug("Not proceeding with the main loop, since the agent has stopped.")
             return
 
+        if self.goods_demanded_description is not None:
+            self.unregister_service(1, self.goods_demanded_description)
+        if self.goods_supplied_description is not None:
+            self.unregister_service(1, self.goods_supplied_description)
+
+        time.sleep(0.5)
         self._register_services()
-        time.sleep(1.0)
+        time.sleep(0.5)
         self._search_services()
 
     def on_cancelled(self) -> None:
@@ -147,10 +156,12 @@ class BaselineAgent(NegotiationAgent):
         if self.is_registering_as_seller:
             logger.debug("[{}]: Updating service directory as seller with goods supplied.".format(self.public_key))
             goods_supplied_description = self._get_goods_description(is_supply=True)
+            self.goods_supplied_description = goods_supplied_description
             self.register_service(STARTING_MESSAGE_REF, goods_supplied_description)
         if self.is_registering_as_buyer:
             logger.debug("[{}]: Updating service directory as buyer with goods demanded.".format(self.public_key))
             goods_demanded_description = self._get_goods_description(is_supply=False)
+            self.goods_demanded_description = goods_demanded_description
             self.register_service(STARTING_MESSAGE_REF, goods_demanded_description)
 
     def _get_goods_description(self, is_supply: bool) -> Description:

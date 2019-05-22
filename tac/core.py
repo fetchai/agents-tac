@@ -181,7 +181,7 @@ class NegotiationAgent(OEFAgent):
 
         response = None  # type: Optional[Response]
         try:
-            response = Response.from_pb(content)
+            response = Response.from_pb(content, origin)
         except TacError as e:
             # the message was not a 'Response' message.
             logger.exception(str(e))
@@ -227,10 +227,11 @@ class NegotiationAgent(OEFAgent):
 
         :return: None
         """
+        agent_pbks = list(set(agent_pbks))
         if search_id == self.TAC_CONTROLLER_SEARCH_ID:
             # assuming the number of active controller is only one.
             assert len(agent_pbks) == 1
-            controller_public_key = agent_pbks[0]
+            controller_public_key = list(agent_pbks)[0]
             self.register_to_tac(controller_public_key)
         else:
             self.on_search_results(search_id, agent_pbks)
@@ -257,7 +258,7 @@ class NegotiationAgent(OEFAgent):
         :raises AssertionError: if the agent is already registered.
         """
         assert self.controller_pbk is None and self.game_configuration is None and self._agent_state is None
-        msg = Register().serialize()
+        msg = Register(self.public_key).serialize()
         self.send_message(0, 0, tac_controller_pk, msg)
 
     def submit_transaction_to_controller(self, tx: Transaction) -> None:
