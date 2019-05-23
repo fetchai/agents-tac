@@ -40,6 +40,7 @@ from typing import List, Dict, Any, Optional
 from tac.helpers.misc import generate_money_endowments, generate_good_endowments, generate_utility_params, from_iso_format, \
     logarithmic_utility, generate_equilibrium_prices_and_holdings, determine_scaling_factor
 from tac.protocol import Transaction
+from tac.helpers.price_model import GoodPriceModel
 
 Endowment = List[int]  # an element e_j is the endowment of good j.
 UtilityParams = List[float]  # an element u_j is the utility value of good j.
@@ -759,11 +760,16 @@ class WorldState:
                 ))
             for agent_pbk in opponent_pbks)  # type: Dict[str, AgentState]
 
-        self.good_states = dict(
+        # self.good_states = dict(
+        #     (good_pbk,
+        #         GoodState(
+        #             self._expected_price(good_pbk)
+        #         ))
+        #     for good_pbk in good_pbks)
+
+        self.good_price_models = dict(
             (good_pbk,
-                GoodState(
-                    self._expected_price(good_pbk)
-                ))
+                GoodPriceModel())
             for good_pbk in good_pbks)
 
     def update_on_cfp(self, query):
@@ -782,13 +788,24 @@ class WorldState:
         """
         Update the world state when a proposal is rejected.
         """
-        pass
+        self._from_proposals_update_price(proposal, is_accepted=False)
+
+    def _from_proposals_update_price(self, proposal, is_accepted: bool):
+        good_pbks = []
+        for key, value in proposal.items():
+            if key == "price":
+                price = value
+            elif value > 0:
+                good_pbks.append(key)
+        price = price / len(good_pbks)
+        for good_pbk in good_pbks:
+            self._update_price(good_pbk, price, is_accepted=is_accepted)
 
     def update_on_accept(self, proposal):
         """
         Update the world state when a proposal is accepted.
         """
-        pass
+        self._from_proposals_update_price(proposal, is_accepted=True)
 
     def _expected_initial_money_amount(self, initial_money_amount: float) -> float:
         """
@@ -823,15 +840,29 @@ class WorldState:
         expected_utility_params = utility_params
         return expected_utility_params
 
-    def _expected_price(self, good_pbk: str) -> float:
+    def expected_price(self, good_pbk: str, constraint: float = 0.0) -> float:
         """
         Expectation of the endowments of other agents.
 
-        :param good_pbk:
+        :param good_pbk: the pbk of the good
+        :param constraint: the minimum price
+        :return: the expected price
         """
-        # Naiive expectation
-        expected_price = 0
+        good_price_model = self.good_price_models[good_pbk]
+        expected_price = good_price_model.get_price_expectation(constraint)
         return expected_price
+
+    def _update_price(self, good_pbk: str, price: float, is_accepted: bool) -> None:
+        """
+        Updates the price for the good based on an outcome
+
+        :param good_pbk: the pbk of the good
+        :param price: the price to which the outcome relates
+        :param is_accepted: boolean indicating the outcome
+        :return: None
+        """
+        good_price_model = self.good_price_models[good_pbk]
+        good_price_model.update(is_accepted, price)
 
 
 class GameTransaction:
