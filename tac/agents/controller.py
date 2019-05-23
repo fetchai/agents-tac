@@ -35,10 +35,11 @@ import os
 import pprint
 import time
 from abc import ABC, abstractmethod
-from threading import Thread
+from threading import Thread, Timer
 from typing import Dict, Type
 from typing import Optional, Set
 
+import dateutil
 from oef.agents import OEFAgent
 from oef.schema import Description, DataModel, AttributeSchema
 
@@ -55,24 +56,6 @@ else:
     logger = logging.getLogger("tac.agents.controller")
 
 
-def parse_arguments():
-    parser = argparse.ArgumentParser("controller", description="Launch the controller agent.")
-    parser.add_argument("--public-key", default="controller", help="Public key of the agent.")
-    parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
-    parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
-    parser.add_argument("--money", default=20, help="Money endowment for TAC agents.")
-    parser.add_argument("--nb-agents", default=5, type=int, help="Number of goods")
-    parser.add_argument("--nb-goods", default=5, type=int, help="Number of goods")
-    parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
-    parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
-    parser.add_argument("--tx-fee", default=1, type=int, help="Number of goods")
-    parser.add_argument("--inactivity-countdown", default=30, type=int, help="Timeout of inactivity.")
-    parser.add_argument("--verbose", default=False, action="store_true", help="Log debug messages.")
-    parser.add_argument("--gui", action="store_true", help="Show the GUI.")
-
-    return parser.parse_args()
-
-
 class TACParameters(object):
 
     def __init__(self, min_nb_agents: int = 5,
@@ -83,7 +66,8 @@ class TACParameters(object):
                  lower_bound_factor: int = 1,
                  upper_bound_factor: int = 1,
                  start_time: datetime.datetime = None,
-                 end_time: datetime.datetime = None,
+                 registration_timeout: int = 10,
+                 competition_timeout: int = 20,
                  inactivity_timeout: Optional[int] = None):
         """
         Initialize parameters for TAC
@@ -94,8 +78,9 @@ class TACParameters(object):
         :param base_amount: the base amount of instances per good
         :param lower_bound_factor: the lower bound factor of a uniform distribution.
         :param upper_bound_factor: the upper bound factor of a uniform distribution.
-        :param start_time: the time when the competition will start.
-        :param end_time: the time when the competition will end.
+        :param start_time: the datetime when the competition will start.
+        :param registration_timeout: the duration (in seconds) of the registration phase.
+        :param competition_timeout: the duration (in seconds) of the competition phase.
         :param inactivity_timeout: the time when the competition will start.
         """
         self._min_nb_agents = min_nb_agents
@@ -106,7 +91,8 @@ class TACParameters(object):
         self._lower_bound_factor = lower_bound_factor
         self._upper_bound_factor = upper_bound_factor
         self._start_time = start_time
-        self._end_time = end_time
+        self._registration_timeout = registration_timeout
+        self._competition_timeout = competition_timeout
         self._inactivity_timeout = inactivity_timeout
 
     @property
@@ -138,16 +124,36 @@ class TACParameters(object):
         return self._upper_bound_factor
 
     @property
-    def start_time(self):
+    def start_time(self) -> datetime.datetime:
         return self._start_time
 
     @property
-    def end_time(self):
-        return self._end_time
+    def end_time(self) -> datetime.datetime:
+        return self._start_time + self.registration_timedelta + self.competition_timedelta
+
+    @property
+    def registration_timeout(self):
+        return self._registration_timeout
+
+    @property
+    def competition_timeout(self):
+        return self._competition_timeout
 
     @property
     def inactivity_timeout(self):
         return self._inactivity_timeout
+
+    @property
+    def registration_timedelta(self) -> datetime.timedelta:
+        return datetime.timedelta(0, self._registration_timeout)
+
+    @property
+    def competition_timedelta(self) -> datetime.timedelta:
+        return datetime.timedelta(0, self._competition_timeout)
+
+    @property
+    def inactivity_timedelta(self) -> datetime.timedelta:
+        return datetime.timedelta(0, self._inactivity_timeout)
 
 
 class RequestHandler(ABC):
@@ -256,7 +262,7 @@ class TransactionHandler(RequestHandler):
         logger.debug("Handling valid transaction: {}".format(request.transaction_id))
 
         # update the game state.
-        tx = self.controller_agent.game_handler.from_request_to_game_tx(request)
+        tx = GameTransaction.from_request_to_game_tx(request)
         self.controller_agent.game_handler.current_game.settle_transaction(tx)
         self.controller_agent.monitor.update()
 
@@ -274,7 +280,8 @@ class TransactionHandler(RequestHandler):
 
     def _handle_invalid_transaction(self, request: Transaction) -> Response:
         """Handle an invalid transaction."""
-        return Error(request.public_key, ErrorCode.TRANSACTION_NOT_VALID, {"transaction_id": request.transaction_id})
+        return Error(request.public_key, ErrorCode.TRANSACTION_NOT_VALID,
+                     details={"transaction_id": request.transaction_id})
 
     def _handle_non_matching_transaction(self, request: Transaction) -> Response:
         """Handle non-matching transaction."""
@@ -299,6 +306,12 @@ class ControllerDispatcher(object):
         }  # type: Dict[Type[Request], RequestHandler]
 
     def register_handler(self, request_type: Type[Request], request_handler: RequestHandler) -> None:
+        """
+        Register a handler for a type of request.
+        :param request_type: the type of request to handle.
+        :param request_handler: the handler associated with the type specified.
+        :return: None
+        """
         self.handlers[request_type] = request_handler
 
     def process_request(self, msg: bytes, public_key: str) -> Response:
@@ -464,7 +477,7 @@ class GameHandler:
         nb_reg_agents = len(self.registered_agents)
         min_nb_agents = self.tac_parameters.min_nb_agents
 
-        seconds_to_wait = (self.tac_parameters.start_time - datetime.datetime.now()).seconds + 1
+        seconds_to_wait = self.tac_parameters.registration_timedelta.seconds
         seconds_to_wait = 0 if seconds_to_wait < 0 else seconds_to_wait
         logger.debug("[{}]: Waiting for {} seconds...".format(ctrl_pbk, seconds_to_wait))
         time.sleep(seconds_to_wait)
@@ -520,6 +533,7 @@ class ControllerAgent(OEFAgent):
         self._timeout_checker_task = None
 
         self._is_running = False
+        self._terminated = False
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
         """
@@ -577,13 +591,15 @@ class ControllerAgent(OEFAgent):
         Terminate the controller agent
         :return: None
         """
-        logger.debug("[{}]: Terminating the controller...".format(self.public_key))
-        self._is_running = False
-        self.game_handler.notify_tac_cancelled()
-        self._loop.call_soon_threadsafe(self._task.cancel)
-        self.monitor.stop()
-        self._message_processing_task.join()
-        self._message_processing_task = None
+
+        if self._is_running:
+            logger.debug("[{}]: Terminating the controller...".format(self.public_key))
+            self._is_running = False
+            self.game_handler.notify_tac_cancelled()
+            self._loop.call_soon_threadsafe(self.stop)
+            self.monitor.stop()
+            self._message_processing_task.join()
+            self._message_processing_task = None
 
     def check_inactivity_timeout(self, rate: Optional[float] = 2.0) -> None:
         """
@@ -592,14 +608,14 @@ class ControllerAgent(OEFAgent):
         :return: None
         """
         logger.debug("Started job to check for inactivity of {} seconds. Checking rate: {}"
-                     .format(self.game_handler.inactivity_timeout_timedelta.total_seconds(), rate))
+                     .format(self.game_handler.tac_parameters.inactivity_timedelta.total_seconds(), rate))
         while True:
             if self._is_running is False:
                 return
             time.sleep(rate)
             current_time = datetime.datetime.now()
             inactivity_duration = current_time - self.last_activity
-            if inactivity_duration > self.game_handler.inactivity_timeout_timedelta:
+            if inactivity_duration > self.game_handler.tac_parameters.inactivity_timedelta:
                 logger.debug("[{}]: Inactivity timeout expired. Terminating...".format(self.public_key))
                 self.terminate()
                 return
@@ -617,6 +633,8 @@ class ControllerAgent(OEFAgent):
         :param tac_parameters: the parameter of the competition.
         :return:
         """
+        logger.debug("[{}]: Starting competition with parameters: {}"
+                     .format(self.public_key, pprint.pformat(tac_parameters.__dict__)))
         self._is_running = True
         self._message_processing_task = Thread(target=self.run)
         self._message_processing_task.start()
@@ -624,35 +642,76 @@ class ControllerAgent(OEFAgent):
         self.game_handler = GameHandler(self, tac_parameters)
         self.game_handler.handle_registration_phase()
 
+    def wait_and_start_competition(self, tac_parameters: TACParameters, rate: float = 0.5) -> None:
+        """
+        Wait until the current time is greater than the start time.
+        Then, start the TAC.
+        :param tac_parameters: the parameters for TAC.
+        :param rate: at which rate the start time should be checked.
+        :return: None
+        """
+        now = datetime.datetime.now()
+        logger.debug("[{}]: waiting for starting the competition: start_time={}, current_time={}, timedelta ={}s"
+                     .format(self.public_key, str(tac_parameters.start_time), str(now),
+                             (tac_parameters.start_time - now).total_seconds()))
+
+        while now < tac_parameters.start_time:
+            time.sleep(rate)
+            now = datetime.datetime.now()
+
+        self.start_competition(tac_parameters)
+
+
+def _parse_arguments():
+    parser = argparse.ArgumentParser("controller", description="Launch the controller agent.")
+    parser.add_argument("--public-key", default="controller", help="Public key of the agent.")
+    parser.add_argument("--nb-agents", default=5, type=int, help="Number of goods")
+    parser.add_argument("--nb-goods", default=5, type=int, help="Number of goods")
+    parser.add_argument("--money-endowment", type=int, default=200, help="Initial amount of money.")
+    parser.add_argument("--base-amount", type=int, default=2, help="Initial quantity for every good.")
+    parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
+    parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
+    parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
+    parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
+    parser.add_argument("--tx-fee", default=1, type=int, help="Number of goods")
+    parser.add_argument("--start-time", default=str(datetime.datetime.now() + datetime.timedelta(0, 10)), type=str, help="The start time for the competition (in UTC format).")
+    parser.add_argument("--registration-timeout", default=10, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
+    parser.add_argument("--inactivity-timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
+    parser.add_argument("--competition-timeout", default=240, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
+    parser.add_argument("--verbose", default=False, action="store_true", help="Log debug messages.")
+    parser.add_argument("--gui", action="store_true", help="Show the GUI.")
+    return parser.parse_args()
+
 
 def main():
-    args = parse_arguments()
+    arguments = _parse_arguments()
 
-    if args.verbose:
+    if arguments.verbose:
         logger.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
 
     try:
-        agent = ControllerAgent(public_key=args.public_key,
-                                oef_addr=args.oef_addr,
-                                oef_port=args.oef_port,
-                                min_nb_agents=args.nb_agents,
-                                money_endowment=args.money_endowment,
-                                nb_goods=args.nb_goods,
-                                tx_fee=args.tx_fee,
-                                lower_bound_factor=args.lower_bound_factor,
-                                upper_bound_factor=args.upper_bound_factor,
-                                version=args.version,
-                                start_time=args.start_time,
-                                end_time=args.end_time,
-                                inactivity_timeout=args.inactivity_timeout,
-                                gui=args.gui)
+        agent = ControllerAgent(public_key=arguments.public_key,
+                                oef_addr=arguments.oef_addr,
+                                oef_port=arguments.oef_port)
 
+        tac_parameters = TACParameters(
+            min_nb_agents=arguments.nb_agents,
+            money_endowment=arguments.money_endowment,
+            nb_goods=arguments.nb_goods,
+            tx_fee=arguments.tx_fee,
+            base_amount=arguments.base_amount,
+            lower_bound_factor=arguments.lower_bound_factor,
+            upper_bound_factor=arguments.upper_bound_factor,
+            start_time=dateutil.parser.parse(arguments.start_time),
+            registration_timeout=arguments.registration_timeout,
+            competition_timeout=arguments.competition_timeout,
+            inactivity_timeout=arguments.inactivity_timeout,
+        )
         agent.connect()
         agent.register()
-
-        agent.run_controller()
+        agent.wait_and_start_competition(tac_parameters)
 
     finally:
         agent.terminate()

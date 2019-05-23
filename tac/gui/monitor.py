@@ -21,17 +21,27 @@ class Monitor(ABC):
     def stop(self):
         """Stop the monitor."""
 
+    @abstractmethod
+    def is_running(self) -> bool:
+        """Check if the monitor is running"""
+
 
 class NullMonitor(Monitor):
 
+    def __init__(self):
+        self._is_running = False
+
     def start(self, game_stats: GameStats):
-        pass
+        self._is_running = True
 
     def update(self):
         pass
 
     def stop(self):
-        pass
+        self._is_running = False
+
+    def is_running(self) -> bool:
+        return self._is_running
 
 
 class VisdomMonitor(Monitor):
@@ -41,8 +51,12 @@ class VisdomMonitor(Monitor):
         self.visdom_port = visdom_port
         self.dashboard = None  # type: Optional[Dashboard]
 
+    @property
+    def is_running(self) -> bool:
+        return self.dashboard is not None
+
     def start(self, game_stats: GameStats):
-        if self.dashboard is not None:
+        if self.is_running:
             raise Exception("A dashboard is already running.")
         self.dashboard = Dashboard(game_stats, self.visdom_addr, self.visdom_port)
         self.dashboard.start()
@@ -51,7 +65,7 @@ class VisdomMonitor(Monitor):
         self.dashboard.update()
 
     def stop(self):
-        if self.dashboard is None:
+        if not self.is_running:
             raise Exception("The dashboard not running.")
         self.dashboard.stop()
         self.dashboard = None
