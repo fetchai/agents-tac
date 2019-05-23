@@ -52,6 +52,8 @@ def parse_arguments():
     parser.add_argument("--data-output-dir", default="data", help="The output directory for the simulation data.")
     parser.add_argument("--experiment-id", default=None, help="The experiment ID.")
     parser.add_argument("--plot", default=True, type=bool, help="Plot sequence of transactions and the changes in scores.")
+    parser.add_argument("--money-endowment", default=2, type=int, help="The money amount every agent receives.")
+    parser.add_argument("--base-good-endowment", default=2, type=int, help="The base amount of per good instances every agent receives.")
     parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
     parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
     parser.add_argument("--tx-fee", default=1, type=int, help="The transaction fee.")
@@ -92,6 +94,8 @@ def initialize_controller_agent(public_key: str,
                                 min_nb_agents: int,
                                 nb_goods: int,
                                 tx_fee: int,
+                                money_endowment: int,
+                                base_good_endowment: int,
                                 lower_bound_factor: int,
                                 upper_bound_factor: int,
                                 registration_timeout: int,
@@ -108,6 +112,8 @@ def initialize_controller_agent(public_key: str,
     :param min_nb_agents: the minimum number of agents to run the competition.
     :param nb_goods: the number of goods.
     :param tx_fee: the transaction fee.
+    :param money_endowment: the money amount every agent receives.
+    :param base_good_endowment: the base amount of per good instances every agent receives.
     :param lower_bound_factor: the lower bound factor of a uniform distribution.
     :param upper_bound_factor: the upper bound factor of a uniform distribution.
     :param registration_timeout: the amount of time (in seconds) to wait for agents to register before attempting to start the competition.
@@ -123,9 +129,9 @@ def initialize_controller_agent(public_key: str,
 
     tac_controller = ControllerAgent(public_key=public_key, oef_addr=oef_addr,
                                      oef_port=oef_port, min_nb_agents=min_nb_agents,
-                                     nb_goods=nb_goods, tx_fee=tx_fee, lower_bound_factor=lower_bound_factor,
-                                     upper_bound_factor=upper_bound_factor, start_time=start_time, end_time=end_time,
-                                     inactivity_timeout=inactivity_timeout,
+                                     nb_goods=nb_goods, tx_fee=tx_fee, money_endowment=money_endowment, base_good_endowment=base_good_endowment,
+                                     lower_bound_factor=lower_bound_factor, upper_bound_factor=upper_bound_factor,
+                                     start_time=start_time, end_time=end_time, inactivity_timeout=inactivity_timeout,
                                      visdom_addr=visdom_addr, visdom_port=visdom_port, gui=gui)
     tac_controller.connect()
     tac_controller.register()
@@ -236,6 +242,8 @@ if __name__ == '__main__':
                                                      min_nb_agents=arguments.nb_agents,
                                                      nb_goods=arguments.nb_goods,
                                                      tx_fee=arguments.tx_fee,
+                                                     money_endowment=arguments.money_endowment,
+                                                     base_good_endowment=arguments.base_good_endowment,
                                                      lower_bound_factor=arguments.lower_bound_factor,
                                                      upper_bound_factor=arguments.upper_bound_factor,
                                                      registration_timeout=arguments.registration_timeout,

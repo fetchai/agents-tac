@@ -63,6 +63,8 @@ def parse_arguments():
     parser.add_argument("--money", default=20, help="Money endowment for TAC agents.")
     parser.add_argument("--nb-agents", default=5, type=int, help="Number of goods")
     parser.add_argument("--nb-goods", default=5, type=int, help="Number of goods")
+    parser.add_argument("--money-endowment", default=2, type=int, help="The money amount every agent receives.")
+    parser.add_argument("--base-good-endowment", default=2, type=int, help="The base amount of per good instances every agent receives.")
     parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
     parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
     parser.add_argument("--tx-fee", default=1, type=int, help="Number of goods")
@@ -242,9 +244,10 @@ class GameHandler:
 
     def __init__(self, controller_agent: 'ControllerAgent',
                  min_nb_agents: int,
-                 money_endowment: int,
                  nb_goods: int,
                  tx_fee: float,
+                 money_endowment: int,
+                 base_good_endowment: int,
                  lower_bound_factor: int,
                  upper_bound_factor: int,
                  start_time: Optional[datetime.datetime] = None):
@@ -254,16 +257,18 @@ class GameHandler:
         :param money_endowment: the initial amount of money to assign to every agent.
         :param nb_goods: the number of goods in the competition.
         :param tx_fee: the fee for a transaction.
+        :param money_endowment: the money amount every agent receives.
+        :param base_good_endowment: the base amount of per good instances every agent receives.
         :param lower_bound_factor: the lower bound factor of a uniform distribution.
         :param upper_bound_factor: the upper bound factor of a uniform distribution.
         :param start_time: the time when the competition will start.
         """
         self.controller_agent = controller_agent
         self.min_nb_agents = min_nb_agents
-        self.money_endowment = money_endowment
         self.nb_goods = nb_goods
-        self.base_amount = 2
         self.tx_fee = tx_fee
+        self.money_endowment = money_endowment
+        self.base_good_endowment = base_good_endowment
         self.lower_bound_factor = lower_bound_factor
         self.upper_bound_factor = upper_bound_factor
         self.start_time = start_time if start_time is not None else datetime.datetime.now() + datetime.timedelta(0, 5)
@@ -337,7 +342,7 @@ class GameHandler:
         #     agent_pbks = generate_pbks(self.nb_agents, 'agent')
         good_pbks = generate_pbks(self.nb_goods, 'good')
 
-        game = Game.generate_game(nb_agents, self.nb_goods, self.money_endowment, self.tx_fee, self.base_amount, self.lower_bound_factor, self.upper_bound_factor, agent_pbks, good_pbks)
+        game = Game.generate_game(nb_agents, self.nb_goods, self.tx_fee, self.money_endowment, self.base_good_endowment, self.lower_bound_factor, self.upper_bound_factor, agent_pbks, good_pbks)
         return game
 
     def _send_game_data_to_agents(self) -> None:
@@ -401,11 +406,12 @@ class ControllerAgent(OEFAgent):
                  oef_addr="127.0.0.1",
                  oef_port=3333,
                  min_nb_agents: int = 5,
-                 money_endowment: int = 200,
                  nb_goods: int = 5,
                  tx_fee: float = 1.0,
-                 lower_bound_factor: int = 1,
-                 upper_bound_factor: int = 1,
+                 money_endowment: int = 200,
+                 base_good_endowment: int = 2,
+                 lower_bound_factor: int = 0,
+                 upper_bound_factor: int = 0,
                  version: int = 1,
                  start_time: datetime.datetime = None,
                  end_time: datetime.datetime = None,
@@ -420,9 +426,10 @@ class ControllerAgent(OEFAgent):
         :param oef_addr: the OEF address.
         :param oef_port: the OEF listening port.
         :param min_nb_agents: the number of agents to wait for the registration.
-        :param money_endowment: the initial amount of money to assign to every agent.
         :param nb_goods: the number of goods in the competition.
         :param tx_fee: the fee for a transaction.
+        :param money_endowment: the initial amount of money to assign to every agent.
+        :param base_good_endowment: the base amount of per good instances every agent receives.
         :param lower_bound_factor: the lower bound factor of a uniform distribution.
         :param upper_bound_factor: the upper bound factor of a uniform distribution.
         :param version: the version of the TAC controller.
@@ -436,7 +443,7 @@ class ControllerAgent(OEFAgent):
         super().__init__(public_key, oef_addr, oef_port, loop=asyncio.new_event_loop())
         logger.debug("Initialized Controller Agent :\n{}".format(pprint.pformat(vars())))
 
-        self.game_handler = GameHandler(self, min_nb_agents, money_endowment, nb_goods, tx_fee, lower_bound_factor, upper_bound_factor, start_time)
+        self.game_handler = GameHandler(self, min_nb_agents, nb_goods, tx_fee, money_endowment, base_good_endowment, lower_bound_factor, upper_bound_factor, start_time)
         self.handler = ControllerHandler(self)
         self.version = version
         self.gui = gui
@@ -577,9 +584,10 @@ def main():
                                 oef_addr=args.oef_addr,
                                 oef_port=args.oef_port,
                                 min_nb_agents=args.nb_agents,
-                                money_endowment=args.money_endowment,
                                 nb_goods=args.nb_goods,
                                 tx_fee=args.tx_fee,
+                                money_endowment=args.money_endowment,
+                                base_good_endowment=args.base_good_endowment,
                                 lower_bound_factor=args.lower_bound_factor,
                                 upper_bound_factor=args.upper_bound_factor,
                                 version=args.version,
