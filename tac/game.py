@@ -37,8 +37,8 @@ import logging
 import pprint
 from typing import List, Dict, Any, Optional
 
-from tac.helpers.misc import generate_initial_money_amounts, generate_endowments, generate_utility_params, from_iso_format, \
-    logarithmic_utility, generate_equilibrium_prices_and_allocation
+from tac.helpers.misc import generate_money_endowments, generate_good_endowments, generate_utility_params, from_iso_format, \
+    logarithmic_utility, generate_equilibrium_prices_and_holdings, determine_scaling_factor
 from tac.protocol import Transaction
 
 Endowment = List[int]  # an element e_j is the endowment of good j.
@@ -342,21 +342,20 @@ class Game:
     @staticmethod
     def generate_game(nb_agents: int,
                       nb_goods: int,
-                      money_endowment: int,
                       tx_fee: float,
-                      base_amount: int,
+                      money_endowment: int,
+                      base_good_endowment: int,
                       lower_bound_factor: int,
                       upper_bound_factor: int,
                       agent_pbks: List[str],
-                      good_pbks: List[str],
-                      scaling_factor: float = 100.0) -> 'Game':
+                      good_pbks: List[str]) -> 'Game':
         """
         Generate a game, the endowments and the utilites.
         :param nb_agents: the number of agents.
         :param nb_goods: the number of goods.
-        :param money_endowment: the initial amount of money for every agent.
         :param tx_fee: the fee to pay per transaction.
-        :param base_amount: the base amount of instances per good.
+        :param money_endowment: the initial amount of money for every agent.
+        :param base_good_endowment: the base amount of instances per good.
         :param lower_bound_factor: the lower bound of a uniform distribution.
         :param upper_bound_factor: the upper bound of a uniform distribution
         :param agent_pbks: the pbks for the agents.
@@ -365,11 +364,12 @@ class Game:
         """
         game_configuration = GameConfiguration(nb_agents, nb_goods, tx_fee, agent_pbks, good_pbks)
 
-        initial_money_amounts = generate_initial_money_amounts(nb_agents, money_endowment)
-        endowments = generate_endowments(nb_goods, nb_agents, base_amount, lower_bound_factor, upper_bound_factor)
+        scaling_factor = determine_scaling_factor(money_endowment)
+        money_endowments = generate_money_endowments(nb_agents, money_endowment)
+        good_endowments = generate_good_endowments(nb_goods, nb_agents, base_good_endowment, lower_bound_factor, upper_bound_factor)
         utility_params = generate_utility_params(nb_agents, nb_goods, scaling_factor)
-        eq_prices, eq_good_holdings, eq_money_holdings = generate_equilibrium_prices_and_allocation(endowments, utility_params, money_endowment, scaling_factor)
-        game_initialization = GameInitialization(initial_money_amounts, endowments, utility_params, eq_prices, eq_good_holdings, eq_money_holdings)
+        eq_prices, eq_good_holdings, eq_money_holdings = generate_equilibrium_prices_and_holdings(good_endowments, utility_params, money_endowment, scaling_factor)
+        game_initialization = GameInitialization(money_endowments, good_endowments, utility_params, eq_prices, eq_good_holdings, eq_money_holdings)
 
         return Game(game_configuration, game_initialization)
 
@@ -735,6 +735,103 @@ class GoodState:
         :raises: AssertionError: if some constraint is not satisfied.
         """
         assert self.price >= 0, "The price must be non-negative."
+
+
+class WorldState:
+    """Represent the state of the world from the perspective of the agent."""
+
+    def __init__(self, opponent_pbks: List[str],
+                 good_pbks: List[str],
+                 initial_agent_state: AgentState):
+        """
+        Instantiate an agent state object.
+
+        :param opponent_pbks: the pbks of the opponents
+        :param good_pbks: the pbks of the goods
+        :param agent_state: the initial state of the agent
+        """
+        self.opponent_states = dict(
+            (agent_pbk,
+                AgentState(
+                    self._expected_initial_money_amount(initial_agent_state.balance),
+                    self._expected_good_endowments(initial_agent_state.current_holdings),
+                    self._expected_utility_params(initial_agent_state.utility_params)
+                ))
+            for agent_pbk in opponent_pbks)  # type: Dict[str, AgentState]
+
+        self.good_states = dict(
+            (good_pbk,
+                GoodState(
+                    self._expected_price(good_pbk)
+                ))
+            for good_pbk in good_pbks)
+
+    def update_on_cfp(self, query):
+        """
+        Update the world state when a new cfp is received.
+        """
+        pass
+
+    def update_on_proposal(self, proposal):
+        """
+        Update the world state when a new proposal is received.
+        """
+        pass
+
+    def update_on_decline(self, proposal):
+        """
+        Update the world state when a proposal is rejected.
+        """
+        pass
+
+    def update_on_accept(self, proposal):
+        """
+        Update the world state when a proposal is accepted.
+        """
+        pass
+
+    def _expected_initial_money_amount(self, initial_money_amount: float) -> float:
+        """
+        Expectation of the initial_money_amount of an opponent.
+
+        :param initial_money_amount: the initial amount of money of the agent.
+        :return: the expected initial money amount of the opponent
+        """
+        # Naiive expectation
+        expected_initial_money_amount = initial_money_amount
+        return expected_initial_money_amount
+
+    def _expected_good_endowments(self, good_endowment: Endowment) -> Endowment:
+        """
+        Expectation of the good endowment of an opponent.
+
+        :param good_endowment: the good_endowment of the agent.
+        :return: the expected good endowment of the opponent
+        """
+        # Naiive expectation
+        expected_good_endowment = good_endowment
+        return expected_good_endowment
+
+    def _expected_utility_params(self, utility_params: UtilityParams) -> UtilityParams:
+        """
+        Expectation of the utility params of an opponent.
+
+        :param utility_params: the utility_params of the agent.
+        :return: the expected utility params of the opponent
+        """
+        # Naiive expectation
+        expected_utility_params = utility_params
+        return expected_utility_params
+
+    def _expected_price(self, good_pbk: str) -> float:
+        """
+        Expectation of the endowments of other agents.
+
+        :param good_pbk:
+        """
+        # Naiive expectation
+        expected_price = 0
+        return expected_price
 
 
 class GameTransaction:

@@ -46,13 +46,13 @@ def parse_arguments():
     parser.add_argument("--nb-agents", type=int, default=10, help="(minimum) number of TAC agent to wait for the competition.")
     parser.add_argument("--nb-goods", type=int, default=10, help="Number of TAC agent to run.")
     parser.add_argument("--money-endowment", type=int, default=200, help="Initial amount of money.")
+    parser.add_argument("--base-good-endowment", default=2, type=int, help="The base amount of per good instances every agent receives.")
     parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
     parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
     parser.add_argument("--tx-fee", default=1, type=int, help="The transaction fee.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
     parser.add_argument("--nb-baseline-agents", type=int, default=10, help="Number of baseline agent to run. Defaults to the number of agents of the competition.")
-    parser.add_argument("--base-amount", type=int, default=2, help="Initial quantity for every good.")
     parser.add_argument("--start-time", default=str(datetime.datetime.now() + datetime.timedelta(0, 10)), type=str, help="The start time for the competition (in UTC format).")
     parser.add_argument("--registration-timeout", default=10, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
     parser.add_argument("--inactivity-timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
@@ -103,12 +103,12 @@ def initialize_controller_agent(public_key: str,
     :param oef_port: the TCP/IP port of the OEF Node.
     :param visdom_addr: TCP/IP address of the Visdom server.
     :param visdom_port: TCP/IP port of the Visdom server.
-    :param gui: Show the dashboard.
     :return: the controller agent.
     """
 
     monitor = VisdomMonitor(visdom_addr=visdom_addr, visdom_port=visdom_port) if gui else NullMonitor()
     tac_controller = ControllerAgent(public_key=public_key, oef_addr=oef_addr, oef_port=oef_port, monitor=monitor)
+
     tac_controller.connect()
     tac_controller.register()
     return tac_controller
@@ -219,7 +219,7 @@ def initialize_tac_parameters(arguments: argparse.Namespace) -> TACParameters:
                                    money_endowment=arguments.money_endowment,
                                    nb_goods=arguments.nb_goods,
                                    tx_fee=arguments.tx_fee,
-                                   base_amount=arguments.base_amount,
+                                   base_good_endowment=arguments.base_good_endowment,
                                    lower_bound_factor=arguments.lower_bound_factor,
                                    upper_bound_factor=arguments.upper_bound_factor,
                                    start_time=start_datetime,

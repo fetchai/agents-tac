@@ -55,9 +55,17 @@ def generate_transaction_id(agent_pbk: str, origin: str, dialogue_id: int, agent
     return transaction_id
 
 
-def generate_endowments(nb_goods: int, nb_agents: int, base_amount: int, uniform_lower_bound_factor: int, uniform_upper_bound_factor: int) -> List[List[int]]:
+def determine_scaling_factor(money_endowment: int):
     """
-    Compute endowments per agent. That is, a matrix of shape (nb_agents, nb_goods)
+    Computes the scaling factor based on the money amount.
+    """
+    scaling_factor = (len(str(money_endowment)) * 10) / 10.0
+    return scaling_factor
+
+
+def generate_good_endowments(nb_goods: int, nb_agents: int, base_amount: int, uniform_lower_bound_factor: int, uniform_upper_bound_factor: int) -> List[List[int]]:
+    """
+    Compute good endowments per agent. That is, a matrix of shape (nb_agents, nb_goods)
 
     :param nb_goods: the number of goods.
     :param nb_agents: the number of agents.
@@ -136,7 +144,7 @@ def _sample_good_instances(nb_agents: int, nb_goods: int, base_amount: int,
     return nb_instances
 
 
-def generate_initial_money_amounts(nb_agents: int, money_endowment: int) -> List[int]:
+def generate_money_endowments(nb_agents: int, money_endowment: int) -> List[int]:
     """
     Compute the initial money amounts for each agent.
 
@@ -147,7 +155,7 @@ def generate_initial_money_amounts(nb_agents: int, money_endowment: int) -> List
     return [money_endowment] * nb_agents
 
 
-def generate_equilibrium_prices_and_allocation(endowments: List[List[int]], utility_function_params: List[List[float]], money_endowment: float, scaling_factor: float) -> (List[float], List[List[float]], List[float]):
+def generate_equilibrium_prices_and_holdings(endowments: List[List[int]], utility_function_params: List[List[float]], money_endowment: float, scaling_factor: float) -> (List[float], List[List[float]], List[float]):
     """
     Computes the competitive equilibrium prices and allocation.
 

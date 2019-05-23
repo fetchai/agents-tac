@@ -62,7 +62,7 @@ class TACParameters(object):
                  money_endowment: int = 200,
                  nb_goods: int = 5,
                  tx_fee: float = 1.0,
-                 base_amount: int = 2,
+                 base_good_endowment: int = 2,
                  lower_bound_factor: int = 1,
                  upper_bound_factor: int = 1,
                  start_time: datetime.datetime = None,
@@ -72,10 +72,10 @@ class TACParameters(object):
         """
         Initialize parameters for TAC
         :param min_nb_agents: the number of agents to wait for the registration.
-        :param money_endowment: the initial amount of money to assign to every agent.
+        :param money_endowment: The money amount every agent receives.
         :param nb_goods: the number of goods in the competition.
         :param tx_fee: the fee for a transaction.
-        :param base_amount: the base amount of instances per good
+        :param base_good_endowment:The base amount of per good instances every agent receives.
         :param lower_bound_factor: the lower bound factor of a uniform distribution.
         :param upper_bound_factor: the upper bound factor of a uniform distribution.
         :param start_time: the datetime when the competition will start.
@@ -87,7 +87,7 @@ class TACParameters(object):
         self._money_endowment = money_endowment
         self._nb_goods = nb_goods
         self._tx_fee = tx_fee
-        self._base_amount = base_amount
+        self._base_good_endowment = base_good_endowment
         self._lower_bound_factor = lower_bound_factor
         self._upper_bound_factor = upper_bound_factor
         self._start_time = start_time
@@ -112,8 +112,8 @@ class TACParameters(object):
         return self._tx_fee
 
     @property
-    def base_amount(self):
-        return self._base_amount
+    def base_good_endowment(self):
+        return self._base_good_endowment
 
     @property
     def lower_bound_factor(self):
@@ -382,24 +382,6 @@ class GameHandler:
         """
         return self.current_game is not None
 
-    def from_request_to_game_tx(self, transaction: Transaction) -> GameTransaction:
-        """
-        From a transaction request message to a game transaction
-        :param transaction: the request message for a transaction.
-        :return: the game transaction.
-        """
-        sender_pbk = transaction.sender
-        receiver_pbk = transaction.counterparty
-        buyer_pbk, seller_pbk = (sender_pbk, receiver_pbk) if transaction.buyer else (receiver_pbk, sender_pbk)
-
-        tx = GameTransaction(
-            buyer_pbk,
-            seller_pbk,
-            transaction.amount,
-            transaction.quantities_by_good_pbk
-        )
-        return tx
-
     def _start_competition(self):
         """Create a game and send the game setting to every registered agent.
         Moreover, start the inactivity timeout checker."""
@@ -430,17 +412,19 @@ class GameHandler:
         """
         agent_pbks = sorted(self.registered_agents)
         nb_agents = len(agent_pbks)
-        good_pbks = generate_pbks(self.controller_agent.game_handler.tac_parameters.nb_goods, 'good')
+
+        good_pbks = generate_pbks(self.tac_parameters.nb_goods, 'good')
 
         game = Game.generate_game(nb_agents,
                                   self.tac_parameters.nb_goods,
-                                  self.tac_parameters.money_endowment,
                                   self.tac_parameters.tx_fee,
-                                  self.tac_parameters.base_amount,
+                                  self.tac_parameters.money_endowment,
+                                  self.tac_parameters.base_good_endowment,
                                   self.tac_parameters.lower_bound_factor,
                                   self.tac_parameters.upper_bound_factor,
                                   agent_pbks,
                                   good_pbks)
+
         return game
 
     def _send_game_data_to_agents(self) -> None:
@@ -500,10 +484,10 @@ class GameHandler:
 
 
 class ControllerAgent(OEFAgent):
+
     CONTROLLER_DATAMODEL = DataModel("tac", [
         AttributeSchema("version", int, True, "Version number of the TAC Controller Agent."),
     ])
-    # TODO need at least one attribute in the search Query to the OEF.
 
     def __init__(self, public_key: str = "controller",
                  oef_addr: str = "127.0.0.1",
@@ -516,14 +500,15 @@ class ControllerAgent(OEFAgent):
         :param public_key: The public key of the OEF Agent.
         :param oef_addr: the OEF address.
         :param oef_port: the OEF listening port.
+        :param version: the version of the TAC controller.
         :param monitor: the GUI monitor. If None, defaults to a null (dummy) monitor.
-        :param gui: show the GUI.
         """
         super().__init__(public_key, oef_addr, oef_port, loop=asyncio.new_event_loop())
         logger.debug("Initialized Controller Agent :\n{}".format(pprint.pformat(vars())))
 
         self.dispatcher = ControllerDispatcher(self)
         self.monitor = NullMonitor() if monitor is None else monitor  # type: Monitor
+
         self.version = version
         self.game_handler = None  # type: Optional[GameHandler]
 
@@ -668,9 +653,9 @@ def _parse_arguments():
     parser.add_argument("--nb-agents", default=5, type=int, help="Number of goods")
     parser.add_argument("--nb-goods", default=5, type=int, help="Number of goods")
     parser.add_argument("--money-endowment", type=int, default=200, help="Initial amount of money.")
-    parser.add_argument("--base-amount", type=int, default=2, help="Initial quantity for every good.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
+    parser.add_argument("--base-good-endowment", default=2, type=int, help="The base amount of per good instances every agent receives.")
     parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
     parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
     parser.add_argument("--tx-fee", default=1, type=int, help="Number of goods")
@@ -684,6 +669,7 @@ def _parse_arguments():
 
 
 def main():
+    agent = None
     arguments = _parse_arguments()
 
     if arguments.verbose:
@@ -692,6 +678,7 @@ def main():
         logger.setLevel(logging.INFO)
 
     try:
+
         agent = ControllerAgent(public_key=arguments.public_key,
                                 oef_addr=arguments.oef_addr,
                                 oef_port=arguments.oef_port)
@@ -701,7 +688,7 @@ def main():
             money_endowment=arguments.money_endowment,
             nb_goods=arguments.nb_goods,
             tx_fee=arguments.tx_fee,
-            base_amount=arguments.base_amount,
+            base_good_endowment=arguments.base_good_endowment,
             lower_bound_factor=arguments.lower_bound_factor,
             upper_bound_factor=arguments.upper_bound_factor,
             start_time=dateutil.parser.parse(arguments.start_time),
@@ -709,12 +696,14 @@ def main():
             competition_timeout=arguments.competition_timeout,
             inactivity_timeout=arguments.inactivity_timeout,
         )
+
         agent.connect()
         agent.register()
         agent.wait_and_start_competition(tac_parameters)
 
     finally:
-        agent.terminate()
+        if agent is not None:
+            agent.terminate()
 
 
 if __name__ == '__main__':
