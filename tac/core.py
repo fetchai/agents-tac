@@ -231,7 +231,7 @@ class NegotiationAgent(OEFAgent):
         if search_id == self.TAC_CONTROLLER_SEARCH_ID:
             # assuming the number of active controller is only one.
             assert len(agent_pbks) == 1
-            controller_public_key = list(agent_pbks)[0]
+            controller_public_key = agent_pbks[0]
             self.register_to_tac(controller_public_key)
         else:
             self.on_search_results(search_id, agent_pbks)
