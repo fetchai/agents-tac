@@ -487,7 +487,7 @@ class Game:
                 good_state = self.good_states[good_pbk]
                 good_state.price = price
 
-        share_of_tx_fee = round(self.configuration.tx_fee, 2)
+        share_of_tx_fee = round(self.configuration.tx_fee / 2.0, 2)
         # update balances and charge share of fee to buyer and seller
         buyer_state.balance -= tx.amount + share_of_tx_fee
         seller_state.balance += tx.amount - share_of_tx_fee
@@ -798,7 +798,7 @@ class WorldState:
                 good_pbks += [good_pbk] * quantity
         price = transaction.amount
         price = price / len(good_pbks)
-        for good_pbk in good_pbks:
+        for good_pbk in list(set(good_pbks)):
             self._update_price(good_pbk, price, is_accepted=is_accepted)
 
     def update_on_accept(self, transaction: Transaction):
@@ -840,15 +840,16 @@ class WorldState:
         expected_utility_params = utility_params
         return expected_utility_params
 
-    def expected_price(self, good_pbk: str, constraint: float = 0.0, is_seller: bool) -> float:
+    def expected_price(self, good_pbk: str, constraint: float, is_seller: bool) -> float:
         """
-        Expectation of the endowments of other agents.
+        Expectation of the price for the good given a constraint.
 
         :param good_pbk: the pbk of the good
         :param constraint: the price constraint
         :param is_seller: whether the agent is a seller or buyer
         :return: the expected price
         """
+        constraint = round(constraint, 1)
         good_price_model = self.good_price_models[good_pbk]
         expected_price = good_price_model.get_price_expectation(constraint, is_seller)
         return expected_price

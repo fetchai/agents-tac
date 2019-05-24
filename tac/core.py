@@ -221,9 +221,9 @@ class NegotiationAgent(OEFAgent):
         self._initial_agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
         self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
         if self.is_world_modeling:
-            opponent_bks = self.game_configuration.agent_pbks
-            opponent_bks.remove(self.public_key)
-            self._world_state = WorldState(opponent_bks, self.game_configuration.good_pbks, self.initial_agent_state)
+            opponent_pbks = self.game_configuration.agent_pbks
+            opponent_pbks.remove(self.public_key)
+            self._world_state = WorldState(opponent_pbks, self.game_configuration.good_pbks, self.initial_agent_state)
 
         # dispatch the handling to the developer's implementation.
         self.on_start()
