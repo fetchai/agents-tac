@@ -168,7 +168,8 @@ def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port:
     :param register_as: the string indicates whether the baseline agent registers as seller, buyer or both on the oef.
     :param search_for: the string indicates whether the baseline agent searches for sellers, buyers or both on the oef.    :return: A list of baseline agents.
     """
-    nb_baseline_agents_world_modeling = round(nb_baseline_agents * 0.1)
+    fraction_world_modeling = 0.1
+    nb_baseline_agents_world_modeling = round(nb_baseline_agents * fraction_world_modeling)
     baseline_agents = [initialize_baseline_agent(_make_id(i, i < nb_baseline_agents_world_modeling, nb_baseline_agents), oef_addr, oef_port, register_as, search_for, i < nb_baseline_agents_world_modeling)
                        for i in range(nb_baseline_agents)]
     return baseline_agents
