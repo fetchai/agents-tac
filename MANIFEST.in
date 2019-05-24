@@ -1,7 +1,6 @@
 include README.md LICENSE Pipfile Pipfile.lock
 
 recursive-include tac *
-recursive-include oef-sdk-python *
 recursive-include proto *
 recursive-include tests *
 recursive-include docs *
