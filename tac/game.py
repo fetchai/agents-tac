@@ -760,13 +760,6 @@ class WorldState:
                 ))
             for agent_pbk in opponent_pbks)  # type: Dict[str, AgentState]
 
-        # self.good_states = dict(
-        #     (good_pbk,
-        #         GoodState(
-        #             self._expected_price(good_pbk)
-        #         ))
-        #     for good_pbk in good_pbks)
-
         self.good_price_models = dict(
             (good_pbk,
                 GoodPriceModel())
@@ -791,6 +784,9 @@ class WorldState:
         self._from_proposals_update_price(proposal, is_accepted=False)
 
     def _from_proposals_update_price(self, proposal, is_accepted: bool):
+        """
+        Update the good price model based on proposal.
+        """
         good_pbks = []
         for key, value in proposal.items():
             if key == "price":

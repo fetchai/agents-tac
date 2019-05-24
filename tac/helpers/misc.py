@@ -59,7 +59,7 @@ def determine_scaling_factor(money_endowment: int):
     """
     Computes the scaling factor based on the money amount.
     """
-    scaling_factor = (len(str(money_endowment)) * 10) / 10.0
+    scaling_factor = 10.0 ** (len(str(money_endowment)) - 1)
     return scaling_factor
 
 

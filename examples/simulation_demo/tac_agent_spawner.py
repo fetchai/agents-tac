@@ -52,7 +52,7 @@ def parse_arguments():
     parser.add_argument("--data-output-dir", default="data", help="The output directory for the simulation data.")
     parser.add_argument("--experiment-id", default=None, help="The experiment ID.")
     parser.add_argument("--plot", default=True, type=bool, help="Plot sequence of transactions and the changes in scores.")
-    parser.add_argument("--money-endowment", default=2, type=int, help="The money amount every agent receives.")
+    parser.add_argument("--money-endowment", default=200, type=int, help="The money amount every agent receives.")
     parser.add_argument("--base-good-endowment", default=2, type=int, help="The base amount of per good instances every agent receives.")
     parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
     parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
