@@ -399,7 +399,8 @@ class Game:
         """
 
         # check if the buyer has enough balance to pay the transaction.
-        if self.agent_states[tx.buyer_pbk].balance < tx.amount + self.configuration.tx_fee:
+        share_of_tx_fee = round(self.configuration.tx_fee / 2.0, 2)
+        if self.agent_states[tx.buyer_pbk].balance < tx.amount + share_of_tx_fee:
             return False
 
         # check if we have enough instances of goods, for every good involved in the transaction.
@@ -463,7 +464,7 @@ class Game:
         >>> agent_state_0.balance, agent_state_0.current_holdings
         (4.0, [2, 1, 1])
         >>> agent_state_1.balance, agent_state_1.current_holdings
-        (35, [1, 1, 1])
+        (34.0, [1, 1, 1])
 
         :param tx: the game transaction.
         :return: None
@@ -486,9 +487,10 @@ class Game:
                 good_state = self.good_states[good_pbk]
                 good_state.price = price
 
-        # update balances and charge fee to buyer
-        buyer_state.balance -= tx.amount + self.configuration.tx_fee
-        seller_state.balance += tx.amount
+        share_of_tx_fee = round(self.configuration.tx_fee, 2)
+        # update balances and charge share of fee to buyer and seller
+        buyer_state.balance -= tx.amount + share_of_tx_fee
+        seller_state.balance += tx.amount - share_of_tx_fee
 
     def get_holdings_matrix(self) -> List[Endowment]:
         """
@@ -659,9 +661,10 @@ class AgentState:
         :return: True if the transaction is legal wrt the current state, false otherwise.
         """
 
+        share_of_tx_fee = round(tx_fee / 2.0, 2)
         if tx.buyer:
             # check if we have the money.
-            result = self.balance >= tx.amount + tx_fee
+            result = self.balance >= tx.amount + share_of_tx_fee
         else:
             # check if we have the goods.
             result = True
@@ -689,11 +692,13 @@ class AgentState:
         :param tx: the transaction request message.
         :return: None
         """
+        share_of_tx_fee = round(tx_fee / 2.0, 2)
         if tx.buyer:
-            fees = tx.amount + tx_fee
-            self.balance -= fees
+            diff = tx.amount + share_of_tx_fee
+            self.balance -= diff
         else:
-            self.balance += tx.amount
+            diff = tx.amount - share_of_tx_fee
+            self.balance += diff
 
         for good_id, quantity in enumerate(tx.quantities_by_good_pbk.values()):
             quantity_delta = quantity if tx.buyer else -quantity

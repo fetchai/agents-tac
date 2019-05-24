@@ -39,13 +39,14 @@ class NegotiationAgent(OEFAgent):
 
     TAC_CONTROLLER_SEARCH_ID = 1
 
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, **kwargs) -> None:
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, is_world_modeling: bool = False, **kwargs) -> None:
         super().__init__(public_key, oef_addr, oef_port, **kwargs)
 
         self._controller_pbk = None  # type: Optional[str]
         self._game_configuration = None  # type: Optional[GameConfiguration]
         self._initial_agent_state = None  # type: Optional[AgentState]
         self._agent_state = None  # type: Optional[AgentState]
+        self._is_world_modeling = is_world_modeling
         self._world_state = None  # type: Optional[WorldState]
 
     @property
@@ -59,6 +60,10 @@ class NegotiationAgent(OEFAgent):
     @property
     def initial_agent_state(self):
         return self._initial_agent_state
+
+    @property
+    def is_world_modeling(self):
+        return self._is_world_modeling
 
     @abstractmethod
     def on_start(self) -> None:
@@ -215,9 +220,10 @@ class NegotiationAgent(OEFAgent):
         self._game_configuration = GameConfiguration(game_data.nb_agents, game_data.nb_goods, game_data.tx_fee, game_data.agent_pbks, game_data.good_pbks)
         self._initial_agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
         self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
-        opponent_bks = self.game_configuration.agent_pbks
-        opponent_bks.remove(self.public_key)
-        self._world_state = WorldState(opponent_bks, self.game_configuration.good_pbks, self.initial_agent_state)
+        if self.is_world_modeling:
+            opponent_bks = self.game_configuration.agent_pbks
+            opponent_bks.remove(self.public_key)
+            self._world_state = WorldState(opponent_bks, self.game_configuration.good_pbks, self.initial_agent_state)
 
         # dispatch the handling to the developer's implementation.
         self.on_start()
