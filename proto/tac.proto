@@ -40,6 +40,7 @@ message TACController {
             AGENT_ALREADY_REGISTERED = 2;
             AGENT_NOT_REGISTERED = 3;
             TRANSACTION_NOT_VALID = 4;
+            TRANSACTION_NOT_MATCHING = 5;
         }
 
         ErrorCode error_code = 1;

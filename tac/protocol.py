@@ -56,14 +56,31 @@ class ErrorCode(Enum):
     AGENT_ALREADY_REGISTERED = 2
     AGENT_NOT_REGISTERED = 3
     TRANSACTION_NOT_VALID = 4
+    TRANSACTION_NOT_MATCHING = 5
+
+
+_from_ec_to_msg = {
+    ErrorCode.GENERIC_ERROR: "Unexpected error.",
+    ErrorCode.AGENT_ALREADY_REGISTERED: "Agent already registered.",
+    ErrorCode.AGENT_NOT_REGISTERED: "Agent not registered.",
+    ErrorCode.REQUEST_NOT_VALID: "Request not recognized",
+    ErrorCode.TRANSACTION_NOT_VALID: "Error in checking transaction",
+    ErrorCode.TRANSACTION_NOT_MATCHING: "The transaction request does not match with a previous transaction request with the same id.",
+}  # type: Dict[ErrorCode, str]
 
 
 class Message(ABC):
     """Abstract class representing a message between TAC agents and TAC controller."""
 
+    def __init__(self, public_key: str):
+        """
+        :param public_key: The public key of the TAC agent
+        """
+        self.public_key = public_key
+
     @classmethod
     @abstractmethod
-    def from_pb(cls, obj):
+    def from_pb(cls, obj, public_key: str):
         """From Protobuf to :class:`~tac.protocol.Message` object"""
 
     @abstractmethod
@@ -85,7 +102,7 @@ class Request(Message, ABC):
     """Message from clients to controller"""
 
     @classmethod
-    def from_pb(cls, obj: bytes) -> 'Request':
+    def from_pb(cls, obj: bytes, public_key: str) -> 'Request':
         """
         Parse a string of bytes associated to a request message to the TAC controller.
         :param obj: the string of bytes to be parsed.
@@ -98,11 +115,11 @@ class Request(Message, ABC):
         msg.ParseFromString(obj)
         case = msg.WhichOneof("msg")
         if case == "register":
-            return Register()
+            return Register(public_key)
         elif case == "unregister":
-            return Unregister()
+            return Unregister(public_key)
         elif case == "transaction":
-            return Transaction.from_pb(obj)
+            return Transaction.from_pb(obj, public_key)
         else:
             raise TacError("Unrecognized type of Request.")
 
@@ -136,7 +153,7 @@ class Unregister(Request):
 class Transaction(Request):
 
     def __init__(self, transaction_id: str, buyer: bool, counterparty: str,
-                 amount: int, quantities_by_good_pbk: Dict[str, int], sender: Optional[str] = None):
+                 amount: int, quantities_by_good_pbk: Dict[str, int], sender: str):
         """
         A transaction request.
 
@@ -147,13 +164,16 @@ class Transaction(Request):
         :param amount: the amount of money involved.
         :param quantities_by_good_pbk: a map from good pbk to the quantity of that good involved in the transaction.
         """
+        super().__init__(sender)
         self.transaction_id = transaction_id
         self.buyer = buyer
         self.counterparty = counterparty
         self.amount = amount
         self.quantities_by_good_pbk = quantities_by_good_pbk
 
-        self.sender = sender
+    @property
+    def sender(self):
+        return self.public_key
 
     def to_pb(self) -> tac_pb2.TACAgent.Message:
         msg = tac_pb2.TACAgent.Transaction()
@@ -170,7 +190,7 @@ class Transaction(Request):
         return envelope
 
     @classmethod
-    def from_pb(cls, obj: bytes) -> 'Request':
+    def from_pb(cls, obj: bytes, public_key: str) -> 'Request':
         msg = tac_pb2.TACAgent.Message()
         msg.ParseFromString(obj)
 
@@ -180,7 +200,8 @@ class Transaction(Request):
                            msg.transaction.buyer,
                            msg.transaction.counterparty,
                            msg.transaction.amount,
-                           quantities_per_good_pbk)
+                           quantities_per_good_pbk,
+                           public_key)
 
     @classmethod
     def from_proposal(cls, proposal: Description, transaction_id: str,
@@ -238,10 +259,11 @@ class Response(Message):
     """Message from controller to clients"""
 
     @classmethod
-    def from_pb(cls, obj: bytes) -> 'Response':
+    def from_pb(cls, obj: bytes, public_key: str) -> 'Response':
         """
         Parse a string of bytes associated to a response message from the TAC controller.
         :param obj: the string of bytes to be parsed.
+        :param public_key: the public key of the recipient.
         :return: a :class:`~tac.protocol.Response` object.
         :raises TacError: if the string of bytes cannot be parsed as a Response from the TAC Controller.
         """
@@ -251,13 +273,14 @@ class Response(Message):
             msg.ParseFromString(obj)
             case = msg.WhichOneof("msg")
             if case == "registered":
-                return Registered()
+                return Registered(public_key)
             elif case == "unregistered":
-                return Unregistered()
+                return Unregistered(public_key)
             elif case == "cancelled":
-                return Cancelled()
+                return Cancelled(public_key)
             elif case == "game_data":
-                return GameData(msg.game_data.money,
+                return GameData(public_key,
+                                msg.game_data.money,
                                 list(msg.game_data.endowment),
                                 list(msg.game_data.utility_params),
                                 msg.game_data.nb_agents,
@@ -266,12 +289,12 @@ class Response(Message):
                                 msg.game_data.agent_pbks,
                                 msg.game_data.good_pbks)
             elif case == "tx_confirmation":
-                return TransactionConfirmation(msg.tx_confirmation.transaction_id)
+                return TransactionConfirmation(public_key, msg.tx_confirmation.transaction_id)
             elif case == "error":
                 error_code = ErrorCode(msg.error.error_code)
                 error_msg = msg.error.error_msg
                 details = dict(msg.error.details.items())
-                return Error(error_code, error_msg, details)
+                return Error(public_key, error_code, error_msg, details)
             else:
                 raise TacError("Unrecognized type of Response.")
         except DecodeError as e:
@@ -318,9 +341,13 @@ class Cancelled(Response):
 class Error(Response):
     """This response means that something bad happened while processing a request."""
 
-    def __init__(self, error_code: ErrorCode, error_msg: str, details: Optional[Dict[str, Any]] = None):
+    def __init__(self, public_key: str,
+                 error_code: ErrorCode,
+                 error_msg: Optional[str] = None,
+                 details: Optional[Dict[str, Any]] = None):
+        super().__init__(public_key)
         self.error_code = error_code
-        self.error_msg = error_msg
+        self.error_msg = _from_ec_to_msg[error_code] if error_msg is None else error_msg
         self.details = details if details is not None else {}
 
     def to_pb(self) -> tac_pb2.TACController.Message:
@@ -342,10 +369,11 @@ class Error(Response):
 class GameData(Response):
     """Class that holds the game configuration and the initialization of a TAC agent."""
 
-    def __init__(self, money: int, endowment: List[int], utility_params: List[float], nb_agents: int, nb_goods: int,
-                 tx_fee: float, agent_pbks: List[str], good_pbks: List[str]):
+    def __init__(self, public_key: str, money: int, endowment: List[int], utility_params: List[float],
+                 nb_agents: int, nb_goods: int, tx_fee: float, agent_pbks: List[str], good_pbks: List[str]):
         """
         Initialize a game data object.
+        :param public_key: the destination
         :param money: the money amount.
         :param endowment: the endowment for every good.
         :param utility_params: the utility params for every good.
@@ -356,6 +384,7 @@ class GameData(Response):
         :param good_pbks: the pbks of the goods.
         """
         assert len(endowment) == len(utility_params)
+        super().__init__(public_key)
         self.money = money
         self.endowment = endowment
         self.utility_params = utility_params
@@ -405,7 +434,8 @@ class GameData(Response):
 
 class TransactionConfirmation(Response):
 
-    def __init__(self, transaction_id: str):
+    def __init__(self, public_key: str, transaction_id: str):
+        super().__init__(public_key)
         self.transaction_id = transaction_id
 
     def to_pb(self) -> tac_pb2.TACController.Message:

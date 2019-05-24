@@ -34,17 +34,18 @@ import logging
 import os
 import pprint
 import time
-from threading import Thread
-from typing import Dict
+from abc import ABC, abstractmethod
+from threading import Thread, Timer
+from typing import Dict, Type
 from typing import Optional, Set
 
+import dateutil
 from oef.agents import OEFAgent
 from oef.schema import Description, DataModel, AttributeSchema
 
 from tac.game import Game, GameTransaction
-from tac.gui.dashboard import Dashboard
+from tac.gui.monitor import Monitor, NullMonitor
 from tac.helpers.misc import generate_pbks
-from tac.helpers.plantuml import plantuml_gen
 from tac.protocol import Response, Request, Register, Unregister, Error, GameData, \
     Transaction, TransactionConfirmation, ErrorCode, Cancelled
 from tac.stats import GameStats
@@ -55,125 +56,176 @@ else:
     logger = logging.getLogger("tac.agents.controller")
 
 
-def parse_arguments():
-    parser = argparse.ArgumentParser("controller", description="Launch the controller agent.")
-    parser.add_argument("--public-key", default="controller", help="Public key of the agent.")
-    parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
-    parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
-    parser.add_argument("--money", default=20, help="Money endowment for TAC agents.")
-    parser.add_argument("--nb-agents", default=5, type=int, help="Number of goods")
-    parser.add_argument("--nb-goods", default=5, type=int, help="Number of goods")
-    parser.add_argument("--money-endowment", default=2, type=int, help="The money amount every agent receives.")
-    parser.add_argument("--base-good-endowment", default=2, type=int, help="The base amount of per good instances every agent receives.")
-    parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
-    parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
-    parser.add_argument("--tx-fee", default=1, type=int, help="Number of goods")
-    parser.add_argument("--inactivity-countdown", default=30, type=int, help="Timeout of inactivity.")
-    parser.add_argument("--verbose", default=False, action="store_true", help="Log debug messages.")
-    parser.add_argument("--gui", action="store_true", help="Show the GUI.")
+class TACParameters(object):
 
-    return parser.parse_args()
+    def __init__(self, min_nb_agents: int = 5,
+                 money_endowment: int = 200,
+                 nb_goods: int = 5,
+                 tx_fee: float = 1.0,
+                 base_good_endowment: int = 2,
+                 lower_bound_factor: int = 1,
+                 upper_bound_factor: int = 1,
+                 start_time: datetime.datetime = None,
+                 registration_timeout: int = 10,
+                 competition_timeout: int = 20,
+                 inactivity_timeout: Optional[int] = None):
+        """
+        Initialize parameters for TAC
+        :param min_nb_agents: the number of agents to wait for the registration.
+        :param money_endowment: The money amount every agent receives.
+        :param nb_goods: the number of goods in the competition.
+        :param tx_fee: the fee for a transaction.
+        :param base_good_endowment:The base amount of per good instances every agent receives.
+        :param lower_bound_factor: the lower bound factor of a uniform distribution.
+        :param upper_bound_factor: the upper bound factor of a uniform distribution.
+        :param start_time: the datetime when the competition will start.
+        :param registration_timeout: the duration (in seconds) of the registration phase.
+        :param competition_timeout: the duration (in seconds) of the competition phase.
+        :param inactivity_timeout: the time when the competition will start.
+        """
+        self._min_nb_agents = min_nb_agents
+        self._money_endowment = money_endowment
+        self._nb_goods = nb_goods
+        self._tx_fee = tx_fee
+        self._base_good_endowment = base_good_endowment
+        self._lower_bound_factor = lower_bound_factor
+        self._upper_bound_factor = upper_bound_factor
+        self._start_time = start_time
+        self._registration_timeout = registration_timeout
+        self._competition_timeout = competition_timeout
+        self._inactivity_timeout = inactivity_timeout
+
+    @property
+    def min_nb_agents(self) -> int:
+        return self._min_nb_agents
+
+    @property
+    def money_endowment(self):
+        return self._money_endowment
+
+    @property
+    def nb_goods(self):
+        return self._nb_goods
+
+    @property
+    def tx_fee(self):
+        return self._tx_fee
+
+    @property
+    def base_good_endowment(self):
+        return self._base_good_endowment
+
+    @property
+    def lower_bound_factor(self):
+        return self._lower_bound_factor
+
+    @property
+    def upper_bound_factor(self):
+        return self._upper_bound_factor
+
+    @property
+    def start_time(self) -> datetime.datetime:
+        return self._start_time
+
+    @property
+    def end_time(self) -> datetime.datetime:
+        return self._start_time + self.registration_timedelta + self.competition_timedelta
+
+    @property
+    def registration_timeout(self):
+        return self._registration_timeout
+
+    @property
+    def competition_timeout(self):
+        return self._competition_timeout
+
+    @property
+    def inactivity_timeout(self):
+        return self._inactivity_timeout
+
+    @property
+    def registration_timedelta(self) -> datetime.timedelta:
+        return datetime.timedelta(0, self._registration_timeout)
+
+    @property
+    def competition_timedelta(self) -> datetime.timedelta:
+        return datetime.timedelta(0, self._competition_timeout)
+
+    @property
+    def inactivity_timedelta(self) -> datetime.timedelta:
+        return datetime.timedelta(0, self._inactivity_timeout)
 
 
-class ControllerHandler(object):
-    """Class to wrap the decoding procedure and dispatching the handling of the message to the right function."""
+class RequestHandler(ABC):
 
     def __init__(self, controller_agent: 'ControllerAgent'):
-        """
-        Initialize a Controller handler, i.e. the class that manages the handling of incoming messages.
-
-        :param controller_agent: The Controller Agent the handler is associated with.
-        """
         self.controller_agent = controller_agent
-        self.game_handler = controller_agent.game_handler
 
-        self._pending_transaction_requests = {}  # type: Dict[str, Transaction]
+    def __call__(self, request: Request) -> Response:
+        return self.handle(request)
 
-    def handle(self, msg: bytes, public_key: str) -> Response:
-        """Handle a simple message coming from an agent.
-        :param msg: the Protobuf message.
-        :param public_key: the agent's public key that sent the request.
-        :return: the Response object
+    @abstractmethod
+    def handle(self, request: Request) -> Optional[Response]:
         """
-        message = self.decode(msg, public_key)  # type: Request
-        response = self.dispatch(message, public_key)
-        logger.debug("[{}]: Returning response: {}".format(self.controller_agent.public_key, str(response)))
-        return response
-
-    def dispatch(self, request: Request, public_key: str) -> Response:
+        Handle a request from an OEF agent. It returns
+        :param request: the request message.
+        :return: a response, or None.
         """
-        Dispatch the request to the right handler.
 
-        :param request: the request to handle
-        :param public_key: the public key of the sender agent.
-        :return: the response.
-        """
-        try:
-            if isinstance(request, Register):
-                return self.handle_register(request, public_key)
-            elif isinstance(request, Unregister):
-                return self.handle_unregister(request, public_key)
-            elif isinstance(request, Transaction):
-                request.sender = public_key
-                return self.handle_transaction(request, public_key)
-            else:
-                error_msg = "Request not recognized"
-                logger.error(error_msg)
-                return Error(ErrorCode.REQUEST_NOT_VALID, error_msg)
-        except Exception as e:
-            error_msg = "Unexpected error."
-            logger.exception(error_msg)
-            return Error(ErrorCode.GENERIC_ERROR, error_msg + str(e))
 
-    def decode(self, msg: bytes, public_key: str) -> Request:
-        """From bytes to a Response message"""
-        request = Request.from_pb(msg)
-        return request
+class RegisterHandler(RequestHandler):
 
-    def handle_register(self, request: Register, public_key: str) -> Optional[Response]:
+    def handle(self, request: Request) -> Optional[Response]:
         """
         Handle a register message.
         If the public key is already registered, answer with an error message.
         If this is the n_th registration request, where n is equal to nb_agents, then start the competition.
 
         :param request: the register request.
-        :param public_key: the public key of the sender agent.
         :return: an Error response if an error occurred, else None.
         """
-        if public_key in self.controller_agent.game_handler.registered_agents:
-            error_msg = "Agent already registered: '{}'".format(public_key)
+        if request.public_key in self.controller_agent.game_handler.registered_agents:
+            error_msg = "Agent already registered: '{}'".format(request.public_key)
             logger.error(error_msg)
-            return Error(ErrorCode.AGENT_ALREADY_REGISTERED, error_msg)
+            return Error(request.public_key, ErrorCode.AGENT_ALREADY_REGISTERED)
         else:
-            logger.debug("Agent registered: '{}'".format(public_key))
-            self.controller_agent.game_handler.registered_agents.add(public_key)
+            logger.debug("Agent registered: '{}'".format(request.public_key))
+            self.controller_agent.game_handler.registered_agents.add(request.public_key)
             return None
 
-    def handle_unregister(self, request: Unregister, public_key: str) -> Optional[Response]:
+
+class UnregisterHandler(RequestHandler):
+
+    def handle(self, request: Request) -> Optional[Response]:
         """
         Handle a unregister message.
         If the public key is not registered, answer with an error message.
 
         :param request: the register request.
-        :param public_key: the public key of the sender agent.
         :return: an Error response if an error occurred, else None.
         """
-        if public_key not in self.controller_agent.game_handler.registered_agents:
-            error_msg = "Agent not registered: '{}'".format(public_key)
+        if request.public_key not in self.controller_agent.game_handler.registered_agents:
+            error_msg = "Agent not registered: '{}'".format(request.public_key)
             logger.error(error_msg)
-            return Error(ErrorCode.AGENT_NOT_REGISTERED, error_msg)
+            return Error(request.public_key, ErrorCode.AGENT_NOT_REGISTERED)
         else:
-            logger.debug("Agent unregistered: '{}'".format(public_key))
-            self.controller_agent.game_handler.registered_agents.remove(public_key)
+            logger.debug("Agent unregistered: '{}'".format(request.public_key))
+            self.controller_agent.game_handler.registered_agents.remove(request.public_key)
             return None
 
-    def handle_transaction(self, request: Transaction, public_key: str) -> Optional[Response]:
+
+class TransactionHandler(RequestHandler):
+
+    def __init__(self, controller_agent: 'ControllerAgent'):
+        super().__init__(controller_agent)
+        self._pending_transaction_requests = {}  # type: Dict[str, Transaction]
+
+    def handle(self, request: Transaction) -> Optional[Response]:
         """
         Handle a transaction request message.
         If the transaction is invalid (e.g. because the state of the game are not consistent), reply with an error.
 
         :param request: the transaction request.
-        :param public_key: the public key of the sender agent.
         :return: an Error response if an error occurred, else None (no response to send back).
         """
         logger.debug("Handling transaction: {}".format(request))
@@ -190,34 +242,33 @@ class ControllerHandler(object):
             #  don't care for now, because assuming only (properly implemented) baseline agents.
             pending_tx = self._pending_transaction_requests.pop(request.transaction_id)
             if request.matches(pending_tx):
-                tx = self.game_handler.from_request_to_game_tx(request, public_key)
+                tx = GameTransaction.from_request_to_game_tx(request)
 
-                if self.game_handler.current_game.is_transaction_valid(tx):
-                    return self._handle_valid_transaction(request, public_key)
+                if self.controller_agent.game_handler.current_game.is_transaction_valid(tx):
+                    return self._handle_valid_transaction(request)
                 else:
-                    return self._handle_invalid_transaction(request.transaction_id)
+                    return self._handle_invalid_transaction(request)
             else:
-                return self._handle_non_matching_transaction()
+                return self._handle_non_matching_transaction(request)
 
-    def _handle_valid_transaction(self, request: Transaction, public_key: str) -> None:
+    def _handle_valid_transaction(self, request: Transaction) -> None:
         """
         Handle a valid transaction. That is:
         - update the game state
         - send a transaction confirmation both to the buyer and the seller.
         :param request: the transaction request.
-        :param public_key: the public key of the sender.
         :return: None
         """
         logger.debug("Handling valid transaction: {}".format(request.transaction_id))
 
         # update the game state.
-        tx = self.game_handler.from_request_to_game_tx(request, public_key)
-        self.game_handler.current_game.settle_transaction(tx)
-        self.controller_agent._update_dashboard()
+        tx = GameTransaction.from_request_to_game_tx(request)
+        self.controller_agent.game_handler.current_game.settle_transaction(tx)
+        self.controller_agent.monitor.update()
 
         # send the transaction confirmation.
-        tx_confirmation = TransactionConfirmation(request.transaction_id)
-        self.controller_agent.send_message(0, 0, public_key, tx_confirmation.serialize())
+        tx_confirmation = TransactionConfirmation(request.public_key, request.transaction_id)
+        self.controller_agent.send_message(0, 0, request.public_key, tx_confirmation.serialize())
         self.controller_agent.send_message(0, 0, request.counterparty, tx_confirmation.serialize())
 
         # log messages
@@ -227,14 +278,79 @@ class ControllerHandler(object):
 
         return None
 
-    def _handle_invalid_transaction(self, transaction_id: str) -> Response:
+    def _handle_invalid_transaction(self, request: Transaction) -> Response:
         """Handle an invalid transaction."""
-        return Error(ErrorCode.TRANSACTION_NOT_VALID, "Error in checking transaction: {}".format(transaction_id))
+        return Error(request.public_key, ErrorCode.TRANSACTION_NOT_VALID,
+                     details={"transaction_id": request.transaction_id})
 
-    def _handle_non_matching_transaction(self) -> Response:
+    def _handle_non_matching_transaction(self, request: Transaction) -> Response:
         """Handle non-matching transaction."""
-        return Error(ErrorCode.TRANSACTION_NOT_VALID,
-                     "The transaction request does not match with a previous transaction request with the same id.")
+        return Error(request.public_key, ErrorCode.TRANSACTION_NOT_MATCHING)
+
+
+class ControllerDispatcher(object):
+    """Class to wrap the decoding procedure and dispatching the handling of the message to the right function."""
+
+    def __init__(self, controller_agent: 'ControllerAgent'):
+        """
+        Initialize a Controller handler, i.e. the class that manages the handling of incoming messages.
+
+        :param controller_agent: The Controller Agent the handler is associated with.
+        """
+        self.controller_agent = controller_agent
+
+        self.handlers = {
+            Register: RegisterHandler(controller_agent),
+            Unregister: UnregisterHandler(controller_agent),
+            Transaction: TransactionHandler(controller_agent)
+        }  # type: Dict[Type[Request], RequestHandler]
+
+    def register_handler(self, request_type: Type[Request], request_handler: RequestHandler) -> None:
+        """
+        Register a handler for a type of request.
+        :param request_type: the type of request to handle.
+        :param request_handler: the handler associated with the type specified.
+        :return: None
+        """
+        self.handlers[request_type] = request_handler
+
+    def process_request(self, msg: bytes, public_key: str) -> Response:
+        """Handle a simple message coming from an agent.
+        :param msg: the Protobuf message.
+        :param public_key: the agent's public key that sent the request.
+        :return: the Response object
+        """
+        message = self.decode(msg, public_key)  # type: Request
+        response = self.dispatch(message)
+        logger.debug("[{}]: Returning response: {}".format(self.controller_agent.public_key, str(response)))
+        return response
+
+    def dispatch(self, request: Request) -> Response:
+        """
+        Dispatch the request to the right handler.
+        If no handler is found for the provided type of request, return an "invalid request" error.
+        If something bad happen, return a "generic" error.
+
+        :param request: the request to handle
+        :return: the response.
+        """
+        handle_request = self.handlers.get(type(request), None)  # type: RequestHandler
+        if handle_request is None:
+            return Error(request.public_key, ErrorCode.REQUEST_NOT_VALID)
+        try:
+            return handle_request(request)
+        except Exception as e:
+            return Error(request.public_key, ErrorCode.GENERIC_ERROR)
+
+    def decode(self, msg: bytes, public_key: str) -> Request:
+        """
+        From bytes to a Request message
+        :param msg: the serialized message.
+        :param public_key: the public key of the sender agent.
+        :return: the deserialized Request
+        """
+        request = Request.from_pb(msg, public_key)
+        return request
 
 
 class GameHandler:
@@ -242,39 +358,17 @@ class GameHandler:
     A class to manage a TAC instance.
     """
 
-    def __init__(self, controller_agent: 'ControllerAgent',
-                 min_nb_agents: int,
-                 nb_goods: int,
-                 tx_fee: float,
-                 money_endowment: int,
-                 base_good_endowment: int,
-                 lower_bound_factor: int,
-                 upper_bound_factor: int,
-                 start_time: Optional[datetime.datetime] = None):
+    def __init__(self, controller_agent: 'ControllerAgent', tac_parameters: TACParameters):
         """
         :param controller_agent: the controller agent the handler is associated with.
-        :param min_nb_agents: the number of agents to wait for during registration and before starting the game.
-        :param money_endowment: the initial amount of money to assign to every agent.
-        :param nb_goods: the number of goods in the competition.
-        :param tx_fee: the fee for a transaction.
-        :param money_endowment: the money amount every agent receives.
-        :param base_good_endowment: the base amount of per good instances every agent receives.
-        :param lower_bound_factor: the lower bound factor of a uniform distribution.
-        :param upper_bound_factor: the upper bound factor of a uniform distribution.
-        :param start_time: the time when the competition will start.
         """
         self.controller_agent = controller_agent
-        self.min_nb_agents = min_nb_agents
-        self.nb_goods = nb_goods
-        self.tx_fee = tx_fee
-        self.money_endowment = money_endowment
-        self.base_good_endowment = base_good_endowment
-        self.lower_bound_factor = lower_bound_factor
-        self.upper_bound_factor = upper_bound_factor
-        self.start_time = start_time if start_time is not None else datetime.datetime.now() + datetime.timedelta(0, 5)
+        self.tac_parameters = tac_parameters
 
         self.registered_agents = set()  # type: Set[str]
         self.current_game = None  # type: Optional[Game]
+        self.inactivity_timeout_timedelta = datetime.timedelta(seconds=tac_parameters.inactivity_timeout) \
+            if tac_parameters.inactivity_timeout is not None else datetime.timedelta(seconds=15)
 
     def reset(self) -> None:
         """Reset the game."""
@@ -288,31 +382,14 @@ class GameHandler:
         """
         return self.current_game is not None
 
-    def from_request_to_game_tx(self, transaction: Transaction, sender_pbk: str) -> GameTransaction:
-        """
-        From a transaction request message to a game transaction
-        :param transaction: the request message for a transaction.
-        :param sender_pbk: the agent pbk that sent the transaction.
-        :return: the game transaction.
-        """
-        receiver_pbk = transaction.counterparty
-        buyer_pbk, seller_pbk = (sender_pbk, receiver_pbk) if transaction.buyer else (receiver_pbk, sender_pbk)
-
-        tx = GameTransaction(
-            buyer_pbk,
-            seller_pbk,
-            transaction.amount,
-            transaction.quantities_by_good_pbk
-        )
-        return tx
-
     def _start_competition(self):
         """Create a game and send the game setting to every registered agent.
         Moreover, start the inactivity timeout checker."""
         # assert that there is no competition running.
         assert not self.is_game_running()
         self.current_game = self._create_game()
-        self.controller_agent._start_dashboard(GameStats(self.current_game))
+        self.controller_agent.monitor.start(GameStats(self.current_game))
+        self.controller_agent.monitor.update()
         self._send_game_data_to_agents()
 
         # start the inactivity timeout.
@@ -322,7 +399,6 @@ class GameHandler:
         # log messages
         logger.debug("Started competition:\n{}".format(self.current_game.get_holdings_summary()))
         logger.debug("Computed equilibrium:\n{}".format(self.current_game.get_equilibrium_summary()))
-        plantuml_gen.start_competition(self.controller_agent.public_key, self.current_game)
 
     def _create_game(self) -> Game:
         """
@@ -337,12 +413,18 @@ class GameHandler:
         agent_pbks = sorted(self.registered_agents)
         nb_agents = len(agent_pbks)
 
-        # TODO these pbks need to come externally, should not be set here!
-        # if agent_pbks is None:
-        #     agent_pbks = generate_pbks(self.nb_agents, 'agent')
-        good_pbks = generate_pbks(self.nb_goods, 'good')
+        good_pbks = generate_pbks(self.tac_parameters.nb_goods, 'good')
 
-        game = Game.generate_game(nb_agents, self.nb_goods, self.tx_fee, self.money_endowment, self.base_good_endowment, self.lower_bound_factor, self.upper_bound_factor, agent_pbks, good_pbks)
+        game = Game.generate_game(nb_agents,
+                                  self.tac_parameters.nb_goods,
+                                  self.tac_parameters.tx_fee,
+                                  self.tac_parameters.money_endowment,
+                                  self.tac_parameters.base_good_endowment,
+                                  self.tac_parameters.lower_bound_factor,
+                                  self.tac_parameters.upper_bound_factor,
+                                  agent_pbks,
+                                  good_pbks)
+
         return game
 
     def _send_game_data_to_agents(self) -> None:
@@ -355,6 +437,7 @@ class GameHandler:
         for public_key in self.current_game.configuration.agent_pbks:
             agent_state = self.current_game.get_agent_state_from_agent_pbk(public_key)
             game_data_response = GameData(
+                public_key,
                 agent_state.balance,
                 agent_state.current_holdings,
                 agent_state.utility_params,
@@ -368,113 +451,74 @@ class GameHandler:
                          .format(self.controller_agent.public_key, public_key, str(game_data_response)))
             self.controller_agent.send_message(0, 1, public_key, game_data_response.serialize())
 
-    def timeout_competition(self) -> bool:
+    def handle_registration_phase(self) -> bool:
         """Wait until the registration time expires. Then, if there are enough agents, start the competition.
 
         :return True if the competition has been successfully started. False otherwise.
         """
+        # just to make names shorter
+        ctrl_pbk = self.controller_agent.public_key
+        nb_reg_agents = len(self.registered_agents)
+        min_nb_agents = self.tac_parameters.min_nb_agents
 
-        seconds_to_wait = (self.start_time - datetime.datetime.now()).seconds + 1
+        seconds_to_wait = self.tac_parameters.registration_timedelta.seconds
         seconds_to_wait = 0 if seconds_to_wait < 0 else seconds_to_wait
-        logger.debug("[{}]: Waiting for {} seconds...".format(self.controller_agent.public_key, seconds_to_wait))
+        logger.debug("[{}]: Waiting for {} seconds...".format(ctrl_pbk, seconds_to_wait))
         time.sleep(seconds_to_wait)
         logger.debug("[Controller]: Check if we can start the competition.".format(seconds_to_wait))
-        if len(self.registered_agents) >= self.min_nb_agents:
+        if len(self.registered_agents) >= self.tac_parameters.min_nb_agents:
             logger.debug("[{}]: Start competition. Registered agents: {}, minimum number of agents: {}."
-                         .format(self.controller_agent.public_key, len(self.registered_agents), self.min_nb_agents))
+                         .format(ctrl_pbk, nb_reg_agents, min_nb_agents))
             self._start_competition()
             return True
         else:
             logger.debug("[{}]: Not enough agents to start TAC. Registered agents: {}, minimum number of agents: {}."
-                         .format(self.controller_agent.public_key, len(self.registered_agents), self.min_nb_agents))
+                         .format(ctrl_pbk, nb_reg_agents, min_nb_agents))
             self.notify_tac_cancelled()
             self.controller_agent.terminate()
             return False
 
     def notify_tac_cancelled(self):
         for tac_agent in self.registered_agents:
-            self.controller_agent.send_message(0, 0, tac_agent, Cancelled().serialize())
+            self.controller_agent.send_message(0, 0, tac_agent, Cancelled(tac_agent).serialize())
 
 
 class ControllerAgent(OEFAgent):
+
     CONTROLLER_DATAMODEL = DataModel("tac", [
         AttributeSchema("version", int, True, "Version number of the TAC Controller Agent."),
     ])
-    # TODO need at least one attribute in the search Query to the OEF.
 
-    def __init__(self, public_key="controller",
-                 oef_addr="127.0.0.1",
-                 oef_port=3333,
-                 min_nb_agents: int = 5,
-                 nb_goods: int = 5,
-                 tx_fee: float = 1.0,
-                 money_endowment: int = 200,
-                 base_good_endowment: int = 2,
-                 lower_bound_factor: int = 0,
-                 upper_bound_factor: int = 0,
+    def __init__(self, public_key: str = "controller",
+                 oef_addr: str = "127.0.0.1",
+                 oef_port: int = 3333,
                  version: int = 1,
-                 start_time: datetime.datetime = None,
-                 end_time: datetime.datetime = None,
-                 inactivity_timeout: Optional[int] = None,
-                 visdom_addr: str = "localhost",
-                 visdom_port: int = 8097,
-                 gui: bool = False,
+                 monitor: Optional[Monitor] = None,
                  **kwargs):
         """
         Initialize a Controller Agent for TAC.
         :param public_key: The public key of the OEF Agent.
         :param oef_addr: the OEF address.
         :param oef_port: the OEF listening port.
-        :param min_nb_agents: the number of agents to wait for the registration.
-        :param nb_goods: the number of goods in the competition.
-        :param tx_fee: the fee for a transaction.
-        :param money_endowment: the initial amount of money to assign to every agent.
-        :param base_good_endowment: the base amount of per good instances every agent receives.
-        :param lower_bound_factor: the lower bound factor of a uniform distribution.
-        :param upper_bound_factor: the upper bound factor of a uniform distribution.
         :param version: the version of the TAC controller.
-        :param start_time: the time when the competition will start.
-        :param end_time: the time when the competition will end.
-        :param inactivity_timeout: the time when the competition will start.
-        :param visdom_addr: TCP/IP address of the Visdom server.
-        :param visdom_port: TCP/IP port of the Visdom server.
-        :param gui: show the GUI.
+        :param monitor: the GUI monitor. If None, defaults to a null (dummy) monitor.
         """
         super().__init__(public_key, oef_addr, oef_port, loop=asyncio.new_event_loop())
         logger.debug("Initialized Controller Agent :\n{}".format(pprint.pformat(vars())))
 
-        self.game_handler = GameHandler(self, min_nb_agents, nb_goods, tx_fee, money_endowment, base_good_endowment, lower_bound_factor, upper_bound_factor, start_time)
-        self.handler = ControllerHandler(self)
-        self.version = version
-        self.gui = gui
+        self.dispatcher = ControllerDispatcher(self)
+        self.monitor = NullMonitor() if monitor is None else monitor  # type: Monitor
 
-        self._last_activity = datetime.datetime.now()
-        self._inactivity_timeout = datetime.timedelta(seconds=inactivity_timeout) if inactivity_timeout is not None else datetime.timedelta(seconds=15)
-        self._end_time = end_time
+        self.version = version
+        self.game_handler = None  # type: Optional[GameHandler]
+
+        self.last_activity = datetime.datetime.now()
 
         self._message_processing_task = None
         self._timeout_checker_task = None
 
+        self._is_running = False
         self._terminated = False
-
-        self.visdom_addr = visdom_addr
-        self.visdom_port = visdom_port
-        self.dashboard = None  # type: Optional[Dashboard]
-
-    def _start_dashboard(self, game_stats: GameStats):
-        if self.gui:
-            d = Dashboard(game_stats, visdom_addr=self.visdom_addr, visdom_port=self.visdom_port)
-            d.start()
-            self.dashboard = d
-            self.dashboard.update()
-
-    def _update_dashboard(self):
-        if self.dashboard is not None:
-            self.dashboard.update()
-
-    def _stop_dashboard(self):
-        if self.dashboard is not None:
-            self.dashboard.stop()
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
         """
@@ -493,8 +537,8 @@ class ControllerAgent(OEFAgent):
         """
         logger.debug("[ControllerAgent] on_message: msg_id={}, dialogue_id={}, origin={}"
                      .format(msg_id, dialogue_id, origin))
-        self._update_last_activity()
-        response = self.handler.handle(content, origin)  # type: Optional[Response]
+        self.update_last_activity()
+        response = self.dispatcher.process_request(content, origin)  # type: Optional[Response]
         if response is not None:
             self.send_message(msg_id, dialogue_id, origin, response.serialize())
 
@@ -532,11 +576,15 @@ class ControllerAgent(OEFAgent):
         Terminate the controller agent
         :return: None
         """
-        logger.debug("[{}]: Terminating the controller...".format(self.public_key))
-        self._terminated = True
-        self.game_handler.notify_tac_cancelled()
-        self._loop.call_soon_threadsafe(self._task.cancel)
-        self._stop_dashboard()
+
+        if self._is_running:
+            logger.debug("[{}]: Terminating the controller...".format(self.public_key))
+            self._is_running = False
+            self.game_handler.notify_tac_cancelled()
+            self._loop.call_soon_threadsafe(self.stop)
+            self.monitor.stop()
+            self._message_processing_task.join()
+            self._message_processing_task = None
 
     def check_inactivity_timeout(self, rate: Optional[float] = 2.0) -> None:
         """
@@ -545,64 +593,117 @@ class ControllerAgent(OEFAgent):
         :return: None
         """
         logger.debug("Started job to check for inactivity of {} seconds. Checking rate: {}"
-                     .format(self._inactivity_timeout.total_seconds(), rate))
+                     .format(self.game_handler.tac_parameters.inactivity_timedelta.total_seconds(), rate))
         while True:
-            if self._terminated is True:
+            if self._is_running is False:
                 return
             time.sleep(rate)
             current_time = datetime.datetime.now()
-            inactivity_duration = current_time - self._last_activity
-            if inactivity_duration > self._inactivity_timeout:
+            inactivity_duration = current_time - self.last_activity
+            if inactivity_duration > self.game_handler.tac_parameters.inactivity_timedelta:
                 logger.debug("[{}]: Inactivity timeout expired. Terminating...".format(self.public_key))
                 self.terminate()
                 return
-            elif current_time > self._end_time:
+            elif current_time > self.game_handler.tac_parameters.end_time:
                 logger.debug("[{}]: Competition timeout expired. Terminating...".format(self.public_key))
                 self.terminate()
                 return
 
-    def _update_last_activity(self):
-        self._last_activity = datetime.datetime.now()
+    def update_last_activity(self):
+        self.last_activity = datetime.datetime.now()
 
-    def run_controller(self) -> None:
-        logger.debug("Running TAC controller agent...")
+    def start_competition(self, tac_parameters: TACParameters):
+        """
+        Start a Trading Agent Competition.
+        :param tac_parameters: the parameter of the competition.
+        :return:
+        """
+        logger.debug("[{}]: Starting competition with parameters: {}"
+                     .format(self.public_key, pprint.pformat(tac_parameters.__dict__)))
+        self._is_running = True
         self._message_processing_task = Thread(target=self.run)
         self._message_processing_task.start()
-        self._message_processing_task.join()
+
+        self.game_handler = GameHandler(self, tac_parameters)
+        self.game_handler.handle_registration_phase()
+
+    def wait_and_start_competition(self, tac_parameters: TACParameters, rate: float = 0.5) -> None:
+        """
+        Wait until the current time is greater than the start time.
+        Then, start the TAC.
+        :param tac_parameters: the parameters for TAC.
+        :param rate: at which rate the start time should be checked.
+        :return: None
+        """
+        now = datetime.datetime.now()
+        logger.debug("[{}]: waiting for starting the competition: start_time={}, current_time={}, timedelta ={}s"
+                     .format(self.public_key, str(tac_parameters.start_time), str(now),
+                             (tac_parameters.start_time - now).total_seconds()))
+
+        while now < tac_parameters.start_time:
+            time.sleep(rate)
+            now = datetime.datetime.now()
+
+        self.start_competition(tac_parameters)
+
+
+def _parse_arguments():
+    parser = argparse.ArgumentParser("controller", description="Launch the controller agent.")
+    parser.add_argument("--public-key", default="controller", help="Public key of the agent.")
+    parser.add_argument("--nb-agents", default=5, type=int, help="Number of goods")
+    parser.add_argument("--nb-goods", default=5, type=int, help="Number of goods")
+    parser.add_argument("--money-endowment", type=int, default=200, help="Initial amount of money.")
+    parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
+    parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
+    parser.add_argument("--base-good-endowment", default=2, type=int, help="The base amount of per good instances every agent receives.")
+    parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
+    parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
+    parser.add_argument("--tx-fee", default=1, type=int, help="Number of goods")
+    parser.add_argument("--start-time", default=str(datetime.datetime.now() + datetime.timedelta(0, 10)), type=str, help="The start time for the competition (in UTC format).")
+    parser.add_argument("--registration-timeout", default=10, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
+    parser.add_argument("--inactivity-timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
+    parser.add_argument("--competition-timeout", default=240, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
+    parser.add_argument("--verbose", default=False, action="store_true", help="Log debug messages.")
+    parser.add_argument("--gui", action="store_true", help="Show the GUI.")
+    return parser.parse_args()
 
 
 def main():
-    args = parse_arguments()
+    agent = None
+    arguments = _parse_arguments()
 
-    if args.verbose:
+    if arguments.verbose:
         logger.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
 
     try:
-        agent = ControllerAgent(public_key=args.public_key,
-                                oef_addr=args.oef_addr,
-                                oef_port=args.oef_port,
-                                min_nb_agents=args.nb_agents,
-                                nb_goods=args.nb_goods,
-                                tx_fee=args.tx_fee,
-                                money_endowment=args.money_endowment,
-                                base_good_endowment=args.base_good_endowment,
-                                lower_bound_factor=args.lower_bound_factor,
-                                upper_bound_factor=args.upper_bound_factor,
-                                version=args.version,
-                                start_time=args.start_time,
-                                end_time=args.end_time,
-                                inactivity_timeout=args.inactivity_timeout,
-                                gui=args.gui)
+
+        agent = ControllerAgent(public_key=arguments.public_key,
+                                oef_addr=arguments.oef_addr,
+                                oef_port=arguments.oef_port)
+
+        tac_parameters = TACParameters(
+            min_nb_agents=arguments.nb_agents,
+            money_endowment=arguments.money_endowment,
+            nb_goods=arguments.nb_goods,
+            tx_fee=arguments.tx_fee,
+            base_good_endowment=arguments.base_good_endowment,
+            lower_bound_factor=arguments.lower_bound_factor,
+            upper_bound_factor=arguments.upper_bound_factor,
+            start_time=dateutil.parser.parse(arguments.start_time),
+            registration_timeout=arguments.registration_timeout,
+            competition_timeout=arguments.competition_timeout,
+            inactivity_timeout=arguments.inactivity_timeout,
+        )
 
         agent.connect()
         agent.register()
-
-        agent.run_controller()
+        agent.wait_and_start_competition(tac_parameters)
 
     finally:
-        agent.terminate()
+        if agent is not None:
+            agent.terminate()
 
 
 if __name__ == '__main__':
