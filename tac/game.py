@@ -793,7 +793,7 @@ class WorldState:
         Update the good price model based on a transaction.
         """
         good_pbks = []
-        for good_pbk, quantity in transaction.quantities_by_good_pbk:
+        for good_pbk, quantity in transaction.quantities_by_good_pbk.items():
             if quantity > 0:
                 good_pbks += [good_pbk] * quantity
         price = transaction.amount
@@ -840,16 +840,17 @@ class WorldState:
         expected_utility_params = utility_params
         return expected_utility_params
 
-    def expected_price(self, good_pbk: str, constraint: float, is_seller: bool) -> float:
+    def expected_price(self, good_pbk: str, marginal_utility: float, is_seller: bool, share_of_tx_fee: float) -> float:
         """
         Expectation of the price for the good given a constraint.
 
         :param good_pbk: the pbk of the good
-        :param constraint: the price constraint
+        :param marginal_utility: the marginal_utility from the good
         :param is_seller: whether the agent is a seller or buyer
+        :param share_of_tx_fee: the share of the tx fee the agent pays
         :return: the expected price
         """
-        constraint = round(constraint, 1)
+        constraint = round(marginal_utility + share_of_tx_fee, 1) if is_seller else round(marginal_utility - share_of_tx_fee, 1)
         good_price_model = self.good_price_models[good_pbk]
         expected_price = good_price_model.get_price_expectation(constraint, is_seller)
         return expected_price

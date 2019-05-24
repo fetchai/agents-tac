@@ -851,10 +851,10 @@ class BaselineStrategy:
             marginal_utility_from_single_good = marginal_utility(utility_params, current_holdings, delta_holdings) * switch
             share_of_tx_fee = round(tx_fee / 2.0, 2)
             if is_world_modeling:
-                desc.values["price"] = world_state.expected_price(good_pbk, round(marginal_utility_from_single_good, 2), is_seller) - share_of_tx_fee
+                desc.values["price"] = world_state.expected_price(good_pbk, round(marginal_utility_from_single_good, 2), is_seller, share_of_tx_fee)
             else:
                 if is_seller:
-                    desc.values["price"] = round(marginal_utility_from_single_good, 2) - share_of_tx_fee + rounding_adjustment
+                    desc.values["price"] = round(marginal_utility_from_single_good, 2) + share_of_tx_fee + rounding_adjustment
                 else:
                     desc.values["price"] = round(marginal_utility_from_single_good, 2) - share_of_tx_fee - rounding_adjustment
             proposals.append(desc)
