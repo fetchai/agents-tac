@@ -462,9 +462,9 @@ class Game:
         (20, [1, 1, 2])
         >>> game.settle_transaction(GameTransaction('tac_agent_0', 'tac_agent_1', 15, {'tac_good_0': 1, 'tac_good_1': 0, 'tac_good_2': 0}))
         >>> agent_state_0.balance, agent_state_0.current_holdings
-        (4.0, [2, 1, 1])
+        (4.5, [2, 1, 1])
         >>> agent_state_1.balance, agent_state_1.current_holdings
-        (34.0, [1, 1, 1])
+        (34.5, [1, 1, 1])
 
         :param tx: the game transaction.
         :return: None
