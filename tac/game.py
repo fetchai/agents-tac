@@ -782,31 +782,30 @@ class WorldState:
         """
         pass
 
-    def update_on_decline(self, proposal):
+    def update_on_decline(self, transaction: Transaction):
         """
-        Update the world state when a proposal is rejected.
+        Update the world state when a transaction is rejected.
         """
-        self._from_proposals_update_price(proposal, is_accepted=False)
+        self._from_transaction_update_price(transaction, is_accepted=False)
 
-    def _from_proposals_update_price(self, proposal, is_accepted: bool):
+    def _from_transaction_update_price(self, transaction: Transaction, is_accepted: bool):
         """
-        Update the good price model based on proposal.
+        Update the good price model based on a transaction.
         """
         good_pbks = []
-        for key, value in proposal.items():
-            if key == "price":
-                price = value
-            elif value > 0:
-                good_pbks.append(key)
+        for good_pbk, quantity in transaction.quantities_by_good_pbk:
+            if quantity > 0:
+                good_pbks += [good_pbk] * quantity
+        price = transaction.amount
         price = price / len(good_pbks)
         for good_pbk in good_pbks:
             self._update_price(good_pbk, price, is_accepted=is_accepted)
 
-    def update_on_accept(self, proposal):
+    def update_on_accept(self, transaction: Transaction):
         """
         Update the world state when a proposal is accepted.
         """
-        self._from_proposals_update_price(proposal, is_accepted=True)
+        self._from_transaction_update_price(transaction, is_accepted=True)
 
     def _expected_initial_money_amount(self, initial_money_amount: float) -> float:
         """
@@ -862,6 +861,7 @@ class WorldState:
         :param is_accepted: boolean indicating the outcome
         :return: None
         """
+        price = round(price, 1)
         good_price_model = self.good_price_models[good_pbk]
         good_price_model.update(is_accepted, price)
 

@@ -67,8 +67,8 @@ class BaselineAgent(NegotiationAgent):
     to their marginal utility and buying goods at a price plus fee equal or below their marginal utility.
     """
 
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, register_as: str = 'both', search_for: str = 'both', **kwargs):
-        super().__init__(public_key, oef_addr, oef_port, **kwargs)
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, register_as: str = 'both', search_for: str = 'both', is_world_modeling: bool = False, **kwargs):
+        super().__init__(public_key, oef_addr, oef_port, is_world_modeling, **kwargs)
         self._register_as = register_as
         self._search_for = search_for
 
@@ -466,7 +466,7 @@ class BaselineAgent(NegotiationAgent):
 
         if self.is_world_modeling:
             transaction = self._recover_pending_proposal(dialogue_id, origin, target)
-            self._world_state.update_on_accept(transaction)
+            self._world_state.update_on_decline(transaction)
 
         is_seller = self._is_seller(dialogue_id, origin)
         transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id, is_seller)
