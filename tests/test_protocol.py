@@ -10,8 +10,8 @@ class TestRequest:
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
-            expected_msg = Register()
-            actual_msg = Request.from_pb(expected_msg.serialize())
+            expected_msg = Register("public_key")
+            actual_msg = Request.from_pb(expected_msg.serialize(), "public_key")
 
             assert expected_msg == actual_msg
 
@@ -19,8 +19,8 @@ class TestRequest:
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
-            expected_msg = Unregister()
-            actual_msg = Request.from_pb(expected_msg.serialize())
+            expected_msg = Unregister("public_key")
+            actual_msg = Request.from_pb(expected_msg.serialize(), "public_key")
 
             assert expected_msg == actual_msg
 
@@ -28,8 +28,9 @@ class TestRequest:
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
-            expected_msg = Transaction("transaction_id", True, "seller", 10, {'tac_good_0': 1, 'tac_good_1': 1})
-            actual_msg = Request.from_pb(expected_msg.serialize())
+            expected_msg = Transaction("transaction_id", True, "seller", 10, {'tac_good_0': 1, 'tac_good_1': 1},
+                                       "public_key")
+            actual_msg = Request.from_pb(expected_msg.serialize(), "public_key")
 
             assert expected_msg == actual_msg
 
@@ -40,8 +41,8 @@ class TestResponse:
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
-            expected_msg = Registered()
-            actual_msg = Response.from_pb(expected_msg.serialize())
+            expected_msg = Registered("public_key")
+            actual_msg = Response.from_pb(expected_msg.serialize(), "public_key")
 
             assert expected_msg == actual_msg
 
@@ -49,8 +50,8 @@ class TestResponse:
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
-            expected_msg = Unregistered()
-            actual_msg = Response.from_pb(expected_msg.serialize())
+            expected_msg = Unregistered("public_key")
+            actual_msg = Response.from_pb(expected_msg.serialize(), "public_key")
 
             assert expected_msg == actual_msg
 
@@ -58,8 +59,8 @@ class TestResponse:
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
-            expected_msg = Cancelled()
-            actual_msg = Response.from_pb(expected_msg.serialize())
+            expected_msg = Cancelled("public_key")
+            actual_msg = Response.from_pb(expected_msg.serialize(), "public_key")
 
             assert expected_msg == actual_msg
 
@@ -68,8 +69,8 @@ class TestResponse:
         @pytest.mark.parametrize("error_code", list(ErrorCode))
         def test_serialization_deserialization(self, error_code):
             """Test that serialization and deserialization gives the same result."""
-            expected_msg = Error(error_code, "this is an error message.")
-            actual_msg = Response.from_pb(expected_msg.serialize())
+            expected_msg = Error("public_key", error_code, "this is an error message.")
+            actual_msg = Response.from_pb(expected_msg.serialize(), "public_key")
 
             assert expected_msg == actual_msg
 
@@ -77,8 +78,8 @@ class TestResponse:
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
-            expected_msg = GameData(10, [1, 1, 2], [0.04, 0.80, 0.16], 3, 3, 1.0, ['tac_agent_0', 'tac_agent_1', 'tac_agent_2'], ['tag_good_0', 'tag_good_1', 'tag_good_2'])
-            actual_msg = Response.from_pb(expected_msg.serialize())
+            expected_msg = GameData("public_key", 10, [1, 1, 2], [0.04, 0.80, 0.16], 3, 3, 1.0, ['tac_agent_0', 'tac_agent_1', 'tac_agent_2'], ['tag_good_0', 'tag_good_1', 'tag_good_2'])
+            actual_msg = Response.from_pb(expected_msg.serialize(), "public_key")
 
             assert expected_msg == actual_msg
 
@@ -86,7 +87,7 @@ class TestResponse:
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
-            expected_msg = TransactionConfirmation("transaction_id")
-            actual_msg = Response.from_pb(expected_msg.serialize())
+            expected_msg = TransactionConfirmation("public_key", "transaction_id")
+            actual_msg = Response.from_pb(expected_msg.serialize(), "public_key")
 
             assert expected_msg == actual_msg

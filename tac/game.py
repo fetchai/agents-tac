@@ -342,7 +342,7 @@ class Game:
     @staticmethod
     def generate_game(nb_agents: int,
                       nb_goods: int,
-                      tx_fee: int,
+                      tx_fee: float,
                       money_endowment: int,
                       base_good_endowment: int,
                       lower_bound_factor: int,
@@ -353,8 +353,8 @@ class Game:
         Generate a game, the endowments and the utilites.
         :param nb_agents: the number of agents.
         :param nb_goods: the number of goods.
-        :param money_endowment: the initial amount of money for every agent.
         :param tx_fee: the fee to pay per transaction.
+        :param money_endowment: the initial amount of money for every agent.
         :param base_good_endowment: the base amount of instances per good.
         :param lower_bound_factor: the lower bound of a uniform distribution.
         :param upper_bound_factor: the upper bound of a uniform distribution
@@ -876,6 +876,25 @@ class GameTransaction:
             "quantities_by_good_pbk": self.quantities_by_good_pbk,
             "timestamp": str(self.timestamp)
         }
+
+    @classmethod
+    def from_request_to_game_tx(self, transaction: Transaction) -> 'GameTransaction':
+        """
+        From a transaction request message to a game transaction
+        :param transaction: the request message for a transaction.
+        :return: the game transaction.
+        """
+        sender_pbk = transaction.sender
+        receiver_pbk = transaction.counterparty
+        buyer_pbk, seller_pbk = (sender_pbk, receiver_pbk) if transaction.buyer else (receiver_pbk, sender_pbk)
+
+        tx = GameTransaction(
+            buyer_pbk,
+            seller_pbk,
+            transaction.amount,
+            transaction.quantities_by_good_pbk
+        )
+        return tx
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> 'GameTransaction':
