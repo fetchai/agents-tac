@@ -129,7 +129,7 @@ def _make_id(agent_id: int, is_world_modeling: bool, nb_agents: int) -> str:
     'agent_002'
 
     :param agent_id: the agent id.
-    :param is_world_modeling: th
+    :param is_world_modeling: the boolean indicated whether the baseline agent models the world around her or not.
     :param nb_agents: the overall number of agents.
     :return: the formatted name.
     :return: the string associated to the integer id.

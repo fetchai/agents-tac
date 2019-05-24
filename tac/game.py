@@ -840,16 +840,17 @@ class WorldState:
         expected_utility_params = utility_params
         return expected_utility_params
 
-    def expected_price(self, good_pbk: str, constraint: float = 0.0) -> float:
+    def expected_price(self, good_pbk: str, constraint: float = 0.0, is_seller: bool) -> float:
         """
         Expectation of the endowments of other agents.
 
         :param good_pbk: the pbk of the good
-        :param constraint: the minimum price
+        :param constraint: the price constraint
+        :param is_seller: whether the agent is a seller or buyer
         :return: the expected price
         """
         good_price_model = self.good_price_models[good_pbk]
-        expected_price = good_price_model.get_price_expectation(constraint)
+        expected_price = good_price_model.get_price_expectation(constraint, is_seller)
         return expected_price
 
     def _update_price(self, good_pbk: str, price: float, is_accepted: bool) -> None:

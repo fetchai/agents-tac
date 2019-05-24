@@ -73,17 +73,18 @@ class GoodPriceModel(object):
         bandit = self.price_bandits[price]
         bandit.update(outcome)
 
-    def get_price_expectation(self, constraint: float = 0.0) -> float:
+    def get_price_expectation(self, constraint: float, is_seller: bool) -> float:
         """
         Get best price (given a constraint)
 
-        :param constraint: the minimum price
+        :param constraint: the constraint on the price
+        :param is_seller: indicating whether the agent is a buyer or seller
         :return: the winning price
         """
         maxsample = -1
         winning_price = 20.0
         for price, bandit in self.price_bandits.items():
-            if price <= constraint: continue
+            if (is_seller and price <= constraint) or (not is_seller and price >= constraint): continue
             sample = bandit.sample()
             if sample > maxsample:
                 maxsample = sample
