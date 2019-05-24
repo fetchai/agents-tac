@@ -69,4 +69,3 @@ class VisdomMonitor(Monitor):
             raise Exception("The dashboard not running.")
         self.dashboard.stop()
         self.dashboard = None
-

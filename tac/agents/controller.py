@@ -35,7 +35,7 @@ import os
 import pprint
 import time
 from abc import ABC, abstractmethod
-from threading import Thread, Timer
+from threading import Thread
 from typing import Dict, Type
 from typing import Optional, Set
 
