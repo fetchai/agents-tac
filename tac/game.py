@@ -40,6 +40,7 @@ from typing import List, Dict, Any, Optional
 from tac.helpers.misc import generate_money_endowments, generate_good_endowments, generate_utility_params, from_iso_format, \
     logarithmic_utility, generate_equilibrium_prices_and_holdings, determine_scaling_factor
 from tac.protocol import Transaction
+from tac.helpers.price_model import GoodPriceModel
 
 Endowment = List[int]  # an element e_j is the endowment of good j.
 UtilityParams = List[float]  # an element u_j is the utility value of good j.
@@ -398,7 +399,8 @@ class Game:
         """
 
         # check if the buyer has enough balance to pay the transaction.
-        if self.agent_states[tx.buyer_pbk].balance < tx.amount + self.configuration.tx_fee:
+        share_of_tx_fee = round(self.configuration.tx_fee / 2.0, 2)
+        if self.agent_states[tx.buyer_pbk].balance < tx.amount + share_of_tx_fee:
             return False
 
         # check if we have enough instances of goods, for every good involved in the transaction.
@@ -460,9 +462,9 @@ class Game:
         (20, [1, 1, 2])
         >>> game.settle_transaction(GameTransaction('tac_agent_0', 'tac_agent_1', 15, {'tac_good_0': 1, 'tac_good_1': 0, 'tac_good_2': 0}))
         >>> agent_state_0.balance, agent_state_0.current_holdings
-        (4.0, [2, 1, 1])
+        (4.5, [2, 1, 1])
         >>> agent_state_1.balance, agent_state_1.current_holdings
-        (35, [1, 1, 1])
+        (34.5, [1, 1, 1])
 
         :param tx: the game transaction.
         :return: None
@@ -485,9 +487,10 @@ class Game:
                 good_state = self.good_states[good_pbk]
                 good_state.price = price
 
-        # update balances and charge fee to buyer
-        buyer_state.balance -= tx.amount + self.configuration.tx_fee
-        seller_state.balance += tx.amount
+        share_of_tx_fee = round(self.configuration.tx_fee / 2.0, 2)
+        # update balances and charge share of fee to buyer and seller
+        buyer_state.balance -= tx.amount + share_of_tx_fee
+        seller_state.balance += tx.amount - share_of_tx_fee
 
     def get_holdings_matrix(self) -> List[Endowment]:
         """
@@ -658,9 +661,10 @@ class AgentState:
         :return: True if the transaction is legal wrt the current state, false otherwise.
         """
 
+        share_of_tx_fee = round(tx_fee / 2.0, 2)
         if tx.buyer:
             # check if we have the money.
-            result = self.balance >= tx.amount + tx_fee
+            result = self.balance >= tx.amount + share_of_tx_fee
         else:
             # check if we have the goods.
             result = True
@@ -688,11 +692,13 @@ class AgentState:
         :param tx: the transaction request message.
         :return: None
         """
+        share_of_tx_fee = round(tx_fee / 2.0, 2)
         if tx.buyer:
-            fees = tx.amount + tx_fee
-            self.balance -= fees
+            diff = tx.amount + share_of_tx_fee
+            self.balance -= diff
         else:
-            self.balance += tx.amount
+            diff = tx.amount - share_of_tx_fee
+            self.balance += diff
 
         for good_id, quantity in enumerate(tx.quantities_by_good_pbk.values()):
             quantity_delta = quantity if tx.buyer else -quantity
@@ -759,11 +765,9 @@ class WorldState:
                 ))
             for agent_pbk in opponent_pbks)  # type: Dict[str, AgentState]
 
-        self.good_states = dict(
+        self.good_price_models = dict(
             (good_pbk,
-                GoodState(
-                    self._expected_price(good_pbk)
-                ))
+                GoodPriceModel())
             for good_pbk in good_pbks)
 
     def update_on_cfp(self, query):
@@ -778,17 +782,30 @@ class WorldState:
         """
         pass
 
-    def update_on_decline(self, proposal):
+    def update_on_decline(self, transaction: Transaction):
         """
-        Update the world state when a proposal is rejected.
+        Update the world state when a transaction is rejected.
         """
-        pass
+        self._from_transaction_update_price(transaction, is_accepted=False)
 
-    def update_on_accept(self, proposal):
+    def _from_transaction_update_price(self, transaction: Transaction, is_accepted: bool):
+        """
+        Update the good price model based on a transaction.
+        """
+        good_pbks = []
+        for good_pbk, quantity in transaction.quantities_by_good_pbk.items():
+            if quantity > 0:
+                good_pbks += [good_pbk] * quantity
+        price = transaction.amount
+        price = price / len(good_pbks)
+        for good_pbk in list(set(good_pbks)):
+            self._update_price(good_pbk, price, is_accepted=is_accepted)
+
+    def update_on_accept(self, transaction: Transaction):
         """
         Update the world state when a proposal is accepted.
         """
-        pass
+        self._from_transaction_update_price(transaction, is_accepted=True)
 
     def _expected_initial_money_amount(self, initial_money_amount: float) -> float:
         """
@@ -823,15 +840,33 @@ class WorldState:
         expected_utility_params = utility_params
         return expected_utility_params
 
-    def _expected_price(self, good_pbk: str) -> float:
+    def expected_price(self, good_pbk: str, marginal_utility: float, is_seller: bool, share_of_tx_fee: float) -> float:
         """
-        Expectation of the endowments of other agents.
+        Expectation of the price for the good given a constraint.
 
-        :param good_pbk:
+        :param good_pbk: the pbk of the good
+        :param marginal_utility: the marginal_utility from the good
+        :param is_seller: whether the agent is a seller or buyer
+        :param share_of_tx_fee: the share of the tx fee the agent pays
+        :return: the expected price
         """
-        # Naiive expectation
-        expected_price = 0
+        constraint = round(marginal_utility + share_of_tx_fee, 1) if is_seller else round(marginal_utility - share_of_tx_fee, 1)
+        good_price_model = self.good_price_models[good_pbk]
+        expected_price = good_price_model.get_price_expectation(constraint, is_seller)
         return expected_price
+
+    def _update_price(self, good_pbk: str, price: float, is_accepted: bool) -> None:
+        """
+        Updates the price for the good based on an outcome
+
+        :param good_pbk: the pbk of the good
+        :param price: the price to which the outcome relates
+        :param is_accepted: boolean indicating the outcome
+        :return: None
+        """
+        price = round(price, 1)
+        good_price_model = self.good_price_models[good_pbk]
+        good_price_model.update(is_accepted, price)
 
 
 class GameTransaction:

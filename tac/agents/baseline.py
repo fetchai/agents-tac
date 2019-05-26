@@ -32,6 +32,7 @@ from oef.query import Query
 from oef.schema import Description
 
 from tac.core import NegotiationAgent
+from tac.game import WorldState
 from tac.helpers.misc import generate_transaction_id, build_query, get_goods_quantities_description, \
     TAC_SUPPLY_DATAMODEL_NAME, marginal_utility
 from tac.protocol import Transaction, TransactionConfirmation, Error, ErrorCode
@@ -66,8 +67,8 @@ class BaselineAgent(NegotiationAgent):
     to their marginal utility and buying goods at a price plus fee equal or below their marginal utility.
     """
 
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, register_as: str = 'both', search_for: str = 'both', **kwargs):
-        super().__init__(public_key, oef_addr, oef_port, **kwargs)
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, register_as: str = 'both', search_for: str = 'both', is_world_modeling: bool = False, **kwargs):
+        super().__init__(public_key, oef_addr, oef_port, is_world_modeling, **kwargs)
         self._register_as = register_as
         self._search_for = search_for
 
@@ -463,6 +464,10 @@ class BaselineAgent(NegotiationAgent):
         logger.debug("[{}]: on_decline: msg_id={}, dialogue_id={}, origin={}, target={}"
                      .format(self.public_key, msg_id, dialogue_id, origin, target))
 
+        if self.is_world_modeling:
+            transaction = self._recover_pending_proposal(dialogue_id, origin, target)
+            self._world_state.update_on_decline(transaction)
+
         is_seller = self._is_seller(dialogue_id, origin)
         transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id, is_seller)
         self._remove_lock(transaction_id)
@@ -521,6 +526,8 @@ class BaselineAgent(NegotiationAgent):
         role = 'seller' if is_seller else 'buyer'
         transaction = self._recover_pending_proposal(dialogue_id, origin, target)
         if self._is_profitable_transaction(transaction, is_seller):
+            if self.is_world_modeling:
+                self._world_state.update_on_accept(transaction)
             logger.debug("[{}]: Locking the current state (as {}).".format(self.public_key, role))
             self._lock_state(transaction, is_seller)
             self.submit_transaction_to_controller(transaction)
@@ -769,7 +776,7 @@ class BaselineAgent(NegotiationAgent):
         :return: a list of descriptions
         """
         state_after_locks = self._state_after_locks(is_seller=is_seller)
-        candidate_proposals = BaselineStrategy.get_proposals(self.game_configuration.good_pbks, state_after_locks.current_holdings, state_after_locks.utility_params, self.game_configuration.tx_fee, is_seller)
+        candidate_proposals = BaselineStrategy.get_proposals(self.game_configuration.good_pbks, state_after_locks.current_holdings, state_after_locks.utility_params, self.game_configuration.tx_fee, is_seller, self.is_world_modeling, self._world_state)
         proposals = []
         for proposal in candidate_proposals:
             if not query.check(proposal): continue
@@ -818,7 +825,7 @@ class BaselineStrategy:
         """
         return {good_pbk for good_pbk, quantity in zip(good_pbks, current_holdings)}
 
-    def get_proposals(good_pbks: List[str], current_holdings: List[int], utility_params: List[int], tx_fee: float, is_seller: bool) -> List[Description]:
+    def get_proposals(good_pbks: List[str], current_holdings: List[int], utility_params: List[int], tx_fee: float, is_seller: bool, is_world_modeling: bool, world_state: WorldState) -> List[Description]:
         """
         Generates proposals from the seller/buyer.
 
@@ -834,7 +841,7 @@ class BaselineStrategy:
         proposals = []
         zeroslist = [0] * len(quantities)
         rounding_adjustment = 0.01
-        for good_id in range(len(quantities)):
+        for good_id, good_pbk in zip(range(len(quantities)), good_pbks):
             if is_seller and quantities[good_id] == 0: continue
             lis = copy.deepcopy(zeroslist)
             lis[good_id] = 1
@@ -842,10 +849,14 @@ class BaselineStrategy:
             delta_holdings = [i * -1 for i in lis] if is_seller else lis
             switch = -1 if is_seller else 1
             marginal_utility_from_single_good = marginal_utility(utility_params, current_holdings, delta_holdings) * switch
-            if is_seller:
-                desc.values["price"] = round(marginal_utility_from_single_good, 2) + rounding_adjustment
+            share_of_tx_fee = round(tx_fee / 2.0, 2)
+            if is_world_modeling:
+                desc.values["price"] = world_state.expected_price(good_pbk, round(marginal_utility_from_single_good, 2), is_seller, share_of_tx_fee)
             else:
-                desc.values["price"] = round(marginal_utility_from_single_good, 2) - tx_fee - rounding_adjustment
+                if is_seller:
+                    desc.values["price"] = round(marginal_utility_from_single_good, 2) + share_of_tx_fee + rounding_adjustment
+                else:
+                    desc.values["price"] = round(marginal_utility_from_single_good, 2) - share_of_tx_fee - rounding_adjustment
             proposals.append(desc)
         return proposals
 

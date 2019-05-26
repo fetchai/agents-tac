@@ -13,8 +13,9 @@ This repository contains submodules. Clone with recursive strategy:
 - `docker-images`: submodule to the [docker-images](https://github.com/uvue-git/docker-images.git)
 - `docker-tac-develop`: Docker image for the development of TAC related stuff.  
 - `docs`: the docs for this project.
-- `examples`: some examples/demos showing the usage of this package.
-- `oef-core` and `oef-sdk-python`: submodules associated with the project.
+- `examples`: some examples/demos showing the usage of this package (including simulation of the TAC).
+- `notebooks`: contains jupyter notebooks with exploratory code.
+- `proto`: contains the protobuf schema.
 - `sandbox`: setup for using Docker compose.
 - `scripts`: list of scripts for different purposes (e.g. do data analysis)
 - `tac`: the main folder containing the Python package.

@@ -114,7 +114,7 @@ def initialize_controller_agent(public_key: str,
     return tac_controller
 
 
-def _make_id(agent_id: int, nb_agents: int) -> str:
+def _make_id(agent_id: int, is_world_modeling: bool, nb_agents: int) -> str:
     """
     Make the public key for baseline agents from an integer identifier.
     E.g. from '0' to 'tac_agent_00'.
@@ -129,17 +129,21 @@ def _make_id(agent_id: int, nb_agents: int) -> str:
     'agent_002'
 
     :param agent_id: the agent id.
+    :param is_world_modeling: the boolean indicated whether the baseline agent models the world around her or not.
     :param nb_agents: the overall number of agents.
     :return: the formatted name.
     :return: the string associated to the integer id.
     """
     max_number_of_digits = math.ceil(math.log10(nb_agents))
-    string_format = "tac_agent_{:0" + str(max_number_of_digits) + "}"
+    if is_world_modeling:
+        string_format = "tac_agent_{:0" + str(max_number_of_digits) + "}_wm"
+    else:
+        string_format = "tac_agent_{:0" + str(max_number_of_digits) + "}"
     result = string_format.format(agent_id)
     return result
 
 
-def initialize_baseline_agent(agent_pbk: str, oef_addr: str, oef_port: int, register_as: str, search_for: str) -> BaselineAgent:
+def initialize_baseline_agent(agent_pbk: str, oef_addr: str, oef_port: int, register_as: str, search_for: str, is_world_modeling: bool) -> BaselineAgent:
     """
     Initialize one baseline agent.
     :param agent_pbk: the public key of the Baseline agent.
@@ -147,11 +151,12 @@ def initialize_baseline_agent(agent_pbk: str, oef_addr: str, oef_port: int, regi
     :param oef_port: TCP port of the OEF Node.
     :param register_as: the string indicates whether the baseline agent registers as seller, buyer or both on the oef.
     :param search_for: the string indicates whether the baseline agent searches for sellers, buyers or both on the oef.
+    :param is_world_modeling: the boolean indicated whether the baseline agent models the world around her or not.
     :return: the baseline agent.
     """
 
     # Notice: we create a new asyncio loop, so we can run it in an independent thread.
-    return BaselineAgent(agent_pbk, oef_addr, oef_port, loop=asyncio.new_event_loop(), register_as=register_as, search_for=search_for)
+    return BaselineAgent(agent_pbk, oef_addr, oef_port, loop=asyncio.new_event_loop(), register_as=register_as, search_for=search_for, is_world_modeling=is_world_modeling)
 
 
 def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port: int, register_as: str, search_for: str) -> List[BaselineAgent]:
@@ -163,7 +168,9 @@ def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port:
     :param register_as: the string indicates whether the baseline agent registers as seller, buyer or both on the oef.
     :param search_for: the string indicates whether the baseline agent searches for sellers, buyers or both on the oef.    :return: A list of baseline agents.
     """
-    baseline_agents = [initialize_baseline_agent(_make_id(i, nb_baseline_agents), oef_addr, oef_port, register_as, search_for)
+    fraction_world_modeling = 0.1
+    nb_baseline_agents_world_modeling = round(nb_baseline_agents * fraction_world_modeling)
+    baseline_agents = [initialize_baseline_agent(_make_id(i, i < nb_baseline_agents_world_modeling, nb_baseline_agents), oef_addr, oef_port, register_as, search_for, i < nb_baseline_agents_world_modeling)
                        for i in range(nb_baseline_agents)]
     return baseline_agents
 
