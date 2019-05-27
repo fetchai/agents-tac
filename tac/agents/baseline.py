@@ -37,7 +37,10 @@ from tac.helpers.misc import generate_transaction_id, build_query, get_goods_qua
     TAC_SUPPLY_DATAMODEL_NAME, marginal_utility
 from tac.protocol import Transaction, TransactionConfirmation, Error, ErrorCode
 
-logger = logging.getLogger(__name__)
+if __name__ != "__main__":
+    logger = logging.getLogger(__name__)
+else:
+    logger = logging.getLogger("tac.agents.baseline")
 
 
 def parse_arguments():

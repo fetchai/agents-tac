@@ -31,3 +31,4 @@ handler = logging.StreamHandler()
 formatter = logging.Formatter(_DEFAULT_LOG_FORMAT)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
+logger.propagate = False
