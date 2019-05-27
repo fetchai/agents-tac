@@ -61,6 +61,58 @@ DIALOGUE_LABEL = Tuple[str, int]  # (origin, dialogue_id)
 MESSAGE_ID = int
 
 
+class LockManager(object):
+    """Class to handle pending proposals/acceptances and locks."""
+
+    def __init__(self):
+        self.pending_tx_proposals = defaultdict(lambda: {})  # type: Dict[DIALOGUE_LABEL, Dict[MESSAGE_ID, Transaction]]
+        self.pending_tx_acceptances = defaultdict(lambda: {})  # type: Dict[DIALOGUE_LABEL, Dict[MESSAGE_ID, Transaction]]
+
+        self.locks = {}  # type: Dict[str, Transaction]
+        self.locks_as_buyer = {}  # type: Dict[str, Transaction]
+        self.locks_as_seller = {}  # type: Dict[str, Transaction]
+
+    def add_pending_proposal(self, dialogue_id: int, origin: str, proposal_id: int, transaction: Transaction):
+        dialogue_label = (origin, dialogue_id)
+        assert dialogue_label not in self.pending_tx_proposals and proposal_id not in self.pending_tx_proposals[dialogue_label]
+        self.pending_tx_proposals[dialogue_label][proposal_id] = transaction
+
+    def pop_pending_proposal(self, dialogue_id: int, origin: str, proposal_id: int) -> Transaction:
+        dialogue_label = (origin, dialogue_id)
+        assert dialogue_label in self.pending_tx_proposals
+        assert proposal_id in self.pending_tx_proposals[dialogue_label]
+        assert dialogue_label in self.pending_tx_proposals and proposal_id in self.pending_tx_proposals[dialogue_label]
+        transaction = self.pending_tx_proposals[dialogue_label].pop(proposal_id)
+        return transaction
+
+    def add_pending_acceptances(self, dialogue_id: int, origin: str, proposal_id: int, transaction: Transaction):
+        dialogue_label = (origin, dialogue_id)
+        assert dialogue_label not in self.pending_tx_acceptances and proposal_id not in self.pending_tx_acceptances[dialogue_label]
+        self.pending_tx_acceptances[dialogue_label][proposal_id] = transaction
+
+    def pop_pending_acceptances(self, dialogue_id: int, origin: str, proposal_id: int) -> Transaction:
+        dialogue_label = (origin, dialogue_id)
+        assert dialogue_label in self.pending_tx_acceptances and proposal_id in self.pending_tx_acceptances[dialogue_label]
+        transaction = self.pending_tx_acceptances[dialogue_label].pop(proposal_id)
+        return transaction
+
+    def add_lock(self, transaction: Transaction, as_buyer: bool):
+        transaction_id = transaction.transaction_id
+        assert transaction_id not in self.locks
+        self.locks[transaction_id] = transaction
+        if as_buyer:
+            self.locks_as_buyer[transaction_id] = transaction
+        else:
+            self.locks_as_seller[transaction_id] = transaction
+
+    def pop_lock(self, transaction_id: str):
+        assert transaction_id in self.locks
+        transaction = self.locks.pop(transaction_id)
+        self.locks_as_buyer.pop(transaction_id, None)
+        self.locks_as_seller.pop(transaction_id, None)
+        return transaction
+
+
 class BaselineAgent(NegotiationAgent):
     """
     The baseline agent simply tries to improve its utility by selling good bundles at a price equal
@@ -78,6 +130,8 @@ class BaselineAgent(NegotiationAgent):
         self._all_dialogues = set()  # type: Set[DIALOGUE_LABEL]
         self._dialogues_as_buyer = set()  # type: Set[DIALOGUE_LABEL]
         self._dialogues_as_seller = set()  # type: Set[DIALOGUE_LABEL]
+
+        self.lock_manager = LockManager()
 
         self._pending_tx_proposals = defaultdict(lambda: {})  # type: Dict[DIALOGUE_LABEL, Dict[MESSAGE_ID, Transaction]]
         self._pending_tx_acceptances = defaultdict(lambda: {})  # type: Dict[DIALOGUE_LABEL, Dict[MESSAGE_ID, Transaction]]
@@ -358,7 +412,8 @@ class BaselineAgent(NegotiationAgent):
                                                     is_buyer=not is_seller,
                                                     counterparty=origin,
                                                     sender=self.public_key)
-            self._pending_tx_proposals[dialogue_label][proposal_id] = transaction
+            # self._pending_tx_proposals[dialogue_label][proposal_id] = transaction
+            self.lock_manager.add_pending_proposal(dialogue_id, origin, proposal_id, transaction)
 
     def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES) -> None:
         """
@@ -442,11 +497,13 @@ class BaselineAgent(NegotiationAgent):
                                                 sender=self.public_key)
 
         logger.debug("[{}]: Locking the current state (as {}).".format(self.public_key, role))
-        self._lock_state(transaction, is_seller)
+        # self._lock_state(transaction, is_seller)
+        self.lock_manager.add_lock(transaction, as_buyer=not is_seller)
 
         # add to pending acceptances
         new_msg_id = msg_id + 1
-        self._pending_tx_acceptances[dialogue_label][new_msg_id] = transaction
+        # self._pending_tx_acceptances[dialogue_label][new_msg_id] = transaction
+        self.lock_manager.add_pending_acceptances(dialogue_id, origin, new_msg_id, transaction)
 
         self.send_accept(new_msg_id, dialogue_id, origin, msg_id)
 
@@ -465,12 +522,13 @@ class BaselineAgent(NegotiationAgent):
                      .format(self.public_key, msg_id, dialogue_id, origin, target))
 
         if self.is_world_modeling:
-            transaction = self._recover_pending_proposal(dialogue_id, origin, target)
+            transaction = self.lock_manager.pop_pending_proposal(dialogue_id, origin, target)
             self._world_state.update_on_decline(transaction)
 
         is_seller = self._is_seller(dialogue_id, origin)
         transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id, is_seller)
-        self._remove_lock(transaction_id)
+        if transaction_id in self.lock_manager.locks:
+            self.lock_manager.pop_lock(transaction_id)
 
         self._delete_dialogue_id(origin, dialogue_id)
 
@@ -492,7 +550,8 @@ class BaselineAgent(NegotiationAgent):
 
         dialogue_label = (origin, dialogue_id)  # type: DIALOGUE_LABEL
         acceptance_id = target
-        if dialogue_label in self._pending_tx_acceptances and acceptance_id in self._pending_tx_acceptances[dialogue_label]:
+        if dialogue_label in self.lock_manager.pending_tx_acceptances \
+                and acceptance_id in self.lock_manager.pending_tx_acceptances[dialogue_label]:
             self._on_match_accept(msg_id, dialogue_id, origin, target)
         else:
             self._on_accept(msg_id, dialogue_id, origin, target)
@@ -524,32 +583,17 @@ class BaselineAgent(NegotiationAgent):
         :return: None
         """
         role = 'seller' if is_seller else 'buyer'
-        transaction = self._recover_pending_proposal(dialogue_id, origin, target)
+        transaction = self.lock_manager.pop_pending_proposal(dialogue_id, origin, target)
         if self._is_profitable_transaction(transaction, is_seller):
             if self.is_world_modeling:
                 self._world_state.update_on_accept(transaction)
             logger.debug("[{}]: Locking the current state (as {}).".format(self.public_key, role))
-            self._lock_state(transaction, is_seller)
+            self.lock_manager.add_lock(transaction, as_buyer=not is_seller)
             self.submit_transaction_to_controller(transaction)
             self.send_accept(msg_id + 1, dialogue_id, origin, msg_id)
         else:
             logger.debug("[{}]: Decline the accept (as {}).".format(self.public_key, role))
             self.send_decline(msg_id + 1, dialogue_id, origin, msg_id)
-
-    def _recover_pending_proposal(self, dialogue_id: int, origin: str, proposal_id: int) -> Transaction:
-        """
-        Recovers pending transaction proposal.
-
-        :param dialogue_id: the dialogue id
-        :param origin: the public key of the message sender.
-        :param proposal_id: the proposal id
-
-        :return: Transaction
-        """
-        dialogue_label = (origin, dialogue_id)
-        assert dialogue_label in self._pending_tx_proposals and proposal_id in self._pending_tx_proposals[dialogue_label]
-        transaction = self._pending_tx_proposals[dialogue_label].pop(proposal_id)
-        return transaction
 
     def _on_match_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int):
         """
@@ -565,24 +609,8 @@ class BaselineAgent(NegotiationAgent):
         # TODO implement at SDK level and proper error handling
         logger.debug("[{}]: on match accept".format(self.public_key))
 
-        transaction = self._recover_pending_acceptance(dialogue_id, origin, target)
+        transaction = self.lock_manager.pop_pending_acceptances(dialogue_id, origin, target)
         self.submit_transaction_to_controller(transaction)
-
-    def _recover_pending_acceptance(self, dialogue_id: int, origin: str, target: int) -> Transaction:
-        """
-        Recovers pending transaction acceptance.
-
-        :param dialogue_id: the dialogue id
-        :param origin: the public key of the message sender.
-        :param target: the targeted message id to which this message is a response.
-
-        :return: Transaction
-        """
-        acceptance_id = target
-        dialogue_label = (origin, dialogue_id)
-        assert dialogue_label in self._pending_tx_acceptances and acceptance_id in self._pending_tx_acceptances[dialogue_label]
-        transaction = self._pending_tx_acceptances[dialogue_label].pop(acceptance_id)
-        return transaction
 
     def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
         """
@@ -593,9 +621,8 @@ class BaselineAgent(NegotiationAgent):
         :return: None
         """
         logger.debug("[{}]: on transaction confirmed.".format(self.public_key))
-        transaction = self._locks[tx_confirmation.transaction_id]
+        transaction = self.lock_manager.pop_lock(tx_confirmation.transaction_id)
         self._agent_state.update(transaction, self.game_configuration.tx_fee)
-        self._remove_lock(tx_confirmation.transaction_id)
 
         self._start_loop()
 
@@ -605,8 +632,8 @@ class BaselineAgent(NegotiationAgent):
             # if error in checking transaction, remove it from the pending transactions.
             start_idx_of_tx_id = len("Error in checking transaction: ")
             transaction_id = error.error_msg[start_idx_of_tx_id:]
-            if transaction_id in self._locks:
-                self._remove_lock(transaction_id)
+            if transaction_id in self.lock_manager.locks:
+                self.lock_manager.pop_lock(transaction_id)
             else:
                 logger.warning("[{}]: Received error on unknown transaction id: {}".format(self.public_key, transaction_id))
 
@@ -682,21 +709,6 @@ class BaselineAgent(NegotiationAgent):
                              proposal_delta_score, transaction.amount))
         return result
 
-    def _lock_state(self, transaction: Transaction, is_seller: bool) -> None:
-        """
-        Lock the state. That is, save the locking proposal.
-
-        :param transaction: the transaction used to lock the state.
-        :param is_seller: Boolean indicating the role of the agent.
-
-        :return: None
-        """
-        self._locks[transaction.transaction_id] = transaction
-        if is_seller:
-            self._locks_as_seller[transaction.transaction_id] = transaction
-        else:
-            self._locks_as_buyer[transaction.transaction_id] = transaction
-
     def _state_after_locks(self, is_seller: bool):
         """
         Apply all the locks to the current state of the agent. That is, assuming all
@@ -706,21 +718,11 @@ class BaselineAgent(NegotiationAgent):
 
         :return: the agent state with the locks applied to current state
         """
-        transactions = list(self._locks_as_seller.values()) if is_seller else list(self._locks_as_buyer.values())
+        # transactions = list(self._locks_as_seller.values()) if is_seller else list(self._locks_as_buyer.values())
+        transactions = list(self.lock_manager.locks_as_seller.values()) if is_seller \
+            else list(self.lock_manager.locks_as_buyer.values())
         state_after_locks = self._agent_state.apply(transactions, self.game_configuration.tx_fee)
         return state_after_locks
-
-    def _remove_lock(self, transaction_id: str):
-        """
-        Try to remove a lock, given its id.
-
-        :param transaction_id: the transaction id.
-
-        :return: None
-        """
-        self._locks.pop(transaction_id, None)
-        self._locks_as_buyer.pop(transaction_id, None)
-        self._locks_as_seller.pop(transaction_id, None)
 
     def _is_seller(self, dialogue_id: int, origin: str) -> bool:
         """

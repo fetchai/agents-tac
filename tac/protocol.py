@@ -205,7 +205,7 @@ class Transaction(Request):
 
     @classmethod
     def from_proposal(cls, proposal: Description, transaction_id: str,
-                      is_buyer: bool, counterparty: str, sender: str) -> 'Request':
+                      is_buyer: bool, counterparty: str, sender: str) -> 'Transaction':
         """
         Create a transaction from a proposal.
 
