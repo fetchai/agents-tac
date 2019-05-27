@@ -102,7 +102,7 @@ class Request(Message, ABC):
     """Message from clients to controller"""
 
     @classmethod
-    def from_pb(cls, obj: bytes, public_key: str) -> 'Request':
+    def from_pb(cls, obj, public_key: str) -> 'Request':
         """
         Parse a string of bytes associated to a request message to the TAC controller.
         :param obj: the string of bytes to be parsed.
@@ -119,7 +119,9 @@ class Request(Message, ABC):
         elif case == "unregister":
             return Unregister(public_key)
         elif case == "transaction":
-            return Transaction.from_pb(obj, public_key)
+            return Transaction.from_pb(msg.transaction, public_key)
+        elif case == "get_agent_state":
+            return GetAgentState(public_key)
         else:
             raise TacError("Unrecognized type of Request.")
 
@@ -153,7 +155,7 @@ class Unregister(Request):
 class Transaction(Request):
 
     def __init__(self, transaction_id: str, buyer: bool, counterparty: str,
-                 amount: int, quantities_by_good_pbk: Dict[str, int], sender: str):
+                 amount: float, quantities_by_good_pbk: Dict[str, int], sender: str):
         """
         A transaction request.
 
@@ -190,16 +192,13 @@ class Transaction(Request):
         return envelope
 
     @classmethod
-    def from_pb(cls, obj: bytes, public_key: str) -> 'Request':
-        msg = tac_pb2.TACAgent.Message()
-        msg.ParseFromString(obj)
+    def from_pb(cls, obj: tac_pb2.TACAgent.Transaction, public_key: str) -> 'Transaction':
+        quantities_per_good_pbk = {pair.first: pair.second for pair in obj.quantities}
 
-        quantities_per_good_pbk = {pair.first: pair.second for pair in msg.transaction.quantities}
-
-        return Transaction(msg.transaction.transaction_id,
-                           msg.transaction.buyer,
-                           msg.transaction.counterparty,
-                           msg.transaction.amount,
+        return Transaction(obj.transaction_id,
+                           obj.buyer,
+                           obj.counterparty,
+                           obj.amount,
                            quantities_per_good_pbk,
                            public_key)
 
@@ -254,12 +253,31 @@ class Transaction(Request):
             good_pbk_quantity_pairs=self.quantities_by_good_pbk
         )
 
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        return self.transaction_id == other.transaction_id and \
+            self.buyer == other.buyer and \
+            self.counterparty == other.counterparty and \
+            self.amount == other.amount and \
+            self.quantities_by_good_pbk == other.quantities_by_good_pbk
+
+
+class GetAgentState(Request):
+    """Message to register an agent to the competition."""
+
+    def to_pb(self) -> tac_pb2.TACAgent.Message:
+        msg = tac_pb2.TACAgent.GetAgentState()
+        envelope = tac_pb2.TACAgent.Message()
+        envelope.get_agent_state.CopyFrom(msg)
+        return envelope
+
 
 class Response(Message):
     """Message from controller to clients"""
 
     @classmethod
-    def from_pb(cls, obj: bytes, public_key: str) -> 'Response':
+    def from_pb(cls, obj, public_key: str) -> 'Response':
         """
         Parse a string of bytes associated to a response message from the TAC controller.
         :param obj: the string of bytes to be parsed.
@@ -279,22 +297,13 @@ class Response(Message):
             elif case == "cancelled":
                 return Cancelled(public_key)
             elif case == "game_data":
-                return GameData(public_key,
-                                msg.game_data.money,
-                                list(msg.game_data.endowment),
-                                list(msg.game_data.utility_params),
-                                msg.game_data.nb_agents,
-                                msg.game_data.nb_goods,
-                                msg.game_data.tx_fee,
-                                msg.game_data.agent_pbks,
-                                msg.game_data.good_pbks)
+                return GameData.from_pb(msg.game_data, public_key)
             elif case == "tx_confirmation":
                 return TransactionConfirmation(public_key, msg.tx_confirmation.transaction_id)
+            elif case == "agent_state":
+                return AgentState.from_pb(msg.agent_state, public_key)
             elif case == "error":
-                error_code = ErrorCode(msg.error.error_code)
-                error_msg = msg.error.error_msg
-                details = dict(msg.error.details.items())
-                return Error(public_key, error_code, error_msg, details)
+                return Error.from_pb(msg.error, public_key)
             else:
                 raise TacError("Unrecognized type of Response.")
         except DecodeError as e:
@@ -359,6 +368,13 @@ class Error(Response):
         envelope.error.CopyFrom(msg)
         return envelope
 
+    @classmethod
+    def from_pb(cls, obj, public_key: str) -> 'Error':
+        error_code = ErrorCode(obj.error_code)
+        error_msg = obj.error_msg
+        details = dict(obj.details.items())
+        return Error(public_key, error_code, error_msg, details)
+
     def __str__(self):
         return self._build_str(error_msg=self.error_msg)
 
@@ -393,6 +409,18 @@ class GameData(Response):
         self.tx_fee = tx_fee
         self.agent_pbks = agent_pbks
         self.good_pbks = good_pbks
+
+    @classmethod
+    def from_pb(cls, obj: tac_pb2.TACController.GameData, public_key: str) -> 'GameData':
+        return GameData(public_key,
+                        obj.money,
+                        list(obj.endowment),
+                        list(obj.utility_params),
+                        obj.nb_agents,
+                        obj.nb_goods,
+                        obj.tx_fee,
+                        obj.agent_pbks,
+                        obj.good_pbks)
 
     def to_pb(self) -> tac_pb2.TACController.Message:
         msg = tac_pb2.TACController.GameData()
@@ -447,3 +475,65 @@ class TransactionConfirmation(Response):
 
     def __str__(self):
         return self._build_str(transaction_id=self.transaction_id)
+
+
+class AgentState(Response):
+
+    def __init__(self, public_key: str,
+                 initial_state: GameData,
+                 balance: float,
+                 holdings: List[int],
+                 transactions: List[Transaction]):
+        super().__init__(public_key)
+        self.initial_state = initial_state
+        self.balance = balance
+        self.holdings = holdings
+        self.transactions = transactions
+
+    def to_pb(self) -> tac_pb2.TACController.Message:
+        msg = tac_pb2.TACController.AgentState()
+
+        game_data = tac_pb2.TACController.GameData()
+        game_data.money = game_data.money
+        game_data.endowment.extend(game_data.endowment)
+        game_data.utility_params.extend(game_data.utility_params)
+        game_data.nb_agents = game_data.nb_agents
+        game_data.nb_goods = game_data.nb_goods
+        game_data.tx_fee = game_data.tx_fee
+        game_data.agent_pbks.extend(game_data.agent_pbks)
+        game_data.good_pbks.extend(game_data.good_pbks)
+
+        msg.initial_state.CopyFrom(game_data)
+        msg.balance = self.balance
+        msg.holdings.extend(self.holdings)
+
+        transactions = []
+        for tx in self.transactions:
+            tx_pb = tac_pb2.TACAgent.Transaction()
+            tx_pb.transaction_id = tx.transaction_id
+            tx_pb.buyer = tx.buyer
+            tx_pb.counterparty = tx.counterparty
+            tx_pb.amount = tx.amount
+            tx_pb.quantities.extend({})
+
+            transactions.append(tx_pb)
+
+        msg.txs.extend(transactions)
+
+        envelope = tac_pb2.TACController.Message()
+        envelope.agent_state.CopyFrom(msg)
+        return envelope
+
+    @classmethod
+    def from_pb(cls, obj, public_key: str) -> 'AgentState':
+        initial_state = GameData.from_pb(obj.initial_state, public_key)
+        transactions = [Transaction.from_pb(tx_obj, public_key) for tx_obj in obj.txs]
+
+        return AgentState(public_key,
+                          initial_state,
+                          obj.balance,
+                          obj.holdings,
+                          transactions)
+
+    def __str__(self):
+        return self._build_str(balance=self.balance, holdings=self.holdings)

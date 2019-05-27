@@ -33,6 +33,13 @@ message TACController {
         string transaction_id = 1;
     }
 
+    message AgentState{
+        GameData initial_state = 1;
+        double balance = 2;
+        repeated int32 holdings = 3;
+        repeated TACAgent.Transaction txs = 4;
+    }
+
     message Error {
         enum ErrorCode {
             GENERIC_ERROR = 0;
@@ -56,7 +63,8 @@ message TACController {
             Cancelled cancelled = 3;
             GameData game_data = 4;
             TransactionConfirmation tx_confirmation = 5;
-            Error error = 6;
+            AgentState agent_state = 6;
+            Error error = 7;
         }
     }
 
@@ -77,11 +85,15 @@ message TACAgent {
         repeated StrIntPair quantities = 5;
     }
 
+    message GetAgentState {
+    }
+
     message Message {
         oneof msg {
             Register register = 1;
             Unregister unregister = 2;
             Transaction transaction = 3;
+            GetAgentState get_agent_state = 4;
         }
     }
 

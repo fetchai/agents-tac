@@ -1,7 +1,7 @@
 import pytest
 
 from tac.protocol import Register, Unregister, Transaction, Registered, Unregistered, TransactionConfirmation, Error, \
-    GameData, Request, Response, ErrorCode, Cancelled
+    GameData, Request, Response, ErrorCode, Cancelled, GetAgentState, AgentState
 
 
 class TestRequest:
@@ -30,6 +30,15 @@ class TestRequest:
             """Test that serialization and deserialization gives the same result."""
             expected_msg = Transaction("transaction_id", True, "seller", 10, {'tac_good_0': 1, 'tac_good_1': 1},
                                        "public_key")
+            actual_msg = Request.from_pb(expected_msg.serialize(), "public_key")
+
+            assert expected_msg == actual_msg
+
+    class TestGetAgentState:
+
+        def test_serialization_deserialization(self):
+            """Test that serialization and deserialization gives the same result."""
+            expected_msg = GetAgentState("public_key")
             actual_msg = Request.from_pb(expected_msg.serialize(), "public_key")
 
             assert expected_msg == actual_msg
@@ -88,6 +97,18 @@ class TestResponse:
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
             expected_msg = TransactionConfirmation("public_key", "transaction_id")
+            actual_msg = Response.from_pb(expected_msg.serialize(), "public_key")
+
+            assert expected_msg == actual_msg
+
+    class TestAgentState:
+
+        def test_serialization_deserialization(self):
+            """Test that serialization and deserialization gives the same result."""
+            game_state = GameData("public_key", 10, [1, 1, 2], [0.04, 0.80, 0.16], 3, 3, 1.0, ['tac_agent_0', 'tac_agent_1', 'tac_agent_2'], ['tag_good_0', 'tag_good_1', 'tag_good_2'])
+            transactions = [Transaction("transaction_id", True, "seller", 10.0, {"good_01": 1}, "public_key")]
+
+            expected_msg = AgentState("public_key", game_state, 10.0, [0, 1, 2, 3], transactions)
             actual_msg = Response.from_pb(expected_msg.serialize(), "public_key")
 
             assert expected_msg == actual_msg

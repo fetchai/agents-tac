@@ -264,6 +264,8 @@ class TransactionHandler(RequestHandler):
         # update the game state.
         tx = GameTransaction.from_request_to_game_tx(request)
         self.controller_agent.game_handler.current_game.settle_transaction(tx)
+
+        # update the GUI monitor
         self.controller_agent.monitor.update()
 
         # send the transaction confirmation.
