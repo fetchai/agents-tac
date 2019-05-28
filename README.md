@@ -5,7 +5,7 @@ Agents for Trading Agents Competition
 
 This repository contains submodules. Clone with recursive strategy:
 
-	  git clone git@github.com:uvue-git/tac-agents.git --recursive
+	  git clone git@github.com:uvue-git/tac-agents.git --recursive && cd tac-agents
 
 ## Repository structure
 
