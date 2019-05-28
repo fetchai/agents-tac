@@ -1,7 +1,7 @@
 import pytest
 
 from tac.protocol import Register, Unregister, Transaction, Registered, Unregistered, TransactionConfirmation, Error, \
-    GameData, Request, Response, ErrorCode, Cancelled, GetAgentState, AgentState
+    GameData, Request, Response, ErrorCode, Cancelled, GetStateUpdate, StateUpdate
 
 
 class TestRequest:
@@ -34,11 +34,11 @@ class TestRequest:
 
             assert expected_msg == actual_msg
 
-    class TestGetAgentState:
+    class TestGetStateUpdate:
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
-            expected_msg = GetAgentState("public_key")
+            expected_msg = GetStateUpdate("public_key")
             actual_msg = Request.from_pb(expected_msg.serialize(), "public_key")
 
             assert expected_msg == actual_msg
@@ -101,14 +101,14 @@ class TestResponse:
 
             assert expected_msg == actual_msg
 
-    class TestAgentState:
+    class TestStateUpdate:
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
             game_state = GameData("public_key", 10, [1, 1, 2], [0.04, 0.80, 0.16], 3, 3, 1.0, ['tac_agent_0', 'tac_agent_1', 'tac_agent_2'], ['tag_good_0', 'tag_good_1', 'tag_good_2'])
             transactions = [Transaction("transaction_id", True, "seller", 10.0, {"good_01": 1}, "public_key")]
 
-            expected_msg = AgentState("public_key", game_state, 10.0, [0, 1, 2, 3], transactions)
+            expected_msg = StateUpdate("public_key", game_state, 10.0, [0, 1, 2, 3], transactions)
             actual_msg = Response.from_pb(expected_msg.serialize(), "public_key")
 
             assert expected_msg == actual_msg

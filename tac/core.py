@@ -27,7 +27,8 @@ from oef.query import Query, Constraint, GtEq
 
 from tac.game import AgentState, GameConfiguration, WorldState
 from tac.helpers.misc import TacError
-from tac.protocol import Register, Response, GameData, TransactionConfirmation, Error, Transaction, Cancelled
+from tac.protocol import Register, Response, GameData, TransactionConfirmation, Error, Transaction, Cancelled, \
+    StateUpdate, GetStateUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -154,6 +155,14 @@ class NegotiationAgent(OEFAgent):
         :return: None
         """
 
+    def on_state_update(self, agent_state: StateUpdate) -> None:
+        """
+        On receiving the agent state update.
+
+        :param agent_state: the current state of the agent in the competition.
+        :return: None
+        """
+
     @abstractmethod
     def on_tac_error(self, error: Error) -> None:
         """
@@ -187,7 +196,7 @@ class NegotiationAgent(OEFAgent):
 
         response = None  # type: Optional[Response]
         try:
-            response = Response.from_pb(content, origin)
+            response = Response.from_pb(content, self.public_key)
         except TacError as e:
             # the message was not a 'Response' message.
             logger.exception(str(e))
@@ -199,6 +208,8 @@ class NegotiationAgent(OEFAgent):
             self.on_transaction_confirmed(response)
         elif isinstance(response, Cancelled):
             self.on_cancelled()
+        elif isinstance(response, StateUpdate):
+            self.on_state_update(response)
         elif isinstance(response, Error):
             self.on_tac_error(response)
         else:
@@ -281,3 +292,6 @@ class NegotiationAgent(OEFAgent):
         """
         dialogue_id = abs(hash(tx.transaction_id) % 2**31)
         self.send_message(0, dialogue_id, self._controller_pbk, tx.serialize())
+
+    def get_state_update(self):
+        self.send_message(0, 0, self._controller_pbk, GetStateUpdate(self.public_key).serialize())

@@ -130,6 +130,7 @@ class BaselineAgent(NegotiationAgent):
         if self.goods_supplied_description is not None:
             self.unregister_service(1, self.goods_supplied_description)
 
+        self.get_state_update()
         time.sleep(0.5)
         self._register_services()
         time.sleep(0.5)

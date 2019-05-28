@@ -15,7 +15,7 @@ message TACController {
     }
     message Unregistered {
     }
-    message Cancelled{
+    message Cancelled {
     }
 
     message GameData {
@@ -33,7 +33,7 @@ message TACController {
         string transaction_id = 1;
     }
 
-    message AgentState{
+    message StateUpdate {
         GameData initial_state = 1;
         double balance = 2;
         repeated int32 holdings = 3;
@@ -63,7 +63,7 @@ message TACController {
             Cancelled cancelled = 3;
             GameData game_data = 4;
             TransactionConfirmation tx_confirmation = 5;
-            AgentState agent_state = 6;
+            StateUpdate state_update = 6;
             Error error = 7;
         }
     }
@@ -77,7 +77,7 @@ message TACAgent {
     message Unregister {
     }
 
-    message Transaction{
+    message Transaction {
         string transaction_id = 1;
         bool buyer = 2;  // is the sender of this message a buyer?
         string counterparty = 3;
@@ -85,7 +85,7 @@ message TACAgent {
         repeated StrIntPair quantities = 5;
     }
 
-    message GetAgentState {
+    message GetStateUpdate {
     }
 
     message Message {
@@ -93,7 +93,7 @@ message TACAgent {
             Register register = 1;
             Unregister unregister = 2;
             Transaction transaction = 3;
-            GetAgentState get_agent_state = 4;
+            GetStateUpdate get_state_update = 4;
         }
     }
 

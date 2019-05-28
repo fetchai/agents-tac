@@ -120,8 +120,8 @@ class Request(Message, ABC):
             return Unregister(public_key)
         elif case == "transaction":
             return Transaction.from_pb(msg.transaction, public_key)
-        elif case == "get_agent_state":
-            return GetAgentState(public_key)
+        elif case == "get_state_update":
+            return GetStateUpdate(public_key)
         else:
             raise TacError("Unrecognized type of Request.")
 
@@ -263,13 +263,13 @@ class Transaction(Request):
             self.quantities_by_good_pbk == other.quantities_by_good_pbk
 
 
-class GetAgentState(Request):
+class GetStateUpdate(Request):
     """Message to register an agent to the competition."""
 
     def to_pb(self) -> tac_pb2.TACAgent.Message:
-        msg = tac_pb2.TACAgent.GetAgentState()
+        msg = tac_pb2.TACAgent.GetStateUpdate()
         envelope = tac_pb2.TACAgent.Message()
-        envelope.get_agent_state.CopyFrom(msg)
+        envelope.get_state_update.CopyFrom(msg)
         return envelope
 
 
@@ -300,8 +300,8 @@ class Response(Message):
                 return GameData.from_pb(msg.game_data, public_key)
             elif case == "tx_confirmation":
                 return TransactionConfirmation(public_key, msg.tx_confirmation.transaction_id)
-            elif case == "agent_state":
-                return AgentState.from_pb(msg.agent_state, public_key)
+            elif case == "state_update":
+                return StateUpdate.from_pb(msg.state_update, public_key)
             elif case == "error":
                 return Error.from_pb(msg.error, public_key)
             else:
@@ -477,7 +477,7 @@ class TransactionConfirmation(Response):
         return self._build_str(transaction_id=self.transaction_id)
 
 
-class AgentState(Response):
+class StateUpdate(Response):
 
     def __init__(self, public_key: str,
                  initial_state: GameData,
@@ -491,7 +491,7 @@ class AgentState(Response):
         self.transactions = transactions
 
     def to_pb(self) -> tac_pb2.TACController.Message:
-        msg = tac_pb2.TACController.AgentState()
+        msg = tac_pb2.TACController.StateUpdate()
 
         game_data = tac_pb2.TACController.GameData()
         game_data.money = game_data.money
@@ -521,19 +521,19 @@ class AgentState(Response):
         msg.txs.extend(transactions)
 
         envelope = tac_pb2.TACController.Message()
-        envelope.agent_state.CopyFrom(msg)
+        envelope.state_update.CopyFrom(msg)
         return envelope
 
     @classmethod
-    def from_pb(cls, obj, public_key: str) -> 'AgentState':
+    def from_pb(cls, obj, public_key: str) -> 'StateUpdate':
         initial_state = GameData.from_pb(obj.initial_state, public_key)
         transactions = [Transaction.from_pb(tx_obj, public_key) for tx_obj in obj.txs]
 
-        return AgentState(public_key,
-                          initial_state,
-                          obj.balance,
-                          obj.holdings,
-                          transactions)
+        return StateUpdate(public_key,
+                           initial_state,
+                           obj.balance,
+                           obj.holdings,
+                           transactions)
 
     def __str__(self):
-        return self._build_str(balance=self.balance, holdings=self.holdings)
+        return self._build_str(public_key=self.public_key, balance=self.balance, holdings=self.holdings)
