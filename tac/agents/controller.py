@@ -243,11 +243,10 @@ class TransactionHandler(RequestHandler):
             #  don't care for now, because assuming only (properly implemented) baseline agents.
             pending_tx = self._pending_transaction_requests.pop(request.transaction_id)
             if request.matches(pending_tx):
-                self.controller_agent.game_handler.confirmed_transaction_per_participant[pending_tx.sender].append(pending_tx)
-                self.controller_agent.game_handler.confirmed_transaction_per_participant[request.sender].append(request)
                 tx = GameTransaction.from_request_to_game_tx(request)
-
                 if self.controller_agent.game_handler.current_game.is_transaction_valid(tx):
+                    self.controller_agent.game_handler.confirmed_transaction_per_participant[pending_tx.sender].append(pending_tx)
+                    self.controller_agent.game_handler.confirmed_transaction_per_participant[request.sender].append(request)
                     return self._handle_valid_transaction(request)
                 else:
                     return self._handle_invalid_transaction(request)
@@ -293,7 +292,7 @@ class TransactionHandler(RequestHandler):
         return Error(request.public_key, ErrorCode.TRANSACTION_NOT_MATCHING)
 
 
-class GetAgentStateHandler(RequestHandler):
+class GetStateUpdateHandler(RequestHandler):
 
     def handle(self, request: Request) -> Optional[Response]:
         """
@@ -310,11 +309,8 @@ class GetAgentStateHandler(RequestHandler):
             return Error(request.public_key, ErrorCode.AGENT_NOT_REGISTERED)
         else:
             transactions = self.controller_agent.game_handler.confirmed_transaction_per_participant[request.public_key]  # type: List[Transaction]
-            balance = self.controller_agent.game_handler.current_game.agent_states[request.public_key].balance  # type: float
-            holdings = self.controller_agent.game_handler.current_game.agent_states[request.public_key].current_holdings  # type: List[int]
-
             initial_game_data = self.controller_agent.game_handler.game_data_per_participant[request.public_key]  # type: GameData
-            return StateUpdate(request.public_key, initial_game_data, balance, holdings, transactions)
+            return StateUpdate(request.public_key, initial_game_data, transactions)
 
 
 class ControllerDispatcher(object):
@@ -332,7 +328,7 @@ class ControllerDispatcher(object):
             Register: RegisterHandler(controller_agent),
             Unregister: UnregisterHandler(controller_agent),
             Transaction: TransactionHandler(controller_agent),
-            GetStateUpdate: GetAgentStateHandler(controller_agent),
+            GetStateUpdate: GetStateUpdateHandler(controller_agent),
         }  # type: Dict[Type[Request], RequestHandler]
 
     def register_handler(self, request_type: Type[Request], request_handler: RequestHandler) -> None:

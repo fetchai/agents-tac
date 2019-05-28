@@ -449,7 +449,7 @@ class GameData(Response):
         )
 
     def __eq__(self, other):
-        return super().__eq__(other) and \
+        return type(self) == type(other) and \
             self.money == other.money and \
             self.endowment == other.endowment and \
             self.utility_params == other.utility_params and \
@@ -481,31 +481,25 @@ class StateUpdate(Response):
 
     def __init__(self, public_key: str,
                  initial_state: GameData,
-                 balance: float,
-                 holdings: List[int],
                  transactions: List[Transaction]):
         super().__init__(public_key)
         self.initial_state = initial_state
-        self.balance = balance
-        self.holdings = holdings
         self.transactions = transactions
 
     def to_pb(self) -> tac_pb2.TACController.Message:
         msg = tac_pb2.TACController.StateUpdate()
 
         game_data = tac_pb2.TACController.GameData()
-        game_data.money = game_data.money
-        game_data.endowment.extend(game_data.endowment)
-        game_data.utility_params.extend(game_data.utility_params)
-        game_data.nb_agents = game_data.nb_agents
-        game_data.nb_goods = game_data.nb_goods
-        game_data.tx_fee = game_data.tx_fee
-        game_data.agent_pbks.extend(game_data.agent_pbks)
-        game_data.good_pbks.extend(game_data.good_pbks)
+        game_data.money = self.initial_state.money
+        game_data.endowment.extend(self.initial_state.endowment)
+        game_data.utility_params.extend(self.initial_state.utility_params)
+        game_data.nb_agents = self.initial_state.nb_agents
+        game_data.nb_goods = self.initial_state.nb_goods
+        game_data.tx_fee = self.initial_state.tx_fee
+        game_data.agent_pbks.extend(self.initial_state.agent_pbks)
+        game_data.good_pbks.extend(self.initial_state.good_pbks)
 
         msg.initial_state.CopyFrom(game_data)
-        msg.balance = self.balance
-        msg.holdings.extend(self.holdings)
 
         transactions = []
         for tx in self.transactions:
@@ -514,7 +508,10 @@ class StateUpdate(Response):
             tx_pb.buyer = tx.buyer
             tx_pb.counterparty = tx.counterparty
             tx_pb.amount = tx.amount
-            tx_pb.quantities.extend({})
+
+            good_pbk_quantity_pairs = [_make_str_int_pair(good_pbk, quantity) for good_pbk, quantity in
+                                       tx.quantities_by_good_pbk.items()]
+            tx_pb.quantities.extend(good_pbk_quantity_pairs)
 
             transactions.append(tx_pb)
 
@@ -531,9 +528,13 @@ class StateUpdate(Response):
 
         return StateUpdate(public_key,
                            initial_state,
-                           obj.balance,
-                           obj.holdings,
                            transactions)
 
     def __str__(self):
-        return self._build_str(public_key=self.public_key, balance=self.balance, holdings=self.holdings)
+        return self._build_str(public_key=self.public_key)
+
+    def __eq__(self, other):
+        return type(self) == type(other) and \
+               self.public_key == other.public_key and \
+               self.initial_state == other.initial_state and \
+               self.transactions == other.transactions

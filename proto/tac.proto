@@ -35,9 +35,7 @@ message TACController {
 
     message StateUpdate {
         GameData initial_state = 1;
-        double balance = 2;
-        repeated int32 holdings = 3;
-        repeated TACAgent.Transaction txs = 4;
+        repeated TACAgent.Transaction txs = 2;
     }
 
     message Error {

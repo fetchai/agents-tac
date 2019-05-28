@@ -108,7 +108,7 @@ class TestResponse:
             game_state = GameData("public_key", 10, [1, 1, 2], [0.04, 0.80, 0.16], 3, 3, 1.0, ['tac_agent_0', 'tac_agent_1', 'tac_agent_2'], ['tag_good_0', 'tag_good_1', 'tag_good_2'])
             transactions = [Transaction("transaction_id", True, "seller", 10.0, {"good_01": 1}, "public_key")]
 
-            expected_msg = StateUpdate("public_key", game_state, 10.0, [0, 1, 2, 3], transactions)
+            expected_msg = StateUpdate("public_key", game_state, transactions)
             actual_msg = Response.from_pb(expected_msg.serialize(), "public_key")
 
             assert expected_msg == actual_msg
