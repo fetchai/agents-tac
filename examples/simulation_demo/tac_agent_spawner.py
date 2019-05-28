@@ -57,6 +57,7 @@ def parse_arguments():
     parser.add_argument("--registration-timeout", default=10, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
     parser.add_argument("--inactivity-timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
     parser.add_argument("--competition-timeout", default=240, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
+    parser.add_argument("--pending-transaction-timeout", default=120, type=int, help="The amount of time (in seconds) the baseline agents wait until the transaction confirmation.")
     parser.add_argument("--register-as", choices=['seller', 'buyer', 'both'], default='seller', help="The string indicates whether the baseline agent registers as seller, buyer or both on the oef.")
     parser.add_argument("--search-for", choices=['sellers', 'buyers', 'both'], default='sellers', help="The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.")
     parser.add_argument("--uml", default=True, help="Plot uml file")
@@ -143,7 +144,7 @@ def _make_id(agent_id: int, is_world_modeling: bool, nb_agents: int) -> str:
     return result
 
 
-def initialize_baseline_agent(agent_pbk: str, oef_addr: str, oef_port: int, register_as: str, search_for: str, is_world_modeling: bool) -> BaselineAgent:
+def initialize_baseline_agent(agent_pbk: str, oef_addr: str, oef_port: int, register_as: str, search_for: str, is_world_modeling: bool, pending_transaction_timeout: int) -> BaselineAgent:
     """
     Initialize one baseline agent.
     :param agent_pbk: the public key of the Baseline agent.
@@ -152,25 +153,30 @@ def initialize_baseline_agent(agent_pbk: str, oef_addr: str, oef_port: int, regi
     :param register_as: the string indicates whether the baseline agent registers as seller, buyer or both on the oef.
     :param search_for: the string indicates whether the baseline agent searches for sellers, buyers or both on the oef.
     :param is_world_modeling: the boolean indicated whether the baseline agent models the world around her or not.
+    :param pending_transaction_timeout: seconds that baseline agents wait for transaction confirmations.
+
     :return: the baseline agent.
     """
 
     # Notice: we create a new asyncio loop, so we can run it in an independent thread.
-    return BaselineAgent(agent_pbk, oef_addr, oef_port, loop=asyncio.new_event_loop(), register_as=register_as, search_for=search_for, is_world_modeling=is_world_modeling)
+    return BaselineAgent(agent_pbk, oef_addr, oef_port, loop=asyncio.new_event_loop(), register_as=register_as, search_for=search_for, is_world_modeling=is_world_modeling, pending_transaction_timeout=pending_transaction_timeout)
 
 
-def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port: int, register_as: str, search_for: str) -> List[BaselineAgent]:
+def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port: int, register_as: str, search_for: str, pending_transaction_timeout: int) -> List[BaselineAgent]:
     """
     Initialize a list of baseline agents.
     :param nb_baseline_agents: number of agents to initialize.
     :param oef_addr: IP address of the OEF Node.
     :param oef_port: TCP port of the OEF Node.
     :param register_as: the string indicates whether the baseline agent registers as seller, buyer or both on the oef.
-    :param search_for: the string indicates whether the baseline agent searches for sellers, buyers or both on the oef.    :return: A list of baseline agents.
+    :param search_for: the string indicates whether the baseline agent searches for sellers, buyers or both on the oef.
+    :param pending_transaction_timeout: seconds that baseline agents wait for transaction confirmations.
+
+    :return: A list of baseline agents.
     """
     fraction_world_modeling = 0.1
     nb_baseline_agents_world_modeling = round(nb_baseline_agents * fraction_world_modeling)
-    baseline_agents = [initialize_baseline_agent(_make_id(i, i < nb_baseline_agents_world_modeling, nb_baseline_agents), oef_addr, oef_port, register_as, search_for, i < nb_baseline_agents_world_modeling)
+    baseline_agents = [initialize_baseline_agent(_make_id(i, i < nb_baseline_agents_world_modeling, nb_baseline_agents), oef_addr, oef_port, register_as, search_for, i < nb_baseline_agents_world_modeling, pending_transaction_timeout)
                        for i in range(nb_baseline_agents)]
     return baseline_agents
 
@@ -279,7 +285,8 @@ if __name__ == '__main__':
                                                      oef_addr=arguments.oef_addr,
                                                      oef_port=arguments.oef_port,
                                                      register_as=arguments.register_as,
-                                                     search_for=arguments.search_for)
+                                                     search_for=arguments.search_for,
+                                                     pending_transaction_timeout=arguments.pending_transaction_timeout)
 
         tac_parameters = initialize_tac_parameters(arguments)
 
