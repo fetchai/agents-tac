@@ -31,7 +31,7 @@ class TestSimulation:
         cls.tac_controller.register()
 
         cls.baseline_agents = [BaselineAgent("baseline_{:02}".format(i), "127.0.0.1", 3333,
-                                             search_for='both', register_as='both',
+                                             search_for='both', register_as='both', pending_transaction_timeout=120,
                                              loop=asyncio.new_event_loop()) for i in range(15)]
 
         cls.tac_parameters = TACParameters(min_nb_agents=15,
