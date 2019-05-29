@@ -25,12 +25,12 @@ def _stop_oef_search_images():
         if "qati/oef-search:latest" in container.image.tags:
             container.stop()
 
+
 @pytest.fixture(scope="module")
 def network_node(oef_addr, oef_port):
     logger.info("Stopping running OEF Nodes...")
     _stop_oef_search_images()
     client = docker.from_env()
-
 
     ports = {'20000/tcp': 20000, '30000/tcp': 30000, '{}/tcp'.format(oef_port): oef_port}
     c = client.containers.run("qati/oef-search:latest",
