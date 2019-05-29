@@ -192,31 +192,28 @@ class NegotiationAgent(OEFAgent):
             # the message was not a 'Response' message.
             logger.exception(str(e))
 
-        if isinstance(response, GameData):
-            controller_public_key = origin
-            self._on_start(controller_public_key, response)
-        elif isinstance(response, TransactionConfirmation):
+        if isinstance(response, GameData) and origin == self.controller_pbk:
+            self._on_start(response)
+        elif isinstance(response, TransactionConfirmation) and origin == self.controller_pbk:
             self.on_transaction_confirmed(response)
-        elif isinstance(response, Cancelled):
+        elif isinstance(response, Cancelled) and origin == self.controller_pbk:
             self.on_cancelled()
-        elif isinstance(response, Error):
+        elif isinstance(response, Error) and origin == self.controller_pbk:
             self.on_tac_error(response)
         else:
-            raise TacError("No correct message received.")
+            raise TacError("Message received either not implemented or from wrong controller.")
 
-    def _on_start(self, controller_public_key: str, game_data: GameData) -> None:
+    def _on_start(self, game_data: GameData) -> None:
         """
         The private handler for the on_start event. It is used to populate
         data structures of the agent and remove the burden from the developer to do so.
 
-        :param controller_public_key: the public key of the controller
         :param game_data: the data sent from the controller about the game.
 
         :return: None
         """
 
         # populate data structures about the started competition
-        self._controller_pbk = controller_public_key
         self._game_configuration = GameConfiguration(game_data.nb_agents, game_data.nb_goods, game_data.tx_fee, game_data.agent_pbks, game_data.good_pbks)
         self._initial_agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
         self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
@@ -238,11 +235,12 @@ class NegotiationAgent(OEFAgent):
         :return: None
         """
         agent_pbks = list(set(agent_pbks))
-        if search_id == self.TAC_CONTROLLER_SEARCH_ID:
-            # assuming the number of active controller is only one.
-            assert len(agent_pbks) == 1
-            controller_public_key = agent_pbks[0]
-            self.register_to_tac(controller_public_key)
+        if search_id == self.TAC_CONTROLLER_SEARCH_ID and len(agent_pbks) == 1:
+            # commit to the first controller going forward
+            controller_pbk = agent_pbks[0]
+            self.register_to_tac(controller_pbk)
+        elif search_id == self.TAC_CONTROLLER_SEARCH_ID:
+            raise TacError("More than one controller public key received.")
         else:
             self.on_search_results(search_id, agent_pbks)
 
@@ -258,18 +256,19 @@ class NegotiationAgent(OEFAgent):
         query = Query([Constraint("version", GtEq(1))])
         self.search_services(self.TAC_CONTROLLER_SEARCH_ID, query)
 
-    def register_to_tac(self, tac_controller_pk: str) -> None:
+    def register_to_tac(self, tac_controller_pbk: str) -> None:
         """
         Register to active TAC Controller.
 
-        :param tac_controller_pk: the public key of the controller.
+        :param tac_controller_pbk: the public key of the controller.
 
         :return: None
         :raises AssertionError: if the agent is already registered.
         """
         assert self.controller_pbk is None and self.game_configuration is None and self._agent_state is None
+        self._controller_pbk = tac_controller_pbk
         msg = Register(self.public_key).serialize()
-        self.send_message(0, 0, tac_controller_pk, msg)
+        self.send_message(0, 0, tac_controller_pbk, msg)
 
     def submit_transaction_to_controller(self, tx: Transaction) -> None:
         """
