@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+import logging
 import time
 
 import docker
 import pytest
 
+logger = logging.getLogger(__name__)
 
 @pytest.fixture(scope="module")
 def oef_addr() -> str:
@@ -31,6 +33,9 @@ def network_node(oef_addr, oef_port):
                               "--director_api_port 40000",
                               detach=True, ports=ports)
     # wait for the setup...
-    time.sleep(10.0)
+    logger.info("Setting up the OEF node...")
+    time.sleep(15.0)
     yield
+    logger.info("Stopping the OEF node...")
     c.stop()
+
