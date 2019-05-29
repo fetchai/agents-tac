@@ -68,7 +68,7 @@ class TACParameters(object):
                  start_time: datetime.datetime = None,
                  registration_timeout: int = 10,
                  competition_timeout: int = 20,
-                 inactivity_timeout: Optional[int] = None):
+                 inactivity_timeout: Optional[int] = 60):
         """
         Initialize parameters for TAC
         :param min_nb_agents: the number of agents to wait for the registration.
@@ -90,7 +90,7 @@ class TACParameters(object):
         self._base_good_endowment = base_good_endowment
         self._lower_bound_factor = lower_bound_factor
         self._upper_bound_factor = upper_bound_factor
-        self._start_time = start_time
+        self._start_time = start_time if start_time is not None else datetime.datetime.now() + datetime.timedelta(0, 10)
         self._registration_timeout = registration_timeout
         self._competition_timeout = competition_timeout
         self._inactivity_timeout = inactivity_timeout
