@@ -30,18 +30,20 @@ class TestSimulation:
         cls.tac_controller.connect()
         cls.tac_controller.register()
 
-        cls.baseline_agents = [BaselineAgent("baseline_{:02}".format(i), "127.0.0.1", 3333, loop=asyncio.new_event_loop()) for i in range(15)]
+        cls.baseline_agents = [BaselineAgent("baseline_{:02}".format(i), "127.0.0.1", 3333,
+                                             search_for='both', register_as='both',
+                                             loop=asyncio.new_event_loop()) for i in range(15)]
 
         cls.tac_parameters = TACParameters(min_nb_agents=15,
                                            money_endowment=200,
                                            nb_goods=10,
-                                           tx_fee=2.0,
+                                           tx_fee=1.0,
                                            base_good_endowment=2,
                                            lower_bound_factor=0,
                                            upper_bound_factor=0,
                                            start_time=None,
                                            registration_timeout=5,
-                                           competition_timeout=25,
+                                           competition_timeout=40,
                                            inactivity_timeout=10)
 
         # run the simulation
