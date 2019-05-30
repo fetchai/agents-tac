@@ -69,7 +69,7 @@ class TACParameters(object):
                  start_time: datetime.datetime = None,
                  registration_timeout: int = 10,
                  competition_timeout: int = 20,
-                 inactivity_timeout: Optional[int] = None):
+                 inactivity_timeout: int = None):
         """
         Initialize parameters for TAC
         :param min_nb_agents: the number of agents to wait for the registration.
@@ -95,6 +95,17 @@ class TACParameters(object):
         self._registration_timeout = registration_timeout
         self._competition_timeout = competition_timeout
         self._inactivity_timeout = inactivity_timeout
+        self._check_values()
+
+    def _check_values(self) -> None:
+        """
+        Check constructor parameters.
+        :raises ValueError: if some parameter has not the right value.
+        """
+        if self._start_time is None:
+            raise ValueError
+        if self._inactivity_timeout is None:
+            raise ValueError
 
     @property
     def min_nb_agents(self) -> int:

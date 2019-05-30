@@ -44,14 +44,12 @@ def generate_transaction_id(agent_pbk: str, origin: str, dialogue_id: int, agent
     :param agent_pbk: the pbk of the agent.
     :param origin: the public key of the message sender.
     :param dialogue_id: the dialogue id
-    :param agent_is_seller: boolean indicating
+    :param agent_is_seller: boolean indicating if the agent is a seller
     :return: a transaction id
     """
     # the format is {buyer_pbk}_{seller_pbk}_{dialogue_id}
-    if agent_is_seller:
-        transaction_id = "{}_{}_{}".format(origin, agent_pbk, dialogue_id)
-    else:
-        transaction_id = "{}_{}_{}".format(agent_pbk, origin, dialogue_id)
+    buyer_pbk, seller_pbk = (origin, agent_pbk) if agent_is_seller else (agent_pbk, origin)
+    transaction_id = "{}_{}_{}".format(buyer_pbk, seller_pbk, dialogue_id)
     return transaction_id
 
 
