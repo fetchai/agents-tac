@@ -38,6 +38,7 @@ class NegotiationAgent(OEFAgent):
     """
 
     TAC_CONTROLLER_SEARCH_ID = 1
+    GAME_PHASES = ['pre_game', 'game_setup', 'game', 'post_game']
 
     def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, is_world_modeling: bool = False, **kwargs) -> None:
         super().__init__(public_key, oef_addr, oef_port, **kwargs)
@@ -48,6 +49,7 @@ class NegotiationAgent(OEFAgent):
         self._agent_state = None  # type: Optional[AgentState]
         self._is_world_modeling = is_world_modeling
         self._world_state = None  # type: Optional[WorldState]
+        self._game_phase = self.GAME_PHASES[0] # type: str
 
     @property
     def controller_pbk(self):
@@ -192,12 +194,12 @@ class NegotiationAgent(OEFAgent):
             # the message was not a 'Response' message.
             logger.exception(str(e))
 
-        if isinstance(response, GameData) and origin == self.controller_pbk:
+        if isinstance(response, GameData) and origin == self.controller_pbk and self._game_phase == self.GAME_PHASES[1]:
             self._on_start(response)
         elif isinstance(response, TransactionConfirmation) and origin == self.controller_pbk:
             self.on_transaction_confirmed(response)
-        elif isinstance(response, Cancelled) and origin == self.controller_pbk:
-            self.on_cancelled()
+        elif isinstance(response, Cancelled) and origin == self.controller_pbk and self._game_phase == self.GAME_PHASES[2]:
+            self._on_cancelled()
         elif isinstance(response, Error) and origin == self.controller_pbk:
             self.on_tac_error(response)
         else:
@@ -222,6 +224,7 @@ class NegotiationAgent(OEFAgent):
             opponent_pbks.remove(self.public_key)
             self._world_state = WorldState(opponent_pbks, self.game_configuration.good_pbks, self.initial_agent_state)
 
+        self._game_phase = self.GAME_PHASES[2]
         # dispatch the handling to the developer's implementation.
         self.on_start()
 
@@ -267,6 +270,7 @@ class NegotiationAgent(OEFAgent):
         """
         assert self.controller_pbk is None and self.game_configuration is None and self._agent_state is None
         self._controller_pbk = tac_controller_pbk
+        self._game_phase = self.GAME_PHASES[1]
         msg = Register(self.public_key).serialize()
         self.send_message(0, 0, tac_controller_pbk, msg)
 
@@ -280,3 +284,14 @@ class NegotiationAgent(OEFAgent):
         """
         dialogue_id = abs(hash(tx.transaction_id) % 2**31)
         self.send_message(0, dialogue_id, self._controller_pbk, tx.serialize())
+
+    def _on_cancelled(self) -> None:
+        """
+        The private handler for the on_cancelled event. It is used to update the game phase.
+
+        :return: None
+        """
+
+        self._game_phase = self.GAME_PHASES[3]
+        # dispatch the handling to the developer's implementation.
+        self.on_cancelled()
