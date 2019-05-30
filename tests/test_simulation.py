@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import datetime
 from threading import Thread
 
 import numpy as np
@@ -41,7 +42,7 @@ class TestSimulation:
                                            base_good_endowment=2,
                                            lower_bound_factor=0,
                                            upper_bound_factor=0,
-                                           start_time=None,
+                                           start_time=datetime.datetime.now() + datetime.timedelta(0, 2),
                                            registration_timeout=5,
                                            competition_timeout=40,
                                            inactivity_timeout=10)
