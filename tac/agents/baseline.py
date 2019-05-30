@@ -263,13 +263,6 @@ class BaselineAgent(NegotiationAgent):
         self.lock_manager = LockManager(self, pending_transaction_timeout=pending_transaction_timeout)
         self.lock_manager.start()
 
-        self._pending_tx_proposals = defaultdict(lambda: {})  # type: Dict[DIALOGUE_LABEL, Dict[MESSAGE_ID, Transaction]]
-        self._pending_tx_acceptances = defaultdict(lambda: {})  # type: Dict[DIALOGUE_LABEL, Dict[MESSAGE_ID, Transaction]]
-
-        self._locks = {}  # type: Dict[str, Transaction]
-        self._locks_as_buyer = {}  # type: Dict[str, Transaction]
-        self._locks_as_seller = {}  # type: Dict[str, Transaction]
-
         self._stopped = False
 
     @property

@@ -13,6 +13,7 @@ sphinxcontrib-plantuml = "*"
 pytest = "*"
 tox = "*"
 pytest-cov = "*"
+docker = "*"
 
 [packages]
 flask-sqlalchemy = "*"
