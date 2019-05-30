@@ -36,7 +36,7 @@ from oef.schema import Description
 from tac.core import NegotiationAgent
 from tac.game import WorldState
 from tac.helpers.misc import generate_transaction_id, build_query, get_goods_quantities_description, \
-    TAC_SUPPLY_DATAMODEL_NAME, marginal_utility
+    TAC_SUPPLY_DATAMODEL_NAME, marginal_utility, TacError
 from tac.protocol import Transaction, TransactionConfirmation, Error, ErrorCode
 
 if __name__ != "__main__":
@@ -290,10 +290,11 @@ class BaselineAgent(NegotiationAgent):
 
     def on_start(self) -> None:
         """
-        Handle the 'start' event.
+        Handle the 'start' event emitted by the controller.
 
         :return: None
         """
+        logger.debug("[{}]: Received start event from the controller. Starting...".format(self.public_key))
         self._start_loop()
 
     def _start_loop(self) -> None:
@@ -306,7 +307,7 @@ class BaselineAgent(NegotiationAgent):
         :return: None
         """
         if self._stopped:
-            logger.debug("Not proceeding with the main loop, since the agent has stopped.")
+            logger.debug("[{}]: Not proceeding with the main loop, since the agent has stopped.".format(self.public_key))
             return
 
         if self.goods_demanded_description is not None:
@@ -321,7 +322,7 @@ class BaselineAgent(NegotiationAgent):
 
     def on_cancelled(self) -> None:
         """
-        Handle the 'cancel' event.
+        Handle the 'cancel' event emitted by the controller.
 
         :return: None
         """
@@ -423,7 +424,7 @@ class BaselineAgent(NegotiationAgent):
             self._on_search_result(agent_pbks, is_searching_for_sellers=False)
             return
         else:
-            raise Exception("Shouldn't be here.")
+            raise Exception("Unexpected search result received.")
 
     def _on_search_result(self, agent_pbks: List[str], is_searching_for_sellers: bool) -> None:
         """
@@ -477,9 +478,12 @@ class BaselineAgent(NegotiationAgent):
         logger.debug("[{}]: on_cfp: msg_id={}, dialogue_id={}, origin={}, target={}, query={}"
                      .format(self.public_key, msg_id, dialogue_id, origin, target, query))
 
-        # if the cfp is from a buyer, then the buyer query references the seller/supply model (i.e. the buyer is searching for sellers)
-        is_seller = query.model.name == TAC_SUPPLY_DATAMODEL_NAME
-        self._on_cfp(msg_id, dialogue_id, origin, target, query, is_seller)
+        if origin in self.game_configuration.agent_pbks:
+            # if the cfp is from a buyer, then the buyer query references the seller/supply model (i.e. the buyer is searching for sellers)
+            is_seller = query.model.name == TAC_SUPPLY_DATAMODEL_NAME
+            self._on_cfp(msg_id, dialogue_id, origin, target, query, is_seller)
+        else:
+            raise TacError("Message received from unknown agent.")
 
     def _on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES, is_seller: bool) -> None:
         """
@@ -534,7 +538,6 @@ class BaselineAgent(NegotiationAgent):
 
         :return: None
         """
-        dialogue_label = (origin, dialogue_id)
         for proposal in proposals:
             proposal_id = new_msg_id  # TODO fix if more than one proposal!
             transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id, is_seller)  # TODO fix if more than one proposal!
@@ -560,8 +563,11 @@ class BaselineAgent(NegotiationAgent):
         logger.debug("[{}]: on_propose: msg_id={}, dialogue_id={}, origin={}, target={}, proposals={}"
                      .format(self.public_key, msg_id, dialogue_id, origin, target, proposals))
 
-        is_seller = self._is_seller(dialogue_id, origin)
-        self._on_propose(msg_id, dialogue_id, origin, target, proposals, is_seller)
+        if origin in self.game_configuration.agent_pbks:
+            is_seller = self._is_seller(dialogue_id, origin)
+            self._on_propose(msg_id, dialogue_id, origin, target, proposals, is_seller)
+        else:
+            raise TacError("Message received from unknown agent.")
 
     def _on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES, is_seller: bool) -> None:
         """
@@ -618,7 +624,6 @@ class BaselineAgent(NegotiationAgent):
 
         # compute the transaction request from the propose.
         proposal = proposals[0]
-        dialogue_label = (origin, dialogue_id)
         transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id, is_seller)
         transaction = Transaction.from_proposal(proposal=proposal,
                                                 transaction_id=transaction_id,
@@ -627,12 +632,10 @@ class BaselineAgent(NegotiationAgent):
                                                 sender=self.public_key)
 
         logger.debug("[{}]: Locking the current state (as {}).".format(self.public_key, role))
-        # self._lock_state(transaction, is_seller)
         self.lock_manager.add_lock(transaction, as_seller=is_seller)
 
         # add to pending acceptances
         new_msg_id = msg_id + 1
-        # self._pending_tx_acceptances[dialogue_label][new_msg_id] = transaction
         self.lock_manager.add_pending_acceptances(dialogue_id, origin, new_msg_id, transaction)
 
         self.send_accept(new_msg_id, dialogue_id, origin, msg_id)
@@ -650,22 +653,24 @@ class BaselineAgent(NegotiationAgent):
         """
         logger.debug("[{}]: on_decline: msg_id={}, dialogue_id={}, origin={}, target={}"
                      .format(self.public_key, msg_id, dialogue_id, origin, target))
-        dialogue_label = (dialogue_id, origin)
 
-        if self.is_world_modeling:
-           if dialogue_label in self.lock_manager.pending_tx_proposals and \
-                   target in self.lock_manager.pending_tx_proposals[dialogue_label]:
-               transaction = self.lock_manager.pop_pending_proposal(dialogue_id, origin, target)
-               self._world_state.update_on_decline(transaction)
+        if origin in self.game_configuration.agent_pbks:
+            dialogue_label = (dialogue_id, origin)
 
-        is_seller = self._is_seller(dialogue_id, origin)
-        transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id, is_seller)
-        if transaction_id in self.lock_manager.locks:
-            self.lock_manager.pop_lock(transaction_id)
+            if self.is_world_modeling:
+                if dialogue_label in self.lock_manager.pending_tx_proposals and target in self.lock_manager.pending_tx_proposals[dialogue_label]:
+                    transaction = self.lock_manager.pop_pending_proposal(dialogue_id, origin, target)
+                    self._world_state.update_on_decline(transaction)
 
-        self._delete_dialogue_id(origin, dialogue_id)
+            is_seller = self._is_seller(dialogue_id, origin)
+            transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id, is_seller)
+            if transaction_id in self.lock_manager.locks:
+                self.lock_manager.pop_lock(transaction_id)
 
-        self._start_loop()
+            self._delete_dialogue_id(origin, dialogue_id)
+            self._start_loop()
+        else:
+            raise TacError("Message received from unknown agent.")
 
     def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
         """
@@ -681,13 +686,16 @@ class BaselineAgent(NegotiationAgent):
         logger.debug("[{}]: on_accept: msg_id={}, dialogue_id={}, origin={}, target={}"
                      .format(self.public_key, msg_id, dialogue_id, origin, target))
 
-        dialogue_label = (origin, dialogue_id)  # type: DIALOGUE_LABEL
-        acceptance_id = target
-        if dialogue_label in self.lock_manager.pending_tx_acceptances \
-                and acceptance_id in self.lock_manager.pending_tx_acceptances[dialogue_label]:
-            self._on_match_accept(msg_id, dialogue_id, origin, target)
+        if origin in self.game_configuration.agent_pbks:
+            dialogue_label = (origin, dialogue_id)  # type: DIALOGUE_LABEL
+            acceptance_id = target
+            if dialogue_label in self.lock_manager.pending_tx_acceptances \
+                    and acceptance_id in self.lock_manager.pending_tx_acceptances[dialogue_label]:
+                self._on_match_accept(msg_id, dialogue_id, origin, target)
+            else:
+                self._on_accept(msg_id, dialogue_id, origin, target)
         else:
-            self._on_accept(msg_id, dialogue_id, origin, target)
+            raise TacError("Message received from unknown agent.")
 
     def _on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
         """
@@ -747,7 +755,7 @@ class BaselineAgent(NegotiationAgent):
 
     def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
         """
-        On Transaction confirmed handler.
+        Handles 'on transaction confirmed' event emitted by the controller.
 
         :param tx_confirmation: the transaction confirmation
 
@@ -760,6 +768,13 @@ class BaselineAgent(NegotiationAgent):
         self._start_loop()
 
     def on_tac_error(self, error: Error) -> None:
+        """
+        Handles 'on tac error' event emitted by the controller.
+
+        :param error: the error object
+
+        :return: None
+        """
         logger.error("[{}]: Received error from the controller. error_msg={}".format(self.public_key, error.error_msg))
         if error.error_code == ErrorCode.TRANSACTION_NOT_VALID:
             # if error in checking transaction, remove it from the pending transactions.
@@ -867,7 +882,8 @@ class BaselineAgent(NegotiationAgent):
         """
         is_buyer = (origin, dialogue_id) in self._dialogues_as_buyer
         is_seller = (origin, dialogue_id) in self._dialogues_as_seller
-        assert is_buyer == (not is_seller), "This dialogue is not specified."
+        if not is_buyer == (not is_seller):
+            raise TacError("This dialogue is not specified.")
         return is_seller
 
     ###

@@ -216,6 +216,48 @@ class GameStats:
 
         return result
 
+    def adjusted_score(self) -> np.ndarray:
+        """
+        Compute the adjusted score of each agent.
+
+        :return: a matrix of shape (1, nb_agents), where every column i contains the score of the agent.
+        """
+        nb_agents = self.game.configuration.nb_agents
+        current_scores = np.zeros((1, nb_agents), dtype=np.float32)
+
+        eq_agent_states = dict(
+            (agent_pbk,
+                AgentState(
+                    self.game.initialization.eq_money_holdings[i],
+                    self.game.initialization.eq_good_holdings[i],
+                    self.game.initialization.utility_params[i]
+                ))
+            for agent_pbk, i in zip(self.game.configuration.agent_pbks, range(self.game.configuration.nb_agents)))  # type: Dict[str, AgentState]
+
+        result = np.zeros((1, nb_agents), dtype=np.float32)
+
+        eq_scores = np.zeros((1, nb_agents), dtype=np.float32)
+        eq_scores[0, :] = [eq_agent_state.get_score() for eq_agent_state in eq_agent_states.values()]
+
+        temp_game = Game(self.game.configuration, self.game.initialization)
+
+        # initial scores
+        initial_scores = np.zeros((1, nb_agents), dtype=np.float32)
+        initial_scores[0, :] = temp_game.get_scores()
+        current_scores = np.zeros((1, nb_agents), dtype=np.float32)
+        current_scores[0, :] = temp_game.get_scores()
+
+        # compute the partial scores for every agent after every transaction
+        # (remember that indexes of the transaction start from one, because index 0 is reserved for the initial scores)
+        for idx, tx in enumerate(self.game.transactions):
+            temp_game.settle_transaction(tx)
+            current_scores[0, :] = temp_game.get_scores()
+
+        result[0, :] = np.divide(np.subtract(current_scores, initial_scores), np.subtract(eq_scores, initial_scores))
+        result = np.transpose(result)
+
+        return result
+
     def dump(self, directory: str, experiment_name: str) -> None:
         """
         Dump the plot.

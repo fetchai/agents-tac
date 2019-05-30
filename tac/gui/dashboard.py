@@ -69,7 +69,7 @@ class Dashboard(object):
         self._update_plot_price_history()
         self._update_plot_eq_vs_mean_price()
         self._update_plot_eq_vs_current_score()
-        # self._update_current_balances()
+        self._update_adjusted_score()
 
     @staticmethod
     def from_datadir(datadir: str, env_name: str):
@@ -179,6 +179,18 @@ class Dashboard(object):
                       opts=dict(
                           legend=['eq_score', 'current_score'],
                           title="Equilibrium vs Current Score",
+                          xlabel="Agents",
+                          ylabel="Score")
+                      )
+
+    def _update_adjusted_score(self):
+        adjusted_score = self.game_stats.adjusted_score()
+
+        window_name = "adjusted_score"
+        self.viz.line(X=np.arange(adjusted_score.shape[0]), Y=adjusted_score, env=self.env_name, win=window_name,
+                      opts=dict(
+                          legend=['adjusted_score'],
+                          title="Adjusted Score",
                           xlabel="Agents",
                           ylabel="Score")
                       )
