@@ -35,8 +35,9 @@ import os
 import pprint
 import time
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from threading import Thread
-from typing import Dict, Type
+from typing import Dict, Type, List
 from typing import Optional, Set
 
 import dateutil
@@ -47,7 +48,7 @@ from tac.game import Game, GameTransaction
 from tac.gui.monitor import Monitor, NullMonitor
 from tac.helpers.misc import generate_pbks
 from tac.protocol import Response, Request, Register, Unregister, Error, GameData, \
-    Transaction, TransactionConfirmation, ErrorCode, Cancelled
+    Transaction, TransactionConfirmation, ErrorCode, Cancelled, GetStateUpdate, StateUpdate
 from tac.stats import GameStats
 
 if __name__ != "__main__":
@@ -254,8 +255,9 @@ class TransactionHandler(RequestHandler):
             pending_tx = self._pending_transaction_requests.pop(request.transaction_id)
             if request.matches(pending_tx):
                 tx = GameTransaction.from_request_to_game_tx(request)
-
                 if self.controller_agent.game_handler.current_game.is_transaction_valid(tx):
+                    self.controller_agent.game_handler.confirmed_transaction_per_participant[pending_tx.sender].append(pending_tx)
+                    self.controller_agent.game_handler.confirmed_transaction_per_participant[request.sender].append(request)
                     return self._handle_valid_transaction(request)
                 else:
                     return self._handle_invalid_transaction(request)
@@ -275,6 +277,8 @@ class TransactionHandler(RequestHandler):
         # update the game state.
         tx = GameTransaction.from_request_to_game_tx(request)
         self.controller_agent.game_handler.current_game.settle_transaction(tx)
+
+        # update the GUI monitor
         self.controller_agent.monitor.update()
 
         # send the transaction confirmation.
@@ -299,6 +303,27 @@ class TransactionHandler(RequestHandler):
         return Error(request.public_key, ErrorCode.TRANSACTION_NOT_MATCHING)
 
 
+class GetStateUpdateHandler(RequestHandler):
+
+    def handle(self, request: Request) -> Optional[Response]:
+        """
+        Handle a 'get agent state' request.
+        If the public key is not registered, answer with an error message.
+
+        :param request: the 'get agent state' request.
+        :return: an Error response if an error occurred, else None.
+        """
+        logger.debug("Handling the 'get agent state' request: {}".format(request))
+        if request.public_key not in self.controller_agent.game_handler.registered_agents:
+            error_msg = "Agent not registered: '{}'".format(request.public_key)
+            logger.error(error_msg)
+            return Error(request.public_key, ErrorCode.AGENT_NOT_REGISTERED)
+        else:
+            transactions = self.controller_agent.game_handler.confirmed_transaction_per_participant[request.public_key]  # type: List[Transaction]
+            initial_game_data = self.controller_agent.game_handler.game_data_per_participant[request.public_key]  # type: GameData
+            return StateUpdate(request.public_key, initial_game_data, transactions)
+
+
 class ControllerDispatcher(object):
     """Class to wrap the decoding procedure and dispatching the handling of the message to the right function."""
 
@@ -313,7 +338,8 @@ class ControllerDispatcher(object):
         self.handlers = {
             Register: RegisterHandler(controller_agent),
             Unregister: UnregisterHandler(controller_agent),
-            Transaction: TransactionHandler(controller_agent)
+            Transaction: TransactionHandler(controller_agent),
+            GetStateUpdate: GetStateUpdateHandler(controller_agent),
         }  # type: Dict[Type[Request], RequestHandler]
 
     def register_handler(self, request_type: Type[Request], request_handler: RequestHandler) -> None:
@@ -380,6 +406,9 @@ class GameHandler:
         self.current_game = None  # type: Optional[Game]
         self.inactivity_timeout_timedelta = datetime.timedelta(seconds=tac_parameters.inactivity_timeout) \
             if tac_parameters.inactivity_timeout is not None else datetime.timedelta(seconds=15)
+
+        self.game_data_per_participant = {}  # type: Dict[str, GameData]
+        self.confirmed_transaction_per_participant = defaultdict(lambda: [])  # type: Dict[str, List[Transaction]]
 
     def reset(self) -> None:
         """Reset the game."""
@@ -460,6 +489,8 @@ class GameHandler:
             )
             logger.debug("[{}]: sending GameData to '{}': {}"
                          .format(self.controller_agent.public_key, public_key, str(game_data_response)))
+
+            self.game_data_per_participant[public_key] = game_data_response
             self.controller_agent.send_message(0, 1, public_key, game_data_response.serialize())
 
     def handle_registration_phase(self) -> bool:

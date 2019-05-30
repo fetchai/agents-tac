@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import datetime
 from threading import Thread
 
 from oef.agents import OEFAgent
@@ -18,7 +19,7 @@ class TestController:
         controller_agent = ControllerAgent("controller")
         controller_agent.connect()
 
-        parameters = TACParameters(min_nb_agents=2)
+        parameters = TACParameters(min_nb_agents=2, start_time=datetime.datetime.now(), inactivity_timeout=10)
         job = Thread(target=controller_agent.start_competition, args=(parameters, ))
         job.start()
 
