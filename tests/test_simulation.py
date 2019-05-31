@@ -44,8 +44,8 @@ class TestSimulation:
                                            upper_bound_factor=0,
                                            start_time=datetime.datetime.now() + datetime.timedelta(0, 2),
                                            registration_timeout=5,
-                                           competition_timeout=40,
-                                           inactivity_timeout=10)
+                                           competition_timeout=60,
+                                           inactivity_timeout=30)
 
         # run the simulation
         try:
@@ -88,5 +88,3 @@ class TestSimulation:
             next_scores = np.asarray(game.get_scores())
             assert not (next_scores < current_score).any()
             current_score = next_scores
-
-

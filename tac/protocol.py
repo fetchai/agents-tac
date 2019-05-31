@@ -535,6 +535,6 @@ class StateUpdate(Response):
 
     def __eq__(self, other):
         return type(self) == type(other) and \
-               self.public_key == other.public_key and \
-               self.initial_state == other.initial_state and \
-               self.transactions == other.transactions
+            self.public_key == other.public_key and \
+            self.initial_state == other.initial_state and \
+            self.transactions == other.transactions

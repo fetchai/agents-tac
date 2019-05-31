@@ -47,6 +47,7 @@ from oef.schema import Description, DataModel, AttributeSchema
 from tac.game import Game, GameTransaction
 from tac.gui.monitor import Monitor, NullMonitor
 from tac.helpers.misc import generate_pbks
+from tac.helpers.crypto import Crypto
 from tac.protocol import Response, Request, Register, Unregister, Error, GameData, \
     Transaction, TransactionConfirmation, ErrorCode, Cancelled, GetStateUpdate, StateUpdate
 from tac.stats import GameStats
@@ -531,7 +532,7 @@ class ControllerAgent(OEFAgent):
         AttributeSchema("version", int, True, "Version number of the TAC Controller Agent."),
     ])
 
-    def __init__(self, public_key: str = "controller",
+    def __init__(self, name: str = "controller",
                  oef_addr: str = "127.0.0.1",
                  oef_port: int = 3333,
                  version: int = 1,
@@ -539,13 +540,15 @@ class ControllerAgent(OEFAgent):
                  **kwargs):
         """
         Initialize a Controller Agent for TAC.
-        :param public_key: The public key of the OEF Agent.
+        :param name: The name of the OEF Agent.
         :param oef_addr: the OEF address.
         :param oef_port: the OEF listening port.
         :param version: the version of the TAC controller.
         :param monitor: the GUI monitor. If None, defaults to a null (dummy) monitor.
         """
-        super().__init__(public_key, oef_addr, oef_port, loop=asyncio.new_event_loop())
+        self.name = name
+        self.crypto = Crypto()
+        super().__init__(self.crypto.public_key, oef_addr, oef_port, loop=asyncio.new_event_loop())
         logger.debug("Initialized Controller Agent :\n{}".format(pprint.pformat(vars())))
 
         self.dispatcher = ControllerDispatcher(self)
@@ -620,7 +623,7 @@ class ControllerAgent(OEFAgent):
         """
 
         if self._is_running:
-            logger.debug("[{}]: Terminating the controller...".format(self.public_key))
+            logger.debug("[{}]: Terminating the controller...".format(self.name))
             self._is_running = False
             self.game_handler.notify_tac_cancelled()
             self._loop.call_soon_threadsafe(self.stop)
@@ -643,11 +646,11 @@ class ControllerAgent(OEFAgent):
             current_time = datetime.datetime.now()
             inactivity_duration = current_time - self.last_activity
             if inactivity_duration > self.game_handler.tac_parameters.inactivity_timedelta:
-                logger.debug("[{}]: Inactivity timeout expired. Terminating...".format(self.public_key))
+                logger.debug("[{}]: Inactivity timeout expired. Terminating...".format(self.name))
                 self.terminate()
                 return
             elif current_time > self.game_handler.tac_parameters.end_time:
-                logger.debug("[{}]: Competition timeout expired. Terminating...".format(self.public_key))
+                logger.debug("[{}]: Competition timeout expired. Terminating...".format(self.name))
                 self.terminate()
                 return
 
@@ -661,7 +664,7 @@ class ControllerAgent(OEFAgent):
         :return:
         """
         logger.debug("[{}]: Starting competition with parameters: {}"
-                     .format(self.public_key, pprint.pformat(tac_parameters.__dict__)))
+                     .format(self.name, pprint.pformat(tac_parameters.__dict__)))
         self._is_running = True
         self._message_processing_task = Thread(target=self.run)
         self._message_processing_task.start()
@@ -679,7 +682,7 @@ class ControllerAgent(OEFAgent):
         """
         now = datetime.datetime.now()
         logger.debug("[{}]: waiting for starting the competition: start_time={}, current_time={}, timedelta ={}s"
-                     .format(self.public_key, str(tac_parameters.start_time), str(now),
+                     .format(self.name, str(tac_parameters.start_time), str(now),
                              (tac_parameters.start_time - now).total_seconds()))
 
         while now < tac_parameters.start_time:

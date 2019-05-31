@@ -12,5 +12,3 @@ def test_generate_transaction_id():
     actual_result = generate_transaction_id("buyer_pbk", "seller_pbk", 12345, True)
 
     assert actual_result == expected_result
-
-

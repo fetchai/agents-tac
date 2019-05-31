@@ -10,7 +10,7 @@ from tac.agents.controller import ControllerAgent, TACParameters
 
 
 class TestController:
-    
+
     def test_competition_stops_too_few_registered_agents(self, network_node):
         """
         Test that if the controller agent does not receive enough registrations, it stops.
@@ -30,4 +30,3 @@ class TestController:
         job.join()
 
         assert len(controller_agent.game_handler.registered_agents) == 1
-

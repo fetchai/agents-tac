@@ -91,7 +91,7 @@ def _compute_competition_start_and_end_time(registration_timeout: int, competiti
     return start_time, end_time
 
 
-def initialize_controller_agent(public_key: str,
+def initialize_controller_agent(name: str,
                                 oef_addr: str,
                                 oef_port: int,
                                 visdom_addr: str,
@@ -99,7 +99,7 @@ def initialize_controller_agent(public_key: str,
                                 gui: bool) -> ControllerAgent:
     """
     Initialize the controller agent.
-    :param public_key: the public key of the controller agent.
+    :param name: the name of the controller agent.
     :param oef_addr: the TCP/IP address of the OEF Node.
     :param oef_port: the TCP/IP port of the OEF Node.
     :param visdom_addr: TCP/IP address of the Visdom server.
@@ -108,7 +108,7 @@ def initialize_controller_agent(public_key: str,
     """
 
     monitor = VisdomMonitor(visdom_addr=visdom_addr, visdom_port=visdom_port) if gui else NullMonitor()
-    tac_controller = ControllerAgent(public_key=public_key, oef_addr=oef_addr, oef_port=oef_port, monitor=monitor)
+    tac_controller = ControllerAgent(name=name, oef_addr=oef_addr, oef_port=oef_port, monitor=monitor)
 
     tac_controller.connect()
     tac_controller.register()
@@ -117,7 +117,7 @@ def initialize_controller_agent(public_key: str,
 
 def _make_id(agent_id: int, is_world_modeling: bool, nb_agents: int) -> str:
     """
-    Make the public key for baseline agents from an integer identifier.
+    Make the name for baseline agents from an integer identifier.
     E.g. from '0' to 'tac_agent_00'.
 
     E.g.:
@@ -144,10 +144,10 @@ def _make_id(agent_id: int, is_world_modeling: bool, nb_agents: int) -> str:
     return result
 
 
-def initialize_baseline_agent(agent_pbk: str, oef_addr: str, oef_port: int, register_as: str, search_for: str, is_world_modeling: bool, pending_transaction_timeout: int) -> BaselineAgent:
+def initialize_baseline_agent(agent_name: str, oef_addr: str, oef_port: int, register_as: str, search_for: str, is_world_modeling: bool, pending_transaction_timeout: int) -> BaselineAgent:
     """
     Initialize one baseline agent.
-    :param agent_pbk: the public key of the Baseline agent.
+    :param agent_name: the name of the Baseline agent.
     :param oef_addr: IP address of the OEF Node.
     :param oef_port: TCP port of the OEF Node.
     :param register_as: the string indicates whether the baseline agent registers as seller, buyer or both on the oef.
@@ -159,7 +159,7 @@ def initialize_baseline_agent(agent_pbk: str, oef_addr: str, oef_port: int, regi
     """
 
     # Notice: we create a new asyncio loop, so we can run it in an independent thread.
-    return BaselineAgent(agent_pbk, oef_addr, oef_port, loop=asyncio.new_event_loop(), register_as=register_as, search_for=search_for, is_world_modeling=is_world_modeling, pending_transaction_timeout=pending_transaction_timeout)
+    return BaselineAgent(agent_name, oef_addr, oef_port, loop=asyncio.new_event_loop(), register_as=register_as, search_for=search_for, is_world_modeling=is_world_modeling, pending_transaction_timeout=pending_transaction_timeout)
 
 
 def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port: int, register_as: str, search_for: str, pending_transaction_timeout: int) -> List[BaselineAgent]:
