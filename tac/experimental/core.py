@@ -10,8 +10,7 @@ from typing import List, Optional, Any, Dict, Union, Set
 
 from oef.agents import OEFAgent
 from oef.messages import PROPOSE_TYPES, CFP_TYPES, CFP, Decline, Propose, Accept, Message as SimpleMessage, \
-    SearchResult, \
-    OEFErrorOperation, OEFErrorMessage, DialogueErrorMessage, AgentMessage
+    SearchResult, OEFErrorOperation, OEFErrorMessage, DialogueErrorMessage
 from oef.query import Query, Constraint, GtEq
 
 from tac.game import AgentState, WorldState, GameConfiguration
@@ -22,6 +21,7 @@ logger = logging.getLogger(__name__)
 Action = Any
 OEFMessage = Union[SearchResult, OEFErrorMessage, DialogueErrorMessage]
 ControllerResponse = Response
+AgentMessage = Union[SimpleMessage, CFP, Propose, Accept, Decline]
 Message = Union[OEFMessage, AgentMessage]
 
 
@@ -136,13 +136,6 @@ class DialogueLabel:
 
     def __hash__(self):
         return hash((self.dialogue_id, self.agent_pbk))
-
-
-class AgentMessage:
-
-    def __init__(self, dialogue_label: DialogueLabel, content: Any):
-        self.dialogue_label = dialogue_label
-        self.content = content
 
 
 class Crypto(object):
@@ -439,8 +432,9 @@ class TACParticipantAgent(ControllerInterface):
 
     def handle_dialogue_message(self, msg: AgentMessage):
         logger.debug("Handling Dialogue message. type={}".format(type(msg)))
-        if self.dialogues.is_dialogue_registered(msg.dialogue_label):
-            dialogue = self.dialogues.get_dialogue(msg.dialogue_label)
+        dialogue_label = DialogueLabel(msg.dialogue_id, msg.destination)
+        if self.dialogues.is_dialogue_registered(dialogue_label):
+            dialogue = self.dialogues.get_dialogue(dialogue_label)
         else:
             dialogue = self.on_new_dialogue(msg)
 
