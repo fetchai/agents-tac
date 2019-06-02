@@ -22,6 +22,7 @@ numpy = "*"
 matplotlib = "*"
 python-dateutil = "*"
 visdom = "*"
+cryptography = "*"
 
 [requires]
 python_version = "3.7"

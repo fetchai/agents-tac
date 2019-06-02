@@ -50,7 +50,7 @@ class NegotiationAgent(OEFAgent):
         self._agent_state = None  # type: Optional[AgentState]
         self._is_world_modeling = is_world_modeling
         self._world_state = None  # type: Optional[WorldState]
-        self._game_phase = self.GAME_PHASES[0] # type: str
+        self._game_phase = self.GAME_PHASES[0]  # type: str
 
     @property
     def controller_pbk(self):
@@ -309,4 +309,3 @@ class NegotiationAgent(OEFAgent):
         self._game_phase = self.GAME_PHASES[3]
         # dispatch the handling to the developer's implementation.
         self.on_cancelled()
-

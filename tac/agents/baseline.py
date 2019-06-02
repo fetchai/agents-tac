@@ -37,6 +37,7 @@ from tac.core import NegotiationAgent
 from tac.game import WorldState
 from tac.helpers.misc import generate_transaction_id, build_query, get_goods_quantities_description, \
     TAC_SUPPLY_DATAMODEL_NAME, marginal_utility, TacError
+from tac.helpers.crypto import Crypto
 from tac.protocol import Transaction, TransactionConfirmation, Error, ErrorCode
 
 if __name__ != "__main__":
@@ -248,8 +249,10 @@ class BaselineAgent(NegotiationAgent):
     to their marginal utility and buying goods at a price plus fee equal or below their marginal utility.
     """
 
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, register_as: str = 'both', search_for: str = 'both', is_world_modeling: bool = False, pending_transaction_timeout: int = 30, **kwargs):
-        super().__init__(public_key, oef_addr, oef_port, is_world_modeling, **kwargs)
+    def __init__(self, name: str, oef_addr: str, oef_port: int = 3333, register_as: str = 'both', search_for: str = 'both', is_world_modeling: bool = False, pending_transaction_timeout: int = 30, **kwargs):
+        self.name = name
+        self.crypto = Crypto()
+        super().__init__(self.crypto.public_key, oef_addr, oef_port, is_world_modeling, **kwargs)
         self._register_as = register_as
         self._search_for = search_for
 
@@ -287,7 +290,7 @@ class BaselineAgent(NegotiationAgent):
 
         :return: None
         """
-        logger.debug("[{}]: Received start event from the controller. Starting...".format(self.public_key))
+        logger.debug("[{}]: Received start event from the controller. Starting...".format(self.name))
         self._start_loop()
 
     def _start_loop(self) -> None:
@@ -300,7 +303,7 @@ class BaselineAgent(NegotiationAgent):
         :return: None
         """
         if self._stopped:
-            logger.debug("[{}]: Not proceeding with the main loop, since the agent has stopped.".format(self.public_key))
+            logger.debug("[{}]: Not proceeding with the main loop, since the agent has stopped.".format(self.name))
             return
 
         if self.goods_demanded_description is not None:
@@ -319,7 +322,7 @@ class BaselineAgent(NegotiationAgent):
 
         :return: None
         """
-        logger.debug("[{}]: Received cancellation from the controller. Stopping...".format(self.public_key))
+        logger.debug("[{}]: Received cancellation from the controller. Stopping...".format(self.name))
         self._loop.call_soon_threadsafe(self.stop)
         self.lock_manager.stop()
         self._stopped = True
@@ -334,12 +337,12 @@ class BaselineAgent(NegotiationAgent):
         :return: None
         """
         if self.is_registering_as_seller:
-            logger.debug("[{}]: Updating service directory as seller with goods supplied.".format(self.public_key))
+            logger.debug("[{}]: Updating service directory as seller with goods supplied.".format(self.name))
             goods_supplied_description = self._get_goods_description(is_supply=True)
             self.goods_supplied_description = goods_supplied_description
             self.register_service(STARTING_MESSAGE_REF, goods_supplied_description)
         if self.is_registering_as_buyer:
-            logger.debug("[{}]: Updating service directory as buyer with goods demanded.".format(self.public_key))
+            logger.debug("[{}]: Updating service directory as buyer with goods demanded.".format(self.name))
             goods_demanded_description = self._get_goods_description(is_supply=False)
             self.goods_demanded_description = goods_demanded_description
             self.register_service(STARTING_MESSAGE_REF, goods_demanded_description)
@@ -372,18 +375,18 @@ class BaselineAgent(NegotiationAgent):
         if self.is_searching_for_sellers:
             query = self._build_query(is_searching_for_sellers=True)
             if query is None:
-                logger.warning("[{}]: Not searching the OEF for sellers because the agent demands no goods.".format(self.public_key))
+                logger.warning("[{}]: Not searching the OEF for sellers because the agent demands no goods.".format(self.name))
                 return None
             else:
-                logger.debug("[{}]: Searching for sellers which match the demand of the agent.".format(self.public_key))
+                logger.debug("[{}]: Searching for sellers which match the demand of the agent.".format(self.name))
                 self.search_services(TAC_SELLERS_SEARCH_ID, query)
         if self.is_searching_for_buyers:
             query = self._build_query(is_searching_for_sellers=False)
             if query is None:
-                logger.warning("[{}]: Not searching the OEF for buyers because the agent supplies no goods.".format(self.public_key))
+                logger.warning("[{}]: Not searching the OEF for buyers because the agent supplies no goods.".format(self.name))
                 return None
             else:
-                logger.debug("[{}]: Searching for buyers which match the supply of the agent.".format(self.public_key))
+                logger.debug("[{}]: Searching for buyers which match the supply of the agent.".format(self.name))
                 self.search_services(TAC_BUYERS_SEARCH_ID, query)
 
     def _build_query(self, is_searching_for_sellers: bool) -> Optional[Query]:
@@ -409,7 +412,7 @@ class BaselineAgent(NegotiationAgent):
 
         :return: None
         """
-        logger.debug("[{}]: on search result: {} {}".format(self.public_key, search_id, agent_pbks))
+        logger.debug("[{}]: on search result: {} {}".format(self.name, search_id, agent_pbks))
         if search_id == TAC_SELLERS_SEARCH_ID:
             self._on_search_result(agent_pbks, is_searching_for_sellers=True)
             return
@@ -439,12 +442,12 @@ class BaselineAgent(NegotiationAgent):
         searched_for = 'sellers' if is_searching_for_sellers else 'buyers'
         role = 'buyer' if is_searching_for_sellers else 'seller'
         is_seller = False if is_searching_for_sellers else True
-        logger.debug("[{}]: Found potential {}: {}".format(self.public_key, searched_for, agent_pbks))
+        logger.debug("[{}]: Found potential {}: {}".format(self.name, searched_for, agent_pbks))
 
         query = self._build_query(is_searching_for_sellers)
         if query is None:
             response = 'demanding' if is_searching_for_sellers else 'supplying'
-            logger.debug("[{}]: No longer {} any goods...".format(self.public_key, response))
+            logger.debug("[{}]: No longer {} any goods...".format(self.name, response))
 
             self._start_loop()
             return
@@ -453,7 +456,7 @@ class BaselineAgent(NegotiationAgent):
             dialogue_id = random.randint(0, 2 ** 31)
             self._save_dialogue_id(agent_pbk, dialogue_id, is_seller)
             logger.debug("[{}]: send_cfp_as_{}: msg_id={}, dialogue_id={}, destination={}, target={}, query={}"
-                         .format(self.public_key, role, STARTING_MESSAGE_ID, dialogue_id, agent_pbk, STARTING_MESSAGE_REF, query))
+                         .format(self.name, role, STARTING_MESSAGE_ID, dialogue_id, agent_pbk, STARTING_MESSAGE_REF, query))
             self.send_cfp(STARTING_MESSAGE_ID, dialogue_id, agent_pbk, STARTING_MESSAGE_REF, query)
 
     def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES) -> None:
@@ -469,7 +472,7 @@ class BaselineAgent(NegotiationAgent):
         :return: None
         """
         logger.debug("[{}]: on_cfp: msg_id={}, dialogue_id={}, origin={}, target={}, query={}"
-                     .format(self.public_key, msg_id, dialogue_id, origin, target, query))
+                     .format(self.name, msg_id, dialogue_id, origin, target, query))
 
         if origin in self.game_configuration.agent_pbks:
             # if the cfp is from a buyer, then the buyer query references the seller/supply model (i.e. the buyer is searching for sellers)
@@ -498,8 +501,8 @@ class BaselineAgent(NegotiationAgent):
         goods_description = self._get_goods_description(is_supply=is_seller)
         new_msg_id = msg_id + 1
         if not query.check(goods_description):
-            logger.debug("[{}]: Current holdings do not satisfy CFP query.".format(self.public_key))
-            logger.debug("[{}]: sending to {} a Decline{}".format(self.public_key, origin,
+            logger.debug("[{}]: Current holdings do not satisfy CFP query.".format(self.name))
+            logger.debug("[{}]: sending to {} a Decline{}".format(self.name, origin,
                                                                   pprint.pformat({
                                                                       "msg_id": new_msg_id,
                                                                       "dialogue_id": dialogue_id,
@@ -510,7 +513,7 @@ class BaselineAgent(NegotiationAgent):
         else:
             proposals = [random.choice(self._get_proposals(query, is_seller))]
             self._store_proposals(proposals, new_msg_id, dialogue_id, origin, is_seller)
-            logger.debug("[{}]: sending to {} a Propose{}".format(self.public_key, origin,
+            logger.debug("[{}]: sending to {} a Propose{}".format(self.name, origin,
                                                                   pprint.pformat({
                                                                       "msg_id": new_msg_id,
                                                                       "dialogue_id": dialogue_id,
@@ -554,7 +557,7 @@ class BaselineAgent(NegotiationAgent):
         :return: None
         """
         logger.debug("[{}]: on_propose: msg_id={}, dialogue_id={}, origin={}, target={}, proposals={}"
-                     .format(self.public_key, msg_id, dialogue_id, origin, target, proposals))
+                     .format(self.name, msg_id, dialogue_id, origin, target, proposals))
 
         if origin in self.game_configuration.agent_pbks:
             is_seller = self._is_seller(dialogue_id, origin)
@@ -582,7 +585,7 @@ class BaselineAgent(NegotiationAgent):
         :return: None
         """
         role = 'seller' if is_seller else 'buyer'
-        logger.debug("[{}]: on propose as {}.".format(self.public_key, role))
+        logger.debug("[{}]: on propose as {}.".format(self.name, role))
         proposal = proposals[0]
         transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id, is_seller)
         transaction = Transaction.from_proposal(proposal,
@@ -591,11 +594,11 @@ class BaselineAgent(NegotiationAgent):
                                                 counterparty=origin,
                                                 sender=self.public_key)
         if self._is_profitable_transaction(transaction, is_seller):
-            logger.debug("[{}]: Accepting propose (as {}).".format(self.public_key, role))
+            logger.debug("[{}]: Accepting propose (as {}).".format(self.name, role))
             self._accept_propose(msg_id, dialogue_id, origin, target, proposals, is_seller)
         # TODO counter-propose
         else:
-            logger.debug("[{}]: Declining propose (as {})".format(self.public_key, role))
+            logger.debug("[{}]: Declining propose (as {})".format(self.name, role))
             self.send_decline(msg_id + 1, dialogue_id, origin, msg_id)
             self._delete_dialogue_id(origin, dialogue_id)
 
@@ -613,7 +616,7 @@ class BaselineAgent(NegotiationAgent):
         :return: None
         """
         role = 'seller' if is_seller else 'buyer'
-        logger.debug("[{}]: accept propose as {}".format(self.public_key, role))
+        logger.debug("[{}]: accept propose as {}".format(self.name, role))
 
         # compute the transaction request from the propose.
         proposal = proposals[0]
@@ -624,7 +627,7 @@ class BaselineAgent(NegotiationAgent):
                                                 counterparty=origin,
                                                 sender=self.public_key)
 
-        logger.debug("[{}]: Locking the current state (as {}).".format(self.public_key, role))
+        logger.debug("[{}]: Locking the current state (as {}).".format(self.name, role))
         self.lock_manager.add_lock(transaction, as_seller=is_seller)
 
         # add to pending acceptances
@@ -645,7 +648,7 @@ class BaselineAgent(NegotiationAgent):
         :return: None
         """
         logger.debug("[{}]: on_decline: msg_id={}, dialogue_id={}, origin={}, target={}"
-                     .format(self.public_key, msg_id, dialogue_id, origin, target))
+                     .format(self.name, msg_id, dialogue_id, origin, target))
 
         if origin in self.game_configuration.agent_pbks:
             dialogue_label = (dialogue_id, origin)
@@ -677,7 +680,7 @@ class BaselineAgent(NegotiationAgent):
         :return: None
         """
         logger.debug("[{}]: on_accept: msg_id={}, dialogue_id={}, origin={}, target={}"
-                     .format(self.public_key, msg_id, dialogue_id, origin, target))
+                     .format(self.name, msg_id, dialogue_id, origin, target))
 
         if origin in self.game_configuration.agent_pbks:
             dialogue_label = (origin, dialogue_id)  # type: DIALOGUE_LABEL
@@ -721,12 +724,12 @@ class BaselineAgent(NegotiationAgent):
         if self._is_profitable_transaction(transaction, is_seller):
             if self.is_world_modeling:
                 self._world_state.update_on_accept(transaction)
-            logger.debug("[{}]: Locking the current state (as {}).".format(self.public_key, role))
+            logger.debug("[{}]: Locking the current state (as {}).".format(self.name, role))
             self.lock_manager.add_lock(transaction, as_seller=is_seller)
             self.submit_transaction_to_controller(transaction)
             self.send_accept(msg_id + 1, dialogue_id, origin, msg_id)
         else:
-            logger.debug("[{}]: Decline the accept (as {}).".format(self.public_key, role))
+            logger.debug("[{}]: Decline the accept (as {}).".format(self.name, role))
             self.send_decline(msg_id + 1, dialogue_id, origin, msg_id)
 
     def _on_match_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int):
@@ -741,7 +744,7 @@ class BaselineAgent(NegotiationAgent):
         :return: None
         """
         # TODO implement at SDK level and proper error handling
-        logger.debug("[{}]: on match accept".format(self.public_key))
+        logger.debug("[{}]: on match accept".format(self.name))
 
         transaction = self.lock_manager.pop_pending_acceptances(dialogue_id, origin, target)
         self.submit_transaction_to_controller(transaction)
@@ -754,7 +757,7 @@ class BaselineAgent(NegotiationAgent):
 
         :return: None
         """
-        logger.debug("[{}]: on transaction confirmed: {}".format(self.public_key, tx_confirmation.transaction_id))
+        logger.debug("[{}]: on transaction confirmed: {}".format(self.name, tx_confirmation.transaction_id))
         transaction = self.lock_manager.pop_lock(tx_confirmation.transaction_id)
         self._agent_state.update(transaction, self.game_configuration.tx_fee)
 
@@ -768,7 +771,7 @@ class BaselineAgent(NegotiationAgent):
 
         :return: None
         """
-        logger.error("[{}]: Received error from the controller. error_msg={}".format(self.public_key, error.error_msg))
+        logger.error("[{}]: Received error from the controller. error_msg={}".format(self.name, error.error_msg))
         if error.error_code == ErrorCode.TRANSACTION_NOT_VALID:
             # if error in checking transaction, remove it from the pending transactions.
             start_idx_of_tx_id = len("Error in checking transaction: ")
@@ -776,7 +779,7 @@ class BaselineAgent(NegotiationAgent):
             if transaction_id in self.lock_manager.locks:
                 self.lock_manager.pop_lock(transaction_id)
             else:
-                logger.warning("[{}]: Received error on unknown transaction id: {}".format(self.public_key, transaction_id))
+                logger.warning("[{}]: Received error on unknown transaction id: {}".format(self.name, transaction_id))
 
     def _save_dialogue_id(self, dialogue_starter_pbk: str, dialogue_id: int, is_seller: bool):
         """
@@ -796,7 +799,7 @@ class BaselineAgent(NegotiationAgent):
         else:
             assert dialogue_label not in self._dialogues_as_buyer
             self._dialogues_as_buyer.add(dialogue_label)
-        logger.debug("[{}]: saving dialogue {}".format(self.public_key, dialogue_label))
+        logger.debug("[{}]: saving dialogue {}".format(self.name, dialogue_label))
         self._all_dialogues.add(dialogue_label)
 
     def _delete_dialogue_id(self, origin: str, dialogue_id: int):
@@ -809,7 +812,7 @@ class BaselineAgent(NegotiationAgent):
         :return: None
         """
         dialogue_label = (origin, dialogue_id)
-        logger.debug("[{}]: deleting dialogue {}".format(self.public_key, dialogue_label))
+        logger.debug("[{}]: deleting dialogue {}".format(self.name, dialogue_label))
         assert dialogue_label in self._all_dialogues
         assert dialogue_label in self._dialogues_as_buyer or dialogue_label in self._dialogues_as_seller
 
@@ -838,7 +841,7 @@ class BaselineAgent(NegotiationAgent):
         state_after_locks = self._state_after_locks(is_seller)
 
         if not state_after_locks.check_transaction_is_consistent(transaction, self.game_configuration.tx_fee):
-            logger.debug("[{}]: the proposed transaction is not consistent with the state after locks.".format(self.public_key))
+            logger.debug("[{}]: the proposed transaction is not consistent with the state after locks.".format(self.name))
             return False
 
         proposal_delta_score = state_after_locks.get_score_diff_from_transaction(transaction, self.game_configuration.tx_fee)
@@ -846,7 +849,7 @@ class BaselineAgent(NegotiationAgent):
         result = proposal_delta_score >= 0
         logger.debug("[{}]: is good proposal for {}? {}: tx_id={}, "
                      "delta_score={}, amount={}"
-                     .format(self.public_key, role, result, transaction.transaction_id,
+                     .format(self.name, role, result, transaction.transaction_id,
                              proposal_delta_score, transaction.amount))
         return result
 

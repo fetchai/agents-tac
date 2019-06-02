@@ -7,6 +7,7 @@ import pytest
 
 logger = logging.getLogger(__name__)
 
+
 @pytest.fixture(scope="module")
 def oef_addr() -> str:
     """The IP address pointing to the OEF Node to use during the tests."""
@@ -49,4 +50,3 @@ def network_node(oef_addr, oef_port):
     yield
     logger.info("Stopping the OEF node...")
     c.stop()
-
