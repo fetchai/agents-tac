@@ -57,6 +57,7 @@ class GameConfiguration:
                  nb_goods: int,
                  tx_fee: float,
                  agent_pbks: List[str],
+                 agent_names: List[str],
                  good_pbks: List[str]):
         """
         Configuration of a game.
@@ -64,6 +65,7 @@ class GameConfiguration:
         :param nb_goods: the number of goods.
         :param tx_fee: the fee for a transaction.
         :param agent_pbks: a list of agent public keys (as strings).
+        :param agent_names: a list of human readable agent names (as strings).
         :param good_pbks: a list of good public keys (as strings).
         """
 
@@ -71,6 +73,7 @@ class GameConfiguration:
         self._nb_goods = nb_goods
         self._tx_fee = tx_fee
         self._agent_pbks = agent_pbks
+        self._agent_names = agent_names
         self._good_pbks = good_pbks
 
         self._check_consistency()
@@ -92,6 +95,10 @@ class GameConfiguration:
         return self._agent_pbks
 
     @property
+    def agent_names(self):
+        return self._agent_names
+
+    @property
     def good_pbks(self) -> List[str]:
         return self._good_pbks
 
@@ -104,6 +111,7 @@ class GameConfiguration:
         assert self.tx_fee >= 0, "Tx fee must be non-negative."
         assert self.nb_agents > 1, "Must have at least two agents."
         assert self.nb_goods > 1, "Must have at least two goods."
+        assert len(set(self.agent_names)) == self.nb_agents, "Agents' names must be unique."
         assert len(set(self.agent_pbks)) == self.nb_agents, "Agents' pbks must be unique."
         assert len(set(self.good_pbks)) == self.nb_goods, "Goods' pbks must be unique."
 
@@ -114,6 +122,7 @@ class GameConfiguration:
             "nb_goods": self.nb_goods,
             "tx_fee": self.tx_fee,
             "agent_pbks": self.agent_pbks,
+            "agent_names": self.agent_names,
             "good_pbks": self.good_pbks
         }
 
@@ -125,6 +134,7 @@ class GameConfiguration:
             d["nb_goods"],
             d["tx_fee"],
             d["agent_pbks"],
+            d["agent_names"],
             d["good_pbks"]
         )
         return obj
@@ -135,6 +145,7 @@ class GameConfiguration:
             self.nb_goods == other.nb_goods and \
             self.tx_fee == other.tx_fee and \
             self.agent_pbks == other.agent_pbks and \
+            self.agent_names == other.agent_names and \
             self.good_pbks == other.good_pbks
 
 
@@ -254,7 +265,8 @@ class Game:
     >>> nb_agents = 3
     >>> nb_goods = 3
     >>> tx_fee = 1.0
-    >>> agent_pbks = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
+    >>> agent_pbks = ['tac_agent_0_pbk', 'tac_agent_1_pbk', 'tac_agent_2_pbk']
+    >>> agent_names = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
     >>> good_pbks = ['tac_good_0', 'tac_good_1', 'tac_good_2']
     >>> money_amounts = [20, 20, 20]
     >>> endowments = [
@@ -276,6 +288,7 @@ class Game:
     ...     nb_goods,
     ...     tx_fee,
     ...     agent_pbks,
+    ...     agent_names,
     ...     good_pbks,
     ... )
     >>> game_initialization = GameInitialization(
@@ -349,6 +362,7 @@ class Game:
                       lower_bound_factor: int,
                       upper_bound_factor: int,
                       agent_pbks: List[str],
+                      agent_names: List[str],
                       good_pbks: List[str]) -> 'Game':
         """
         Generate a game, the endowments and the utilites.
@@ -360,10 +374,11 @@ class Game:
         :param lower_bound_factor: the lower bound of a uniform distribution.
         :param upper_bound_factor: the upper bound of a uniform distribution
         :param agent_pbks: the pbks for the agents.
+        :param agent_names: the names for the agents.
         :param good_pbks: the pbks for the goods.
         :return: a game.
         """
-        game_configuration = GameConfiguration(nb_agents, nb_goods, tx_fee, agent_pbks, good_pbks)
+        game_configuration = GameConfiguration(nb_agents, nb_goods, tx_fee, agent_pbks, agent_names, good_pbks)
 
         scaling_factor = determine_scaling_factor(money_endowment)
         money_endowments = generate_money_endowments(nb_agents, money_endowment)
@@ -418,7 +433,8 @@ class Game:
         >>> nb_agents = 3
         >>> nb_goods = 3
         >>> tx_fee = 1.0
-        >>> agent_pbks = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
+        >>> agent_pbks = ['tac_agent_0_pbk', 'tac_agent_1_pbk', 'tac_agent_2_pbk']
+        >>> agent_names = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
         >>> good_pbks = ['tac_good_0', 'tac_good_1', 'tac_good_2']
         >>> money_amounts = [20, 20, 20]
         >>> endowments = [
@@ -440,6 +456,7 @@ class Game:
         ...     nb_goods,
         ...     tx_fee,
         ...     agent_pbks,
+        ...     agent_names,
         ...     good_pbks,
         ... )
         >>> game_initialization = GameInitialization(
@@ -451,16 +468,16 @@ class Game:
         ...     eq_money_holdings
         ... )
         >>> game = Game(game_configuration, game_initialization)
-        >>> agent_state_0 = game.agent_states['tac_agent_0'] # agent state of tac_agent_0
-        >>> agent_state_1 = game.agent_states['tac_agent_1'] # agent state of tac_agent_1
-        >>> agent_state_2 = game.agent_states['tac_agent_2'] # agent state of tac_agent_2
+        >>> agent_state_0 = game.agent_states['tac_agent_0_pbk'] # agent state of tac_agent_0
+        >>> agent_state_1 = game.agent_states['tac_agent_1_pbk'] # agent state of tac_agent_1
+        >>> agent_state_2 = game.agent_states['tac_agent_2_pbk'] # agent state of tac_agent_2
         >>> agent_state_0.balance, agent_state_0.current_holdings
         (20, [1, 1, 1])
         >>> agent_state_1.balance, agent_state_1.current_holdings
         (20, [2, 1, 1])
         >>> agent_state_2.balance, agent_state_2.current_holdings
         (20, [1, 1, 2])
-        >>> game.settle_transaction(GameTransaction('tac_agent_0', 'tac_agent_1', 15, {'tac_good_0': 1, 'tac_good_1': 0, 'tac_good_2': 0}))
+        >>> game.settle_transaction(GameTransaction('tac_agent_0_pbk', 'tac_agent_1_pbk', 15, {'tac_good_0': 1, 'tac_good_1': 0, 'tac_good_2': 0}))
         >>> agent_state_0.balance, agent_state_0.current_holdings
         (4.5, [2, 1, 1])
         >>> agent_state_1.balance, agent_state_1.current_holdings
@@ -517,7 +534,8 @@ class Game:
         >>> nb_agents = 3
         >>> nb_goods = 3
         >>> tx_fee = 1.0
-        >>> agent_pbks = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
+        >>> agent_pbks = ['tac_agent_0_pbk', 'tac_agent_1_pbk', 'tac_agent_2_pbk']
+        >>> agent_names = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
         >>> good_pbks = ['tac_good_0', 'tac_good_1', 'tac_good_2']
         >>> money_amounts = [20, 20, 20]
         >>> endowments = [
@@ -539,6 +557,7 @@ class Game:
         ...     nb_goods,
         ...     tx_fee,
         ...     agent_pbks,
+        ...     agent_names,
         ...     good_pbks,
         ... )
         >>> game_initialization = GameInitialization(
@@ -558,8 +577,9 @@ class Game:
         :return: a string representing the holdings for every agent.
         """
         result = ""
-        for agent_pbk, agent_state in self.agent_states.items():
-            result = result + agent_pbk + " " + str(agent_state._current_holdings) + "\n"
+        # TODO > assuming agent_names ordering is consistent with agent_pbks ordering
+        for agent_name, agent_state in zip(self.configuration.agent_names, self.agent_states.values()):
+            result = result + agent_name + " " + str(agent_state._current_holdings) + "\n"
         return result
 
     def get_equilibrium_summary(self) -> str:
@@ -571,12 +591,12 @@ class Game:
             result = result + good_pbk + " " + str(eq_price) + "\n"
         result = result + "\n"
         result = result + "Equilibrium good allocation: \n"
-        for agent_pbk, eq_allocation in zip(self.configuration.agent_pbks, self.initialization.eq_good_holdings):
-            result = result + agent_pbk + " " + str(eq_allocation) + "\n"
+        for agent_name, eq_allocation in zip(self.configuration.agent_names, self.initialization.eq_good_holdings):
+            result = result + agent_name + " " + str(eq_allocation) + "\n"
         result = result + "\n"
         result = result + "Equilibrium money allocation: \n"
-        for agent_pbk, eq_allocation in zip(self.configuration.agent_pbks, self.initialization.eq_money_holdings):
-            result = result + agent_pbk + " " + str(eq_allocation) + "\n"
+        for agent_name, eq_allocation in zip(self.configuration.agent_names, self.initialization.eq_money_holdings):
+            result = result + agent_name + " " + str(eq_allocation) + "\n"
         return result
 
     def to_dict(self) -> Dict[str, Any]:

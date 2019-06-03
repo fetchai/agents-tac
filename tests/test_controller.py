@@ -23,9 +23,9 @@ class TestController:
         job = Thread(target=controller_agent.start_competition, args=(parameters, ))
         job.start()
 
-        agent1 = OEFAgent("agent1", "127.0.0.1", 3333, loop=asyncio.new_event_loop())
+        agent1 = OEFAgent("agent_pbk", "127.0.0.1", 3333, loop=asyncio.new_event_loop())
         agent1.connect()
-        agent1.send_message(0, 0, 'controller', Register(agent1.public_key).serialize())
+        agent1.send_message(0, 0, 'controller', Register(agent1.public_key, 'agent_name').serialize())
 
         job.join()
 

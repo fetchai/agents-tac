@@ -26,7 +26,8 @@ message TACController {
         int32 nb_goods = 5;
         double tx_fee = 6;
         repeated string agent_pbks = 7;
-        repeated string good_pbks = 8;
+        repeated string agent_names = 8;
+        repeated string good_pbks = 9;
     }
 
     message TransactionConfirmation {
@@ -71,6 +72,7 @@ message TACController {
 message TACAgent {
 
     message Register {
+        string agent_name = 1;
     }
     message Unregister {
     }

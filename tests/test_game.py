@@ -13,17 +13,19 @@ class TestGameConfiguration:
                 1,
                 2,
                 1.0,
+                ['tac_agent_0_pbk'],
                 ['tac_agent_0'],
                 ['tac_good_0', 'tac_good_1']
             )
 
-    def test_not_eenough_goods_raises_exception(self):
+    def test_not_enough_goods_raises_exception(self):
         """Test that if we try to instantiate a game_configuration with not enough goods, we raise an AssertionError."""
         with pytest.raises(AssertionError, match="Must have at least two goods."):
             GameConfiguration(
                 2,
                 1,
                 1.0,
+                ['tac_agent_0_pbk', 'tac_agent_1_pbk'],
                 ['tac_agent_0', 'tac_agent_1'],
                 ['tac_good_0']
             )
@@ -35,6 +37,7 @@ class TestGameConfiguration:
                 2,
                 2,
                 - 1.0,
+                ['tac_agent_0_pbk', 'tac_agent_1_pbk'],
                 ['tac_agent_0', 'tac_agent_1'],
                 ['tac_good_0', 'tac_good_1']
             )
@@ -46,6 +49,19 @@ class TestGameConfiguration:
                 2,
                 2,
                 1.0,
+                ['tac_agent_0_pbk', 'tac_agent_0_pbk'],
+                ['tac_agent_0', 'tac_agent_1'],
+                ['tac_good_0', 'tac_good_1']
+            )
+
+    def test_non_unique_agent_pbks_raises_exception(self):
+        """Test that if we try to instantiate a game_configuration with non unique agent pbks, we raise an AssertionError."""
+        with pytest.raises(AssertionError, match="Agents' names must be unique."):
+            GameConfiguration(
+                2,
+                2,
+                1.0,
+                ['tac_agent_0_pbk', 'tac_agent_1_pbk'],
                 ['tac_agent_0', 'tac_agent_0'],
                 ['tac_good_0', 'tac_good_1']
             )
@@ -57,6 +73,7 @@ class TestGameConfiguration:
                 2,
                 2,
                 1.0,
+                ['tac_agent_0_pbk', 'tac_agent_1_pbk'],
                 ['tac_agent_0', 'tac_agent_1'],
                 ['tac_good_0', 'tac_good_0']
             )
@@ -66,7 +83,8 @@ class TestGameConfiguration:
         nb_agents = 10
         nb_goods = 10
         tx_fee = 2.5
-        agent_pbks = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2', 'tac_agent_3', 'tac_agent_4', 'tac_agent_5', 'tac_agent_6', 'tac_agent_7', 'tac_agent_8', 'tac_agent_9']
+        agent_pbks = ['tac_agent_0_pbk', 'tac_agent_1_pbk', 'tac_agent_2_pbk', 'tac_agent_3_pbk', 'tac_agent_4_pbk', 'tac_agent_5_pbk', 'tac_agent_6_pbk', 'tac_agent_7_pbk', 'tac_agent_8_pbk', 'tac_agent_9_pbk']
+        agent_names = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2', 'tac_agent_3', 'tac_agent_4', 'tac_agent_5', 'tac_agent_6', 'tac_agent_7', 'tac_agent_8', 'tac_agent_9']
         good_pbks = ['tac_good_0', 'tac_good_1', 'tac_good_2', 'tac_good_3', 'tac_good_4', 'tac_good_5', 'tac_good_6', 'tac_good_7', 'tac_good_8', 'tac_good_9']
 
         game_configuration = GameConfiguration(
@@ -74,6 +92,7 @@ class TestGameConfiguration:
             nb_goods,
             tx_fee,
             agent_pbks,
+            agent_names,
             good_pbks
         )
 
@@ -83,6 +102,7 @@ class TestGameConfiguration:
             "nb_goods": nb_goods,
             "tx_fee": tx_fee,
             "agent_pbks": agent_pbks,
+            "agent_names": agent_names,
             "good_pbks": good_pbks
         }
 
@@ -93,10 +113,11 @@ class TestGameConfiguration:
         nb_agents = 10
         nb_goods = 10
         tx_fee = 2.5
-        agent_pbks = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2', 'tac_agent_3', 'tac_agent_4', 'tac_agent_5', 'tac_agent_6', 'tac_agent_7', 'tac_agent_8', 'tac_agent_9']
+        agent_pbks = ['tac_agent_0_pbk', 'tac_agent_1_pbk', 'tac_agent_2_pbk', 'tac_agent_3_pbk', 'tac_agent_4_pbk', 'tac_agent_5_pbk', 'tac_agent_6_pbk', 'tac_agent_7_pbk', 'tac_agent_8_pbk', 'tac_agent_9_pbk']
+        agent_names = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2', 'tac_agent_3', 'tac_agent_4', 'tac_agent_5', 'tac_agent_6', 'tac_agent_7', 'tac_agent_8', 'tac_agent_9']
         good_pbks = ['tac_good_0', 'tac_good_1', 'tac_good_2', 'tac_good_3', 'tac_good_4', 'tac_good_5', 'tac_good_6', 'tac_good_7', 'tac_good_8', 'tac_good_9']
 
-        expected_game_configuration = GameConfiguration(nb_agents, nb_goods, tx_fee, agent_pbks, good_pbks)
+        expected_game_configuration = GameConfiguration(nb_agents, nb_goods, tx_fee, agent_pbks, agent_names, good_pbks)
         actual_game_configuration = GameConfiguration.from_dict(expected_game_configuration.to_dict())
 
         assert actual_game_configuration == expected_game_configuration
@@ -278,7 +299,8 @@ class TestGame:
         nb_agents = 3
         nb_goods = 3
         tx_fee = 1.0
-        agent_pbks = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
+        agent_pbks = ['tac_agent_0_pbk', 'tac_agent_1_pbk', 'tac_agent_2_pbk']
+        agent_names = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
         good_pbks = ['tac_good_0', 'tac_good_1', 'tac_good_2']
         money_amounts = [20, 20, 20]
         endowments = [
@@ -304,6 +326,7 @@ class TestGame:
             nb_goods,
             tx_fee,
             agent_pbks,
+            agent_names,
             good_pbks,
         )
         game_initialization = GameInitialization(
@@ -318,8 +341,8 @@ class TestGame:
         game = Game(game_configuration, game_initialization)
 
         # not enough money: amount + fee > balance of player 0
-        buyer_id = 'tac_agent_0'
-        seller_id = 'tac_agent_1'
+        buyer_id = 'tac_agent_0_pbk'
+        seller_id = 'tac_agent_1_pbk'
         amount = 20
         quantities_by_good = {0: 1, 1: 1, 2: 1}
         invalid_transaction = GameTransaction(buyer_id, seller_id, amount, quantities_by_good)
@@ -333,7 +356,8 @@ class TestGame:
         nb_agents = 3
         nb_goods = 3
         tx_fee = 1.0
-        agent_pbks = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
+        agent_pbks = ['tac_agent_0_pbk', 'tac_agent_1_pbk', 'tac_agent_2_pbk']
+        agent_names = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
         good_pbks = ['tac_good_0', 'tac_good_1', 'tac_good_2']
         money_amounts = [20, 20, 20]
         endowments = [
@@ -359,6 +383,7 @@ class TestGame:
             nb_goods,
             tx_fee,
             agent_pbks,
+            agent_names,
             good_pbks,
         )
         game_initialization = GameInitialization(
@@ -372,8 +397,8 @@ class TestGame:
 
         game = Game(game_configuration, game_initialization)
 
-        buyer_id = 'tac_agent_0'
-        seller_id = 'tac_agent_1'
+        buyer_id = 'tac_agent_0_pbk'
+        seller_id = 'tac_agent_1_pbk'
         amount = 20
         quantities_by_good = {0: 3, 1: 0, 2: 0}
         invalid_transaction = GameTransaction(buyer_id, seller_id, amount, quantities_by_good)
@@ -390,10 +415,11 @@ class TestGame:
         base_amount = 2
         lower_bound_factor = 1
         upper_bound_factor = 3
-        agent_pbks = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
+        agent_pbks = ['tac_agent_0_pbk', 'tac_agent_1_pbk', 'tac_agent_2_pbk']
+        agent_names = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
         good_pbks = ['tac_good_0', 'tac_good_1', 'tac_good_2']
 
-        _ = Game.generate_game(nb_agents, nb_goods, money_endowment, tx_fee, base_amount, lower_bound_factor, upper_bound_factor, agent_pbks, good_pbks)
+        _ = Game.generate_game(nb_agents, nb_goods, money_endowment, tx_fee, base_amount, lower_bound_factor, upper_bound_factor, agent_pbks, agent_names, good_pbks)
 
         # please look at the assertions in tac.game.GameConfiguration._check_consistency()
 
@@ -403,7 +429,8 @@ class TestGame:
         nb_agents = 3
         nb_goods = 3
         tx_fee = 1.0
-        agent_pbks = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
+        agent_pbks = ['tac_agent_0_pbk', 'tac_agent_1_pbk', 'tac_agent_2_pbk']
+        agent_names = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
         good_pbks = ['tac_good_0', 'tac_good_1', 'tac_good_2']
         money_amounts = [20, 20, 20]
         endowments = [
@@ -429,6 +456,7 @@ class TestGame:
             nb_goods,
             tx_fee,
             agent_pbks,
+            agent_names,
             good_pbks,
         )
         game_initialization = GameInitialization(
@@ -442,8 +470,8 @@ class TestGame:
 
         game = Game(game_configuration, game_initialization)
 
-        actual_agent_state_0 = game.get_agent_state_from_agent_pbk("tac_agent_0")
-        actual_agent_state_1 = game.get_agent_state_from_agent_pbk("tac_agent_1")
+        actual_agent_state_0 = game.get_agent_state_from_agent_pbk("tac_agent_0_pbk")
+        actual_agent_state_1 = game.get_agent_state_from_agent_pbk("tac_agent_1_pbk")
 
         expected_agent_state_0 = AgentState(money_amounts[0], endowments[0], utility_params[0])
         expected_agent_state_1 = AgentState(money_amounts[1], endowments[1], utility_params[1])
@@ -457,7 +485,8 @@ class TestGame:
         nb_agents = 3
         nb_goods = 3
         tx_fee = 1.0
-        agent_pbks = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
+        agent_pbks = ['tac_agent_0_pbk', 'tac_agent_1_pbk', 'tac_agent_2_pbk']
+        agent_names = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
         good_pbks = ['tac_good_0', 'tac_good_1', 'tac_good_2']
         money_amounts = [20, 20, 20]
         endowments = [
@@ -483,6 +512,7 @@ class TestGame:
             nb_goods,
             tx_fee,
             agent_pbks,
+            agent_names,
             good_pbks,
         )
         game_initialization = GameInitialization(
@@ -496,8 +526,8 @@ class TestGame:
 
         game = Game(game_configuration, game_initialization)
 
-        game_transaction_1 = GameTransaction('tac_agent_0', 'tac_agent_1', 10, {'tac_good_0': 1})
-        game_transaction_2 = GameTransaction('tac_agent_1', 'tac_agent_0', 10, {'tac_good_0': 1})
+        game_transaction_1 = GameTransaction('tac_agent_0_pbk', 'tac_agent_1_pbk', 10, {'tac_good_0': 1})
+        game_transaction_2 = GameTransaction('tac_agent_1_pbk', 'tac_agent_0_pbk', 10, {'tac_good_0': 1})
         game.settle_transaction(game_transaction_1)
         game.settle_transaction(game_transaction_2)
 
@@ -518,7 +548,8 @@ class TestGame:
         nb_agents = 3
         nb_goods = 3
         tx_fee = 1.0
-        agent_pbks = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
+        agent_pbks = ['tac_agent_0_pbk', 'tac_agent_1_pbk', 'tac_agent_2_pbk']
+        agent_names = ['tac_agent_0', 'tac_agent_1', 'tac_agent_2']
         good_pbks = ['tac_good_0', 'tac_good_1', 'tac_good_2']
         money_amounts = [20, 20, 20]
         endowments = [
@@ -544,6 +575,7 @@ class TestGame:
             nb_goods,
             tx_fee,
             agent_pbks,
+            agent_names,
             good_pbks,
         )
         game_initialization = GameInitialization(
@@ -557,8 +589,8 @@ class TestGame:
 
         expected_game = Game(game_configuration, game_initialization)
 
-        game_transaction_1 = GameTransaction('tac_agent_0', 'tac_agent_1', 10, {'tac_good_0': 1})
-        game_transaction_2 = GameTransaction('tac_agent_1', 'tac_agent_0', 10, {'tac_good_0': 1})
+        game_transaction_1 = GameTransaction('tac_agent_0_pbk', 'tac_agent_1_pbk', 10, {'tac_good_0': 1})
+        game_transaction_2 = GameTransaction('tac_agent_1_pbk', 'tac_agent_0_pbk', 10, {'tac_good_0': 1})
         expected_game.settle_transaction(game_transaction_1)
         expected_game.settle_transaction(game_transaction_2)
 

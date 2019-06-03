@@ -10,7 +10,7 @@ class TestRequest:
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
-            expected_msg = Register("public_key")
+            expected_msg = Register("public_key", "agent_name")
             actual_msg = Request.from_pb(expected_msg.serialize(), "public_key")
 
             assert expected_msg == actual_msg
@@ -87,7 +87,7 @@ class TestResponse:
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
-            expected_msg = GameData("public_key", 10, [1, 1, 2], [0.04, 0.80, 0.16], 3, 3, 1.0, ['tac_agent_0', 'tac_agent_1', 'tac_agent_2'], ['tag_good_0', 'tag_good_1', 'tag_good_2'])
+            expected_msg = GameData("public_key", 10, [1, 1, 2], [0.04, 0.80, 0.16], 3, 3, 1.0, ['tac_agent_0_pbk', 'tac_agent_1_pbk', 'tac_agent_2_pbk'], ['tac_agent_0', 'tac_agent_1', 'tac_agent_2'], ['tag_good_0', 'tag_good_1', 'tag_good_2'])
             actual_msg = Response.from_pb(expected_msg.serialize(), "public_key")
 
             assert expected_msg == actual_msg
@@ -105,7 +105,7 @@ class TestResponse:
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
-            game_state = GameData("public_key", 10, [1, 1, 2], [0.04, 0.80, 0.16], 3, 3, 1.0, ['tac_agent_0', 'tac_agent_1', 'tac_agent_2'], ['tag_good_0', 'tag_good_1', 'tag_good_2'])
+            game_state = GameData("public_key", 10, [1, 1, 2], [0.04, 0.80, 0.16], 3, 3, 1.0, ['tac_agent_0_pbk', 'tac_agent_1_pbk', 'tac_agent_2_pbk'], ['tac_agent_0', 'tac_agent_1', 'tac_agent_2'], ['tag_good_0', 'tag_good_1', 'tag_good_2'])
             transactions = [Transaction("transaction_id", True, "seller", 10.0, {"good_01": 1}, "public_key")]
 
             expected_msg = StateUpdate("public_key", game_state, transactions)

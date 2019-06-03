@@ -246,7 +246,7 @@ async def main():
     result = await agent.search(Query([Constraint("version", GtEq(1))]), callback=agent.on_start)
     print(result)
 
-    logger.debug("Running agent...")
+    logger.debug("[{}]: Running myself...".format(agent.name))
     await asyncio.sleep(3.0)
 
 

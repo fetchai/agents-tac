@@ -198,11 +198,12 @@ class RegisterHandler(RequestHandler):
         :return: an Error response if an error occurred, else None.
         """
         if request.public_key in self.controller_agent.game_handler.registered_agents:
-            error_msg = "Agent already registered: '{}'".format(request.public_key)
+            error_msg = "[{}]: Agent already registered: '{}'".format(self.controller_agent.name, self.controller_agent.game_handler.agent_pbk_to_name[request.public_key])
             logger.error(error_msg)
             return Error(request.public_key, ErrorCode.AGENT_ALREADY_REGISTERED)
         else:
-            logger.debug("Agent registered: '{}'".format(request.public_key))
+            self.controller_agent.game_handler.agent_pbk_to_name[request.public_key] = request.agent_name
+            logger.debug("[{}]: Agent registered: '{}'".format(self.controller_agent.name, self.controller_agent.game_handler.agent_pbk_to_name[request.public_key]))
             self.controller_agent.game_handler.registered_agents.add(request.public_key)
             return None
 
@@ -218,12 +219,13 @@ class UnregisterHandler(RequestHandler):
         :return: an Error response if an error occurred, else None.
         """
         if request.public_key not in self.controller_agent.game_handler.registered_agents:
-            error_msg = "Agent not registered: '{}'".format(request.public_key)
+            error_msg = "[{}]: Agent not registered: '{}'".format(self.controller_agent.name, request.public_key)
             logger.error(error_msg)
             return Error(request.public_key, ErrorCode.AGENT_NOT_REGISTERED)
         else:
-            logger.debug("Agent unregistered: '{}'".format(request.public_key))
+            logger.debug("[{}]: Agent unregistered: '{}'".format(self.controller_agent.name, self.controller_agent.game_handler.agent_pbk_to_name[request.public_key]))
             self.controller_agent.game_handler.registered_agents.remove(request.public_key)
+            self.controller_agent.game_handler.agent_pbk_to_name.pop(request.public_key)
             return None
 
 
@@ -241,11 +243,11 @@ class TransactionHandler(RequestHandler):
         :param request: the transaction request.
         :return: an Error response if an error occurred, else None (no response to send back).
         """
-        logger.debug("Handling transaction: {}".format(request))
+        logger.debug("[{}]: Handling transaction: {}".format(self.controller_agent.name, request))
 
         # if transaction arrives first time then put it into the pending pool
         if request.transaction_id not in self._pending_transaction_requests:
-            logger.debug("Put transaction request in the pool: {}".format(request.transaction_id))
+            logger.debug("[{}]: Put transaction request in the pool: {}".format(self.controller_agent.name, request.transaction_id))
             self._pending_transaction_requests[request.transaction_id] = request
         # if transaction arrives second time then process it
         else:
@@ -273,7 +275,7 @@ class TransactionHandler(RequestHandler):
         :param request: the transaction request.
         :return: None
         """
-        logger.debug("Handling valid transaction: {}".format(request.transaction_id))
+        logger.debug("[{}]: Handling valid transaction: {}".format(self.controller_agent.name, request.transaction_id))
 
         # update the game state.
         tx = GameTransaction.from_request_to_game_tx(request)
@@ -288,9 +290,9 @@ class TransactionHandler(RequestHandler):
         self.controller_agent.send_message(0, 0, request.counterparty, tx_confirmation.serialize())
 
         # log messages
-        logger.debug("[Controller]: Transaction '{}' settled successfully.".format(request.transaction_id))
+        logger.debug("[{}]: Transaction '{}' settled successfully.".format(self.controller_agent.name, request.transaction_id))
         holdings_summary = self.controller_agent.game_handler.current_game.get_holdings_summary()
-        logger.debug("[Controller]: Current state:\n{}".format(holdings_summary))
+        logger.debug("[{}]: Current state:\n{}".format(self.controller_agent.name, holdings_summary))
 
         return None
 
@@ -314,9 +316,9 @@ class GetStateUpdateHandler(RequestHandler):
         :param request: the 'get agent state' request.
         :return: an Error response if an error occurred, else None.
         """
-        logger.debug("Handling the 'get agent state' request: {}".format(request))
+        logger.debug("[{}]: Handling the 'get agent state' request: {}".format(self.controller_agent.name, request))
         if request.public_key not in self.controller_agent.game_handler.registered_agents:
-            error_msg = "Agent not registered: '{}'".format(request.public_key)
+            error_msg = "[{}]: Agent not registered: '{}'".format(self.controller_agent.name, request.public_key)
             logger.error(error_msg)
             return Error(request.public_key, ErrorCode.AGENT_NOT_REGISTERED)
         else:
@@ -360,7 +362,7 @@ class ControllerDispatcher(object):
         """
         message = self.decode(msg, public_key)  # type: Request
         response = self.dispatch(message)
-        logger.debug("[{}]: Returning response: {}".format(self.controller_agent.public_key, str(response)))
+        logger.debug("[{}]: Returning response: {}".format(self.controller_agent.name, str(response)))
         return response
 
     def dispatch(self, request: Request) -> Response:
@@ -404,6 +406,7 @@ class GameHandler:
         self.tac_parameters = tac_parameters
 
         self.registered_agents = set()  # type: Set[str]
+        self.agent_pbk_to_name = defaultdict()  # type: Dict[str, str]
         self.current_game = None  # type: Optional[Game]
         self.inactivity_timeout_timedelta = datetime.timedelta(seconds=tac_parameters.inactivity_timeout) \
             if tac_parameters.inactivity_timeout is not None else datetime.timedelta(seconds=15)
@@ -415,6 +418,7 @@ class GameHandler:
         """Reset the game."""
         self.current_game = None
         self.registered_agents = set()
+        self.agent_pbk_to_name = defaultdict()
 
     def is_game_running(self) -> bool:
         """
@@ -438,8 +442,8 @@ class GameHandler:
         self._timeout_checker_task.start()
 
         # log messages
-        logger.debug("Started competition:\n{}".format(self.current_game.get_holdings_summary()))
-        logger.debug("Computed equilibrium:\n{}".format(self.current_game.get_equilibrium_summary()))
+        logger.debug("[{}]: Started competition:\n{}".format(self.controller_agent.name, self.current_game.get_holdings_summary()))
+        logger.debug("[{}]: Computed equilibrium:\n{}".format(self.controller_agent.name, self.current_game.get_equilibrium_summary()))
 
     def _create_game(self) -> Game:
         """
@@ -455,6 +459,7 @@ class GameHandler:
         nb_agents = len(agent_pbks)
 
         good_pbks = generate_pbks(self.tac_parameters.nb_goods, 'good')
+        agent_names = generate_pbks(nb_agents, 'agent')
 
         game = Game.generate_game(nb_agents,
                                   self.tac_parameters.nb_goods,
@@ -464,6 +469,7 @@ class GameHandler:
                                   self.tac_parameters.lower_bound_factor,
                                   self.tac_parameters.upper_bound_factor,
                                   agent_pbks,
+                                  agent_names,
                                   good_pbks)
 
         return game
@@ -486,10 +492,11 @@ class GameHandler:
                 self.current_game.configuration.nb_goods,
                 self.current_game.configuration.tx_fee,
                 self.current_game.configuration.agent_pbks,
+                self.current_game.configuration.agent_names,
                 self.current_game.configuration.good_pbks
             )
             logger.debug("[{}]: sending GameData to '{}': {}"
-                         .format(self.controller_agent.public_key, public_key, str(game_data_response)))
+                         .format(self.controller_agent.name, public_key, str(game_data_response)))
 
             self.game_data_per_participant[public_key] = game_data_response
             self.controller_agent.send_message(0, 1, public_key, game_data_response.serialize())
@@ -500,23 +507,22 @@ class GameHandler:
         :return True if the competition has been successfully started. False otherwise.
         """
         # just to make names shorter
-        ctrl_pbk = self.controller_agent.public_key
         nb_reg_agents = len(self.registered_agents)
         min_nb_agents = self.tac_parameters.min_nb_agents
 
         seconds_to_wait = self.tac_parameters.registration_timedelta.seconds
         seconds_to_wait = 0 if seconds_to_wait < 0 else seconds_to_wait
-        logger.debug("[{}]: Waiting for {} seconds...".format(ctrl_pbk, seconds_to_wait))
+        logger.debug("[{}]: Waiting for {} seconds...".format(self.controller_agent.name, seconds_to_wait))
         time.sleep(seconds_to_wait)
-        logger.debug("[Controller]: Check if we can start the competition.".format(seconds_to_wait))
+        logger.debug("[{}]: Check if we can start the competition.".format(self.controller_agent.name))
         if len(self.registered_agents) >= self.tac_parameters.min_nb_agents:
             logger.debug("[{}]: Start competition. Registered agents: {}, minimum number of agents: {}."
-                         .format(ctrl_pbk, nb_reg_agents, min_nb_agents))
+                         .format(self.controller_agent.name, nb_reg_agents, min_nb_agents))
             self._start_competition()
             return True
         else:
             logger.debug("[{}]: Not enough agents to start TAC. Registered agents: {}, minimum number of agents: {}."
-                         .format(ctrl_pbk, nb_reg_agents, min_nb_agents))
+                         .format(self.controller_agent.name, nb_reg_agents, min_nb_agents))
             self.notify_tac_cancelled()
             self.controller_agent.terminate()
             return False
@@ -549,7 +555,7 @@ class ControllerAgent(OEFAgent):
         self.name = name
         self.crypto = Crypto()
         super().__init__(self.crypto.public_key, oef_addr, oef_port, loop=asyncio.new_event_loop())
-        logger.debug("Initialized Controller Agent :\n{}".format(pprint.pformat(vars())))
+        logger.debug("[{}]: Initialized myself as Controller Agent :\n{}".format(self.name, pprint.pformat(vars())))
 
         self.dispatcher = ControllerDispatcher(self)
         self.monitor = NullMonitor() if monitor is None else monitor  # type: Monitor
@@ -580,8 +586,8 @@ class ControllerAgent(OEFAgent):
         :param content: the content of the message.
         :return: None
         """
-        logger.debug("[ControllerAgent] on_message: msg_id={}, dialogue_id={}, origin={}"
-                     .format(msg_id, dialogue_id, origin))
+        logger.debug("[{}] on_message: msg_id={}, dialogue_id={}, origin={}"
+                     .format(self.name, msg_id, dialogue_id, origin))
         self.update_last_activity()
         response = self.dispatcher.process_request(content, origin)  # type: Optional[Response]
         if response is not None:
@@ -593,7 +599,7 @@ class ControllerAgent(OEFAgent):
         :return: None.
         """
         desc = Description({"version": 1}, data_model=self.CONTROLLER_DATAMODEL)
-        logger.debug("Registering with {} data model".format(desc.data_model.name))
+        logger.debug("[{}]: Registering with {} data model".format(self.name, desc.data_model.name))
         self.register_service(0, desc)
 
     def dump(self, directory: str, experiment_name: str) -> None:
@@ -607,7 +613,7 @@ class ControllerAgent(OEFAgent):
         experiment_dir = directory + "/" + experiment_name
 
         if not self.game_handler.is_game_running():
-            logger.warning("Game not present. Using empty dictionary.")
+            logger.warning("[{}]: Game not present. Using empty dictionary.".format(self.name))
             game_dict = {}
         else:
             game_dict = self.game_handler.current_game.to_dict()
@@ -637,8 +643,8 @@ class ControllerAgent(OEFAgent):
         :param: rate: at which rate (in seconds) the frequency of the check.
         :return: None
         """
-        logger.debug("Started job to check for inactivity of {} seconds. Checking rate: {}"
-                     .format(self.game_handler.tac_parameters.inactivity_timedelta.total_seconds(), rate))
+        logger.debug("[{}]: Started job to check for inactivity of {} seconds. Checking rate: {}"
+                     .format(self.name, self.game_handler.tac_parameters.inactivity_timedelta.total_seconds(), rate))
         while True:
             if self._is_running is False:
                 return
