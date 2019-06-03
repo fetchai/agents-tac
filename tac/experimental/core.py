@@ -363,9 +363,12 @@ class TACParticipantAgent(ControllerInterface):
         self._stopped = True  # type: bool
 
     @property
-    def name(self) -> str: return self.mail_box.public_key
+    def name(self) -> str:
+        return self.mail_box.public_key
+
     @property
-    def game_instance(self): return self._game_instance
+    def game_instance(self) -> TACGameInstance:
+        return self._game_instance
 
     def stop(self):
         self._stopped = True
@@ -494,4 +497,3 @@ class TACParticipantAgent(ControllerInterface):
     @abstractmethod
     def on_dialogue_error(self, dialogue_error: DialogueErrorMessage):
         """Handler a dialogue error message"""
-
