@@ -19,6 +19,7 @@
 #
 # ------------------------------------------------------------------------------
 import argparse
+import asyncio
 import copy
 import datetime
 import logging
@@ -1006,7 +1007,8 @@ class BaselineStrategy:
 
 def main():
     args = parse_arguments()
-    agent = BaselineAgent(public_key=args.public_key, oef_addr=args.oef_addr, oef_port=args.oef_port)
+    agent = BaselineAgent(public_key=args.public_key, oef_addr=args.oef_addr, oef_port=args.oef_port,
+                          loop=asyncio.get_event_loop())
 
     agent.connect()
     agent.search_for_tac()
