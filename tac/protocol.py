@@ -115,7 +115,7 @@ class Request(Message, ABC):
         msg.ParseFromString(obj)
         case = msg.WhichOneof("msg")
         if case == "register":
-            return Register(public_key)
+            return Register.from_pb(msg.register, public_key)
         elif case == "unregister":
             return Unregister(public_key)
         elif case == "transaction":
@@ -135,11 +135,25 @@ class Request(Message, ABC):
 class Register(Request):
     """Message to register an agent to the competition."""
 
+    def __init__(self, public_key: str, agent_name: str):
+        """
+        A registration message.
+
+        :param agent_name: the name of the agent
+        """
+        super().__init__(public_key)
+        self.agent_name = agent_name
+
     def to_pb(self) -> tac_pb2.TACAgent.Message:
         msg = tac_pb2.TACAgent.Register()
+        msg.agent_name = self.agent_name
         envelope = tac_pb2.TACAgent.Message()
         envelope.register.CopyFrom(msg)
         return envelope
+
+    @classmethod
+    def from_pb(cls, obj: tac_pb2.TACAgent.Register, public_key: str) -> 'Register':
+        return Register(public_key, obj.agent_name,)
 
 
 class Unregister(Request):
@@ -386,7 +400,7 @@ class GameData(Response):
     """Class that holds the game configuration and the initialization of a TAC agent."""
 
     def __init__(self, public_key: str, money: int, endowment: List[int], utility_params: List[float],
-                 nb_agents: int, nb_goods: int, tx_fee: float, agent_pbks: List[str], good_pbks: List[str]):
+                 nb_agents: int, nb_goods: int, tx_fee: float, agent_pbks: List[str], agent_names: List[str], good_pbks: List[str]):
         """
         Initialize a game data object.
         :param public_key: the destination
@@ -397,6 +411,7 @@ class GameData(Response):
         :param nb_goods: the number of goods.
         :param tx_fee: the transaction fee.
         :param agent_pbks: the pbks of the agents.
+        :param agent_names: the names of the agents.
         :param good_pbks: the pbks of the goods.
         """
         assert len(endowment) == len(utility_params)
@@ -408,6 +423,7 @@ class GameData(Response):
         self.nb_goods = nb_goods
         self.tx_fee = tx_fee
         self.agent_pbks = agent_pbks
+        self.agent_names = agent_names
         self.good_pbks = good_pbks
 
     @classmethod
@@ -420,6 +436,7 @@ class GameData(Response):
                         obj.nb_goods,
                         obj.tx_fee,
                         obj.agent_pbks,
+                        obj.agent_names,
                         obj.good_pbks)
 
     def to_pb(self) -> tac_pb2.TACController.Message:
@@ -431,6 +448,7 @@ class GameData(Response):
         msg.nb_goods = self.nb_goods
         msg.tx_fee = self.tx_fee
         msg.agent_pbks.extend(self.agent_pbks)
+        msg.agent_names.extend(self.agent_names)
         msg.good_pbks.extend(self.good_pbks)
         envelope = tac_pb2.TACController.Message()
         envelope.game_data.CopyFrom(msg)
@@ -445,6 +463,7 @@ class GameData(Response):
             nb_goods=self.nb_goods,
             tx_fee=self.tx_fee,
             agent_pbks=self.agent_pbks,
+            agent_names=self.agent_names,
             good_pbks=self.good_pbks
         )
 
@@ -457,6 +476,7 @@ class GameData(Response):
             self.nb_goods == other.nb_goods and \
             self.tx_fee == other.tx_fee and \
             self.agent_pbks == other.agent_pbks and \
+            self.agent_names == other.agent_names and \
             self.good_pbks == other.good_pbks
 
 
@@ -497,6 +517,7 @@ class StateUpdate(Response):
         game_data.nb_goods = self.initial_state.nb_goods
         game_data.tx_fee = self.initial_state.tx_fee
         game_data.agent_pbks.extend(self.initial_state.agent_pbks)
+        game_data.agent_names.extend(self.initial_state.agent_names)
         game_data.good_pbks.extend(self.initial_state.good_pbks)
 
         msg.initial_state.CopyFrom(game_data)

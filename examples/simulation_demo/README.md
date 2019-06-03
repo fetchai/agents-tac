@@ -24,7 +24,7 @@ docker run -it -p 20000:20000 -p 3333:3333 -p 40000:40000 qati/oef-search:latest
 
 - Start a `visdom` server:
 
-      python -m visdom.server 
+      python -m visdom.server
     
 - Run the simulation example with the gui flag to visualize data in realtime
       

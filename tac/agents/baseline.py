@@ -37,7 +37,6 @@ from tac.core import NegotiationAgent
 from tac.game import WorldState
 from tac.helpers.misc import generate_transaction_id, build_query, get_goods_quantities_description, \
     TAC_SUPPLY_DATAMODEL_NAME, marginal_utility, TacError
-from tac.helpers.crypto import Crypto
 from tac.protocol import Transaction, TransactionConfirmation, Error, ErrorCode
 
 if __name__ != "__main__":
@@ -125,7 +124,7 @@ class LockManager(object):
 
             # extract dialogue label and message id
             dialogue_label, message_id = next_item
-            logger.debug("[{}]: Removing message {}, {}".format(self.baseline_agent.public_key, dialogue_label, message_id))
+            logger.debug("[{}]: Removing message {}, {}".format(self.baseline_agent.name, dialogue_label, message_id))
 
             # remove (safely) the associated pending proposal (if present)
             self.pending_tx_proposals.get(dialogue_label, {}).pop(message_id, None)
@@ -160,7 +159,7 @@ class LockManager(object):
 
             # extract dialogue label and message id
             transaction_id = next_item
-            logger.debug("[{}]: Removing transaction: {}".format(self.baseline_agent.public_key, transaction_id))
+            logger.debug("[{}]: Removing transaction: {}".format(self.baseline_agent.name, transaction_id))
 
             # remove (safely) the associated pending proposal (if present)
             self.locks.pop(transaction_id, None)
@@ -250,9 +249,7 @@ class BaselineAgent(NegotiationAgent):
     """
 
     def __init__(self, name: str, oef_addr: str, oef_port: int = 3333, register_as: str = 'both', search_for: str = 'both', is_world_modeling: bool = False, pending_transaction_timeout: int = 30, **kwargs):
-        self.name = name
-        self.crypto = Crypto()
-        super().__init__(self.crypto.public_key, oef_addr, oef_port, is_world_modeling, **kwargs)
+        super().__init__(name, oef_addr, oef_port, is_world_modeling, **kwargs)
         self._register_as = register_as
         self._search_for = search_for
 
@@ -1014,7 +1011,7 @@ def main():
     agent.connect()
     agent.search_for_tac()
 
-    logger.debug("Running agent...")
+    logger.debug("[{}]: running myself...".format(agent.name))
     agent.run()
 
 
