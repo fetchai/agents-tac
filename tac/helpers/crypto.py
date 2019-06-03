@@ -98,7 +98,12 @@ class Crypto(object):
         signature = self._private_key.sign(digest, ec.ECDSA(utils.Prehashed(self._chosen_hash)))
         return signature
 
-    def confirm_integrity(self, data: bytes, signature: bytes, signer_pbk: str) -> bool:
+    def is_confirmed_integrity(self, content: bytes, signer_pbk: str) -> bool:
+        # TODO split content into data and signature
+        return _is_confirmed_integrity(data, signature, signer_pbk)
+
+
+    def _is_confirmed_integrity(self, data: bytes, signature: bytes, signer_pbk: str) -> bool:
         """
         Confirrms the integrity of the data with respect to its signature.
 

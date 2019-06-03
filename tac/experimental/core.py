@@ -14,6 +14,7 @@ from oef.messages import PROPOSE_TYPES, CFP_TYPES, CFP, Decline, Propose, Accept
 from oef.query import Query, Constraint, GtEq
 
 from tac.game import AgentState, WorldState, GameConfiguration
+from tac.helpers.crypto import Crypto
 from tac.protocol import Error, TransactionConfirmation, StateUpdate, Response, GameData, Cancelled, Register
 
 logger = logging.getLogger(__name__)
@@ -138,26 +139,27 @@ class DialogueLabel:
         return hash((self.dialogue_id, self.agent_pbk))
 
 
-class Crypto(object):
-    pass
-
-
 class MailBox(OEFAgent):
 
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333,
-                 loop: Optional[AbstractEventLoop] = None, crypto: Optional[Crypto] = None):
-        super().__init__(public_key, oef_addr, oef_port, loop)
+    def __init__(self, crypto: Crypto, oef_addr: str, oef_port: int = 3333,
+                 loop: Optional[AbstractEventLoop] = None):
+        
+        self.crypto = crypto
+        super().__init__(self.crypto.public_key, oef_addr, oef_port, loop)
         self.connect()
 
         self.queue = Queue()
-        self.crypto = crypto
 
         self.search_id = 1
 
         self._mail_box_thread = None  # type: Optional[Thread]
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
-        self.queue.put(SimpleMessage(msg_id, dialogue_id, origin, content))
+        if self.crypto.is_confirmed_integrity(content, origin):
+            self.queue.put(SimpleMessage(msg_id, dialogue_id, origin, content))
+        else:
+            pass
+            # TODO send some error indicating signature does not match message data
 
     def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES):
         self.queue.put(CFP(msg_id, dialogue_id, origin, target, query))
@@ -348,8 +350,9 @@ class TACGameInstance:
 class TACParticipantAgent(ControllerInterface):
 
     def __init__(self, name: str, oef_addr: str, oef_port: int = 3333, is_world_modeling: bool = False):
+        self.name = name
         self.crypto = Crypto()
-        self.mail_box = MailBox(name, oef_addr, oef_port, crypto=self.crypto, loop=asyncio.get_event_loop())
+        self.mail_box = MailBox(self.crypto, oef_addr, oef_port, loop=asyncio.get_event_loop())
 
         self.in_box = InBox(self.mail_box)
         self.out_box = OutBox(self.mail_box)
