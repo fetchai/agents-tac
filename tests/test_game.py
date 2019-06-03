@@ -54,7 +54,7 @@ class TestGameConfiguration:
                 ['tac_good_0', 'tac_good_1']
             )
 
-    def test_non_unique_agent_pbks_raises_exception(self):
+    def test_non_unique_agent_names_raises_exception(self):
         """Test that if we try to instantiate a game_configuration with non unique agent pbks, we raise an AssertionError."""
         with pytest.raises(AssertionError, match="Agents' names must be unique."):
             GameConfiguration(
