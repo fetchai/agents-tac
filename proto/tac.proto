@@ -67,6 +67,10 @@ message TACController {
         }
     }
 
+    message SignedMessage {
+        bytes signature = 1;
+        bytes message = 100;
+    }
 }
 
 message TACAgent {
@@ -97,4 +101,8 @@ message TACAgent {
         }
     }
 
+    message SignedMessage {
+        bytes signature = 1;
+        bytes message = 100;
+    }
 }

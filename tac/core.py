@@ -205,7 +205,7 @@ class NegotiationAgent(OEFAgent):
 
         response = None  # type: Optional[Response]
         try:
-            response = Response.from_pb(content, self.public_key)
+            response = Response.from_pb(content, origin, self.crypto)
         except TacError as e:
             # the message was not a 'Response' message.
             logger.exception(str(e))
@@ -289,7 +289,7 @@ class NegotiationAgent(OEFAgent):
         assert self.controller_pbk is None and self.game_configuration is None and self._agent_state is None
         self._controller_pbk = tac_controller_pbk
         self._game_phase = self.GAME_PHASES[1]
-        msg = Register(self.public_key, self.name).serialize()
+        msg = Register(self.public_key, self.crypto, self.name).serialize()
         self.send_message(0, 0, tac_controller_pbk, msg)
 
     def submit_transaction_to_controller(self, tx: Transaction) -> None:
@@ -304,7 +304,7 @@ class NegotiationAgent(OEFAgent):
         self.send_message(0, dialogue_id, self._controller_pbk, tx.serialize())
 
     def get_state_update(self):
-        self.send_message(0, 0, self._controller_pbk, GetStateUpdate(self.public_key).serialize())
+        self.send_message(0, 0, self._controller_pbk, GetStateUpdate(self.public_key, self.crypto).serialize())
 
     def _on_cancelled(self) -> None:
         """

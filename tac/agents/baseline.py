@@ -539,7 +539,8 @@ class BaselineAgent(NegotiationAgent):
                                                     transaction_id=transaction_id,
                                                     is_buyer=not is_seller,
                                                     counterparty=origin,
-                                                    sender=self.public_key)
+                                                    sender=self.public_key,
+                                                    crypto=self.crypto)
             self.lock_manager.add_pending_proposal(dialogue_id, origin, proposal_id, transaction)
 
     def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES) -> None:
@@ -590,7 +591,8 @@ class BaselineAgent(NegotiationAgent):
                                                 transaction_id,
                                                 is_buyer=not is_seller,
                                                 counterparty=origin,
-                                                sender=self.public_key)
+                                                sender=self.public_key,
+                                                crypto=self.crypto)
         if self._is_profitable_transaction(transaction, is_seller):
             logger.debug("[{}]: Accepting propose (as {}).".format(self.name, role))
             self._accept_propose(msg_id, dialogue_id, origin, target, proposals, is_seller)
@@ -623,7 +625,8 @@ class BaselineAgent(NegotiationAgent):
                                                 transaction_id=transaction_id,
                                                 is_buyer=not is_seller,
                                                 counterparty=origin,
-                                                sender=self.public_key)
+                                                sender=self.public_key,
+                                                crypto=self.crypto)
 
         logger.debug("[{}]: Locking the current state (as {}).".format(self.name, role))
         self.lock_manager.add_lock(transaction, as_seller=is_seller)

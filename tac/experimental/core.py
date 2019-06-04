@@ -38,7 +38,7 @@ def is_controller_message(msg: Message) -> bool:
     try:
         msg: SimpleMessage
         byte_content = msg.msg
-        Response.from_pb(byte_content, "")
+        Response.from_pb(byte_content, "", self.crypto)
     except Exception:
         return False
 
@@ -97,6 +97,7 @@ class ControllerInterface:
         On receiving the agent state update.
 
         :param agent_state: the current state of the agent in the competition.
+
         :return: None
         """
 
@@ -140,6 +141,9 @@ class DialogueLabel:
 
 
 class MailBox(OEFAgent):
+    """
+    The MailBox enqueues incoming messages, searches and errors from the OEF and sends outgoing messages to the OEF.
+    """
 
     def __init__(self, crypto: Crypto, oef_addr: str, oef_port: int = 3333,
                  loop: Optional[AbstractEventLoop] = None):
@@ -147,11 +151,8 @@ class MailBox(OEFAgent):
         self.crypto = crypto
         super().__init__(self.crypto.public_key, oef_addr, oef_port, loop)
         self.connect()
-
         self.queue = Queue()
-
         self.search_id = 1
-
         self._mail_box_thread = None  # type: Optional[Thread]
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
@@ -160,18 +161,6 @@ class MailBox(OEFAgent):
         else:
             pass
             # TODO send some error indicating signature does not match message data
-
-    def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES):
-        self.queue.put(CFP(msg_id, dialogue_id, origin, target, query))
-
-    def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES):
-        self.queue.put(Propose(msg_id, dialogue_id, origin, target, proposals))
-
-    def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int):
-        self.queue.put(Accept(msg_id, dialogue_id, origin, target))
-
-    def on_decline(self, msg_id: int, dialogue_id: int, origin: str, target: int):
-        self.queue.put(Decline(msg_id, dialogue_id, origin, target))
 
     def on_search_result(self, search_id: int, agents: List[str]):
         self.queue.put(SearchResult(search_id, agents))
@@ -230,6 +219,28 @@ class OutBox(object):
         pass
 
 
+class TACMailBox(MailBox):
+    """
+    The TACMailBox enqueues additionally FIPA specific messages.
+    """
+
+    def __init__(self, crypto: Crypto, oef_addr: str, oef_port: int = 3333,
+                 loop: Optional[AbstractEventLoop] = None):
+        super().__init__(self.crypto, oef_addr, oef_port, loop)
+
+    def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES):
+        self.queue.put(CFP(msg_id, dialogue_id, origin, target, query))
+
+    def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES):
+        self.queue.put(Propose(msg_id, dialogue_id, origin, target, proposals))
+
+    def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int):
+        self.queue.put(Accept(msg_id, dialogue_id, origin, target))
+
+    def on_decline(self, msg_id: int, dialogue_id: int, origin: str, target: int):
+        self.queue.put(Decline(msg_id, dialogue_id, origin, target))
+
+
 class ProtocolInterface:
 
     @abstractmethod
@@ -257,13 +268,13 @@ class Dialogues:
     def __init__(self):
         self.dialogues = {}  # type: Dict[DialogueLabel, Dialogue]
 
-    def is_dialogue_registered(self, dialogue_label):
+    def is_dialogue_registered(self, dialogue_label) -> bool:
         return dialogue_label in self.dialogues
 
     def get_dialogue(self, dialogue_label: DialogueLabel) -> Dialogue:
         return self.dialogues[dialogue_label]
 
-    def register_dialogue(self, dialogue: Dialogue):
+    def register_dialogue(self, dialogue: Dialogue) -> None:
         self.dialogues[dialogue.dialogue_label] = dialogue
 
 
@@ -350,9 +361,9 @@ class TACGameInstance:
 class TACParticipantAgent(ControllerInterface):
 
     def __init__(self, name: str, oef_addr: str, oef_port: int = 3333, is_world_modeling: bool = False):
-        self.name = name
-        self.crypto = Crypto()
-        self.mail_box = MailBox(self.crypto, oef_addr, oef_port, loop=asyncio.get_event_loop())
+        self._name = name
+        self._crypto = Crypto()
+        self.mail_box = TACMailBox(self.crypto, oef_addr, oef_port, loop=asyncio.get_event_loop())
 
         self.in_box = InBox(self.mail_box)
         self.out_box = OutBox(self.mail_box)
@@ -367,23 +378,28 @@ class TACParticipantAgent(ControllerInterface):
 
     @property
     def name(self) -> str:
-        return self.mail_box.public_key
+        return self._name
+
+    @property
+    def crypto(self) -> Crypto:
+        return self._crypto
 
     @property
     def game_instance(self) -> TACGameInstance:
         return self._game_instance
 
-    def stop(self):
+    def stop(self) -> None:
+        """Stops the mailbox."""
         self._stopped = True
         self.mail_box.stop()
 
     def start(self):
-
+        """Starts the mailbox."""
         self.mail_box.start()
         self._search_for_tac()
         self._stopped = False
 
-        logger.debug("Start processing messages...")
+        logger.debug("[{}]: Start processing messages...".format(self.name))
         while not self._stopped:
             msg = self.in_box.get()  # type: Message
 
@@ -396,7 +412,7 @@ class TACParticipantAgent(ControllerInterface):
                 self.handle_dialogue_message(msg)
 
     def handle_oef_message(self, msg: Union[SearchResult, OEFErrorMessage, DialogueErrorMessage]):
-        logger.debug("Handling OEF message. type={}".format(type(msg)))
+        logger.debug("[{}]: Handling OEF message. type={}".format(self.name, type(msg)))
         if isinstance(msg, SearchResult):
             self.on_search_result(msg)
         elif isinstance(msg, OEFErrorMessage):
@@ -404,11 +420,11 @@ class TACParticipantAgent(ControllerInterface):
         elif isinstance(msg, DialogueErrorMessage):
             self.on_dialogue_error(msg)
         else:
-            logger.warning("OEF Message type not recognized.")
+            logger.warning("[{}]: OEF Message type not recognized.".format(self.name))
 
     def handle_controller_message(self, msg: SimpleMessage):
-        response = Response.from_pb(msg.msg, self.name)
-        logger.debug("Handling controller response. type={}".format(type(response)))
+        response = Response.from_pb(msg.msg, _, self.crypto)
+        logger.debug("[{}]: Handling controller response. type={}".format(self.name, type(response)))
         try:
             if msg.destination != self.game_instance.controller_pbk:
                 raise ValueError("The sender of the message is not a controller agent.")
@@ -483,7 +499,7 @@ class TACParticipantAgent(ControllerInterface):
         """
         self.game_instance.controller_pbk = tac_controller_pbk
         self._game_phase = GamePhase.GAME_SETUP
-        msg = Register(self.name).serialize()
+        msg = Register(self.crypto.public_key).serialize(self.crypto)
         self.mail_box.send_message(0, 0, tac_controller_pbk, msg)
 
     @abstractmethod
