@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from typing import List
-
 from oef.messages import DialogueErrorMessage, OEFErrorMessage
 
 from tac.experimental.core import TACParticipantAgent, Dialogue
@@ -19,12 +17,6 @@ class TACRegistrationAgent(TACParticipantAgent):
         pass
 
     def on_start(self) -> None:
-        pass
-
-    def on_cancelled(self) -> None:
-        pass
-
-    def on_search_results(self, search_id: int, agents: List[str]) -> None:
         pass
 
     def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:

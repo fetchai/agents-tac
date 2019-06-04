@@ -17,10 +17,13 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+import logging
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec, utils
+
+logger = logging.getLogger(__name__)
 
 
 class CryptoError(Exception):
@@ -120,7 +123,6 @@ class Crypto(object):
         except CryptoError as e:
             logger.exception(str(e))
             return False
-        
 
     def _hash_data(self, data: bytes) -> bytes:
         """

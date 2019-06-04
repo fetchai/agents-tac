@@ -31,14 +31,15 @@ def is_oef_message(msg: Message) -> bool:
     return msg_type in {SearchResult, OEFErrorMessage, DialogueErrorMessage}
 
 
-def is_controller_message(msg: Message) -> bool:
+def is_controller_message(msg: Message, crypto: Crypto) -> bool:
     if not isinstance(msg, SimpleMessage):
         return False
 
     try:
         msg: SimpleMessage
         byte_content = msg.msg
-        Response.from_pb(byte_content, "", self.crypto)
+        sender_pbk = msg.destination  # now the origin is the destination!
+        Response.from_pb(byte_content, sender_pbk, crypto)
     except Exception:
         return False
 
@@ -74,14 +75,6 @@ class ControllerInterface:
         """
 
     @abstractmethod
-    def on_search_results(self, search_id: int, agents: List[str]) -> None:
-        """
-        Handle search results.
-
-        :return: None
-        """
-
-    @abstractmethod
     def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
         """
         On Transaction confirmed handler.
@@ -108,6 +101,72 @@ class ControllerInterface:
 
         :return: None
         """
+
+
+class OEFSearchInterface:
+    """
+    This interface contains the methods to maintain OEF search logic.
+    """
+
+    @abstractmethod
+    def on_search_result(self, search_result: SearchResult):
+        """Handle search results."""
+
+    @abstractmethod
+    def on_oef_error(self, oef_error: OEFErrorMessage):
+        """Handle an OEF error message."""
+
+
+# class TACControllerInterface(ControllerInterface):
+#     """
+#     This interface contains the methods to interact with the ControllerAgent.
+#     """
+
+#     def on_start(self) -> None:
+#         """
+#         On start of the competition, do the setup.
+
+#         :return: None
+#         """
+
+#     def on_cancelled(self) -> None:
+#         """
+#         Handle the cancellation of the competition from the TAC controller.
+
+#         :return: None
+#         """
+
+#     def on_search_results(self, search_id: int, agents: List[str]) -> None:
+#         """
+#         Handle search results.
+
+#         :return: None
+#         """
+
+#     def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
+#         """
+#         On Transaction confirmed handler.
+
+#         :param tx_confirmation: the transaction confirmation
+
+#         :return: None
+#         """
+
+#     def on_state_update(self, agent_state: StateUpdate) -> None:
+#         """
+#         On receiving the agent state update.
+
+#         :param agent_state: the current state of the agent in the competition.
+
+#         :return: None
+#         """
+
+#     def on_tac_error(self, error: Error) -> None:
+#         """
+#         Handle error messages from the TAC controller.
+
+#         :return: None
+#         """
 
 
 class DialogueLabel:
@@ -147,7 +206,7 @@ class MailBox(OEFAgent):
 
     def __init__(self, crypto: Crypto, oef_addr: str, oef_port: int = 3333,
                  loop: Optional[AbstractEventLoop] = None):
-        
+
         self.crypto = crypto
         super().__init__(self.crypto.public_key, oef_addr, oef_port, loop)
         self.connect()
@@ -156,11 +215,7 @@ class MailBox(OEFAgent):
         self._mail_box_thread = None  # type: Optional[Thread]
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
-        if self.crypto.is_confirmed_integrity(content, origin):
-            self.queue.put(SimpleMessage(msg_id, dialogue_id, origin, content))
-        else:
-            pass
-            # TODO send some error indicating signature does not match message data
+        self.queue.put(SimpleMessage(msg_id, dialogue_id, origin, content))
 
     def on_search_result(self, search_id: int, agents: List[str]):
         self.queue.put(SearchResult(search_id, agents))
@@ -190,7 +245,7 @@ class MailBox(OEFAgent):
 
     def stop(self) -> None:
         self._loop.call_soon_threadsafe(super().stop)
-        self.halt_loop()
+        # self.halt_loop()  TODO this does not work!
         self._mail_box_thread.join()
         self._mail_box_thread = None
 
@@ -201,7 +256,7 @@ class InBox(object):
         self._mail_box = mail_box
 
     def get(self) -> AgentMessage:
-        logger.debug("Waiting message from the queue...")
+        logger.debug("Waiting for message from the queue...")
         msg = self._mail_box.queue.get()
         logger.debug("Message type: type={}".format(type(msg)))
         return msg
@@ -226,7 +281,7 @@ class TACMailBox(MailBox):
 
     def __init__(self, crypto: Crypto, oef_addr: str, oef_port: int = 3333,
                  loop: Optional[AbstractEventLoop] = None):
-        super().__init__(self.crypto, oef_addr, oef_port, loop)
+        super().__init__(crypto, oef_addr, oef_port, loop)
 
     def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES):
         self.queue.put(CFP(msg_id, dialogue_id, origin, target, query))
@@ -277,6 +332,22 @@ class Dialogues:
     def register_dialogue(self, dialogue: Dialogue) -> None:
         self.dialogues[dialogue.dialogue_label] = dialogue
 
+
+class DialogueInterface:
+    """
+    This interface contains the methods to maintain a Dialogue with other agents.
+    """
+
+    @abstractmethod
+    def on_new_dialogue(self, msg) -> Dialogue:
+        """Given a new message, create a Dialogue object that specifies:
+        - the protocol rules that messages must follow;
+        - how the agent behaves in this dialogue.
+        """
+
+    @abstractmethod
+    def on_dialogue_error(self, dialogue_error: DialogueErrorMessage):
+        """Handler a dialogue error message"""
 
 # class FIPAProtocol(ProtocolInterface):
 #
@@ -358,7 +429,7 @@ class TACGameInstance:
         return self._is_world_modeling
 
 
-class TACParticipantAgent(ControllerInterface):
+class TACParticipantAgent(ControllerInterface, DialogueInterface, OEFSearchInterface):
 
     def __init__(self, name: str, oef_addr: str, oef_port: int = 3333, is_world_modeling: bool = False):
         self._name = name
@@ -388,11 +459,6 @@ class TACParticipantAgent(ControllerInterface):
     def game_instance(self) -> TACGameInstance:
         return self._game_instance
 
-    def stop(self) -> None:
-        """Stops the mailbox."""
-        self._stopped = True
-        self.mail_box.stop()
-
     def start(self):
         """Starts the mailbox."""
         self.mail_box.start()
@@ -405,11 +471,18 @@ class TACParticipantAgent(ControllerInterface):
 
             if is_oef_message(msg):
                 self.handle_oef_message(msg)
-            elif is_controller_message(msg):
+            elif is_controller_message(msg, self.crypto):
                 msg: SimpleMessage
                 self.handle_controller_message(msg)
             else:
                 self.handle_dialogue_message(msg)
+
+    def stop(self) -> None:
+        """Stops the mailbox."""
+
+        logger.debug("[{}]: Stopping message processing...".format(self.name))
+        self._stopped = True
+        self.mail_box.stop()
 
     def handle_oef_message(self, msg: Union[SearchResult, OEFErrorMessage, DialogueErrorMessage]):
         logger.debug("[{}]: Handling OEF message. type={}".format(self.name, type(msg)))
@@ -423,7 +496,7 @@ class TACParticipantAgent(ControllerInterface):
             logger.warning("[{}]: OEF Message type not recognized.".format(self.name))
 
     def handle_controller_message(self, msg: SimpleMessage):
-        response = Response.from_pb(msg.msg, _, self.crypto)
+        response = Response.from_pb(msg.msg, msg.destination, self.crypto)  # TODO this is already created once above!
         logger.debug("[{}]: Handling controller response. type={}".format(self.name, type(response)))
         try:
             if msg.destination != self.game_instance.controller_pbk:
@@ -431,14 +504,16 @@ class TACParticipantAgent(ControllerInterface):
 
             if isinstance(response, Error):
                 self.on_tac_error(response)
-
             elif self._game_phase == GamePhase.PRE_GAME:
-                raise ValueError("We do not expect a controller message in the pre-game phase.")
+                raise ValueError("We do not except a controller agent message in the pre game phase.")
             elif self._game_phase == GamePhase.GAME_SETUP:
                 if isinstance(response, GameData):
                     self._game_instance.init(response)
                     self._game_phase = GamePhase.GAME
                     self.on_start()
+                elif isinstance(response, Cancelled):
+                    self._game_phase = GamePhase.POST_GAME
+                    self.on_cancelled()
             elif self._game_phase == GamePhase.GAME:
                 if isinstance(response, TransactionConfirmation):
                     self.on_transaction_confirmed(response)
@@ -448,7 +523,7 @@ class TACParticipantAgent(ControllerInterface):
                 elif isinstance(response, StateUpdate):
                     self.on_state_update(response)
             elif self._game_phase == GamePhase.POST_GAME:
-                pass
+                raise ValueError("We do not except a controller agent message in the post game phase.")
         except ValueError as e:
             logger.warning(str(e))
 
@@ -486,7 +561,7 @@ class TACParticipantAgent(ControllerInterface):
             controller_pbk = search_result.agents[0]
             self._register_to_tac(controller_pbk)
         else:
-            self.on_search_results(search_id, search_result.agents)
+            self._react_to_search_results(search_id, search_result.agents)
 
     def _register_to_tac(self, tac_controller_pbk: str) -> None:
         """
@@ -499,20 +574,14 @@ class TACParticipantAgent(ControllerInterface):
         """
         self.game_instance.controller_pbk = tac_controller_pbk
         self._game_phase = GamePhase.GAME_SETUP
-        msg = Register(self.crypto.public_key).serialize(self.crypto)
+        msg = Register(self.crypto.public_key, self.crypto, self.name).serialize()
         self.mail_box.send_message(0, 0, tac_controller_pbk, msg)
 
-    @abstractmethod
-    def on_new_dialogue(self, msg) -> Dialogue:
-        """Given a new message, create a Dialogue object that specifies:
-        - the protocol rules that messages must follow;
-        - how the agent behaves in this dialogue.
+    def on_cancelled(self) -> None:
         """
+        Handle the cancellation of the competition from the TAC controller.
 
-    @abstractmethod
-    def on_oef_error(self, oef_error: OEFErrorMessage):
-        """Handle an OEF error message."""
-
-    @abstractmethod
-    def on_dialogue_error(self, dialogue_error: DialogueErrorMessage):
-        """Handler a dialogue error message"""
+        :return: None
+        """
+        logger.debug("[{}]: Received cancellation from the controller.".format(self.name))
+        self._stopped = True

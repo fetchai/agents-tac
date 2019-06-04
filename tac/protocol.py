@@ -30,7 +30,7 @@ from typing import Optional
 from google.protobuf.message import DecodeError
 
 import tac.tac_pb2 as tac_pb2
-from tac.helpers.crypto import Crypto, CryptoError
+from tac.helpers.crypto import Crypto
 from tac.helpers.misc import TacError
 
 from oef.schema import Description
@@ -148,7 +148,6 @@ class Request(Message, ABC):
                 raise TacError("Unrecognized type of Request.")
         else:
             raise ValueError("Bad signature. Do not trust!")
-
 
     def to_pb(self):
         raise NotImplementedError

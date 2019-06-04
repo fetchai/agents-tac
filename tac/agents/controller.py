@@ -497,7 +497,7 @@ class GameHandler:
                 self.current_game.configuration.good_pbks
             )
             logger.debug("[{}]: sending GameData to '{}': {}"
-                         .format(self.controller_agent.name, public_key,  str(game_data_response)))
+                         .format(self.controller_agent.name, public_key, str(game_data_response)))
 
             self.game_data_per_participant[public_key] = game_data_response
             self.controller_agent.send_message(0, 1, public_key, game_data_response.serialize())
@@ -701,7 +701,7 @@ class ControllerAgent(OEFAgent):
 
 def _parse_arguments():
     parser = argparse.ArgumentParser("controller", description="Launch the controller agent.")
-    parser.add_argument("--public-key", default="controller", help="Public key of the agent.")
+    parser.add_argument("--name", default="controller", help="Name of the agent.")
     parser.add_argument("--nb-agents", default=5, type=int, help="Number of goods")
     parser.add_argument("--nb-goods", default=5, type=int, help="Number of goods")
     parser.add_argument("--money-endowment", type=int, default=200, help="Initial amount of money.")
@@ -731,7 +731,7 @@ def main():
 
     try:
 
-        agent = ControllerAgent(public_key=arguments.public_key,
+        agent = ControllerAgent(name=arguments.name,
                                 oef_addr=arguments.oef_addr,
                                 oef_port=arguments.oef_port)
 

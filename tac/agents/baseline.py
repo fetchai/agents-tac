@@ -48,7 +48,7 @@ else:
 
 def parse_arguments():
     parser = argparse.ArgumentParser("baseline", description="Launch the baseline agent.")
-    parser.add_argument("--public-key", default="baseline", help="Public key of the agent.")
+    parser.add_argument("--name", default="baseline", help="Name of the agent.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
     # parser.add_argument("--gui", action="store_true", help="Show the GUI.")
@@ -1010,7 +1010,7 @@ class BaselineStrategy:
 
 def main():
     args = parse_arguments()
-    agent = BaselineAgent(public_key=args.public_key, oef_addr=args.oef_addr, oef_port=args.oef_port,
+    agent = BaselineAgent(name=args.name, oef_addr=args.oef_addr, oef_port=args.oef_port,
                           loop=asyncio.get_event_loop())
 
     agent.connect()
