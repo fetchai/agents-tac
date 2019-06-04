@@ -529,8 +529,8 @@ class GameHandler:
             return False
 
     def notify_tac_cancelled(self):
-        for tac_agent in self.registered_agents:
-            self.controller_agent.send_message(0, 0, tac_agent, Cancelled(tac_agent, self.controller_agent.crypto).serialize())
+        for agent_pbk in self.registered_agents:
+            self.controller_agent.send_message(0, 0, agent_pbk, Cancelled(agent_pbk, self.controller_agent.crypto).serialize())
 
 
 class ControllerAgent(OEFAgent):
