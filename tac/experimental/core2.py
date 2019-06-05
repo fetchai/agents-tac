@@ -117,58 +117,6 @@ class OEFSearchInterface:
         """Handle an OEF error message."""
 
 
-# class TACControllerInterface(ControllerInterface):
-#     """
-#     This interface contains the methods to interact with the ControllerAgent.
-#     """
-
-#     def on_start(self) -> None:
-#         """
-#         On start of the competition, do the setup.
-
-#         :return: None
-#         """
-
-#     def on_cancelled(self) -> None:
-#         """
-#         Handle the cancellation of the competition from the TAC controller.
-
-#         :return: None
-#         """
-
-#     def on_search_results(self, search_id: int, agents: List[str]) -> None:
-#         """
-#         Handle search results.
-
-#         :return: None
-#         """
-
-#     def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
-#         """
-#         On Transaction confirmed handler.
-
-#         :param tx_confirmation: the transaction confirmation
-
-#         :return: None
-#         """
-
-#     def on_state_update(self, agent_state: StateUpdate) -> None:
-#         """
-#         On receiving the agent state update.
-
-#         :param agent_state: the current state of the agent in the competition.
-
-#         :return: None
-#         """
-
-#     def on_tac_error(self, error: Error) -> None:
-#         """
-#         Handle error messages from the TAC controller.
-
-#         :return: None
-#         """
-
-
 class DialogueLabel:
     """Identifier for dialogues."""
 
@@ -197,6 +145,58 @@ class DialogueLabel:
 
     def __hash__(self):
         return hash((self.dialogue_id, self.agent_pbk))
+
+
+class TACGameInstance:
+
+    def __init__(self, is_world_modeling: bool = False):
+        self.controller_pbk = None  # type: Optional[str]
+        self.search_ids_for_tac = set()  # type: Set[int]
+
+        self._game_configuration = None  # type: Optional[GameConfiguration]
+        self._initial_agent_state = None  # type: Optional[AgentState]
+        self._agent_state = None  # type: Optional[AgentState]
+        self._is_world_modeling = is_world_modeling
+        self._world_state = None  # type: Optional[WorldState]
+
+    def init(self, game_data: GameData):
+        # populate data structures about the started competition
+        self._game_configuration = GameConfiguration(game_data.nb_agents, game_data.nb_goods, game_data.tx_fee,
+                                                     game_data.agent_pbks, game_data.good_pbks)
+        self._initial_agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
+        self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
+        if self.is_world_modeling:
+            opponent_pbks = self.game_configuration.agent_pbks
+            opponent_pbks.remove(game_data.public_key)
+            self._world_state = WorldState(opponent_pbks, self.game_configuration.good_pbks, self.initial_agent_state)
+
+    def reset(self):
+        self.controller_pbk = None
+        self.search_ids_for_tac = set()
+        self._game_configuration = None
+        self._initial_agent_state = None
+        self._agent_state = None
+        self._world_state = None
+
+    @property
+    def game_configuration(self):
+        return self._game_configuration
+
+    @property
+    def initial_agent_state(self):
+        return self._initial_agent_state
+
+    @property
+    def agent_state(self):
+        return self._agent_state
+
+    @property
+    def world_state(self):
+        return self._world_state
+
+    @property
+    def is_world_modeling(self):
+        return self._is_world_modeling
 
 
 class MailBox(OEFAgent):
@@ -349,148 +349,142 @@ class DialogueInterface:
     def on_dialogue_error(self, dialogue_error: DialogueErrorMessage):
         """Handler a dialogue error message"""
 
-# class FIPAProtocol(ProtocolInterface):
-#
-#     def check_message(self, msg: AgentMessage) -> bool:
-#         if isinstance(msg, SimpleMessage):
-#             return self.check_simple_message(msg)
-#         # elif CFP
-#         # elif Propose
-#         # ...
-#         else:
-#             return False
-#
-#     def check_simple_message(self, dialogue: Dialogue, msg: AgentMessage):
-#         return True
-#
-#
-# class BaselineBehaviour(BehaviourInterface):
-#
-#     def dispatch_to_handler(self, dialogue: Dialogue, msg: Message) -> Optional[Action]:
-#         if isinstance(msg, Message):
-#             return self.on_message(msg)
-#         # elif
-#         else:
-#             return None  # or NullAction
-#
-#     def on_message(self, msg):
-#         pass
 
+class ControllerActions(ControllerInterface):
 
-class TACGameInstance:
+    def __init__(self, crypto: Crypto, game_instance: 'TACGameInstance', game_phase: 'GamePhase', out_box: 'OutBox', name: str):
+        self.crypto = crypto
+        self.game_instance = game_instance
+        self.game_phase = game_phase
+        self.out_box = out_box
+        self.name = name
 
-    def __init__(self, is_world_modeling: bool = False):
-        self.controller_pbk = None  # type: Optional[str]
-        self.search_ids_for_tac = set()  # type: Set[int]
+    def on_dialogue_error(self, dialogue_error: DialogueErrorMessage):
+        pass
 
-        self._game_configuration = None  # type: Optional[GameConfiguration]
-        self._initial_agent_state = None  # type: Optional[AgentState]
-        self._agent_state = None  # type: Optional[AgentState]
-        self._is_world_modeling = is_world_modeling
-        self._world_state = None  # type: Optional[WorldState]
+    def on_start(self) -> None:
+        pass
 
-    def init(self, game_data: GameData):
-        # populate data structures about the started competition
-        self._game_configuration = GameConfiguration(game_data.nb_agents, game_data.nb_goods, game_data.tx_fee,
-                                                     game_data.agent_pbks, game_data.good_pbks)
-        self._initial_agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
-        self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
-        if self.is_world_modeling:
-            opponent_pbks = self.game_configuration.agent_pbks
-            opponent_pbks.remove(game_data.public_key)
-            self._world_state = WorldState(opponent_pbks, self.game_configuration.good_pbks, self.initial_agent_state)
+    def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
+        pass
 
-    def reset(self):
-        self.controller_pbk = None
-        self.search_ids_for_tac = set()
-        self._game_configuration = None
-        self._initial_agent_state = None
-        self._agent_state = None
-        self._world_state = None
+    def on_state_update(self, agent_state: StateUpdate) -> None:
+        pass
 
-    @property
-    def game_configuration(self):
-        return self._game_configuration
-
-    @property
-    def initial_agent_state(self):
-        return self._initial_agent_state
-
-    @property
-    def agent_state(self):
-        return self._agent_state
-
-    @property
-    def world_state(self):
-        return self._world_state
-
-    @property
-    def is_world_modeling(self):
-        return self._is_world_modeling
-
-
-class TACParticipantAgent(ControllerInterface, DialogueInterface, OEFSearchInterface):
-
-    def __init__(self, name: str, oef_addr: str, oef_port: int = 3333, is_world_modeling: bool = False):
-        self._name = name
-        self._crypto = Crypto()
-        self.mail_box = TACMailBox(self.crypto, oef_addr, oef_port, loop=asyncio.get_event_loop())
-
-        self.in_box = InBox(self.mail_box)
-        self.out_box = OutBox(self.mail_box)
-
-        self.dialogues = Dialogues()
-
-        self.is_world_modeling = is_world_modeling
-        self._game_instance = TACGameInstance(is_world_modeling)  # type:  Optional[TACGameInstance]
-        self._game_phase = GamePhase.PRE_GAME
-
-        self._stopped = True  # type: bool
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    @property
-    def crypto(self) -> Crypto:
-        return self._crypto
-
-    @property
-    def game_instance(self) -> TACGameInstance:
-        return self._game_instance
-
-    def start(self):
+    def on_cancelled(self) -> None:
         """
-        Starts the mailbox.
+        Handle the cancellation of the competition from the TAC controller.
 
         :return: None
         """
-        self.mail_box.start()
-        self._search_for_tac()
-        self._stopped = False
-
-        logger.debug("[{}]: Start processing messages...".format(self.name))
-        while not self._stopped:
-            msg = self.in_box.get()  # type: Message
-
-            if is_oef_message(msg):
-                self.handle_oef_message(msg)
-            elif is_controller_message(msg, self.crypto):
-                msg: SimpleMessage
-                self.handle_controller_message(msg)
-            else:
-                self.handle_dialogue_message(msg)
-
-    def stop(self) -> None:
-        """
-        Stops the mailbox.
-
-        :return: None
-        """
-
-        logger.debug("[{}]: Stopping message processing...".format(self.name))
+        logger.debug("[{}]: Received cancellation from the controller.".format(self.name))
         self._stopped = True
-        self.mail_box.stop()
+
+    def on_tac_error(self, error: Error) -> None:
+        pass
+
+
+class ControllerHandler(ControllerActions):
+
+    def __init__(self, crypto: Crypto, game_instance: 'TACGameInstance', game_phase: 'GamePhase', out_box: 'OutBox', name: str):
+        super().__init__(crypto, game_instance, game_phase, out_box, name)
+
+    def handle_controller_message(self, msg: ControllerMessage) -> None:
+        """
+        Handles messages from the controller.
+
+        The controller does not expect a response for any of these messages.
+
+        :return: None
+        """
+        response = Response.from_pb(msg.msg, msg.destination, self.crypto)  # TODO this is already created once above!
+        logger.debug("[{}]: Handling controller response. type={}".format(self.name, type(response)))
+        try:
+            if msg.destination != self.game_instance.controller_pbk:
+                raise ValueError("The sender of the message is not a controller agent.")
+
+            if isinstance(response, Error):
+                self.on_tac_error(response)
+            elif self.game_phase == GamePhase.PRE_GAME:
+                raise ValueError("We do not except a controller agent message in the pre game phase.")
+            elif self.game_phase == GamePhase.GAME_SETUP:
+                if isinstance(response, GameData):
+                    self.game_instance.init(response)
+                    self.game_phase = GamePhase.GAME
+                    self.on_start()
+                elif isinstance(response, Cancelled):
+                    self.game_phase = GamePhase.POST_GAME
+                    self.on_cancelled()
+            elif self.game_phase == GamePhase.GAME:
+                if isinstance(response, TransactionConfirmation):
+                    self.on_transaction_confirmed(response)
+                elif isinstance(response, Cancelled):
+                    self.game_phase = GamePhase.POST_GAME
+                    self.on_cancelled()
+                elif isinstance(response, StateUpdate):
+                    self.on_state_update(response)
+            elif self.game_phase == GamePhase.POST_GAME:
+                raise ValueError("We do not except a controller agent message in the post game phase.")
+        except ValueError as e:
+            logger.warning(str(e))
+
+
+class OEFActions(OEFSearchInterface):
+
+    def __init__(self, crypto: Crypto, game_instance: 'TACGameInstance', game_phase: 'GamePhase', out_box: 'OutBox', name: str):
+        self.crypto = crypto
+        self.game_instance = game_instance
+        self.game_phase = game_phase
+        self.out_box = out_box
+        self.name = name
+
+    def search_for_tac(self) -> None:
+        """
+        Search for active TAC Controller.
+
+        We assume that the controller is registered as a service with the 'tac' data model
+        and with an attribute version = 1.
+
+        :return: None
+        """
+        query = Query([Constraint("version", GtEq(1))])
+        search_id = self.out_box._mail_box.search_services(query)
+        self.game_instance.search_ids_for_tac.add(search_id)
+
+    def on_search_result(self, search_result: SearchResult):
+        """Process a search result from the OEF."""
+        search_id = search_result.msg_id
+        if search_id in self.game_instance.search_ids_for_tac:
+            controller_pbk = search_result.agents[0]
+            self._register_to_tac(controller_pbk)
+        else:
+            self._react_to_search_results(search_id, search_result.agents)
+
+    def on_oef_error(self, oef_error: OEFErrorMessage) -> None:
+        pass
+
+    def _react_to_search_results(self, sender_id: str, agent_pbks: List[str]) -> None:
+        pass
+
+    def _register_to_tac(self, tac_controller_pbk: str) -> None:
+        """
+        Register to active TAC Controller.
+
+        :param tac_controller_pbk: the public key of the controller.
+
+        :return: None
+        :raises AssertionError: if the agent is already registered.
+        """
+        self.game_instance.controller_pbk = tac_controller_pbk
+        self.game_phase = GamePhase.GAME_SETUP
+        msg = Register(self.crypto.public_key, self.crypto, self.name).serialize()
+        self.out_box._mail_box.send_message(0, 0, tac_controller_pbk, msg)
+
+
+class OEFHandler(OEFActions):
+
+    def __init__(self, crypto: Crypto, game_instance: 'TACGameInstance', game_phase: 'GamePhase', out_box: 'OutBox', name: str):
+        super().__init__(crypto, game_instance, game_phase, out_box, name)
 
     def handle_oef_message(self, msg: OEFMessage) -> None:
         """
@@ -510,44 +504,30 @@ class TACParticipantAgent(ControllerInterface, DialogueInterface, OEFSearchInter
         else:
             logger.warning("[{}]: OEF Message type not recognized.".format(self.name))
 
-    def handle_controller_message(self, msg: ControllerMessage) -> None:
-        """
-        Handles messages from the controller.
 
-        The controller does not expect a response for any of these messages.
+class DialogueActions(DialogueInterface):
+    """
+    Implements a basic dialogue interface.
+    """
 
-        :return: None
-        """
-        response = Response.from_pb(msg.msg, msg.destination, self.crypto)  # TODO this is already created once above!
-        logger.debug("[{}]: Handling controller response. type={}".format(self.name, type(response)))
-        try:
-            if msg.destination != self.game_instance.controller_pbk:
-                raise ValueError("The sender of the message is not a controller agent.")
+    def __init__(self, crypto: Crypto, game_instance: 'TACGameInstance', game_phase: 'GamePhase', out_box: 'OutBox', name: str):
+        self.crypto = crypto
+        self.game_instance = game_instance
+        self.game_phase = game_phase
+        self.out_box = out_box
+        self.name = name
 
-            if isinstance(response, Error):
-                self.on_tac_error(response)
-            elif self._game_phase == GamePhase.PRE_GAME:
-                raise ValueError("We do not except a controller agent message in the pre game phase.")
-            elif self._game_phase == GamePhase.GAME_SETUP:
-                if isinstance(response, GameData):
-                    self._game_instance.init(response)
-                    self._game_phase = GamePhase.GAME
-                    self.on_start()
-                elif isinstance(response, Cancelled):
-                    self._game_phase = GamePhase.POST_GAME
-                    self.on_cancelled()
-            elif self._game_phase == GamePhase.GAME:
-                if isinstance(response, TransactionConfirmation):
-                    self.on_transaction_confirmed(response)
-                elif isinstance(response, Cancelled):
-                    self._game_phase = GamePhase.POST_GAME
-                    self.on_cancelled()
-                elif isinstance(response, StateUpdate):
-                    self.on_state_update(response)
-            elif self._game_phase == GamePhase.POST_GAME:
-                raise ValueError("We do not except a controller agent message in the post game phase.")
-        except ValueError as e:
-            logger.warning(str(e))
+    def on_new_dialogue(self, msg) -> Dialogue:
+        pass
+
+
+class DialogueHandler(DialogueActions):
+    """
+    Handles the dialogue with another agent.
+    """
+
+    def __init__(self, crypto: Crypto, game_instance: 'TACGameInstance', game_phase: 'GamePhase', out_box: 'OutBox', name: str):
+        super().__init__(crypto, game_instance, game_phase, out_box, name)
 
     def handle_dialogue_message(self, msg: AgentMessage) -> None:
         """
@@ -570,47 +550,74 @@ class TACParticipantAgent(ControllerInterface, DialogueInterface, OEFSearchInter
             response = dialogue.dispatch_to_handler(msg)
             self.out_box.send_message(response)
 
-    def _search_for_tac(self) -> None:
-        """
-        Search for active TAC Controller.
 
-        We assume that the controller is registered as a service with the 'tac' data model
-        and with an attribute version = 1.
+class TACParticipantAgent:
+
+    def __init__(self, name: str, oef_addr: str, oef_port: int = 3333, is_world_modeling: bool = False):
+        self._name = name
+        self._crypto = Crypto()
+        self.mail_box = TACMailBox(self.crypto, oef_addr, oef_port, loop=asyncio.get_event_loop())
+
+        self.in_box = InBox(self.mail_box)
+        self.out_box = OutBox(self.mail_box)
+
+        self.dialogues = Dialogues()
+
+        self.is_world_modeling = is_world_modeling
+        self._game_instance = TACGameInstance(is_world_modeling)  # type:  Optional[TACGameInstance]
+        self._game_phase = GamePhase.PRE_GAME
+
+        self.controller_handler = ControllerHandler(self.crypto, self._game_instance, self._game_phase, self.out_box, self.name)
+        self.oef_handler = OEFHandler(self.crypto, self._game_instance, self._game_phase, self.out_box, self.name)
+        self.dialogue_handler = DialogueHandler(self.crypto, self._game_instance, self._game_phase, self.out_box, self.name)
+
+        self._stopped = True  # type: bool
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def crypto(self) -> Crypto:
+        return self._crypto
+
+    # @property
+    # def game_instance(self) -> TACGameInstance:
+    #     return self._game_instance
+
+    # @property
+    # def game_phase(self):
+    #     return self._game_phase
+
+    def start(self):
+        """
+        Starts the mailbox.
 
         :return: None
         """
-        query = Query([Constraint("version", GtEq(1))])
-        search_id = self.mail_box.search_services(query)
-        self._game_instance.search_ids_for_tac.add(search_id)
+        self.mail_box.start()
+        self.oef_handler.search_for_tac()
+        self._stopped = False
 
-    def on_search_result(self, search_result: SearchResult):
-        """Process a search result from the OEF."""
-        search_id = search_result.msg_id
-        if search_id in self._game_instance.search_ids_for_tac:
-            controller_pbk = search_result.agents[0]
-            self._register_to_tac(controller_pbk)
-        else:
-            self._react_to_search_results(search_id, search_result.agents)
+        logger.debug("[{}]: Start processing messages...".format(self.name))
+        while not self._stopped:
+            msg = self.in_box.get()  # type: Message
 
-    def _register_to_tac(self, tac_controller_pbk: str) -> None:
+            if is_oef_message(msg):
+                self.oef_handler.handle_oef_message(msg)
+            elif is_controller_message(msg, self.crypto):
+                msg: SimpleMessage
+                self.controller_handler.handle_controller_message(msg)
+            else:
+                self.dialogue_handler.handle_dialogue_message(msg)
+
+    def stop(self) -> None:
         """
-        Register to active TAC Controller.
-
-        :param tac_controller_pbk: the public key of the controller.
-
-        :return: None
-        :raises AssertionError: if the agent is already registered.
-        """
-        self.game_instance.controller_pbk = tac_controller_pbk
-        self._game_phase = GamePhase.GAME_SETUP
-        msg = Register(self.crypto.public_key, self.crypto, self.name).serialize()
-        self.mail_box.send_message(0, 0, tac_controller_pbk, msg)
-
-    def on_cancelled(self) -> None:
-        """
-        Handle the cancellation of the competition from the TAC controller.
+        Stops the mailbox.
 
         :return: None
         """
-        logger.debug("[{}]: Received cancellation from the controller.".format(self.name))
+
+        logger.debug("[{}]: Stopping message processing...".format(self.name))
         self._stopped = True
+        self.mail_box.stop()
