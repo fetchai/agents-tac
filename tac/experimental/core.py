@@ -21,9 +21,9 @@ logger = logging.getLogger(__name__)
 
 Action = Any
 OEFMessage = Union[SearchResult, OEFErrorMessage, DialogueErrorMessage]
-ControllerResponse = Response
+ControllerMessage = SimpleMessage
 AgentMessage = Union[SimpleMessage, CFP, Propose, Accept, Decline]
-Message = Union[OEFMessage, AgentMessage]
+Message = Union[OEFMessage, ControllerMessage, AgentMessage]
 
 
 def is_oef_message(msg: Message) -> bool:
@@ -460,7 +460,11 @@ class TACParticipantAgent(ControllerInterface, DialogueInterface, OEFSearchInter
         return self._game_instance
 
     def start(self):
-        """Starts the mailbox."""
+        """
+        Starts the mailbox.
+        
+        :return: None
+        """
         self.mail_box.start()
         self._search_for_tac()
         self._stopped = False
@@ -478,13 +482,24 @@ class TACParticipantAgent(ControllerInterface, DialogueInterface, OEFSearchInter
                 self.handle_dialogue_message(msg)
 
     def stop(self) -> None:
-        """Stops the mailbox."""
+        """
+        Stops the mailbox.
+        
+        :return: None
+        """
 
         logger.debug("[{}]: Stopping message processing...".format(self.name))
         self._stopped = True
         self.mail_box.stop()
 
-    def handle_oef_message(self, msg: Union[SearchResult, OEFErrorMessage, DialogueErrorMessage]):
+    def handle_oef_message(self, msg: OEFMessage) -> None:
+        """
+        Handles messages from the oef.
+
+        The oef does not expect a response for any of these messages.
+
+        :return: None
+        """
         logger.debug("[{}]: Handling OEF message. type={}".format(self.name, type(msg)))
         if isinstance(msg, SearchResult):
             self.on_search_result(msg)
@@ -495,7 +510,14 @@ class TACParticipantAgent(ControllerInterface, DialogueInterface, OEFSearchInter
         else:
             logger.warning("[{}]: OEF Message type not recognized.".format(self.name))
 
-    def handle_controller_message(self, msg: SimpleMessage):
+    def handle_controller_message(self, msg: ControllerMessage) -> None:
+        """
+        Handles messages from the controller.
+
+        The controller does not expect a response for any of these messages.
+
+        :return: None
+        """
         response = Response.from_pb(msg.msg, msg.destination, self.crypto)  # TODO this is already created once above!
         logger.debug("[{}]: Handling controller response. type={}".format(self.name, type(response)))
         try:
@@ -527,7 +549,14 @@ class TACParticipantAgent(ControllerInterface, DialogueInterface, OEFSearchInter
         except ValueError as e:
             logger.warning(str(e))
 
-    def handle_dialogue_message(self, msg: AgentMessage):
+    def handle_dialogue_message(self, msg: AgentMessage) -> None:
+        """
+        Handles messages from the other agents.
+
+        The agents expect a response.
+
+        :return: None
+        """
         logger.debug("Handling Dialogue message. type={}".format(type(msg)))
         dialogue_label = DialogueLabel(msg.dialogue_id, msg.destination)
         if self.dialogues.is_dialogue_registered(dialogue_label):
