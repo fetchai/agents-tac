@@ -19,4 +19,7 @@ docker run -it -p 20000:20000 -p 3333:3333 -p 40000:40000 qati/oef-search:latest
 - in another terminal run the agent:
 
       python3 tac/experimental/registration_agent.py
+
+- or
+      python3 tac/experimental/registration_agent2.py
       

@@ -274,9 +274,9 @@ class OutBox(object):
         pass
 
 
-class TACMailBox(MailBox):
+class FIPAMailBox(MailBox):
     """
-    The TACMailBox enqueues additionally FIPA specific messages.
+    The FIPAMailBox enqueues additionally FIPA specific messages.
     """
 
     def __init__(self, crypto: Crypto, oef_addr: str, oef_port: int = 3333,
@@ -392,7 +392,7 @@ class TACGameInstance:
     def init(self, game_data: GameData):
         # populate data structures about the started competition
         self._game_configuration = GameConfiguration(game_data.nb_agents, game_data.nb_goods, game_data.tx_fee,
-                                                     game_data.agent_pbks, game_data.good_pbks)
+                                                     game_data.agent_pbks, game_data.agent_names, game_data.good_pbks)
         self._initial_agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
         self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
         if self.is_world_modeling:
@@ -434,7 +434,7 @@ class TACParticipantAgent(ControllerInterface, DialogueInterface, OEFSearchInter
     def __init__(self, name: str, oef_addr: str, oef_port: int = 3333, is_world_modeling: bool = False):
         self._name = name
         self._crypto = Crypto()
-        self.mail_box = TACMailBox(self.crypto, oef_addr, oef_port, loop=asyncio.get_event_loop())
+        self.mail_box = FIPAMailBox(self.crypto, oef_addr, oef_port, loop=asyncio.get_event_loop())
 
         self.in_box = InBox(self.mail_box)
         self.out_box = OutBox(self.mail_box)

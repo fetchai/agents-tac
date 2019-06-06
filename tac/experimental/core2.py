@@ -153,6 +153,9 @@ class TACGameInstance:
         self.controller_pbk = None  # type: Optional[str]
         self.search_ids_for_tac = set()  # type: Set[int]
 
+        self._game_phase = GamePhase.PRE_GAME
+        self._agent_stopped = True  # type: bool
+
         self._game_configuration = None  # type: Optional[GameConfiguration]
         self._initial_agent_state = None  # type: Optional[AgentState]
         self._agent_state = None  # type: Optional[AgentState]
@@ -162,7 +165,7 @@ class TACGameInstance:
     def init(self, game_data: GameData):
         # populate data structures about the started competition
         self._game_configuration = GameConfiguration(game_data.nb_agents, game_data.nb_goods, game_data.tx_fee,
-                                                     game_data.agent_pbks, game_data.good_pbks)
+                                                     game_data.agent_pbks, game_data.agent_names, game_data.good_pbks)
         self._initial_agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
         self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
         if self.is_world_modeling:
@@ -173,10 +176,19 @@ class TACGameInstance:
     def reset(self):
         self.controller_pbk = None
         self.search_ids_for_tac = set()
+        self._game_phase = GamePhase.PRE_GAME
         self._game_configuration = None
         self._initial_agent_state = None
         self._agent_state = None
         self._world_state = None
+
+    @property
+    def game_phase(self):
+        return self._game_phase
+
+    @property
+    def agent_stopped(self):
+        return self._agent_stopped
 
     @property
     def game_configuration(self):
@@ -274,9 +286,9 @@ class OutBox(object):
         pass
 
 
-class TACMailBox(MailBox):
+class FIPAMailBox(MailBox):
     """
-    The TACMailBox enqueues additionally FIPA specific messages.
+    The FIPAMailBox enqueues additionally FIPA specific messages.
     """
 
     def __init__(self, crypto: Crypto, oef_addr: str, oef_port: int = 3333,
@@ -352,10 +364,9 @@ class DialogueInterface:
 
 class ControllerActions(ControllerInterface):
 
-    def __init__(self, crypto: Crypto, game_instance: 'TACGameInstance', game_phase: 'GamePhase', out_box: 'OutBox', name: str):
+    def __init__(self, crypto: Crypto, game_instance: TACGameInstance, out_box: 'OutBox', name: str):
         self.crypto = crypto
         self.game_instance = game_instance
-        self.game_phase = game_phase
         self.out_box = out_box
         self.name = name
 
@@ -378,7 +389,7 @@ class ControllerActions(ControllerInterface):
         :return: None
         """
         logger.debug("[{}]: Received cancellation from the controller.".format(self.name))
-        self._stopped = True
+        self.game_instance._agent_stopped = True
 
     def on_tac_error(self, error: Error) -> None:
         pass
@@ -386,8 +397,8 @@ class ControllerActions(ControllerInterface):
 
 class ControllerHandler(ControllerActions):
 
-    def __init__(self, crypto: Crypto, game_instance: 'TACGameInstance', game_phase: 'GamePhase', out_box: 'OutBox', name: str):
-        super().__init__(crypto, game_instance, game_phase, out_box, name)
+    def __init__(self, crypto: Crypto, game_instance: TACGameInstance, out_box: 'OutBox', name: str):
+        super().__init__(crypto, game_instance, out_box, name)
 
     def handle_controller_message(self, msg: ControllerMessage) -> None:
         """
@@ -405,25 +416,25 @@ class ControllerHandler(ControllerActions):
 
             if isinstance(response, Error):
                 self.on_tac_error(response)
-            elif self.game_phase == GamePhase.PRE_GAME:
+            elif self.game_instance.game_phase == GamePhase.PRE_GAME:
                 raise ValueError("We do not except a controller agent message in the pre game phase.")
-            elif self.game_phase == GamePhase.GAME_SETUP:
+            elif self.game_instance.game_phase == GamePhase.GAME_SETUP:
                 if isinstance(response, GameData):
                     self.game_instance.init(response)
-                    self.game_phase = GamePhase.GAME
+                    self.game_instance._game_phase = GamePhase.GAME
                     self.on_start()
                 elif isinstance(response, Cancelled):
-                    self.game_phase = GamePhase.POST_GAME
+                    self.game_instance._game_phase = GamePhase.POST_GAME
                     self.on_cancelled()
-            elif self.game_phase == GamePhase.GAME:
+            elif self.game_instance.game_phase == GamePhase.GAME:
                 if isinstance(response, TransactionConfirmation):
                     self.on_transaction_confirmed(response)
                 elif isinstance(response, Cancelled):
-                    self.game_phase = GamePhase.POST_GAME
+                    self.game_instance._game_phase = GamePhase.POST_GAME
                     self.on_cancelled()
                 elif isinstance(response, StateUpdate):
                     self.on_state_update(response)
-            elif self.game_phase == GamePhase.POST_GAME:
+            elif self.game_instance.game_phase == GamePhase.POST_GAME:
                 raise ValueError("We do not except a controller agent message in the post game phase.")
         except ValueError as e:
             logger.warning(str(e))
@@ -431,10 +442,9 @@ class ControllerHandler(ControllerActions):
 
 class OEFActions(OEFSearchInterface):
 
-    def __init__(self, crypto: Crypto, game_instance: 'TACGameInstance', game_phase: 'GamePhase', out_box: 'OutBox', name: str):
+    def __init__(self, crypto: Crypto, game_instance: TACGameInstance, out_box: 'OutBox', name: str):
         self.crypto = crypto
         self.game_instance = game_instance
-        self.game_phase = game_phase
         self.out_box = out_box
         self.name = name
 
@@ -476,15 +486,15 @@ class OEFActions(OEFSearchInterface):
         :raises AssertionError: if the agent is already registered.
         """
         self.game_instance.controller_pbk = tac_controller_pbk
-        self.game_phase = GamePhase.GAME_SETUP
+        self.game_instance._game_phase = GamePhase.GAME_SETUP
         msg = Register(self.crypto.public_key, self.crypto, self.name).serialize()
         self.out_box._mail_box.send_message(0, 0, tac_controller_pbk, msg)
 
 
 class OEFHandler(OEFActions):
 
-    def __init__(self, crypto: Crypto, game_instance: 'TACGameInstance', game_phase: 'GamePhase', out_box: 'OutBox', name: str):
-        super().__init__(crypto, game_instance, game_phase, out_box, name)
+    def __init__(self, crypto: Crypto, game_instance: TACGameInstance, out_box: 'OutBox', name: str):
+        super().__init__(crypto, game_instance, out_box, name)
 
     def handle_oef_message(self, msg: OEFMessage) -> None:
         """
@@ -510,10 +520,9 @@ class DialogueActions(DialogueInterface):
     Implements a basic dialogue interface.
     """
 
-    def __init__(self, crypto: Crypto, game_instance: 'TACGameInstance', game_phase: 'GamePhase', out_box: 'OutBox', name: str):
+    def __init__(self, crypto: Crypto, game_instance: TACGameInstance, out_box: 'OutBox', name: str):
         self.crypto = crypto
         self.game_instance = game_instance
-        self.game_phase = game_phase
         self.out_box = out_box
         self.name = name
 
@@ -526,8 +535,8 @@ class DialogueHandler(DialogueActions):
     Handles the dialogue with another agent.
     """
 
-    def __init__(self, crypto: Crypto, game_instance: 'TACGameInstance', game_phase: 'GamePhase', out_box: 'OutBox', name: str):
-        super().__init__(crypto, game_instance, game_phase, out_box, name)
+    def __init__(self, crypto: Crypto, game_instance: TACGameInstance, out_box: 'OutBox', name: str):
+        super().__init__(crypto, game_instance, out_box, name)
 
     def handle_dialogue_message(self, msg: AgentMessage) -> None:
         """
@@ -556,22 +565,18 @@ class TACParticipantAgent:
     def __init__(self, name: str, oef_addr: str, oef_port: int = 3333, is_world_modeling: bool = False):
         self._name = name
         self._crypto = Crypto()
-        self.mail_box = TACMailBox(self.crypto, oef_addr, oef_port, loop=asyncio.get_event_loop())
+        self.mail_box = FIPAMailBox(self.crypto, oef_addr, oef_port, loop=asyncio.get_event_loop())
 
         self.in_box = InBox(self.mail_box)
         self.out_box = OutBox(self.mail_box)
 
         self.dialogues = Dialogues()
 
-        self.is_world_modeling = is_world_modeling
-        self._game_instance = TACGameInstance(is_world_modeling)  # type:  Optional[TACGameInstance]
-        self._game_phase = GamePhase.PRE_GAME
+        self.game_instance = TACGameInstance(is_world_modeling)  # type:  Optional[TACGameInstance]
 
-        self.controller_handler = ControllerHandler(self.crypto, self._game_instance, self._game_phase, self.out_box, self.name)
-        self.oef_handler = OEFHandler(self.crypto, self._game_instance, self._game_phase, self.out_box, self.name)
-        self.dialogue_handler = DialogueHandler(self.crypto, self._game_instance, self._game_phase, self.out_box, self.name)
-
-        self._stopped = True  # type: bool
+        self.controller_handler = ControllerHandler(self.crypto, self.game_instance, self.out_box, self.name)
+        self.oef_handler = OEFHandler(self.crypto, self.game_instance, self.out_box, self.name)
+        self.dialogue_handler = DialogueHandler(self.crypto, self.game_instance, self.out_box, self.name)
 
     @property
     def name(self) -> str:
@@ -585,10 +590,6 @@ class TACParticipantAgent:
     # def game_instance(self) -> TACGameInstance:
     #     return self._game_instance
 
-    # @property
-    # def game_phase(self):
-    #     return self._game_phase
-
     def start(self):
         """
         Starts the mailbox.
@@ -597,10 +598,10 @@ class TACParticipantAgent:
         """
         self.mail_box.start()
         self.oef_handler.search_for_tac()
-        self._stopped = False
+        self.game_instance._agent_stopped = False
 
         logger.debug("[{}]: Start processing messages...".format(self.name))
-        while not self._stopped:
+        while not self.game_instance.agent_stopped:
             msg = self.in_box.get()  # type: Message
 
             if is_oef_message(msg):
@@ -619,5 +620,5 @@ class TACParticipantAgent:
         """
 
         logger.debug("[{}]: Stopping message processing...".format(self.name))
-        self._stopped = True
+        self.game_instance._agent_stopped = True
         self.mail_box.stop()
