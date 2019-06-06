@@ -60,3 +60,7 @@ This repository contains submodules. Clone with recursive strategy:
 - To run linters:
 
       tox -e flake8
+
+## Resources
+
+- Detailed documentation of the OEF Python SDK is available [here](https://fetchai.github.io/oef-sdk-python/oef.html).

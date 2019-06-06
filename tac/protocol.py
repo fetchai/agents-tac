@@ -30,6 +30,7 @@ from typing import Optional
 from google.protobuf.message import DecodeError
 
 import tac.tac_pb2 as tac_pb2
+from tac.helpers.crypto import Crypto
 from tac.helpers.misc import TacError
 
 from oef.schema import Description
@@ -72,11 +73,13 @@ _from_ec_to_msg = {
 class Message(ABC):
     """Abstract class representing a message between TAC agents and TAC controller."""
 
-    def __init__(self, public_key: str):
+    def __init__(self, public_key: str, crypto: Crypto):
         """
         :param public_key: The public key of the TAC agent
+        :param crypto: the Crypto object
         """
         self.public_key = public_key
+        self.crypto = crypto
 
     @classmethod
     @abstractmethod
@@ -87,9 +90,23 @@ class Message(ABC):
     def to_pb(self):
         """From :class:`~tac.protocol.Message` to Protobuf object"""
 
-    def serialize(self) -> bytes:
+    def serialize_message_part(self) -> bytes:
         """Serialize the message."""
         return self.to_pb().SerializeToString()
+
+    def sign_message(self, message: bytes) -> bytes:
+        """Sign a message."""
+        return self.crypto.sign_data(message)
+
+    def serialize(self) -> bytes:
+        """
+        Serialize the message
+        :return: the signature bytes object
+        """
+        result = tac_pb2.TACAgent.SignedMessage()
+        result.message = self.serialize_message_part()
+        result.signature = self.sign_message(result.message)
+        return result.SerializeToString()
 
     def _build_str(self, **kwargs) -> str:
         return type(self).__name__ + "({})".format(pprint.pformat(kwargs))
@@ -99,31 +116,38 @@ class Message(ABC):
 
 
 class Request(Message, ABC):
-    """Message from clients to controller"""
+    """Message from client to controller"""
 
     @classmethod
-    def from_pb(cls, obj, public_key: str) -> 'Request':
+    def from_pb(cls, obj, public_key: str, crypto: Crypto) -> 'Request':
         """
         Parse a string of bytes associated to a request message to the TAC controller.
         :param obj: the string of bytes to be parsed.
         :param public_key: the public key of the request sender.
+        :param crypto: the Crypto object
         :return: a :class:`~tac.protocol.Response` object.
         :raises TacError: if the string of bytes cannot be parsed as a Response from the TAC Controller.
         """
 
-        msg = tac_pb2.TACAgent.Message()
-        msg.ParseFromString(obj)
-        case = msg.WhichOneof("msg")
-        if case == "register":
-            return Register.from_pb(msg.register, public_key)
-        elif case == "unregister":
-            return Unregister(public_key)
-        elif case == "transaction":
-            return Transaction.from_pb(msg.transaction, public_key)
-        elif case == "get_state_update":
-            return GetStateUpdate(public_key)
+        signed_msg = tac_pb2.TACAgent.SignedMessage()
+        signed_msg.ParseFromString(obj)
+
+        if crypto.is_confirmed_integrity(signed_msg.message, signed_msg.signature, public_key):
+            msg = tac_pb2.TACAgent.Message()
+            msg.ParseFromString(signed_msg.message)
+            case = msg.WhichOneof("msg")
+            if case == "register":
+                return Register.from_pb(msg.register, public_key, crypto)
+            elif case == "unregister":
+                return Unregister(public_key, crypto)
+            elif case == "transaction":
+                return Transaction.from_pb(msg.transaction, public_key, crypto)
+            elif case == "get_state_update":
+                return GetStateUpdate(public_key, crypto)
+            else:
+                raise TacError("Unrecognized type of Request.")
         else:
-            raise TacError("Unrecognized type of Request.")
+            raise ValueError("Bad signature. Do not trust!")
 
     def to_pb(self):
         raise NotImplementedError
@@ -135,13 +159,15 @@ class Request(Message, ABC):
 class Register(Request):
     """Message to register an agent to the competition."""
 
-    def __init__(self, public_key: str, agent_name: str):
+    def __init__(self, public_key: str, crypto: Crypto, agent_name: str):
         """
         A registration message.
 
+        :param public_key: the public key of the agent
         :param agent_name: the name of the agent
+        :param crypto: the Crypto object
         """
-        super().__init__(public_key)
+        super().__init__(public_key, crypto)
         self.agent_name = agent_name
 
     def to_pb(self) -> tac_pb2.TACAgent.Message:
@@ -152,8 +178,8 @@ class Register(Request):
         return envelope
 
     @classmethod
-    def from_pb(cls, obj: tac_pb2.TACAgent.Register, public_key: str) -> 'Register':
-        return Register(public_key, obj.agent_name,)
+    def from_pb(cls, obj: tac_pb2.TACAgent.Register, public_key: str, crypto: Crypto) -> 'Register':
+        return Register(public_key, crypto, obj.agent_name)
 
 
 class Unregister(Request):
@@ -169,7 +195,7 @@ class Unregister(Request):
 class Transaction(Request):
 
     def __init__(self, transaction_id: str, buyer: bool, counterparty: str,
-                 amount: float, quantities_by_good_pbk: Dict[str, int], sender: str):
+                 amount: float, quantities_by_good_pbk: Dict[str, int], sender: str, crypto: Crypto):
         """
         A transaction request.
 
@@ -180,7 +206,7 @@ class Transaction(Request):
         :param amount: the amount of money involved.
         :param quantities_by_good_pbk: a map from good pbk to the quantity of that good involved in the transaction.
         """
-        super().__init__(sender)
+        super().__init__(sender, crypto)
         self.transaction_id = transaction_id
         self.buyer = buyer
         self.counterparty = counterparty
@@ -206,7 +232,7 @@ class Transaction(Request):
         return envelope
 
     @classmethod
-    def from_pb(cls, obj: tac_pb2.TACAgent.Transaction, public_key: str) -> 'Transaction':
+    def from_pb(cls, obj: tac_pb2.TACAgent.Transaction, public_key: str, crypto: Crypto) -> 'Transaction':
         quantities_per_good_pbk = {pair.first: pair.second for pair in obj.quantities}
 
         return Transaction(obj.transaction_id,
@@ -214,11 +240,12 @@ class Transaction(Request):
                            obj.counterparty,
                            obj.amount,
                            quantities_per_good_pbk,
-                           public_key)
+                           public_key,
+                           crypto)
 
     @classmethod
     def from_proposal(cls, proposal: Description, transaction_id: str,
-                      is_buyer: bool, counterparty: str, sender: str) -> 'Transaction':
+                      is_buyer: bool, counterparty: str, sender: str, crypto: Crypto) -> 'Transaction':
         """
         Create a transaction from a proposal.
 
@@ -227,13 +254,14 @@ class Transaction(Request):
         :param is_buyer:
         :param counterparty:
         :param sender:
+        :param crypto:
         :return: Transaction
         """
         data = copy.deepcopy(proposal.values)
         price = data.pop("price")
         quantity_by_good_pbk = {key: value for key, value in data.items()}
         return Transaction(transaction_id, is_buyer, counterparty, price, quantity_by_good_pbk,
-                           sender=sender)
+                           sender=sender, crypto=crypto)
 
     def matches(self, other: 'Transaction') -> bool:
         """
@@ -291,7 +319,7 @@ class Response(Message):
     """Message from controller to clients"""
 
     @classmethod
-    def from_pb(cls, obj, public_key: str) -> 'Response':
+    def from_pb(cls, obj, public_key: str, crypto: Crypto) -> 'Response':
         """
         Parse a string of bytes associated to a response message from the TAC controller.
         :param obj: the string of bytes to be parsed.
@@ -301,25 +329,31 @@ class Response(Message):
         """
 
         try:
-            msg = tac_pb2.TACController.Message()
-            msg.ParseFromString(obj)
-            case = msg.WhichOneof("msg")
-            if case == "registered":
-                return Registered(public_key)
-            elif case == "unregistered":
-                return Unregistered(public_key)
-            elif case == "cancelled":
-                return Cancelled(public_key)
-            elif case == "game_data":
-                return GameData.from_pb(msg.game_data, public_key)
-            elif case == "tx_confirmation":
-                return TransactionConfirmation(public_key, msg.tx_confirmation.transaction_id)
-            elif case == "state_update":
-                return StateUpdate.from_pb(msg.state_update, public_key)
-            elif case == "error":
-                return Error.from_pb(msg.error, public_key)
+            signed_msg = tac_pb2.TACAgent.SignedMessage()
+            signed_msg.ParseFromString(obj)
+
+            if crypto.is_confirmed_integrity(signed_msg.message, signed_msg.signature, public_key):
+                msg = tac_pb2.TACController.Message()
+                msg.ParseFromString(signed_msg.message)
+                case = msg.WhichOneof("msg")
+                if case == "registered":
+                    return Registered(public_key, crypto)
+                elif case == "unregistered":
+                    return Unregistered(public_key, crypto)
+                elif case == "cancelled":
+                    return Cancelled(public_key, crypto)
+                elif case == "game_data":
+                    return GameData.from_pb(msg.game_data, public_key, crypto)
+                elif case == "tx_confirmation":
+                    return TransactionConfirmation(public_key, crypto, msg.tx_confirmation.transaction_id)
+                elif case == "state_update":
+                    return StateUpdate.from_pb(msg.state_update, public_key, crypto)
+                elif case == "error":
+                    return Error.from_pb(msg.error, public_key, crypto)
+                else:
+                    raise TacError("Unrecognized type of Response.")
             else:
-                raise TacError("Unrecognized type of Response.")
+                raise ValueError("Bad signature. Do not trust!")
         except DecodeError as e:
             logger.exception(str(e))
             raise TacError("Error in decoding the message.")
@@ -364,11 +398,11 @@ class Cancelled(Response):
 class Error(Response):
     """This response means that something bad happened while processing a request."""
 
-    def __init__(self, public_key: str,
+    def __init__(self, public_key: str, crypto: Crypto,
                  error_code: ErrorCode,
                  error_msg: Optional[str] = None,
                  details: Optional[Dict[str, Any]] = None):
-        super().__init__(public_key)
+        super().__init__(public_key, crypto)
         self.error_code = error_code
         self.error_msg = _from_ec_to_msg[error_code] if error_msg is None else error_msg
         self.details = details if details is not None else {}
@@ -383,11 +417,11 @@ class Error(Response):
         return envelope
 
     @classmethod
-    def from_pb(cls, obj, public_key: str) -> 'Error':
+    def from_pb(cls, obj, public_key: str, crypto: Crypto) -> 'Error':
         error_code = ErrorCode(obj.error_code)
         error_msg = obj.error_msg
         details = dict(obj.details.items())
-        return Error(public_key, error_code, error_msg, details)
+        return Error(public_key, crypto, error_code, error_msg, details)
 
     def __str__(self):
         return self._build_str(error_msg=self.error_msg)
@@ -399,11 +433,12 @@ class Error(Response):
 class GameData(Response):
     """Class that holds the game configuration and the initialization of a TAC agent."""
 
-    def __init__(self, public_key: str, money: int, endowment: List[int], utility_params: List[float],
+    def __init__(self, public_key: str, crypto: Crypto, money: int, endowment: List[int], utility_params: List[float],
                  nb_agents: int, nb_goods: int, tx_fee: float, agent_pbks: List[str], agent_names: List[str], good_pbks: List[str]):
         """
         Initialize a game data object.
         :param public_key: the destination
+        :param th
         :param money: the money amount.
         :param endowment: the endowment for every good.
         :param utility_params: the utility params for every good.
@@ -415,7 +450,7 @@ class GameData(Response):
         :param good_pbks: the pbks of the goods.
         """
         assert len(endowment) == len(utility_params)
-        super().__init__(public_key)
+        super().__init__(public_key, crypto)
         self.money = money
         self.endowment = endowment
         self.utility_params = utility_params
@@ -427,8 +462,9 @@ class GameData(Response):
         self.good_pbks = good_pbks
 
     @classmethod
-    def from_pb(cls, obj: tac_pb2.TACController.GameData, public_key: str) -> 'GameData':
+    def from_pb(cls, obj: tac_pb2.TACController.GameData, public_key: str, crypto: Crypto) -> 'GameData':
         return GameData(public_key,
+                        crypto,
                         obj.money,
                         list(obj.endowment),
                         list(obj.utility_params),
@@ -482,8 +518,8 @@ class GameData(Response):
 
 class TransactionConfirmation(Response):
 
-    def __init__(self, public_key: str, transaction_id: str):
-        super().__init__(public_key)
+    def __init__(self, public_key: str, crypto: Crypto, transaction_id: str):
+        super().__init__(public_key, crypto)
         self.transaction_id = transaction_id
 
     def to_pb(self) -> tac_pb2.TACController.Message:
@@ -500,9 +536,10 @@ class TransactionConfirmation(Response):
 class StateUpdate(Response):
 
     def __init__(self, public_key: str,
+                 crypto: Crypto,
                  initial_state: GameData,
                  transactions: List[Transaction]):
-        super().__init__(public_key)
+        super().__init__(public_key, crypto)
         self.initial_state = initial_state
         self.transactions = transactions
 
@@ -543,11 +580,12 @@ class StateUpdate(Response):
         return envelope
 
     @classmethod
-    def from_pb(cls, obj, public_key: str) -> 'StateUpdate':
-        initial_state = GameData.from_pb(obj.initial_state, public_key)
-        transactions = [Transaction.from_pb(tx_obj, public_key) for tx_obj in obj.txs]
+    def from_pb(cls, obj, public_key: str, crypto: Crypto) -> 'StateUpdate':
+        initial_state = GameData.from_pb(obj.initial_state, public_key, crypto)
+        transactions = [Transaction.from_pb(tx_obj, public_key, crypto) for tx_obj in obj.txs]
 
         return StateUpdate(public_key,
+                           crypto,
                            initial_state,
                            transactions)
 
@@ -557,5 +595,6 @@ class StateUpdate(Response):
     def __eq__(self, other):
         return type(self) == type(other) and \
             self.public_key == other.public_key and \
+            self.crypto == other.crypto and \
             self.initial_state == other.initial_state and \
             self.transactions == other.transactions

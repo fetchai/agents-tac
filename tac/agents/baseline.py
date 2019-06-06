@@ -19,6 +19,7 @@
 #
 # ------------------------------------------------------------------------------
 import argparse
+import asyncio
 import copy
 import datetime
 import logging
@@ -47,7 +48,7 @@ else:
 
 def parse_arguments():
     parser = argparse.ArgumentParser("baseline", description="Launch the baseline agent.")
-    parser.add_argument("--public-key", default="baseline", help="Public key of the agent.")
+    parser.add_argument("--name", default="baseline", help="Name of the agent.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
     # parser.add_argument("--gui", action="store_true", help="Show the GUI.")
@@ -538,7 +539,8 @@ class BaselineAgent(NegotiationAgent):
                                                     transaction_id=transaction_id,
                                                     is_buyer=not is_seller,
                                                     counterparty=origin,
-                                                    sender=self.public_key)
+                                                    sender=self.public_key,
+                                                    crypto=self.crypto)
             self.lock_manager.add_pending_proposal(dialogue_id, origin, proposal_id, transaction)
 
     def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES) -> None:
@@ -589,7 +591,8 @@ class BaselineAgent(NegotiationAgent):
                                                 transaction_id,
                                                 is_buyer=not is_seller,
                                                 counterparty=origin,
-                                                sender=self.public_key)
+                                                sender=self.public_key,
+                                                crypto=self.crypto)
         if self._is_profitable_transaction(transaction, is_seller):
             logger.debug("[{}]: Accepting propose (as {}).".format(self.name, role))
             self._accept_propose(msg_id, dialogue_id, origin, target, proposals, is_seller)
@@ -622,7 +625,8 @@ class BaselineAgent(NegotiationAgent):
                                                 transaction_id=transaction_id,
                                                 is_buyer=not is_seller,
                                                 counterparty=origin,
-                                                sender=self.public_key)
+                                                sender=self.public_key,
+                                                crypto=self.crypto)
 
         logger.debug("[{}]: Locking the current state (as {}).".format(self.name, role))
         self.lock_manager.add_lock(transaction, as_seller=is_seller)
@@ -1006,7 +1010,8 @@ class BaselineStrategy:
 
 def main():
     args = parse_arguments()
-    agent = BaselineAgent(public_key=args.public_key, oef_addr=args.oef_addr, oef_port=args.oef_port)
+    agent = BaselineAgent(name=args.name, oef_addr=args.oef_addr, oef_port=args.oef_port,
+                          loop=asyncio.get_event_loop())
 
     agent.connect()
     agent.search_for_tac()

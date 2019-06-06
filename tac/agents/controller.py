@@ -67,10 +67,10 @@ class TACParameters(object):
                  base_good_endowment: int = 2,
                  lower_bound_factor: int = 1,
                  upper_bound_factor: int = 1,
-                 start_time: datetime.datetime = None,
+                 start_time: datetime.datetime = datetime.datetime.now(),
                  registration_timeout: int = 10,
                  competition_timeout: int = 20,
-                 inactivity_timeout: int = None):
+                 inactivity_timeout: int = 10):
         """
         Initialize parameters for TAC
         :param min_nb_agents: the number of agents to wait for the registration.
@@ -285,7 +285,7 @@ class TransactionHandler(RequestHandler):
         self.controller_agent.monitor.update()
 
         # send the transaction confirmation.
-        tx_confirmation = TransactionConfirmation(request.public_key, request.transaction_id)
+        tx_confirmation = TransactionConfirmation(request.public_key, self.controller_agent.crypto, request.transaction_id)
         self.controller_agent.send_message(0, 0, request.public_key, tx_confirmation.serialize())
         self.controller_agent.send_message(0, 0, request.counterparty, tx_confirmation.serialize())
 
@@ -389,7 +389,7 @@ class ControllerDispatcher(object):
         :param public_key: the public key of the sender agent.
         :return: the deserialized Request
         """
-        request = Request.from_pb(msg, public_key)
+        request = Request.from_pb(msg, public_key, self.controller_agent.crypto)
         return request
 
 
@@ -485,6 +485,7 @@ class GameHandler:
             agent_state = self.current_game.get_agent_state_from_agent_pbk(public_key)
             game_data_response = GameData(
                 public_key,
+                self.controller_agent.crypto,
                 agent_state.balance,
                 agent_state.current_holdings,
                 agent_state.utility_params,
@@ -528,8 +529,8 @@ class GameHandler:
             return False
 
     def notify_tac_cancelled(self):
-        for tac_agent in self.registered_agents:
-            self.controller_agent.send_message(0, 0, tac_agent, Cancelled(tac_agent).serialize())
+        for agent_pbk in self.registered_agents:
+            self.controller_agent.send_message(0, 0, agent_pbk, Cancelled(agent_pbk, self.controller_agent.crypto).serialize())
 
 
 class ControllerAgent(OEFAgent):
@@ -700,7 +701,7 @@ class ControllerAgent(OEFAgent):
 
 def _parse_arguments():
     parser = argparse.ArgumentParser("controller", description="Launch the controller agent.")
-    parser.add_argument("--public-key", default="controller", help="Public key of the agent.")
+    parser.add_argument("--name", default="controller", help="Name of the agent.")
     parser.add_argument("--nb-agents", default=5, type=int, help="Number of goods")
     parser.add_argument("--nb-goods", default=5, type=int, help="Number of goods")
     parser.add_argument("--money-endowment", type=int, default=200, help="Initial amount of money.")
@@ -730,7 +731,7 @@ def main():
 
     try:
 
-        agent = ControllerAgent(public_key=arguments.public_key,
+        agent = ControllerAgent(name=arguments.name,
                                 oef_addr=arguments.oef_addr,
                                 oef_port=arguments.oef_port)
 

@@ -129,7 +129,7 @@ class Dashboard(object):
         window_name = "score_history"
         self.viz.line(X=np.arange(score_history.shape[0]), Y=score_history, env=self.env_name, win=window_name,
                       opts=dict(
-                          legend=self.game_stats.game.configuration.agent_pbks,
+                          legend=self.game_stats.game.configuration.agent_names,
                           title="Scores",
                           xlabel="Transactions",
                           ylabel="Score")
@@ -141,7 +141,7 @@ class Dashboard(object):
         window_name = "balance_history"
         self.viz.line(X=np.arange(balance_history.shape[0]), Y=balance_history, env=self.env_name, win=window_name,
                       opts=dict(
-                          legend=self.game_stats.game.configuration.agent_pbks,
+                          legend=self.game_stats.game.configuration.agent_names,
                           title="Balance history",
                           xlabel="Transactions",
                           ylabel="Money")

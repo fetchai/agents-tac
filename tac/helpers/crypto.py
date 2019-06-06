@@ -17,10 +17,17 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+import logging
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec, utils
+
+logger = logging.getLogger(__name__)
+
+
+class CryptoError(Exception):
+    """Exception to be thrown when cryptographic signatures don't match!."""
 
 
 class Crypto(object):
@@ -98,7 +105,7 @@ class Crypto(object):
         signature = self._private_key.sign(digest, ec.ECDSA(utils.Prehashed(self._chosen_hash)))
         return signature
 
-    def confirm_integrity(self, data: bytes, signature: bytes, signer_pbk: str) -> bool:
+    def is_confirmed_integrity(self, data: bytes, signature: bytes, signer_pbk: str) -> bool:
         """
         Confirrms the integrity of the data with respect to its signature.
 
@@ -110,12 +117,12 @@ class Crypto(object):
         """
         signer_pbk = self._pbk_to_obj(signer_pbk)
         digest = self._hash_data(data)
-        is_confirmed = True
         try:
             signer_pbk.verify(signature, digest, ec.ECDSA(utils.Prehashed(self._chosen_hash)))
-        except:
-            is_confirmed = False
-        return is_confirmed
+            return True
+        except CryptoError as e:
+            logger.exception(str(e))
+            return False
 
     def _hash_data(self, data: bytes) -> bytes:
         """
