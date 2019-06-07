@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from oef.messages import DialogueErrorMessage, OEFErrorMessage
 
-from tac.experimental.core import TACParticipantAgent, Dialogue
+from tac.experimental.core1 import TACParticipantAgent, Dialogue
 from tac.protocol import Error, StateUpdate, TransactionConfirmation
 
 

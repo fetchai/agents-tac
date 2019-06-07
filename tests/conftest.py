@@ -23,7 +23,7 @@ def oef_port() -> int:
 def _stop_oef_search_images():
     client = docker.from_env()
     for container in client.containers.list():
-        if "qati/oef-search:latest" in container.image.tags:
+        if "fetchai/oef-search:v1" in container.image.tags:
             container.stop()
 
 
@@ -34,7 +34,7 @@ def network_node(oef_addr, oef_port):
     client = docker.from_env()
 
     ports = {'20000/tcp': 20000, '30000/tcp': 30000, '{}/tcp'.format(oef_port): oef_port}
-    c = client.containers.run("qati/oef-search:latest",
+    c = client.containers.run("fetchai/oef-search:v1",
                               "node no_sh "
                               "--node_key Search1 "
                               "--core_key Core1 "
