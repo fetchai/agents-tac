@@ -54,19 +54,21 @@ def _make_str_int_pair(key: str, value: int) -> tac_pb2.StrIntPair:
 class ErrorCode(Enum):
     GENERIC_ERROR = 0
     REQUEST_NOT_VALID = 1
-    AGENT_ALREADY_REGISTERED = 2
-    AGENT_NOT_REGISTERED = 3
-    TRANSACTION_NOT_VALID = 4
-    TRANSACTION_NOT_MATCHING = 5
+    AGENT_PBK_ALREADY_REGISTERED = 2
+    AGENT_NAME_ALREADY_REGISTERED = 3
+    AGENT_NOT_REGISTERED = 4
+    TRANSACTION_NOT_VALID = 5
+    TRANSACTION_NOT_MATCHING = 6
 
 
 _from_ec_to_msg = {
     ErrorCode.GENERIC_ERROR: "Unexpected error.",
-    ErrorCode.AGENT_ALREADY_REGISTERED: "Agent already registered.",
-    ErrorCode.AGENT_NOT_REGISTERED: "Agent not registered.",
     ErrorCode.REQUEST_NOT_VALID: "Request not recognized",
+    ErrorCode.AGENT_PBK_ALREADY_REGISTERED: "Agent pbk already registered.",
+    ErrorCode.AGENT_NAME_ALREADY_REGISTERED: "Agent name already registered.",
+    ErrorCode.AGENT_NOT_REGISTERED: "Agent not registered.",
     ErrorCode.TRANSACTION_NOT_VALID: "Error in checking transaction",
-    ErrorCode.TRANSACTION_NOT_MATCHING: "The transaction request does not match with a previous transaction request with the same id.",
+    ErrorCode.TRANSACTION_NOT_MATCHING: "The transaction request does not match with a previous transaction request with the same id."
 }  # type: Dict[ErrorCode, str]
 
 

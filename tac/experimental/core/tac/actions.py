@@ -63,9 +63,29 @@ class OEFActions(OEFSearchActionInterface):
         :return: None
         """
         query = Query([Constraint("version", GtEq(1))])
-        search_id = self.game_instance.get_next_search_id()
-        self.game_instance.search_ids.for_tac.add(search_id)
+        search_id = self.game_instance.search.get_next_id()
+        self.game_instance.search.ids_for_tac.add(search_id)
         self.out_box.out_queue.put(OutContainer(query=query, search_id=search_id))
+
+    def update_services(self) -> None:
+        """
+        Update service on OEF Service Directory
+
+        :return: None
+        """
+        self.unregister_service()
+        self.register_service()
+
+    def unregister_service(self) -> None:
+        """
+        Unregister service on OEF Service Directory.
+
+        :return: None
+        """
+        if self.game_instance.goods_demanded_description is not None:
+            self.out_box.out_queue.put(OutContainer(message_id=1, service_description=self.game_instance.goods_demanded_description))
+        if self.game_instance.goods_supplied_description is not None:
+            self.out_box.out_queue.put(OutContainer(message_id=1, service_description=self.game_instance.goods_supplied_description))
 
     def register_service(self) -> None:
         """
@@ -97,24 +117,24 @@ class OEFActions(OEFSearchActionInterface):
         :return: None
         """
         if self.game_instance.is_searching_for_sellers:
-            query = self.game_instance.build_service_query(is_searching_for_sellers=True)
+            query = self.game_instance.build_services_query(is_searching_for_sellers=True)
             if query is None:
                 logger.warning("[{}]: Not searching the OEF for sellers because the agent demands no goods.".format(self.name))
                 return None
             else:
                 logger.debug("[{}]: Searching for sellers which match the demand of the agent.".format(self.name))
-                search_id = self.game_instance.get_next_search_id()
-                self.game_instance.search_ids.for_sellers.add(search_id)
+                search_id = self.game_instance.search.get_next_id()
+                self.game_instance.search.ids_for_sellers.add(search_id)
                 self.out_box.out_queue.put(OutContainer(query=query, search_id=search_id))
         if self.game_instance.is_searching_for_buyers:
-            query = self.game_instance.build_service_query(is_searching_for_sellers=False)
+            query = self.game_instance.build_services_query(is_searching_for_sellers=False)
             if query is None:
                 logger.warning("[{}]: Not searching the OEF for buyers because the agent supplies no goods.".format(self.name))
                 return None
             else:
                 logger.debug("[{}]: Searching for buyers which match the supply of the agent.".format(self.name))
-                search_id = self.game_instance.get_next_search_id()
-                self.game_instance.search_ids.for_buyers.add(search_id)
+                search_id = self.game_instance.search.get_next_id()
+                self.game_instance.search.ids_for_buyers.add(search_id)
                 self.out_box.out_queue.put(OutContainer(query=query, search_id=search_id))
 
 

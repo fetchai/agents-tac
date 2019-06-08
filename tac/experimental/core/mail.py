@@ -110,6 +110,20 @@ class InBox(object):
         logger.debug("Incoming message type: type={}".format(type(msg)))
         return msg
 
+    def get_some_wait(self) -> AgentMessage:
+        """
+        Checks for a message on the in queue for some time and gets it.
+
+        :return: the message object
+        """
+        logger.debug("Checks for message from the in queue...")
+        try:
+            msg = self.in_queue.get(block=True, timeout=1)
+            logger.debug("Incoming message type: type={}".format(type(msg)))
+            return msg
+        except:
+            return None
+
 
 class OutBox(object):
     """
@@ -135,17 +149,22 @@ class OutBox(object):
         """
         logger.debug("Checking for message or search query on out queue...")
         while not self.out_queue.empty():
-            out_container = self.out_queue.get_nowait()
-            out_container: OutContainer
-            if out_container.message is not None:
-                logger.debug("Outgoing message type: type={}".format(type(out_container.message)))
-                self.mail_box.send_message(out_container.message_id, out_container.dialogue_id, out_container.destination, out_container.message)
-            elif out_container.service_description is not None:
-                logger.debug("Outgoing service description: message_id={}".format(type(out_container.service_description), out_container.message_id))
-                self.mail_box.register_service(out_container.message_id, out_container.service_description)
-            else:
-                logger.debug("Outgoing query: search_id={}".format(out_container.search_id))
-                self.mail_box.search_services(out_container.search_id, out_container.query)
+            out = self.out_queue.get_nowait()
+            if isinstance(out, OutContainer) and out.message is not None:
+                logger.debug("Outgoing message type: type={}".format(type(out.message)))
+                self.mail_box.send_message(out.message_id, out.dialogue_id, out.destination, out.message)
+            elif isinstance(out, OutContainer) and (out.service_description is not None) and (not out.is_unregister):
+                logger.debug("Outgoing register service description: message_id={}".format(type(out.service_description), out.message_id))
+                self.mail_box.register_service(out.message_id, out.service_description)
+            elif isinstance(out, OutContainer) and out.service_description is not None:
+                logger.debug("Outgoing unregister service description: message_id={}".format(type(out.service_description), out.message_id))
+                self.mail_box.unregister_service(out.message_id, out.service_description)
+            elif isinstance(out, OutContainer) and out.query is not None:
+                logger.debug("Outgoing query: search_id={}".format(out.search_id))
+                self.mail_box.search_services(out.search_id, out.query)
+            elif isinstance(out, CFP):
+                logger.debug("Outgoing cfp: msg_id={}, dialogue_id={}, origin={}, target={}, query={}".format(out.msg_id, out.dialogue_id, out.origin, out.target, out.query))
+                self.mailbox.send_cfp(out.msg_id, out.dialogue_id, out.origin, out.target, out.query)
 
 
 class FIPAMailBox(MailBox):
@@ -175,7 +194,7 @@ class OutContainer:
     The OutContainer is a container to keep a message or search in whilst on the out queue.
     """
 
-    def __init__(self, message: Optional[bytes] = None, message_id: Optional[int] = None, dialogue_id: Optional[int] = None, destination: Optional[str] = None, query: Optional[Query] = None, search_id: Optional[int] = None, service_description: Optional[Description] = None):
+    def __init__(self, message: Optional[bytes] = None, message_id: Optional[int] = None, dialogue_id: Optional[int] = None, destination: Optional[str] = None, query: Optional[Query] = None, search_id: Optional[int] = None, service_description: Optional[Description] = None, is_unregister: Optional[bool] = False):
         self.message = message
         self.message_id = message_id
         self.dialogue_id = dialogue_id
@@ -183,3 +202,4 @@ class OutContainer:
         self.query = query
         self.search_id = search_id
         self.service_description = service_description
+        self.is_unregister = is_unregister

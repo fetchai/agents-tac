@@ -90,30 +90,26 @@ class ControllerHandler(ControllerActions, ControllerReactions):
         logger.debug("[{}]: Handling controller response. type={}".format(self.name, type(response)))
         try:
             if msg.destination != self.game_instance.controller_pbk:
-                raise ValueError("The sender of the message is not a controller agent.")
+                raise ValueError("The sender of the message is not the controller agent we registered with.")
 
             if isinstance(response, Error):
                 self.on_tac_error(response)
             elif self.game_instance.game_phase == GamePhase.PRE_GAME:
-                raise ValueError("We do not except a controller agent message in the pre game phase.")
+                raise ValueError("We do not expect a controller agent message in the pre game phase.")
             elif self.game_instance.game_phase == GamePhase.GAME_SETUP:
                 if isinstance(response, GameData):
-                    self.game_instance.init(response)
-                    self.game_instance._game_phase = GamePhase.GAME
-                    self.on_start()
+                    self.on_start(response)
                 elif isinstance(response, Cancelled):
-                    self.game_instance._game_phase = GamePhase.POST_GAME
                     self.on_cancelled()
             elif self.game_instance.game_phase == GamePhase.GAME:
                 if isinstance(response, TransactionConfirmation):
                     self.on_transaction_confirmed(response)
                 elif isinstance(response, Cancelled):
-                    self.game_instance._game_phase = GamePhase.POST_GAME
                     self.on_cancelled()
                 elif isinstance(response, StateUpdate):
                     self.on_state_update(response)
             elif self.game_instance.game_phase == GamePhase.POST_GAME:
-                raise ValueError("We do not except a controller agent message in the post game phase.")
+                raise ValueError("We do not expect a controller agent message in the post game phase.")
         except ValueError as e:
             logger.warning(str(e))
 

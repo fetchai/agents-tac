@@ -64,31 +64,31 @@ class ParticipantAgent(Agent):
 
         :return: None
         """
-        self.out_box.send_nowait()
-
         if not self.is_competing:
             self.oef_handler.search_for_tac()
             self._is_competing = True
         if self.game_instance.game_phase == GamePhase.GAME:
             if self.game_instance.is_time_to_update_services():
                 self.oef_handler.update_services()
-            if self.game_instance.ist_time_to_search_services():
+            if self.game_instance.is_time_to_search_services():
                 self.oef_handler.search_services()
+
+        self.out_box.send_nowait()
 
     def react(self) -> None:
         """
-        Reacts to incoming events. This is blocking.
+        Reacts to incoming events.
 
         :return: None
         """
-        msg = self.in_box.get_wait()  # type: Message
-
-        if is_oef_message(msg):
-            msg: OEFMessage
-            self.oef_handler.handle_oef_message(msg)
-        elif is_controller_message(msg, self.crypto):
-            msg: ControllerMessage
-            self.controller_handler.handle_controller_message(msg)
-        else:
-            msg: AgentMessage
-            self.dialogue_handler.handle_dialogue_message(msg)
+        msg = self.in_box.get_some_wait()  # type: Optional[Message]
+        if msg is not None:
+            if is_oef_message(msg):
+                msg: OEFMessage
+                self.oef_handler.handle_oef_message(msg)
+            elif is_controller_message(msg, self.crypto):
+                msg: ControllerMessage
+                self.controller_handler.handle_controller_message(msg)
+            else:
+                msg: AgentMessage
+                self.dialogue_handler.handle_dialogue_message(msg)

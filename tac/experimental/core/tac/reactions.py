@@ -20,7 +20,7 @@
 import logging
 from typing import List
 
-from oef.messages import Message as SearchResult, OEFErrorMessage, DialogueErrorMessage
+from oef.messages import CFP, Message as SearchResult, OEFErrorMessage, DialogueErrorMessage
 
 from tac.experimental.core.agent import Liveness
 from tac.experimental.core.tac.dialogues import Dialogues, Dialogue
@@ -28,7 +28,8 @@ from tac.experimental.core.tac.interfaces import ControllerReactionInterface, OE
 from tac.experimental.core.tac.game_instance import GameInstance, GamePhase
 from tac.experimental.core.mail import OutBox, OutContainer
 from tac.helpers.crypto import Crypto
-from tac.protocol import Error, TransactionConfirmation, StateUpdate, Register
+from tac.game import GameData
+from tac.protocol import Error, ErrorCode, TransactionConfirmation, StateUpdate, Register
 
 logger = logging.getLogger(__name__)
 
@@ -43,13 +44,29 @@ class ControllerReactions(ControllerReactionInterface):
         self.name = name
 
     def on_dialogue_error(self, dialogue_error: DialogueErrorMessage):
-        pass
+        logger.debug("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}".format(self.name, dialogue_error.answer_id, dialogue_error.dialogue_id, dialogue_error.origin))
 
-    def on_start(self) -> None:
-        pass
+    def on_start(self, game_data: GameData) -> None:
+        """
+        Handle the 'start' event emitted by the controller.
+
+        :return: None
+        """
+        logger.debug("[{}]: Received start event from the controller. Starting...".format(self.name))
+        self.game_instance.init(game_data)
+        self.game_instance._game_phase = GamePhase.GAME
 
     def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
-        pass
+        """
+        Handles 'on transaction confirmed' event emitted by the controller.
+
+        :param tx_confirmation: the transaction confirmation
+
+        :return: None
+        """
+        logger.debug("[{}]: Received transaction confirmation from the controller: transaction_id={}".format(self.name, tx_confirmation.transaction_id))
+        transaction = self.lock_manager.pop_lock(tx_confirmation.transaction_id)
+        self._agent_state.update(transaction, self.game_configuration.tx_fee)
 
     def on_state_update(self, agent_state: StateUpdate) -> None:
         pass
@@ -62,9 +79,32 @@ class ControllerReactions(ControllerReactionInterface):
         """
         logger.debug("[{}]: Received cancellation from the controller.".format(self.name))
         self.liveness._is_stopped = True
+        self.game_instance._game_phase = GamePhase.POST_GAME
 
     def on_tac_error(self, error: Error) -> None:
-        pass
+        """
+        Handles 'on tac error' event emitted by the controller.
+
+        :param error: the error object
+
+        :return: None
+        """
+        logger.error("[{}]: Received error from the controller. error_msg={}".format(self.name, error.error_msg))
+        if error.error_code == ErrorCode.TRANSACTION_NOT_VALID:
+            # if error in checking transaction, remove it from the pending transactions.
+            start_idx_of_tx_id = len("Error in checking transaction: ")
+            transaction_id = error.error_msg[start_idx_of_tx_id:]
+            if transaction_id in self.game_instance.lock_manager.locks:
+                self.game_instance.lock_manager.pop_lock(transaction_id)
+            else:
+                logger.warning("[{}]: Received error on unknown transaction id: {}".format(self.name, transaction_id))
+            pass
+        elif error.error_code == ErrorCode.TRANSACTION_NOT_MATCHING:
+            pass
+        elif error.error_code == ErrorCode.AGENT_PBK_ALREADY_REGISTERED or error.error_code == ErrorCode.AGENT_NAME_ALREADY_REGISTERED or error.error_code == ErrorCode.AGENT_NOT_REGISTERED:
+            self.liveness._is_stopped = True
+        elif error.error_code == ErrorCode.REQUEST_NOT_VALID or error.error_code == ErrorCode.GENERIC_ERROR:
+            logger.warning("[{}]: Check last request sent and investigate!".format(self.name))
 
 
 class OEFReactions(OEFSearchReactionInterface):
@@ -79,43 +119,63 @@ class OEFReactions(OEFSearchReactionInterface):
     def on_search_result(self, search_result: SearchResult):
         """Split the search results from the OEF."""
         search_id = search_result.msg_id
-        if search_id in self.game_instance.search_ids.for_tac:
-            self._on_contoller_search_result(search_result)
+        logger.debug("[{}]: on search result: {} {}".format(self.name, search_id, search_result.agents))
+        if search_id in self.game_instance.search.ids_for_tac:
+            self._on_controller_search_result(search_result.agents)
+        elif search_id in self.game_instance.search.ids_for_sellers:
+            self._on_services_search_result(search_result.agents, is_seller=True)
+        elif search_id in self.game_instance.search.ids_for_buyers:
+            self._on_services_search_result(search_result.agents, is_seller=False)
         else:
-            self._on_services_search_result(search_result.agents)
+            logger.debug("[{}]: Unknown search id: search_id={}".format(self.name, search_id))
 
     def on_oef_error(self, oef_error: OEFErrorMessage):
-        logger.debug("[{}]: Received OEF error: answer_id={}, operation={}".format(self.nameoef_error.answer_id, oef_error.operation))
+        logger.debug("[{}]: Received OEF error: answer_id={}, operation={}".format(self.name, oef_error.answer_id, oef_error.operation))
 
     def on_dialogue_error(self, dialogue_error: DialogueErrorMessage):
         logger.debug("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}".format(self.name, dialogue_error.answer_id, dialogue_error.dialogue_id, dialogue_error.origin))
 
-    def _on_controller_search_result(self, search_result: SearchResult) -> None:
+    def _on_controller_search_result(self, agent_pbks: List[str]) -> None:
         """
         Process the search result for a controller.
 
         :return: None
         """
-        if len(search_result.agents) == 0:
+        if len(agent_pbks) == 0:
             logger.debug("[{}]: Couldn't find the TAC controller.".format(self.name))
             self.liveness._is_stopped = True
-        elif len(search_result.agents) > 1:
+        elif len(agent_pbks) > 1:
             logger.debug("[{}]: Found more than one TAC controller.".format(self.name))
             self.liveness._is_stopped = True
         else:
             logger.debug("[{}]: Found the TAC controller.".format(self.name))
-            controller_pbk = search_result.agents[0]
+            controller_pbk = agent_pbks[0]
             self._register_to_tac(controller_pbk)
 
-    def _on_services_search_result(self, search_result: SearchResult) -> None:
+    def _on_services_search_result(self, agent_pbks: List[str], is_searching_for_sellers: bool) -> None:
         """
         Process the search result for services.
 
+        :param agent_pbks: the agent pbks matching the search query
+        :param is_searching_for_sellers: whether it is searching for sellers or not
+
         :return: None
         """
+        searched_for = 'sellers' if is_searching_for_sellers else 'buyers'
+        role = 'buyer' if is_searching_for_sellers else 'seller'
+        is_seller = not is_searching_for_sellers
+        logger.debug("[{}]: Found potential {}: {}".format(self.name, searched_for, agent_pbks))
 
-    def _react_to_search_results(self, sender_id: str, agent_pbks: List[str]) -> None:
-        pass
+        query = self.game_instance.build_services_query(is_searching_for_sellers)
+        if query is None:
+            response = 'demanding' if is_searching_for_sellers else 'supplying'
+            logger.debug("[{}]: No longer {} any goods...".format(self.name, response))
+        for agent_pbk in agent_pbks:
+            if agent_pbk == self.crypto.public_key: continue
+            dialogue_id = self.game_instance.create_new_dialogue_id(agent_pbk, is_seller)
+            logger.debug("[{}]: send_cfp_as_{}: msg_id={}, dialogue_id={}, destination={}, target={}, query={}"
+                         .format(self.name, role, STARTING_MESSAGE_ID, dialogue_id, agent_pbk, STARTING_MESSAGE_REF, query))
+            self.out_box.out_queue.put(CFP(STARTING_MESSAGE_ID, dialogue_id, agent_pbk, STARTING_MESSAGE_REF, query))
 
     def _register_to_tac(self, controller_pbk: str) -> None:
         """

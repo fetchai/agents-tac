@@ -111,6 +111,10 @@ class OEFSearchActionInterface:
     """
 
     @abstractmethod
+    def unregister_service(self) -> None:
+        """Unregisters services to the OEF."""
+
+    @abstractmethod
     def register_service(self) -> None:
         """Registers services to the OEF."""
 
