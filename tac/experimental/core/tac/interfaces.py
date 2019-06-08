@@ -25,9 +25,9 @@ from tac.experimental.core.tac.dialogues import Dialogue
 from tac.protocol import Error, TransactionConfirmation, StateUpdate
 
 
-class ControllerInterface:
+class ControllerReactionInterface:
     """
-    This interface contains the methods to interact with the ControllerAgent.
+    This interface contains the methods to react to the ControllerAgent.
     """
 
     @abstractmethod
@@ -75,9 +75,21 @@ class ControllerInterface:
         """
 
 
-class OEFSearchInterface:
+class ControllerActionInterface:
     """
-    This interface contains the methods to maintain OEF search logic.
+    This interface contains the methods to interact with the ControllerAgent.
+    """
+
+    @abstractmethod
+    def request_state_update(self) -> None:
+        """
+        Request a state update from the controller.
+        """
+
+
+class OEFSearchReactionInterface:
+    """
+    This interface contains the methods to react to the OEF.
     """
 
     @abstractmethod
@@ -91,6 +103,20 @@ class OEFSearchInterface:
     @abstractmethod
     def on_dialogue_error(self, dialogue_error: DialogueErrorMessage):
         """Handler a dialogue error message"""
+
+
+class OEFSearchActionInterface:
+    """
+    This interface contains the methods to interact with the OEF.
+    """
+
+    @abstractmethod
+    def register_service(self) -> None:
+        """Registers services to the OEF."""
+
+    @abstractmethod
+    def search_services(self) -> None:
+        """Searches services on the OEF."""
 
 
 class DialogueInterface:

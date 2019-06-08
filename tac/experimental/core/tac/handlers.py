@@ -27,6 +27,8 @@ from tac.experimental.core.agent import Liveness
 from tac.experimental.core.tac.actions import DialogueActions, ControllerActions, OEFActions
 from tac.experimental.core.tac.dialogues import Dialogues, DialogueLabel
 from tac.experimental.core.tac.game_instance import GameInstance, GamePhase
+from tac.experimental.core.tac.reactions import ControllerReactions, OEFReactions
+
 from tac.experimental.core.mail import OutBox
 from tac.helpers.crypto import Crypto
 from tac.protocol import Error, TransactionConfirmation, StateUpdate, Response, GameData, Cancelled
@@ -71,7 +73,7 @@ class DialogueHandler(DialogueActions):
             self.out_box._mail_box.out_queue.put(response)
 
 
-class ControllerHandler(ControllerActions):
+class ControllerHandler(ControllerActions, ControllerReactions):
 
     def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', name: str):
         super().__init__(crypto, liveness, game_instance, out_box, name)
@@ -116,7 +118,7 @@ class ControllerHandler(ControllerActions):
             logger.warning(str(e))
 
 
-class OEFHandler(OEFActions):
+class OEFHandler(OEFActions, OEFReactions):
 
     def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', name: str):
         super().__init__(crypto, liveness, game_instance, out_box, name)

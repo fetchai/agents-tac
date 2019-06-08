@@ -27,6 +27,7 @@ from oef.agents import OEFAgent
 from oef.messages import PROPOSE_TYPES, CFP_TYPES, CFP, Decline, Propose, Accept, Message as SimpleMessage, \
     SearchResult, OEFErrorOperation, OEFErrorMessage, DialogueErrorMessage
 from oef.query import Query
+from oef.schema import Description
 
 logger = logging.getLogger(__name__)
 
@@ -133,18 +134,18 @@ class OutBox(object):
         :return: None
         """
         logger.debug("Checking for message or search query on out queue...")
-        is_something_on_out_queue = True
-        while is_something_on_out_queue:
-            is_something_on_out_queue = not self.out_queue.empty()
-            if is_something_on_out_queue:
-                out_container = self.out_queue.get_nowait()
-                out_container: OutContainer
-                if out_container.msg is not None:
-                    logger.debug("Outgoing message type: type={}".format(type(out_container.msg)))
-                    self.mail_box.send_message(out_container.msg_id, out_container.dialogue_id, out_container.destination, out_container.msg)
-                else:
-                    logger.debug("Outgoing query id: search_id={}".format(out_container.search_id))
-                    self.mail_box.search_services(out_container.search_id, out_container.query)
+        while not self.out_queue.empty():
+            out_container = self.out_queue.get_nowait()
+            out_container: OutContainer
+            if out_container.message is not None:
+                logger.debug("Outgoing message type: type={}".format(type(out_container.message)))
+                self.mail_box.send_message(out_container.message_id, out_container.dialogue_id, out_container.destination, out_container.message)
+            elif out_container.service_description is not None:
+                logger.debug("Outgoing service description: message_id={}".format(type(out_container.service_description), out_container.message_id))
+                self.mail_box.register_service(out_container.message_id, out_container.service_description)
+            else:
+                logger.debug("Outgoing query: search_id={}".format(out_container.search_id))
+                self.mail_box.search_services(out_container.search_id, out_container.query)
 
 
 class FIPAMailBox(MailBox):
@@ -174,10 +175,11 @@ class OutContainer:
     The OutContainer is a container to keep a message or search in whilst on the out queue.
     """
 
-    def __init__(self, msg: Optional[bytes] = None, msg_id: Optional[int] = None, dialogue_id: Optional[int] = None, destination: Optional[str] = None, query: Optional[Query] = None, search_id: Optional[int] = None):
-        self.msg = msg
-        self.msg_id = msg_id
+    def __init__(self, message: Optional[bytes] = None, message_id: Optional[int] = None, dialogue_id: Optional[int] = None, destination: Optional[str] = None, query: Optional[Query] = None, search_id: Optional[int] = None, service_description: Optional[Description] = None):
+        self.message = message
+        self.message_id = message_id
         self.dialogue_id = dialogue_id
         self.destination = destination
         self.query = query
         self.search_id = search_id
+        self.service_description = service_description

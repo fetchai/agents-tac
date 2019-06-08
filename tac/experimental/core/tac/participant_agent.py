@@ -25,7 +25,7 @@ from oef.messages import CFP, Decline, Propose, Accept, Message as SimpleMessage
 
 from tac.experimental.core.agent import Agent
 from tac.experimental.core.mail import FIPAMailBox, InBox, OutBox
-from tac.experimental.core.tac.game_instance import GameInstance
+from tac.experimental.core.tac.game_instance import GameInstance, GamePhase
 from tac.experimental.core.tac.helpers import is_oef_message, is_controller_message
 from tac.experimental.core.tac.handlers import DialogueHandler, ControllerHandler, OEFHandler
 
@@ -44,7 +44,7 @@ class ParticipantAgent(Agent):
         self.out_box = OutBox(self.mail_box)
 
         self._is_competing = False  # type: bool
-        self._game_instance = GameInstance(is_world_modeling)  # type: Optional[GameInstance]
+        self._game_instance = GameInstance(name, is_world_modeling)  # type: Optional[GameInstance]
 
         self.controller_handler = ControllerHandler(self.crypto, self.liveness, self.game_instance, self.out_box, self.name)
         self.oef_handler = OEFHandler(self.crypto, self.liveness, self.game_instance, self.out_box, self.name)
@@ -64,9 +64,16 @@ class ParticipantAgent(Agent):
 
         :return: None
         """
+        self.out_box.send_nowait()
+
         if not self.is_competing:
             self.oef_handler.search_for_tac()
             self._is_competing = True
+        if self.game_instance.game_phase == GamePhase.GAME:
+            if self.game_instance.is_time_to_update_services():
+                self.oef_handler.update_services()
+            if self.game_instance.ist_time_to_search_services():
+                self.oef_handler.search_services()
 
     def react(self) -> None:
         """
@@ -74,8 +81,6 @@ class ParticipantAgent(Agent):
 
         :return: None
         """
-        self.out_box.send_nowait()
-
         msg = self.in_box.get_wait()  # type: Message
 
         if is_oef_message(msg):

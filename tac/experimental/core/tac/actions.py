@@ -18,23 +18,20 @@
 #
 # ------------------------------------------------------------------------------
 import logging
-from typing import List
 
-from oef.messages import Message as SearchResult, OEFErrorMessage, DialogueErrorMessage
 from oef.query import Query, Constraint, GtEq
 
 from tac.experimental.core.agent import Liveness
-from tac.experimental.core.tac.dialogues import Dialogues, Dialogue
-from tac.experimental.core.tac.interfaces import ControllerInterface, OEFSearchInterface, DialogueInterface
-from tac.experimental.core.tac.game_instance import GameInstance, GamePhase
+from tac.experimental.core.tac.dialogues import Dialogues
+from tac.experimental.core.tac.interfaces import ControllerActionInterface, OEFSearchActionInterface, DialogueInterface
+from tac.experimental.core.tac.game_instance import GameInstance
 from tac.experimental.core.mail import OutBox, OutContainer
 from tac.helpers.crypto import Crypto
-from tac.protocol import Error, TransactionConfirmation, StateUpdate, Register
 
 logger = logging.getLogger(__name__)
 
 
-class ControllerActions(ControllerInterface):
+class ControllerActions(ControllerActionInterface):
 
     def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', name: str):
         self.crypto = crypto
@@ -43,32 +40,11 @@ class ControllerActions(ControllerInterface):
         self.out_box = out_box
         self.name = name
 
-    def on_dialogue_error(self, dialogue_error: DialogueErrorMessage):
-        pass
-
-    def on_start(self) -> None:
-        pass
-
-    def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
-        pass
-
-    def on_state_update(self, agent_state: StateUpdate) -> None:
-        pass
-
-    def on_cancelled(self) -> None:
-        """
-        Handle the cancellation of the competition from the TAC controller.
-
-        :return: None
-        """
-        logger.debug("[{}]: Received cancellation from the controller.".format(self.name))
-        self.liveness._is_stopped = True
-
-    def on_tac_error(self, error: Error) -> None:
+    def request_state_update(self) -> None:
         pass
 
 
-class OEFActions(OEFSearchInterface):
+class OEFActions(OEFSearchActionInterface):
 
     def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', name: str):
         self.crypto = crypto
@@ -88,46 +64,58 @@ class OEFActions(OEFSearchInterface):
         """
         query = Query([Constraint("version", GtEq(1))])
         search_id = self.game_instance.get_next_search_id()
+        self.game_instance.search_ids.for_tac.add(search_id)
         self.out_box.out_queue.put(OutContainer(query=query, search_id=search_id))
 
-    def on_search_result(self, search_result: SearchResult):
-        """Process a search result from the OEF."""
-        search_id = search_result.msg_id
-        if search_id in self.game_instance.search_ids_for_tac:
-            controller_pbk = search_result.agents[0]
-            if len(search_result.agents) == 0:
-                logger.debug("[{}]: Couldn't find the TAC controller.".format(self.name))
-                self.liveness._is_stopped = True
-            elif len(search_result.agents) > 1:
-                logger.debug("[{}]: Found more than one TAC controller.".format(self.name))
-                self.liveness._is_stopped = True
-            else:
-                self._register_to_tac(controller_pbk)
-        else:
-            self._react_to_search_results(search_id, search_result.agents)
-
-    def on_oef_error(self, oef_error: OEFErrorMessage) -> None:
-        pass
-
-    def on_dialogue_error(self, dialogue_error: DialogueErrorMessage):
-        pass
-
-    def _react_to_search_results(self, sender_id: str, agent_pbks: List[str]) -> None:
-        pass
-
-    def _register_to_tac(self, tac_controller_pbk: str) -> None:
+    def register_service(self) -> None:
         """
-        Register to active TAC Controller.
-
-        :param tac_controller_pbk: the public key of the controller.
+        Register to the OEF Service Directory
+            - as a seller, listing the goods supplied, or
+            - as a buyer, listing the goods demanded, or
+            - as both.
 
         :return: None
-        :raises AssertionError: if the agent is already registered.
         """
-        self.game_instance.controller_pbk = tac_controller_pbk
-        self.game_instance._game_phase = GamePhase.GAME_SETUP
-        msg = Register(self.crypto.public_key, self.crypto, self.name).serialize()
-        self.out_box.out_queue.put(OutContainer(msg=msg, msg_id=0, dialogue_id=0, destination=tac_controller_pbk))
+        if self.game_instance.is_registering_as_seller:
+            logger.debug("[{}]: Updating service directory as seller with goods supplied.".format(self.name))
+            goods_supplied_description = self.game_instance.get_service_description(is_supply=True)
+            self.game_instance.goods_supplied_description = goods_supplied_description
+            self.out_box.out_queue.put(OutContainer(service_description=goods_supplied_description, message_id=1))
+        if self.game_instance.is_registering_as_buyer:
+            logger.debug("[{}]: Updating service directory as buyer with goods demanded.".format(self.name))
+            goods_demanded_description = self.game_instance.get_service_description(is_supply=False)
+            self.game_instance.goods_demanded_description = goods_demanded_description
+            self.out_box.out_queue.put(OutContainer(service_description=goods_demanded_description, message_id=1))
+
+    def search_services(self) -> None:
+        """
+        Search on OEF Service Directory
+            - for sellers and their supply, or
+            - for buyers and their demand, or
+            - for both.
+
+        :return: None
+        """
+        if self.game_instance.is_searching_for_sellers:
+            query = self.game_instance.build_service_query(is_searching_for_sellers=True)
+            if query is None:
+                logger.warning("[{}]: Not searching the OEF for sellers because the agent demands no goods.".format(self.name))
+                return None
+            else:
+                logger.debug("[{}]: Searching for sellers which match the demand of the agent.".format(self.name))
+                search_id = self.game_instance.get_next_search_id()
+                self.game_instance.search_ids.for_sellers.add(search_id)
+                self.out_box.out_queue.put(OutContainer(query=query, search_id=search_id))
+        if self.game_instance.is_searching_for_buyers:
+            query = self.game_instance.build_service_query(is_searching_for_sellers=False)
+            if query is None:
+                logger.warning("[{}]: Not searching the OEF for buyers because the agent supplies no goods.".format(self.name))
+                return None
+            else:
+                logger.debug("[{}]: Searching for buyers which match the supply of the agent.".format(self.name))
+                search_id = self.game_instance.get_next_search_id()
+                self.game_instance.search_ids.for_buyers.add(search_id)
+                self.out_box.out_queue.put(OutContainer(query=query, search_id=search_id))
 
 
 class DialogueActions(DialogueInterface):
@@ -142,6 +130,3 @@ class DialogueActions(DialogueInterface):
         self.out_box = out_box
         self.name = name
         self.dialogues = dialogues
-
-    def on_new_dialogue(self, msg) -> Dialogue:
-        pass
