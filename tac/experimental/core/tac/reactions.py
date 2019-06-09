@@ -32,6 +32,8 @@ from tac.protocol import Error, ErrorCode, GameData, TransactionConfirmation, St
 
 logger = logging.getLogger(__name__)
 
+STARTING_MESSAGE_ID = 1
+STARTING_MESSAGE_TARGET = 0
 
 class ControllerReactions(ControllerReactionInterface):
 
@@ -174,8 +176,8 @@ class OEFReactions(OEFSearchReactionInterface):
             if agent_pbk == self.crypto.public_key: continue
             dialogue = self.game_instance.dialogues.create(agent_pbk, is_seller)
             logger.debug("[{}]: send_cfp_as_{}: msg_id={}, dialogue_id={}, destination={}, target={}, query={}"
-                         .format(self.name, role, STARTING_MESSAGE_ID, dialogue.dialogue_label.dialogue_id, agent_pbk, STARTING_MESSAGE_REF, query))
-            self.out_box.out_queue.put(CFP(STARTING_MESSAGE_ID, dialogue.dialogue_label.dialogue_id, agent_pbk, STARTING_MESSAGE_REF, query))
+                         .format(self.name, role, STARTING_MESSAGE_ID, dialogue.dialogue_label.dialogue_id, agent_pbk, STARTING_MESSAGE_TARGET, query))
+            self.out_box.out_queue.put(CFP(STARTING_MESSAGE_ID, dialogue.dialogue_label.dialogue_id, agent_pbk, STARTING_MESSAGE_TARGET, query))
 
     def _register_to_tac(self, controller_pbk: str) -> None:
         """

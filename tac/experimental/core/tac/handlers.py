@@ -25,12 +25,12 @@ from oef.messages import CFP, Decline, Propose, Accept, Message as SimpleMessage
 
 from tac.experimental.core.agent import Liveness
 from tac.experimental.core.tac.actions import DialogueActions, ControllerActions, OEFActions
-from tac.experimental.core.tac.dialogues import Dialogues, DialogueLabel
 from tac.experimental.core.tac.game_instance import GameInstance, GamePhase
 from tac.experimental.core.tac.reactions import ControllerReactions, OEFReactions
 
 from tac.experimental.core.mail import OutBox
 from tac.helpers.crypto import Crypto
+from tac.helpers.misc import TAC_SUPPLY_DATAMODEL_NAME
 from tac.protocol import Error, TransactionConfirmation, StateUpdate, Response, GameData, Cancelled
 
 logger = logging.getLogger(__name__)
@@ -59,17 +59,20 @@ class DialogueHandler(DialogueActions):
         :return: None
         """
         logger.debug("Handling Dialogue message. type={}".format(type(msg)))
-        dialogue_label = DialogueLabel(msg.dialogue_id, msg.destination, msg.)
-        if self.dialogues.is_dialogue_registered(dialogue_label):
-            dialogue = self.dialogues.get_dialogue(dialogue_label)
+        if self.dialogues.is_dialogue_registered(msg.dialogue_id, msg.destination, self.crypto.public_key):
+            dialogue = self.dialogues.get_dialogue(msg.dialogue_id, msg.destination, self.crypto.public_key)
+        elif isinstance(msg, CFP):
+            is_seller = msg.query.model.name == TAC_SUPPLY_DATAMODEL_NAME
+            dialogue = self.dialogues.create(msg.destination, is_seller)
+            logger.debug("[{}]: saving dialogue {}".format(self.name, dialogue.dialogue_label))
         else:
-            dialogue = self.dialogues.new_dialogue(msg)
+            logger.debug("[{}]: Unidentified dialogue.".format(self.name))
 
-        if not dialogue.check_message(msg):
-            self.out_box._mail_box.out_queue.put(DialogueErrorMessage)
+        if dialogue is None or not dialogue.check_message(msg):
+            self.out_box.out_queue.put(DialogueErrorMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination))
         else:
             response = dialogue.dispatch_to_handler(msg)
-            self.out_box._mail_box.out_queue.put(response)
+            self.out_box.out_queue.put(response)
 
 
 class ControllerHandler(ControllerActions, ControllerReactions):

@@ -25,6 +25,7 @@ from typing import List, Optional, Set
 from oef.query import Query
 from oef.schema import Description
 
+from tac.experimental.core.tac.dialogues import Dialogues
 from tac.experimental.core.tac.lock_manager import LockManager
 from tac.game import AgentState, WorldState, GameConfiguration
 from tac.helpers.misc import build_query, get_goods_quantities_description, marginal_utility
@@ -54,6 +55,7 @@ class Search:
         """
         self.id += 1
         return self.id
+
 
 class GameInstance:
     """
@@ -102,7 +104,7 @@ class GameInstance:
     def reset(self):
         self.controller_pbk = None
         self._search = Search()
-        self._dialogues = Dialogues
+        self._dialogues = Dialogues()
         self._game_phase = GamePhase.PRE_GAME
         self._game_configuration = None
         self._initial_agent_state = None
@@ -118,7 +120,7 @@ class GameInstance:
     @property
     def dialogues(self):
         return self._dialogues
-    
+
     @property
     def game_phase(self):
         return self._game_phase

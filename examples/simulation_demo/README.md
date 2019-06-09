@@ -7,7 +7,7 @@ This tutorial shows how to simulate a simple TAC.
 - Ensure that you are running an OEF Node on `localhost`, using this command:
 
 ```
-docker run -it -p 20000:20000 -p 3333:3333 -p 40000:40000 qati/oef-search:latest node no_sh \
+docker run -it -p 20000:20000 -p 3333:3333 -p 40000:40000 fetchai/oef-search:v1 node no_sh \
     --node_key Search1 \
     --core_key Core1 \
     --search_port 20000 \

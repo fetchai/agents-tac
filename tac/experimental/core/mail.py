@@ -163,8 +163,8 @@ class OutBox(object):
                 logger.debug("Outgoing query: search_id={}".format(out.search_id))
                 self.mail_box.search_services(out.search_id, out.query)
             elif isinstance(out, CFP):
-                logger.debug("Outgoing cfp: msg_id={}, dialogue_id={}, origin={}, target={}, query={}".format(out.msg_id, out.dialogue_id, out.origin, out.target, out.query))
-                self.mailbox.send_cfp(out.msg_id, out.dialogue_id, out.origin, out.target, out.query)
+                logger.debug("Outgoing cfp: msg_id={}, dialogue_id={}, origin={}, target={}, query={}".format(out.msg_id, out.dialogue_id, out.destination, out.target, out.query))
+                self.mail_box.send_cfp(out.msg_id, out.dialogue_id, out.destination, out.target, out.query)
 
 
 class FIPAMailBox(MailBox):

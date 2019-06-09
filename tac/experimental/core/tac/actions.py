@@ -22,7 +22,6 @@ import logging
 from oef.query import Query, Constraint, GtEq
 
 from tac.experimental.core.agent import Liveness
-from tac.experimental.core.tac.dialogues import Dialogues
 from tac.experimental.core.tac.interfaces import ControllerActionInterface, OEFSearchActionInterface, DialogueInterface
 from tac.experimental.core.tac.game_instance import GameInstance
 from tac.experimental.core.mail import OutBox, OutContainer
