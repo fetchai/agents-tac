@@ -48,8 +48,7 @@ class DialogueHandler(DialogueActions):
     """
 
     def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: OutBox, name: str):
-        self.dialogues = Dialogues()
-        super().__init__(crypto, liveness, game_instance, out_box, name, self.dialogues)
+        super().__init__(crypto, liveness, game_instance, out_box, name)
 
     def handle_dialogue_message(self, msg: AgentMessage) -> None:
         """
@@ -60,7 +59,7 @@ class DialogueHandler(DialogueActions):
         :return: None
         """
         logger.debug("Handling Dialogue message. type={}".format(type(msg)))
-        dialogue_label = DialogueLabel(msg.dialogue_id, msg.destination)
+        dialogue_label = DialogueLabel(msg.dialogue_id, msg.destination, msg.)
         if self.dialogues.is_dialogue_registered(dialogue_label):
             dialogue = self.dialogues.get_dialogue(dialogue_label)
         else:

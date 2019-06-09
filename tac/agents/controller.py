@@ -463,7 +463,7 @@ class GameHandler:
         nb_agents = len(agent_pbks)
 
         good_pbks = generate_pbks(self.tac_parameters.nb_goods, 'good')
-        agent_names = generate_pbks(nb_agents, 'agent')
+        agent_names = [self.agent_pbk_to_name[agent_pbk] for agent_pbk in agent_pbks]
 
         game = Game.generate_game(nb_agents,
                                   self.tac_parameters.nb_goods,
@@ -759,7 +759,8 @@ def main():
 
     finally:
         if agent is not None:
-            agent.terminate()
+            #agent.terminate()
+            pass
 
 
 if __name__ == '__main__':

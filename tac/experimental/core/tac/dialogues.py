@@ -33,14 +33,16 @@ Message = Union[OEFMessage, ControllerMessage, AgentMessage]
 class DialogueLabel:
     """Identifier for dialogues."""
 
-    def __init__(self, dialogue_id: int, agent_pbk: str):
+    def __init__(self, dialogue_id: int, opponent_pbk: str, is_self_initiated: bool):
         """
         Initialize a dialogue label.
         :param dialogue_id: the id of the dialogue.
-        :param agent_pbk: the interlocutor agent's public key.
+        :param opponent_pbk: the opponent's public key.
+        :param is_self_initiated: whether the agent initiated the dialogue
         """
         self._dialogue_id = dialogue_id
-        self._agent_pbk = agent_pbk
+        self._opponent_pbk = opponent_pbk
+        self._is_self_initiated = is_self_initiated
 
     @property
     def dialogue_id(self) -> int:
@@ -50,14 +52,18 @@ class DialogueLabel:
     def agent_pbk(self) -> str:
         return self._agent_pbk
 
+    @property
+    def is_seller(self) -> bool:
+        return self._is_seller
+
     def __eq__(self, other):
         if type(other) == DialogueLabel:
-            return self._dialogue_id == other.dialogue_id and self._agent_pbk == other.agent_pbk
+            return self._dialogue_id == other.dialogue_id and self._agent_pbk == other.agent_pbk and self._is_seller == other.is_seller
         else:
             return False
 
     def __hash__(self):
-        return hash((self.dialogue_id, self.agent_pbk))
+        return hash((self.dialogue_id, self.agent_pbk, self.is_seller))
 
 
 class ProtocolInterface:
@@ -84,7 +90,9 @@ class Dialogue(ProtocolInterface, BehaviourInterface):
 class Dialogues:
 
     def __init__(self):
-        self.dialogues = {}  # type: Dict[DialogueLabel, Dialogue]
+        self.dialogues_as_seller = {}  # type: Dict[DialogueLabel, Dialogue]
+        self.dialogues_as_buyer = {}
+        self.dialogue_id = 0
 
     def is_dialogue_registered(self, dialogue_label) -> bool:
         return dialogue_label in self.dialogues
@@ -92,5 +100,19 @@ class Dialogues:
     def get_dialogue(self, dialogue_label: DialogueLabel) -> Dialogue:
         return self.dialogues[dialogue_label]
 
-    def register_dialogue(self, dialogue: Dialogue) -> None:
-        self.dialogues[dialogue.dialogue_label] = dialogue
+    def register_dialogue(self, dialogue: Dialogue, is_seller: bool) -> None:
+        if is_seller:
+            self.dialogues_as_seller[dialogue.dialogue_label] = dialogue
+        else:
+            self.dialogues_as_buyer[dialogue.dialogue_label] = dialogue
+
+    def next_dialogue_id(self) -> int:
+        self.dialogue_id += 1
+        return self.dialogue_id
+
+    def create(self, opponent_pbk: str, is_seller: bool) -> DialogueLabel:
+        dialogue_label = DialogueLabel(self.next_dialogue_id(), agent_pbk, True)
+        dialogue = Dialogue(dialogue_label)
+        self.register_dialogue(dialogue, is_seller)
+        return dialogue
+

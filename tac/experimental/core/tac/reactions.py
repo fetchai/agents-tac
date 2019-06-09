@@ -28,8 +28,7 @@ from tac.experimental.core.tac.interfaces import ControllerReactionInterface, OE
 from tac.experimental.core.tac.game_instance import GameInstance, GamePhase
 from tac.experimental.core.mail import OutBox, OutContainer
 from tac.helpers.crypto import Crypto
-from tac.game import GameData
-from tac.protocol import Error, ErrorCode, TransactionConfirmation, StateUpdate, Register
+from tac.protocol import Error, ErrorCode, GameData, TransactionConfirmation, StateUpdate, Register
 
 logger = logging.getLogger(__name__)
 
@@ -123,9 +122,9 @@ class OEFReactions(OEFSearchReactionInterface):
         if search_id in self.game_instance.search.ids_for_tac:
             self._on_controller_search_result(search_result.agents)
         elif search_id in self.game_instance.search.ids_for_sellers:
-            self._on_services_search_result(search_result.agents, is_seller=True)
+            self._on_services_search_result(search_result.agents, is_searching_for_sellers=True)
         elif search_id in self.game_instance.search.ids_for_buyers:
-            self._on_services_search_result(search_result.agents, is_seller=False)
+            self._on_services_search_result(search_result.agents, is_searching_for_sellers=False)
         else:
             logger.debug("[{}]: Unknown search id: search_id={}".format(self.name, search_id))
 
@@ -161,6 +160,7 @@ class OEFReactions(OEFSearchReactionInterface):
 
         :return: None
         """
+        agent_pbks = list(set(agent_pbks))
         searched_for = 'sellers' if is_searching_for_sellers else 'buyers'
         role = 'buyer' if is_searching_for_sellers else 'seller'
         is_seller = not is_searching_for_sellers
@@ -172,10 +172,10 @@ class OEFReactions(OEFSearchReactionInterface):
             logger.debug("[{}]: No longer {} any goods...".format(self.name, response))
         for agent_pbk in agent_pbks:
             if agent_pbk == self.crypto.public_key: continue
-            dialogue_id = self.game_instance.create_new_dialogue_id(agent_pbk, is_seller)
+            dialogue = self.game_instance.dialogues.create(agent_pbk, is_seller)
             logger.debug("[{}]: send_cfp_as_{}: msg_id={}, dialogue_id={}, destination={}, target={}, query={}"
-                         .format(self.name, role, STARTING_MESSAGE_ID, dialogue_id, agent_pbk, STARTING_MESSAGE_REF, query))
-            self.out_box.out_queue.put(CFP(STARTING_MESSAGE_ID, dialogue_id, agent_pbk, STARTING_MESSAGE_REF, query))
+                         .format(self.name, role, STARTING_MESSAGE_ID, dialogue.dialogue_label.dialogue_id, agent_pbk, STARTING_MESSAGE_REF, query))
+            self.out_box.out_queue.put(CFP(STARTING_MESSAGE_ID, dialogue.dialogue_label.dialogue_id, agent_pbk, STARTING_MESSAGE_REF, query))
 
     def _register_to_tac(self, controller_pbk: str) -> None:
         """

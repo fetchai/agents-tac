@@ -143,10 +143,10 @@ class DialogueActions(DialogueInterface):
     Implements a basic dialogue interface.
     """
 
-    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: OutBox, name: str, dialogues: Dialogues):
+    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: OutBox, name: str):
         self.crypto = crypto
         self.liveness = liveness
         self.game_instance = game_instance
         self.out_box = out_box
         self.name = name
-        self.dialogues = dialogues
+        self.dialogues = game_instance.dialogues

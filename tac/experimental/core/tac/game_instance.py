@@ -65,6 +65,7 @@ class GameInstance:
         self.controller_pbk = None  # type: Optional[str]
 
         self._search = Search()
+        self._dialogues = Dialogues()
 
         self._game_phase = GamePhase.PRE_GAME
 
@@ -100,7 +101,8 @@ class GameInstance:
 
     def reset(self):
         self.controller_pbk = None
-        self.search = Search()
+        self._search = Search()
+        self._dialogues = Dialogues
         self._game_phase = GamePhase.PRE_GAME
         self._game_configuration = None
         self._initial_agent_state = None
@@ -112,6 +114,10 @@ class GameInstance:
     @property
     def search(self) -> Search:
         return self._search
+
+    @property
+    def dialogues(self):
+        return self._dialogues
     
     @property
     def game_phase(self):
