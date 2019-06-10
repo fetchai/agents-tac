@@ -18,7 +18,7 @@
 #
 # ------------------------------------------------------------------------------
 from abc import abstractmethod
-from typing import List, Optional, Any, Dict, Union
+from typing import List, Any, Dict, Union
 
 from oef.messages import CFP, Decline, Propose, Accept, Message as SimpleMessage, \
     SearchResult, OEFErrorMessage, DialogueErrorMessage
@@ -79,12 +79,6 @@ class ProtocolInterface:
         """
 
     @abstractmethod
-    def handle(self, msg: AgentMessage) -> Optional[Action]:
-        """
-        Handles according to the protocol.
-        """
-
-    @abstractmethod
     def outgoing_extend(self, msg: AgentMessage) -> None:
         """
         Adds a new outgoing message to the dialogue.
@@ -109,33 +103,13 @@ class ProtocolInterface:
         """
 
 
-class BehaviourInterface:
-    """
-    Specifies behaviours
-    """
-
-
-class Dialogue(ProtocolInterface, BehaviourInterface):
+class Dialogue(ProtocolInterface):
 
     def __init__(self, dialogue_label: DialogueLabel, is_seller: bool):
         self.dialogue_label = dialogue_label
         self.is_seller = is_seller
         self.outgoing_messages = []  # type: List[AgentMessage]
         self.incoming_messages = []  # type: List[AgentMessage]
-
-    def handle(self, msg: AgentMessage) -> Optional[AgentMessage]:
-        self.incoming_extend([msg])
-        response = None  # type: Optional[AgentMessage]
-        if isinstance(msg, CFP):
-            pass
-        elif isinstance(msg, Propose):
-            pass
-        elif isinstance(msg, Accept):
-            pass
-        elif isinstance(msg, Decline):
-            pass
-        self.outgoing_extend([response])
-        return response
 
     def is_message_consistent(self, msg: AgentMessage):
         """

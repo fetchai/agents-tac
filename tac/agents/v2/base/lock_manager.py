@@ -22,9 +22,12 @@ import logging
 import time
 from collections import defaultdict, deque
 from threading import Thread
-from typing import Dict, Tuple, Deque
+from typing import Dict, Tuple, Deque, List
+
+from oef.schema import Description
 
 from tac.agents.v2.base.dialogues import DialogueLabel
+from tac.helpers.misc import generate_transaction_id
 from tac.platform.protocol import Transaction
 
 logger = logging.getLogger(__name__)
@@ -204,3 +207,25 @@ class LockManager(object):
         if self._cleanup_locks_task_is_running:
             self._cleanup_locks_task_is_running = False
             self._cleanup_locks_task.join()
+
+    def store_proposals(self, proposals: List[Description], new_msg_id: int, dialogue_id: int, origin: str, is_seller: bool) -> None:
+        """
+        Store proposals as pending transactions.
+
+        :param new_msg_id: the new message id
+        :param dialogue_id: the dialogue id
+        :param origin: the public key of the message sender.
+        :param is_seller: Boolean indicating the role of the agent
+
+        :return: None
+        """
+        for proposal in proposals:
+            proposal_id = new_msg_id  # TODO fix if more than one proposal!
+            transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id, is_seller)  # TODO fix if more than one proposal!
+            transaction = Transaction.from_proposal(proposal=proposal,
+                                                    transaction_id=transaction_id,
+                                                    is_buyer=not is_seller,
+                                                    counterparty=origin,
+                                                    sender=self.public_key,
+                                                    crypto=self.crypto)
+            self.add_pending_proposal(dialogue_id, origin, proposal_id, transaction)

@@ -18,12 +18,13 @@
 #
 # ------------------------------------------------------------------------------
 import logging
-from typing import List, Union
+from typing import List, Union, Optional
 
 from oef.messages import CFP, Propose, Accept, Decline, Message as SimpleMessage, SearchResult, OEFErrorMessage, DialogueErrorMessage
 
 from tac.agents.v2.agent import Liveness
-from tac.agents.v2.base.dialogues import Dialogues
+from tac.agents.v2.base.behaviour import FIPABehaviour
+from tac.agents.v2.base.dialogues import Dialogues, Dialogue
 from tac.agents.v2.base.interfaces import ControllerReactionInterface, OEFSearchReactionInterface, DialogueReactionInterface
 from tac.agents.v2.base.game_instance import GameInstance, GamePhase
 from tac.agents.v2.mail import OutBox, OutContainer
@@ -213,6 +214,7 @@ class DialogueReactions(DialogueReactionInterface):
         self.out_box = out_box
         self.name = name
         self.dialogues = dialogues
+        self.behaviour = FIPABehaviour(game_instance)
 
     def on_new_dialogue(self, msg: AgentMessage) -> None:
         """
@@ -233,7 +235,7 @@ class DialogueReactions(DialogueReactionInterface):
         if not dialogue.is_message_consistent(msg):
             response = DialogueErrorMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination)
         else:
-            response = dialogue.handle(msg)
+            response = self.handle(msg, dialogue)
         self.out_box.out_queue.put(response)
 
     def on_unidentified_dialogue(self, msg: AgentMessage) -> None:
@@ -243,3 +245,16 @@ class DialogueReactions(DialogueReactionInterface):
         logger.debug("[{}]: Unidentified dialogue.".format(self.name))
         response = DialogueErrorMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination)
         self.out_box.out_queue.put(response)
+
+    def handle(self, msg: AgentMessage, dialogue: Dialogue) -> Optional[AgentMessage]:
+        dialogue.incoming_extend([msg])
+        if isinstance(msg, CFP):
+            response = self.behaviour.on_cfp(msg, dialogue)
+        elif isinstance(msg, Propose):
+            response = self.behaviour.on_propose(msg, dialogue)
+        elif isinstance(msg, Accept):
+            response = self.behaviour.on_accept(msg, dialogue)
+        elif isinstance(msg, Decline):
+            response = self.behaviour.on_decline(msg, dialogue)
+        dialogue.outgoing_extend([response])
+        return response
