@@ -71,8 +71,8 @@ class ControllerReactions(ControllerReactionInterface):
         :return: None
         """
         logger.debug("[{}]: Received transaction confirmation from the controller: transaction_id={}".format(self.name, tx_confirmation.transaction_id))
-        transaction = self.lock_manager.pop_lock(tx_confirmation.transaction_id)
-        self._agent_state.update(transaction, self.game_configuration.tx_fee)
+        transaction = self.game_instance.lock_manager.pop_lock(tx_confirmation.transaction_id)
+        self.game_instance._agent_state.update(transaction, self.game_instance.game_configuration.tx_fee)
 
     def on_state_update(self, agent_state: StateUpdate) -> None:
         pass
