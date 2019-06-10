@@ -1,5 +1,5 @@
 # tac-agents
-Agents for Trading Agents Competition
+Framework for Trading Agents Competition
 
 ## Cloning
 
