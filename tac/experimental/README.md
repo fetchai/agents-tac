@@ -18,7 +18,7 @@ python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_
 
 - in one terminal run the controller:
 
-      python3 tac/agents/controller.py
+      python3 tac/platform/controller.py
       
 - in another terminal run the agent:
 
@@ -26,11 +26,3 @@ python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_
 
 - or
       python3 tac/experimental/registration_agent2.py
-     
-- or run controller like so
-
-      python3 tac/agents/controller.py --verbose --nb-agents 2 --inactivity-timeout 60
-
-      python3 tac/experimental/registration_agent3.py --name reg_agent_1
-
-      python3 tac/experimental/registration_agent3.py --name reg_agent_2
