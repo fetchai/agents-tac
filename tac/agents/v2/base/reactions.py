@@ -23,7 +23,7 @@ from typing import List, Union, Optional
 from oef.messages import CFP, Propose, Accept, Decline, Message as SimpleMessage, SearchResult, OEFErrorMessage, DialogueErrorMessage
 
 from tac.agents.v2.agent import Liveness
-from tac.agents.v2.base.behaviour import FIPABehaviour
+from tac.agents.v2.base.behaviours import FIPABehaviour
 from tac.agents.v2.base.dialogues import Dialogues, Dialogue
 from tac.agents.v2.base.interfaces import ControllerReactionInterface, OEFSearchReactionInterface, DialogueReactionInterface
 from tac.agents.v2.base.game_instance import GameInstance, GamePhase
