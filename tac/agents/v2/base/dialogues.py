@@ -132,6 +132,10 @@ class Dialogue(ProtocolInterface):
     def incoming_extend(self, messages: List[AgentMessage]) -> None:
         self.incoming_messages.extend(messages)
 
+    def role(self) -> str:
+        role = 'seller' if self.is_seller else 'buyer'
+        return role
+
     def cfp(self, query: Query) -> CFP:
         """
         Creates a cfp.
@@ -163,8 +167,8 @@ class Dialogues:
     def dialogues_as_buyer(self) -> Dict[DialogueLabel, Dialogue]:
         return self._dialogues_as_buyer
 
-    def is_permitted_for_new_dialogue(self, msg: AgentMessage) -> bool:
-        result = isinstance(msg, CFP)
+    def is_permitted_for_new_dialogue(self, msg: AgentMessage, known_pbks: List[str]) -> bool:
+        result = isinstance(msg, CFP) and (msg.destination in known_pbks)
         return result
 
     def is_dialogue_registered(self, dialogue_id: int, opponent_pbk: str, agent_pbk: str) -> DialogueLabel:

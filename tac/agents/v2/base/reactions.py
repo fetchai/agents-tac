@@ -24,7 +24,7 @@ from oef.messages import CFP, Propose, Accept, Decline, Message as SimpleMessage
 
 from tac.agents.v2.agent import Liveness
 from tac.agents.v2.base.behaviours import FIPABehaviour
-from tac.agents.v2.base.dialogues import Dialogues, Dialogue
+from tac.agents.v2.base.dialogues import Dialogue
 from tac.agents.v2.base.interfaces import ControllerReactionInterface, OEFSearchReactionInterface, DialogueReactionInterface
 from tac.agents.v2.base.game_instance import GameInstance, GamePhase
 from tac.agents.v2.mail import OutBox, OutContainer
@@ -207,14 +207,14 @@ class DialogueReactions(DialogueReactionInterface):
     Implements a basic dialogue interface.
     """
 
-    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: OutBox, name: str, dialogues: Dialogues):
+    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: OutBox, name: str):
         self.crypto = crypto
         self.liveness = liveness
         self.game_instance = game_instance
         self.out_box = out_box
         self.name = name
-        self.dialogues = dialogues
-        self.behaviour = FIPABehaviour(game_instance)
+        self.dialogues = game_instance.dialogues
+        self.behaviour = FIPABehaviour(crypto, game_instance, name)
 
     def on_new_dialogue(self, msg: AgentMessage) -> None:
         """
@@ -222,8 +222,8 @@ class DialogueReactions(DialogueReactionInterface):
         """
         is_seller = msg.query.model.name == TAC_SUPPLY_DATAMODEL_NAME
         dialogue = self.dialogues.create(msg.destination, msg.destination, is_seller)
-        logger.debug("[{}]: saving dialogue: dialogue_id={}".format(self.name, dialogue))
-        response = dialogue.handle(msg)
+        logger.debug("[{}]: saving dialogue: dialogue_id={}".format(self.name, dialogue.dialogue_lable.dialogue_id))
+        response = self.handle(msg, dialogue)
         self.out_box.out_queue.put(response)
 
     def on_existing_dialogue(self, msg: AgentMessage) -> None:
@@ -256,5 +256,7 @@ class DialogueReactions(DialogueReactionInterface):
             response = self.behaviour.on_accept(msg, dialogue)
         elif isinstance(msg, Decline):
             response = self.behaviour.on_decline(msg, dialogue)
-        dialogue.outgoing_extend([response])
+        if not isinstance(response, List):
+            response = [response]
+        dialogue.outgoing_extend(response)
         return response

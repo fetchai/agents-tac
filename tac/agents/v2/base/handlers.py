@@ -59,7 +59,7 @@ class DialogueHandler(DialogueActions, DialogueReactions):
         logger.debug("Handling Dialogue message. type={}".format(type(msg)))
         if self.dialogues.is_dialogue_registered(msg.dialogue_id, msg.destination, self.crypto.public_key):
             self.on_existing_dialogue(msg)
-        elif self.dialogues.is_permitted_for_new_dialogue(msg):
+        elif self.dialogues.is_permitted_for_new_dialogue(msg, self.game_instance.game_configuration.agent_pbks):
             self.on_new_dialogue(msg)
         else:
             self.on_unidentified_dialogue(msg)
