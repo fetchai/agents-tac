@@ -49,7 +49,8 @@ class ControllerReactions(ControllerReactionInterface):
         self.name = name
 
     def on_dialogue_error(self, dialogue_error: DialogueErrorMessage):
-        logger.debug("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}".format(self.name, dialogue_error.answer_id, dialogue_error.dialogue_id, dialogue_error.origin))
+        logger.debug("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}"
+                     .format(self.name, dialogue_error.msg_id, dialogue_error.dialogue_id, dialogue_error.origin))
 
     def on_start(self, game_data: GameData) -> None:
         """
@@ -135,10 +136,12 @@ class OEFReactions(OEFSearchReactionInterface):
             logger.debug("[{}]: Unknown search id: search_id={}".format(self.name, search_id))
 
     def on_oef_error(self, oef_error: OEFErrorMessage):
-        logger.debug("[{}]: Received OEF error: answer_id={}, operation={}".format(self.name, oef_error.answer_id, oef_error.operation))
+        logger.debug("[{}]: Received OEF error: answer_id={}, operation={}"
+                     .format(self.name, oef_error.msg_id, oef_error.oef_error_operation))
 
     def on_dialogue_error(self, dialogue_error: DialogueErrorMessage):
-        logger.debug("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}".format(self.name, dialogue_error.answer_id, dialogue_error.dialogue_id, dialogue_error.origin))
+        logger.debug("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}"
+                     .format(self.name, dialogue_error.msg_id, dialogue_error.dialogue_id, dialogue_error.origin))
 
     def _on_controller_search_result(self, agent_pbks: List[str]) -> None:
         """
@@ -217,7 +220,7 @@ class DialogueReactions(DialogueReactionInterface):
         """
         is_seller = msg.query.model.name == TAC_SUPPLY_DATAMODEL_NAME
         dialogue = self.dialogues.create(msg.destination, msg.destination, is_seller)
-        logger.debug("[{}]: saving dialogue: dialogue_id={}".format(self.name, dialogue.dialogue_label.dialogue_id))
+        logger.debug("[{}]: saving dialogue: dialogue_id={}".format(self.name, dialogue))
         response = dialogue.handle(msg)
         self.out_box.out_queue.put(response)
 

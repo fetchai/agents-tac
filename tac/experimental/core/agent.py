@@ -20,6 +20,8 @@
 import logging
 
 from abc import abstractmethod
+from typing import Optional
+
 from tac.experimental.core.mail import MailBox, InBox, OutBox
 from tac.helpers.crypto import Crypto
 
@@ -44,9 +46,9 @@ class Agent:
         self._crypto = Crypto()
         self._liveness = Liveness()
 
-        self.mail_box = None  # type: MailBox
-        self.in_box = None  # type: InBox
-        self.out_box = None  # type: OutBox
+        self.mail_box = None  # type: Optional[MailBox]
+        self.in_box = None  # type: Optional[InBox]
+        self.out_box = None  # type: Optional[OutBox]
 
     @property
     def name(self) -> str:

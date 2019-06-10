@@ -56,10 +56,8 @@ class LockManager(object):
         self._cleanup_locks_task = None
         self._cleanup_locks_task_is_running = False
 
-        # type: Deque[Tuple[datetime.datetime, Tuple[DialogueLabel, MESSAGE_ID]]]
-        self._last_update_for_pending_messages = deque()
-        # type: Deque[Tuple[datetime.datetime, TRANSACTION_ID]]
-        self._last_update_for_transactions = deque()
+        self._last_update_for_pending_messages = deque()  # type: Deque[Tuple[datetime.datetime, Tuple[DialogueLabel, MESSAGE_ID]]]
+        self._last_update_for_transactions = deque()  # type: Deque[Tuple[datetime.datetime, TRANSACTION_ID]]
 
     def cleanup_locks_job(self) -> None:
         """

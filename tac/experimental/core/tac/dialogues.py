@@ -125,6 +125,7 @@ class Dialogue(ProtocolInterface, BehaviourInterface):
 
     def handle(self, msg: AgentMessage) -> Optional[AgentMessage]:
         self.incoming_extend([msg])
+        response = None  # type: Optional[AgentMessage]
         if isinstance(msg, CFP):
             pass
         elif isinstance(msg, Propose):
@@ -133,7 +134,6 @@ class Dialogue(ProtocolInterface, BehaviourInterface):
             pass
         elif isinstance(msg, Decline):
             pass
-        response = None
         self.outgoing_extend([response])
         return response
 
@@ -178,15 +178,15 @@ class Dialogues:
         self.dialogue_id = 0
 
     @property
-    def dialogues(self) -> Dialogue:
+    def dialogues(self) -> Dict[DialogueLabel, Dialogue]:
         return self._dialogues
 
     @property
-    def dialogues_as_seller(self):
+    def dialogues_as_seller(self) -> Dict[DialogueLabel, Dialogue]:
         return self._dialogues_as_seller
 
     @property
-    def dialogues_as_buyer(self):
+    def dialogues_as_buyer(self) -> Dict[DialogueLabel, Dialogue]:
         return self._dialogues_as_buyer
 
     def is_permitted_for_new_dialogue(self, msg: AgentMessage) -> bool:
@@ -196,7 +196,7 @@ class Dialogues:
     def is_dialogue_registered(self, dialogue_id: int, opponent_pbk: str, agent_pbk: str) -> DialogueLabel:
         self_initiated_dialogue = DialogueLabel(dialogue_id, opponent_pbk, agent_pbk)
         other_initiated_dialogue = DialogueLabel(dialogue_id, opponent_pbk, opponent_pbk)
-        return self_initiated_dialogue in self.dialogues != other_initiated_dialogue in self.dialogues
+        return (self_initiated_dialogue in self.dialogues) is not (other_initiated_dialogue in self.dialogues)
 
     def get_dialogue(self, dialogue_id: int, opponent_pbk: str, agent_pbk: str) -> Dialogue:
         self_initiated_dialogue = DialogueLabel(dialogue_id, opponent_pbk, agent_pbk)
@@ -211,15 +211,15 @@ class Dialogues:
         self.dialogue_id += 1
         return self.dialogue_id
 
-    def create(self, dialogue_opponent_pbk: str, dialogue_starter_pbk: str, is_seller: bool) -> DialogueLabel:
+    def create(self, dialogue_opponent_pbk: str, dialogue_starter_pbk: str, is_seller: bool) -> Dialogue:
         """
-        Saves the dialogue id.
+        Create a new dialogue.
 
         :param dialogue_opponent_pbk: the pbk of the agent with which the dialogue is kept.
         :param dialogue_starter_pbk: the pbk of the agent which started the dialogue
         :param is_seller: boolean indicating the agent role
 
-        :return: None
+        :return: the created dialogue.
         """
         dialogue_label = DialogueLabel(self.next_dialogue_id(), dialogue_opponent_pbk, dialogue_starter_pbk)
         assert dialogue_label not in self.dialogues

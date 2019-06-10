@@ -19,12 +19,12 @@
 # ------------------------------------------------------------------------------
 import logging
 from asyncio import AbstractEventLoop
-from queue import Queue
+from queue import Queue, Empty
 from threading import Thread
 from typing import List, Optional, Any, Union
 
 from oef.agents import OEFAgent
-from oef.messages import PROPOSE_TYPES, CFP_TYPES, CFP, Decline, Propose, Accept, Message as SimpleMessage, \
+from oef.messages import PROPOSE_TYPES, CFP_TYPES, CFP, Decline, Propose, Accept, Message as ByteMessage, \
     SearchResult, OEFErrorOperation, OEFErrorMessage, DialogueErrorMessage
 from oef.query import Query
 from oef.schema import Description
@@ -33,8 +33,8 @@ logger = logging.getLogger(__name__)
 
 Action = Any
 OEFMessage = Union[SearchResult, OEFErrorMessage, DialogueErrorMessage]
-ControllerMessage = SimpleMessage
-AgentMessage = Union[SimpleMessage, CFP, Propose, Accept, Decline]
+ControllerMessage = ByteMessage
+AgentMessage = Union[ByteMessage, CFP, Propose, Accept, Decline]
 Message = Union[OEFMessage, ControllerMessage, AgentMessage]
 
 
@@ -52,7 +52,7 @@ class MailBox(OEFAgent):
         self._mail_box_thread = None  # type: Optional[Thread]
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
-        self.in_queue.put(SimpleMessage(msg_id, dialogue_id, origin, content))
+        self.in_queue.put(ByteMessage(msg_id, dialogue_id, origin, content))
 
     def on_search_result(self, search_id: int, agents: List[str]):
         self.in_queue.put(SearchResult(search_id, agents))
@@ -110,7 +110,7 @@ class InBox(object):
         logger.debug("Incoming message type: type={}".format(type(msg)))
         return msg
 
-    def get_some_wait(self) -> AgentMessage:
+    def get_some_wait(self) -> Optional[AgentMessage]:
         """
         Checks for a message on the in queue for some time and gets it.
 
@@ -121,7 +121,7 @@ class InBox(object):
             msg = self.in_queue.get(block=True, timeout=1)
             logger.debug("Incoming message type: type={}".format(type(msg)))
             return msg
-        except:
+        except Empty:
             return None
 
 
@@ -194,7 +194,14 @@ class OutContainer:
     The OutContainer is a container to keep a message or search in whilst on the out queue.
     """
 
-    def __init__(self, message: Optional[bytes] = None, message_id: Optional[int] = None, dialogue_id: Optional[int] = None, destination: Optional[str] = None, query: Optional[Query] = None, search_id: Optional[int] = None, service_description: Optional[Description] = None, is_unregister: Optional[bool] = False):
+    def __init__(self, message: Optional[bytes] = None,
+                 message_id: Optional[int] = None,
+                 dialogue_id: Optional[int] = None,
+                 destination: Optional[str] = None,
+                 query: Optional[Query] = None,
+                 search_id: Optional[int] = None,
+                 service_description: Optional[Description] = None,
+                 is_unregister: Optional[bool] = False):
         self.message = message
         self.message_id = message_id
         self.dialogue_id = dialogue_id

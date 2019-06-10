@@ -23,7 +23,7 @@ from typing import Union
 from oef.messages import CFP, Propose, Accept, Decline, Message as SimpleMessage, SearchResult, OEFErrorMessage, DialogueErrorMessage
 
 from tac.experimental.core.tac.dialogues import Dialogue
-from tac.protocol import Error, TransactionConfirmation, StateUpdate
+from tac.protocol import Error, TransactionConfirmation, StateUpdate, GameData
 
 AgentMessage = Union[SimpleMessage, CFP, Propose, Accept, Decline]
 
@@ -34,10 +34,11 @@ class ControllerReactionInterface:
     """
 
     @abstractmethod
-    def on_start(self) -> None:
+    def on_start(self, game_data: GameData) -> None:
         """
         On start of the competition, do the setup.
 
+        :param game_data: the data for the started game.
         :return: None
         """
 

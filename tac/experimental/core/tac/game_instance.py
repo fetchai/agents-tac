@@ -284,7 +284,8 @@ class GameInstance:
 
 
 class BaselineStrategy:
-    def supplied_good_quantities(current_holdings: List[int]) -> List[int]:
+
+    def supplied_good_quantities(self, current_holdings: List[int]) -> List[int]:
         """
         Generates list of quantities which are supplied.
 
@@ -293,7 +294,7 @@ class BaselineStrategy:
         """
         return [quantity - 1 for quantity in current_holdings]
 
-    def supplied_good_pbks(good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
+    def supplied_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
         """
         Generates set of good pbks which are supplied.
 
@@ -303,7 +304,7 @@ class BaselineStrategy:
         """
         return {good_pbk for good_pbk, quantity in zip(good_pbks, current_holdings) if quantity > 1}
 
-    def demanded_good_quantities(current_holdings: List[int]) -> List[int]:
+    def demanded_good_quantities(self, current_holdings: List[int]) -> List[int]:
         """
         Generates list of quantities which are demanded.
 
@@ -312,7 +313,7 @@ class BaselineStrategy:
         """
         return [1 for _ in current_holdings]
 
-    def demanded_good_pbks(good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
+    def demanded_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
         """
         Generates set of good pbks which are demanded.
 
@@ -322,7 +323,7 @@ class BaselineStrategy:
         """
         return {good_pbk for good_pbk, quantity in zip(good_pbks, current_holdings)}
 
-    def get_proposals(good_pbks: List[str], current_holdings: List[int], utility_params: List[int], tx_fee: float, is_seller: bool, is_world_modeling: bool, world_state: WorldState) -> List[Description]:
+    def get_proposals(self, good_pbks: List[str], current_holdings: List[int], utility_params: List[int], tx_fee: float, is_seller: bool, is_world_modeling: bool, world_state: WorldState) -> List[Description]:
         """
         Generates proposals from the seller/buyer.
 
