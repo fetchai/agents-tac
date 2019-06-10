@@ -26,11 +26,10 @@ from oef.messages import CFP, Decline, Propose, Accept, Message as SimpleMessage
 from tac.experimental.core.agent import Liveness
 from tac.experimental.core.tac.actions import DialogueActions, ControllerActions, OEFActions
 from tac.experimental.core.tac.game_instance import GameInstance, GamePhase
-from tac.experimental.core.tac.reactions import ControllerReactions, OEFReactions
+from tac.experimental.core.tac.reactions import DialogueReactions, ControllerReactions, OEFReactions
 
 from tac.experimental.core.mail import OutBox
 from tac.helpers.crypto import Crypto
-from tac.helpers.misc import TAC_SUPPLY_DATAMODEL_NAME
 from tac.protocol import Error, TransactionConfirmation, StateUpdate, Response, GameData, Cancelled
 
 logger = logging.getLogger(__name__)
@@ -42,7 +41,7 @@ AgentMessage = Union[SimpleMessage, CFP, Propose, Accept, Decline]
 Message = Union[OEFMessage, ControllerMessage, AgentMessage]
 
 
-class DialogueHandler(DialogueActions):
+class DialogueHandler(DialogueActions, DialogueReactions):
     """
     Handles the dialogue with another agent.
     """
@@ -60,19 +59,11 @@ class DialogueHandler(DialogueActions):
         """
         logger.debug("Handling Dialogue message. type={}".format(type(msg)))
         if self.dialogues.is_dialogue_registered(msg.dialogue_id, msg.destination, self.crypto.public_key):
-            dialogue = self.dialogues.get_dialogue(msg.dialogue_id, msg.destination, self.crypto.public_key)
-        elif isinstance(msg, CFP):
-            is_seller = msg.query.model.name == TAC_SUPPLY_DATAMODEL_NAME
-            dialogue = self.dialogues.create(msg.destination, is_seller)
-            logger.debug("[{}]: saving dialogue {}".format(self.name, dialogue.dialogue_label))
+            self.on_existing_dialogue(msg)
+        elif self.dialogues.is_permitted_for_new_dialogue(msg):
+            self.on_new_dialogue(msg)
         else:
-            logger.debug("[{}]: Unidentified dialogue.".format(self.name))
-
-        if dialogue is None or not dialogue.check_message(msg):
-            self.out_box.out_queue.put(DialogueErrorMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination))
-        else:
-            response = dialogue.dispatch_to_handler(msg)
-            self.out_box.out_queue.put(response)
+            self.on_unidentified_dialogue(msg)
 
 
 class ControllerHandler(ControllerActions, ControllerReactions):

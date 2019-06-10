@@ -18,11 +18,14 @@
 #
 # ------------------------------------------------------------------------------
 from abc import abstractmethod
+from typing import Union
 
-from oef.messages import Message as SearchResult, OEFErrorMessage, DialogueErrorMessage
+from oef.messages import CFP, Propose, Accept, Decline, Message as SimpleMessage, SearchResult, OEFErrorMessage, DialogueErrorMessage
 
 from tac.experimental.core.tac.dialogues import Dialogue
 from tac.protocol import Error, TransactionConfirmation, StateUpdate
+
+AgentMessage = Union[SimpleMessage, CFP, Propose, Accept, Decline]
 
 
 class ControllerReactionInterface:
@@ -123,14 +126,32 @@ class OEFSearchActionInterface:
         """Searches services on the OEF."""
 
 
-class DialogueInterface:
+class DialogueReactionInterface:
     """
     This interface contains the methods to maintain a Dialogue with other agents.
     """
 
     @abstractmethod
-    def on_new_dialogue(self, msg) -> Dialogue:
+    def on_new_dialogue(self, msg: AgentMessage) -> Dialogue:
         """Given a new message, create a Dialogue object that specifies:
         - the protocol rules that messages must follow;
         - how the agent behaves in this dialogue.
         """
+
+    @abstractmethod
+    def on_existing_dialogue(self, msg: AgentMessage) -> Dialogue:
+        """
+        React to a message of an existing dialogue.
+        """
+
+    @abstractmethod
+    def on_unidentified_dialogue(self, msg: AgentMessage) -> Dialogue:
+        """
+        React to a message of an unidentified dialogue.
+        """
+
+
+class DialogueActionInterface:
+    """
+    This interface contains the methods to maintain a Dialogue with other agents.
+    """

@@ -18,22 +18,26 @@
 #
 # ------------------------------------------------------------------------------
 import logging
-from typing import List
+from typing import List, Union
 
-from oef.messages import CFP, Message as SearchResult, OEFErrorMessage, DialogueErrorMessage
+from oef.messages import CFP, Propose, Accept, Decline, Message as SimpleMessage, SearchResult, OEFErrorMessage, DialogueErrorMessage
 
 from tac.experimental.core.agent import Liveness
-from tac.experimental.core.tac.dialogues import Dialogues, Dialogue
-from tac.experimental.core.tac.interfaces import ControllerReactionInterface, OEFSearchReactionInterface, DialogueInterface
+from tac.experimental.core.tac.dialogues import Dialogues
+from tac.experimental.core.tac.interfaces import ControllerReactionInterface, OEFSearchReactionInterface, DialogueReactionInterface
 from tac.experimental.core.tac.game_instance import GameInstance, GamePhase
 from tac.experimental.core.mail import OutBox, OutContainer
 from tac.helpers.crypto import Crypto
+from tac.helpers.misc import TAC_SUPPLY_DATAMODEL_NAME
 from tac.protocol import Error, ErrorCode, GameData, TransactionConfirmation, StateUpdate, Register
 
 logger = logging.getLogger(__name__)
 
 STARTING_MESSAGE_ID = 1
 STARTING_MESSAGE_TARGET = 0
+
+AgentMessage = Union[SimpleMessage, CFP, Propose, Accept, Decline]
+
 
 class ControllerReactions(ControllerReactionInterface):
 
@@ -174,10 +178,11 @@ class OEFReactions(OEFSearchReactionInterface):
             logger.debug("[{}]: No longer {} any goods...".format(self.name, response))
         for agent_pbk in agent_pbks:
             if agent_pbk == self.crypto.public_key: continue
-            dialogue = self.game_instance.dialogues.create(agent_pbk, is_seller)
+            dialogue = self.game_instance.dialogues.create(agent_pbk, self.crypto.public_key, is_seller)
+            cfp = dialogue.cfp(query)
             logger.debug("[{}]: send_cfp_as_{}: msg_id={}, dialogue_id={}, destination={}, target={}, query={}"
-                         .format(self.name, role, STARTING_MESSAGE_ID, dialogue.dialogue_label.dialogue_id, agent_pbk, STARTING_MESSAGE_TARGET, query))
-            self.out_box.out_queue.put(CFP(STARTING_MESSAGE_ID, dialogue.dialogue_label.dialogue_id, agent_pbk, STARTING_MESSAGE_TARGET, query))
+                         .format(self.name, role, cfp.msg_id, cfp.dialogue_id, cfp.destination, cfp.target, query))
+            self.out_box.out_queue.put(cfp)
 
     def _register_to_tac(self, controller_pbk: str) -> None:
         """
@@ -193,7 +198,7 @@ class OEFReactions(OEFSearchReactionInterface):
         self.out_box.out_queue.put(OutContainer(message=msg, message_id=0, dialogue_id=0, destination=controller_pbk))
 
 
-class DialogueReactions(DialogueInterface):
+class DialogueReactions(DialogueReactionInterface):
     """
     Implements a basic dialogue interface.
     """
@@ -206,5 +211,32 @@ class DialogueReactions(DialogueInterface):
         self.name = name
         self.dialogues = dialogues
 
-    def on_new_dialogue(self, msg) -> Dialogue:
-        pass
+    def on_new_dialogue(self, msg: AgentMessage) -> None:
+        """
+        React to a new dialogue.
+        """
+        is_seller = msg.query.model.name == TAC_SUPPLY_DATAMODEL_NAME
+        dialogue = self.dialogues.create(msg.destination, msg.destination, is_seller)
+        logger.debug("[{}]: saving dialogue: dialogue_id={}".format(self.name, dialogue.dialogue_label.dialogue_id))
+        response = dialogue.handle(msg)
+        self.out_box.out_queue.put(response)
+
+    def on_existing_dialogue(self, msg: AgentMessage) -> None:
+        """
+        React to an existing dialogue.
+        """
+        dialogue = self.dialogues.get_dialogue(msg.dialogue_id, msg.destination, self.crypto.public_key)
+
+        if not dialogue.is_message_consistent(msg):
+            response = DialogueErrorMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination)
+        else:
+            response = dialogue.handle(msg)
+        self.out_box.out_queue.put(response)
+
+    def on_unidentified_dialogue(self, msg: AgentMessage) -> None:
+        """
+        React to an unidentified dialogue.
+        """
+        logger.debug("[{}]: Unidentified dialogue.".format(self.name))
+        response = DialogueErrorMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination)
+        self.out_box.out_queue.put(response)

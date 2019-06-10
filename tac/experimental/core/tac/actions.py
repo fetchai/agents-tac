@@ -22,7 +22,7 @@ import logging
 from oef.query import Query, Constraint, GtEq
 
 from tac.experimental.core.agent import Liveness
-from tac.experimental.core.tac.interfaces import ControllerActionInterface, OEFSearchActionInterface, DialogueInterface
+from tac.experimental.core.tac.interfaces import ControllerActionInterface, OEFSearchActionInterface, DialogueActionInterface
 from tac.experimental.core.tac.game_instance import GameInstance
 from tac.experimental.core.mail import OutBox, OutContainer
 from tac.helpers.crypto import Crypto
@@ -137,7 +137,7 @@ class OEFActions(OEFSearchActionInterface):
                 self.out_box.out_queue.put(OutContainer(query=query, search_id=search_id))
 
 
-class DialogueActions(DialogueInterface):
+class DialogueActions(DialogueActionInterface):
     """
     Implements a basic dialogue interface.
     """
