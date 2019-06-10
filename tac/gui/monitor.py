@@ -4,7 +4,7 @@ from typing import Optional
 
 from tac.gui.dashboard import Dashboard
 
-from tac.stats import GameStats
+from tac.platform.stats import GameStats
 
 
 class Monitor(ABC):

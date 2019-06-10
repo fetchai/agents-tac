@@ -1,6 +1,6 @@
 import pytest
 
-from tac.protocol import Register, Unregister, Transaction, Registered, Unregistered, TransactionConfirmation, Error, \
+from tac.platform.protocol import Register, Unregister, Transaction, Registered, Unregistered, TransactionConfirmation, Error, \
     GameData, Request, Response, ErrorCode, Cancelled, GetStateUpdate, StateUpdate
 from tac.helpers.crypto import Crypto
 

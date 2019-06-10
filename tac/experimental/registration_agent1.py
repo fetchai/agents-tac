@@ -2,7 +2,7 @@
 from oef.messages import DialogueErrorMessage, OEFErrorMessage
 
 from tac.experimental.core1 import TACParticipantAgent, Dialogue
-from tac.protocol import Error, StateUpdate, TransactionConfirmation
+from tac.platform.protocol import Error, StateUpdate, TransactionConfirmation
 
 
 class TACRegistrationAgent(TACParticipantAgent):

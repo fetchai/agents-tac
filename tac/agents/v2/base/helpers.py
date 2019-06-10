@@ -22,7 +22,7 @@ from typing import Union
 from oef.messages import Message as SimpleMessage, SearchResult, OEFErrorMessage, DialogueErrorMessage
 
 from tac.helpers.crypto import Crypto
-from tac.protocol import Response
+from tac.platform.protocol import Response
 
 OEFMessage = Union[SearchResult, OEFErrorMessage, DialogueErrorMessage]
 Message = Union[OEFMessage]

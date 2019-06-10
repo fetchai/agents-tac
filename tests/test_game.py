@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from tac.game import GameConfiguration, GameInitialization, Game, GameTransaction, AgentState, GoodState
+from tac.platform.game import GameConfiguration, GameInitialization, Game, GameTransaction, AgentState, GoodState
 
 
 class TestGameConfiguration:

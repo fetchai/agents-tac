@@ -29,9 +29,9 @@ from typing import Optional
 
 from google.protobuf.message import DecodeError
 
-import tac.tac_pb2 as tac_pb2
 from tac.helpers.crypto import Crypto
 from tac.helpers.misc import TacError
+import tac.tac_pb2 as tac_pb2
 
 from oef.schema import Description
 

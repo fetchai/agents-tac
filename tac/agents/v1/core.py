@@ -25,10 +25,10 @@ from oef.agents import OEFAgent
 from oef.messages import CFP_TYPES, PROPOSE_TYPES, OEFErrorOperation
 from oef.query import Query, Constraint, GtEq
 
-from tac.game import AgentState, GameConfiguration, WorldState
+from tac.platform.game import AgentState, GameConfiguration, WorldState
 from tac.helpers.crypto import Crypto
 from tac.helpers.misc import TacError
-from tac.protocol import Register, Response, GameData, TransactionConfirmation, Error, Transaction, Cancelled, \
+from tac.platform.protocol import Register, Response, GameData, TransactionConfirmation, Error, Transaction, Cancelled, \
     StateUpdate, GetStateUpdate
 
 logger = logging.getLogger(__name__)

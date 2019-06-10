@@ -25,7 +25,7 @@ matplotlib.use('agg')
 import os
 import pylab as plt
 
-from tac.game import Game, AgentState
+from tac.platform.game import Game, AgentState
 
 
 class GameStats:

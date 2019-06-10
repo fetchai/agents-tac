@@ -23,11 +23,11 @@ from typing import Optional, Union
 from oef.messages import CFP, Decline, Propose, Accept, Message as SimpleMessage, \
     SearchResult, OEFErrorMessage, DialogueErrorMessage
 
-from tac.experimental.core.agent import Agent
-from tac.experimental.core.mail import FIPAMailBox, InBox, OutBox
-from tac.experimental.core.tac.game_instance import GameInstance, GamePhase
-from tac.experimental.core.tac.helpers import is_oef_message, is_controller_message
-from tac.experimental.core.tac.handlers import DialogueHandler, ControllerHandler, OEFHandler
+from tac.agents.v2.agent import Agent
+from tac.agents.v2.mail import FIPAMailBox, InBox, OutBox
+from tac.agents.v2.base.game_instance import GameInstance, GamePhase
+from tac.agents.v2.base.helpers import is_oef_message, is_controller_message
+from tac.agents.v2.base.handlers import DialogueHandler, ControllerHandler, OEFHandler
 
 OEFMessage = Union[SearchResult, OEFErrorMessage, DialogueErrorMessage]
 ControllerMessage = SimpleMessage

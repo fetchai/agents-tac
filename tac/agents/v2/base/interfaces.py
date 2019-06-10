@@ -22,8 +22,8 @@ from typing import Union
 
 from oef.messages import CFP, Propose, Accept, Decline, Message as SimpleMessage, SearchResult, OEFErrorMessage, DialogueErrorMessage
 
-from tac.experimental.core.tac.dialogues import Dialogue
-from tac.protocol import Error, TransactionConfirmation, StateUpdate, GameData
+from tac.agents.v2.base.dialogues import Dialogue
+from tac.platform.protocol import Error, TransactionConfirmation, StateUpdate, GameData
 
 AgentMessage = Union[SimpleMessage, CFP, Propose, Accept, Decline]
 

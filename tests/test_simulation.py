@@ -5,11 +5,11 @@ from threading import Thread
 
 import numpy as np
 import pytest
-from tac.game import Game
+from tac.platform.game import Game
 
-from tac.agents.baseline import BaselineAgent
+from tac.agents.v1.examples.baseline import BaselineAgent
 
-from tac.agents.controller import ControllerAgent, TACParameters
+from tac.platform.controller import ControllerAgent, TACParameters
 
 
 def _run_baseline_agent(agent: BaselineAgent) -> None:
