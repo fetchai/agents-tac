@@ -13,9 +13,9 @@ from oef.messages import PROPOSE_TYPES, CFP_TYPES, CFP, Decline, Propose, Accept
     SearchResult, OEFErrorOperation, OEFErrorMessage, DialogueErrorMessage
 from oef.query import Query, Constraint, GtEq
 
-from tac.game import AgentState, WorldState, GameConfiguration
+from tac.platform.game import AgentState, WorldState, GameConfiguration
 from tac.helpers.crypto import Crypto
-from tac.protocol import Error, TransactionConfirmation, StateUpdate, Response, GameData, Cancelled, Register
+from tac.platform.protocol import Error, TransactionConfirmation, StateUpdate, Response, GameData, Cancelled, Register
 
 logger = logging.getLogger(__name__)
 

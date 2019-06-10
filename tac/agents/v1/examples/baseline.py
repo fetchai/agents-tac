@@ -34,11 +34,11 @@ from oef.messages import CFP_TYPES, PROPOSE_TYPES
 from oef.query import Query
 from oef.schema import Description
 
-from tac.core import NegotiationAgent
-from tac.game import WorldState
+from tac.agents.v1.core import NegotiationAgent
+from tac.platform.game import WorldState
 from tac.helpers.misc import generate_transaction_id, build_query, get_goods_quantities_description, \
     TAC_SUPPLY_DATAMODEL_NAME, marginal_utility, TacError
-from tac.protocol import Transaction, TransactionConfirmation, Error, ErrorCode
+from tac.platform.protocol import Transaction, TransactionConfirmation, Error, ErrorCode
 
 if __name__ != "__main__":
     logger = logging.getLogger(__name__)

@@ -25,11 +25,11 @@ from typing import List, Optional, Set
 from oef.query import Query
 from oef.schema import Description
 
-from tac.experimental.core.tac.dialogues import Dialogues
-from tac.experimental.core.tac.lock_manager import LockManager
-from tac.game import AgentState, WorldState, GameConfiguration
+from tac.agents.v2.base.dialogues import Dialogues
+from tac.agents.v2.base.lock_manager import LockManager
+from tac.platform.game import AgentState, WorldState, GameConfiguration
 from tac.helpers.misc import build_query, get_goods_quantities_description, marginal_utility
-from tac.protocol import GameData
+from tac.platform.protocol import GameData
 
 
 class GamePhase(Enum):

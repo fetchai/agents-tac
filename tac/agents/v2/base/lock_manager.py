@@ -24,8 +24,8 @@ from collections import defaultdict, deque
 from threading import Thread
 from typing import Dict, Tuple, Deque
 
-from tac.experimental.core.tac.dialogues import DialogueLabel
-from tac.protocol import Transaction
+from tac.agents.v2.base.dialogues import DialogueLabel
+from tac.platform.protocol import Transaction
 
 logger = logging.getLogger(__name__)
 

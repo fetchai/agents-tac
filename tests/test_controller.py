@@ -4,9 +4,9 @@ import datetime
 from threading import Thread
 
 from oef.agents import OEFAgent
-from tac.protocol import Register
+from tac.platform.protocol import Register
 
-from tac.agents.controller import ControllerAgent, TACParameters
+from tac.platform.controller import ControllerAgent, TACParameters
 from tac.helpers.crypto import Crypto
 
 

@@ -10,8 +10,8 @@ from typing import Optional
 import numpy as np
 from visdom import Visdom
 
-from tac.game import Game
-from tac.stats import GameStats
+from tac.platform.game import Game
+from tac.platform.stats import GameStats
 
 CUR_PATH = inspect.getfile(inspect.currentframe())
 CUR_DIR = os.path.dirname(CUR_PATH)

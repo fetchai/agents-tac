@@ -44,13 +44,13 @@ import dateutil
 from oef.agents import OEFAgent
 from oef.schema import Description, DataModel, AttributeSchema
 
-from tac.game import Game, GameTransaction
 from tac.gui.monitor import Monitor, NullMonitor
-from tac.helpers.misc import generate_pbks
 from tac.helpers.crypto import Crypto
-from tac.protocol import Response, Request, Register, Unregister, Error, GameData, \
+from tac.helpers.misc import generate_pbks
+from tac.platform.game import Game, GameTransaction
+from tac.platform.protocol import Response, Request, Register, Unregister, Error, GameData, \
     Transaction, TransactionConfirmation, ErrorCode, Cancelled, GetStateUpdate, StateUpdate
-from tac.stats import GameStats
+from tac.platform.stats import GameStats
 
 if __name__ != "__main__":
     logger = logging.getLogger(__name__)

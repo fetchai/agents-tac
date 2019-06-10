@@ -1,7 +1,10 @@
 # tac
-Agents for the Trading Agents Competition
+Framework for the Trading Agents Competition
 
 ## Available agents
 
-- `controller`: the agent that handles the competition;
-- `baseline`: a baseline agent with a trivial greedy strategy;
+- `agents`: the agent framework and sample implementations;
+- `experimental`: experimental additions to the framework;
+- `gui`: the gui to monitor a competition
+- `helpers`: supporting modules
+- `platform`: the base components of the competition framework excluding the agents

@@ -32,11 +32,11 @@ from typing import List
 import dateutil
 import math
 
-from tac.agents.baseline import BaselineAgent
-from tac.agents.controller import ControllerAgent, TACParameters
+from tac.agents.v1.examples.baseline import BaselineAgent
 from tac.gui.monitor import VisdomMonitor, NullMonitor
 from tac.helpers.plantuml import plantuml_gen
-from tac.stats import GameStats
+from tac.platform.controller import ControllerAgent, TACParameters
+from tac.platform.stats import GameStats
 
 logger = logging.getLogger("tac")
 

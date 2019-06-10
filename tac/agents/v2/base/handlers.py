@@ -23,14 +23,13 @@ from typing import Any, Union
 from oef.messages import CFP, Decline, Propose, Accept, Message as SimpleMessage, \
     SearchResult, OEFErrorMessage, DialogueErrorMessage
 
-from tac.experimental.core.agent import Liveness
-from tac.experimental.core.tac.actions import DialogueActions, ControllerActions, OEFActions
-from tac.experimental.core.tac.game_instance import GameInstance, GamePhase
-from tac.experimental.core.tac.reactions import DialogueReactions, ControllerReactions, OEFReactions
-
-from tac.experimental.core.mail import OutBox
+from tac.agents.v2.agent import Liveness
+from tac.agents.v2.base.actions import DialogueActions, ControllerActions, OEFActions
+from tac.agents.v2.base.game_instance import GameInstance, GamePhase
+from tac.agents.v2.base.reactions import DialogueReactions, ControllerReactions, OEFReactions
+from tac.agents.v2.mail import OutBox
 from tac.helpers.crypto import Crypto
-from tac.protocol import Error, TransactionConfirmation, StateUpdate, Response, GameData, Cancelled
+from tac.platform.protocol import Error, TransactionConfirmation, StateUpdate, Response, GameData, Cancelled
 
 logger = logging.getLogger(__name__)
 

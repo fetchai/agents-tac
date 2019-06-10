@@ -22,7 +22,7 @@ import logging
 from abc import abstractmethod
 from typing import Optional
 
-from tac.experimental.core.mail import MailBox, InBox, OutBox
+from tac.agents.v2.mail import MailBox, InBox, OutBox
 from tac.helpers.crypto import Crypto
 
 logger = logging.getLogger(__name__)

@@ -1,6 +1,6 @@
 import argparse
 
-from tac.experimental.core.tac.participant_agent import ParticipantAgent
+from tac.agents.v2.base.participant_agent import ParticipantAgent
 
 
 class TACRegistrationAgent(ParticipantAgent):

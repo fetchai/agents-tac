@@ -39,8 +39,8 @@ from typing import List, Dict, Any, Optional
 
 from tac.helpers.misc import generate_money_endowments, generate_good_endowments, generate_utility_params, from_iso_format, \
     logarithmic_utility, generate_equilibrium_prices_and_holdings, determine_scaling_factor
-from tac.protocol import Transaction
 from tac.helpers.price_model import GoodPriceModel
+from tac.platform.protocol import Transaction
 
 Endowment = List[int]  # an element e_j is the endowment of good j.
 UtilityParams = List[float]  # an element u_j is the utility value of good j.
