@@ -27,7 +27,7 @@ This repository contains submodules. Clone with recursive strategy:
 - All python specific dependencies are specified in the Pipfile.
 - The project requires oef-search-pluto which can be pulled here:
 
-	  docker pull qati/oef-search:latest
+	  docker pull fetchai/oef-search:latest
 
 ## Preliminaries
 

@@ -200,7 +200,11 @@ class RegisterHandler(RequestHandler):
         if request.public_key in self.controller_agent.game_handler.registered_agents:
             error_msg = "[{}]: Agent already registered: '{}'".format(self.controller_agent.name, self.controller_agent.game_handler.agent_pbk_to_name[request.public_key])
             logger.error(error_msg)
-            return Error(request.public_key, ErrorCode.AGENT_ALREADY_REGISTERED)
+            return Error(request.public_key, self.controller_agent.crypto, ErrorCode.AGENT_PBK_ALREADY_REGISTERED)
+        if request.agent_name in self.controller_agent.game_handler.agent_pbk_to_name.values():
+            error_msg = "[{}]: Agent with this name already registered: '{}'".format(self.controller_agent.name, request.agent_name)
+            logger.error(error_msg)
+            return Error(request.public_key, self.controller_agent.crypto, ErrorCode.AGENT_NAME_ALREADY_REGISTERED)
         else:
             self.controller_agent.game_handler.agent_pbk_to_name[request.public_key] = request.agent_name
             logger.debug("[{}]: Agent registered: '{}'".format(self.controller_agent.name, self.controller_agent.game_handler.agent_pbk_to_name[request.public_key]))
@@ -221,7 +225,7 @@ class UnregisterHandler(RequestHandler):
         if request.public_key not in self.controller_agent.game_handler.registered_agents:
             error_msg = "[{}]: Agent not registered: '{}'".format(self.controller_agent.name, request.public_key)
             logger.error(error_msg)
-            return Error(request.public_key, ErrorCode.AGENT_NOT_REGISTERED)
+            return Error(request.public_key, self.controller_agent.crypto, ErrorCode.AGENT_NOT_REGISTERED)
         else:
             logger.debug("[{}]: Agent unregistered: '{}'".format(self.controller_agent.name, self.controller_agent.game_handler.agent_pbk_to_name[request.public_key]))
             self.controller_agent.game_handler.registered_agents.remove(request.public_key)
@@ -298,12 +302,12 @@ class TransactionHandler(RequestHandler):
 
     def _handle_invalid_transaction(self, request: Transaction) -> Response:
         """Handle an invalid transaction."""
-        return Error(request.public_key, ErrorCode.TRANSACTION_NOT_VALID,
+        return Error(request.public_key, self.controller_agent.crypto, ErrorCode.TRANSACTION_NOT_VALID,
                      details={"transaction_id": request.transaction_id})
 
     def _handle_non_matching_transaction(self, request: Transaction) -> Response:
         """Handle non-matching transaction."""
-        return Error(request.public_key, ErrorCode.TRANSACTION_NOT_MATCHING)
+        return Error(request.public_key, self.controller_agent.crypto, ErrorCode.TRANSACTION_NOT_MATCHING)
 
 
 class GetStateUpdateHandler(RequestHandler):
@@ -320,7 +324,7 @@ class GetStateUpdateHandler(RequestHandler):
         if request.public_key not in self.controller_agent.game_handler.registered_agents:
             error_msg = "[{}]: Agent not registered: '{}'".format(self.controller_agent.name, request.public_key)
             logger.error(error_msg)
-            return Error(request.public_key, ErrorCode.AGENT_NOT_REGISTERED)
+            return Error(request.public_key, self.controller_agent.crypto, ErrorCode.AGENT_NOT_REGISTERED)
         else:
             transactions = self.controller_agent.game_handler.confirmed_transaction_per_participant[request.public_key]  # type: List[Transaction]
             initial_game_data = self.controller_agent.game_handler.game_data_per_participant[request.public_key]  # type: GameData
@@ -376,11 +380,11 @@ class ControllerDispatcher(object):
         """
         handle_request = self.handlers.get(type(request), None)  # type: RequestHandler
         if handle_request is None:
-            return Error(request.public_key, ErrorCode.REQUEST_NOT_VALID)
+            return Error(request.public_key, self.controller_agent.crypto, ErrorCode.REQUEST_NOT_VALID)
         try:
             return handle_request(request)
         except Exception as e:
-            return Error(request.public_key, ErrorCode.GENERIC_ERROR)
+            return Error(request.public_key, self.controller_agent.crypto, ErrorCode.GENERIC_ERROR)
 
     def decode(self, msg: bytes, public_key: str) -> Request:
         """
@@ -459,7 +463,7 @@ class GameHandler:
         nb_agents = len(agent_pbks)
 
         good_pbks = generate_pbks(self.tac_parameters.nb_goods, 'good')
-        agent_names = generate_pbks(nb_agents, 'agent')
+        agent_names = [self.agent_pbk_to_name[agent_pbk] for agent_pbk in agent_pbks]
 
         game = Game.generate_game(nb_agents,
                                   self.tac_parameters.nb_goods,
@@ -508,13 +512,13 @@ class GameHandler:
         :return True if the competition has been successfully started. False otherwise.
         """
         # just to make names shorter
-        nb_reg_agents = len(self.registered_agents)
         min_nb_agents = self.tac_parameters.min_nb_agents
 
         seconds_to_wait = self.tac_parameters.registration_timedelta.seconds
         seconds_to_wait = 0 if seconds_to_wait < 0 else seconds_to_wait
         logger.debug("[{}]: Waiting for {} seconds...".format(self.controller_agent.name, seconds_to_wait))
         time.sleep(seconds_to_wait)
+        nb_reg_agents = len(self.registered_agents)
         logger.debug("[{}]: Check if we can start the competition.".format(self.controller_agent.name))
         if len(self.registered_agents) >= self.tac_parameters.min_nb_agents:
             logger.debug("[{}]: Start competition. Registered agents: {}, minimum number of agents: {}."
@@ -755,7 +759,8 @@ def main():
 
     finally:
         if agent is not None:
-            agent.terminate()
+            # agent.terminate()
+            pass
 
 
 if __name__ == '__main__':
