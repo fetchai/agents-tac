@@ -23,6 +23,6 @@ docker run -it -p 20000:20000 -p 3333:3333 -p 40000:40000 fetchai/oef-search:v1 
 
 - and two agents
 
-      python3 tac/agents/v2/examples/baseline.py --name reg_agent_1
+      python3 tac/agents/v2/examples/baseline.py --name agent_1
 
-      python3 tac/agents/v2/examples/baseline.py --name reg_agent_2
+      python3 tac/agents/v2/examples/baseline.py --name agent_2
