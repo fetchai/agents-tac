@@ -30,7 +30,8 @@ python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_
     
 - Run the simulation example with the gui flag to visualize data in realtime
       
-      python examples/simulation_demo/tac_agent_spawner.py --gui
+      python examples/simulation_demo/v1/tac_agent_spawner.py --gui
+      python examples/simulation_demo/v2/tac_agent_spawner.py --gui
 
 and then open `http://localhost:8097` in your browser.
 
