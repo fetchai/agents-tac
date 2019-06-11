@@ -23,7 +23,7 @@ def pull_image(run_sudo, img):
     c = []
 
     if run_sudo:
-        c += ['sudo']
+        c += [ 'sudo' ]
     c += [
         'docker',
         'pull',
@@ -45,7 +45,7 @@ def parse_command(j):
             continue
         cmd.extend(
             [
-                "--" + key,
+                "--"+key,
                 str(j[key])
             ]
         )
@@ -73,7 +73,7 @@ def launch_job(args, j):
     print("Work dir: ", work_dir)
     c += [
         "-v",
-        work_dir + ":/config"
+        work_dir+":/config"
     ]
 
     for arg in j['params']:
@@ -104,9 +104,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config', required=True, type=str, help='Publish the image to GCR')
     parser.add_argument("--sudo", required=False, action='store_true', help="Run docker as root")
-    parser.add_argument("--background", required=False, action='store_true', help="Run image in background.")
+    parser.add_argument("--background", required=False,  action='store_true', help="Run image in background.")
     parser.add_argument("--cmd", required=False, type=str, default="oef-search", help="The available commands are defined"
-                                                                                      " in the config file "
-                                                                                      "('cmd' dictionary) ")
+                                                                                    " in the config file "
+                                                                                    "('cmd' dictionary) ")
     parser.add_argument('rest', nargs=argparse.REMAINDER)
     main(parser.parse_args())

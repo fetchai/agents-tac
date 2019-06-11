@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "9f68550ac8a2591de2f55d730a8ee00c0762e28941e4b8a161ff8dfbe7092f79"
+            "sha256": "5d6847928c099f1a738be018cb4b8cf677af1327a42c742f6ff58e4adb640330"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -22,6 +22,15 @@
                 "sha256:9d5c20441baf0cb60a4ac34cc447c6c189024b6b4c6cd7877034f4965c464e49"
             ],
             "version": "==0.24.0"
+        },
+        "base58": {
+            "hashes": [
+                "sha256:1e42993c0628ed4f898c03b522b26af78fb05115732549b21a028bc4633d19ab",
+                "sha256:6aa0553e477478993588303c54659d15e3c17ae062508c854a8b752d07c716bd",
+                "sha256:9a793c599979c497800eb414c852b80866f28daaed5494703fc129592cc83e60"
+            ],
+            "index": "pypi",
+            "version": "==1.0.3"
         },
         "certifi": {
             "hashes": [
@@ -805,9 +814,9 @@
         },
         "prometheus-client": {
             "hashes": [
-                "sha256:1b38b958750f66f208bcd9ab92a633c0c994d8859c831f7abc1f46724fcee490"
+                "sha256:ee0c90350595e4a9f36591f291e6f9933246ea67d7cd7d1d6139a9781b14eaae"
             ],
-            "version": "==0.6.0"
+            "version": "==0.7.0"
         },
         "prompt-toolkit": {
             "hashes": [
@@ -964,11 +973,11 @@
         },
         "sphinx": {
             "hashes": [
-                "sha256:2c5becc0fd6706dc0aeb4703f9f1f8a1d1eecacf02e9ac5943cbae48b11e5e42",
-                "sha256:7a359a91fb04054ec77d68ff97cb8728f8cc322e25f22dc94299d67e0e6a7123"
+                "sha256:15143166e786c7faa76fa990d3b6b38ebffe081ef81cffd1d656b07f3b28a1fa",
+                "sha256:5fd62ba64235d77a81554d47ff6b17578171b6dbbc992221e9ebc684898fff59"
             ],
             "index": "pypi",
-            "version": "==2.1.0"
+            "version": "==2.1.1"
         },
         "sphinxcontrib-applehelp": {
             "hashes": [
@@ -1000,10 +1009,10 @@
         },
         "sphinxcontrib-plantuml": {
             "hashes": [
-                "sha256:861c8ec78805598ba32e975dddf911716cd6461fc9c992a6eedf0b5a4c1a7e7a"
+                "sha256:1e388ea0c8bc933adecf438f5243857ca238050a107d2768e5ffb490bbb733d7"
             ],
             "index": "pypi",
-            "version": "==0.16.1"
+            "version": "==0.17"
         },
         "sphinxcontrib-qthelp": {
             "hashes": [

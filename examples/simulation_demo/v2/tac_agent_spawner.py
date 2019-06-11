@@ -182,9 +182,7 @@ def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port:
 
 def run_baseline_agent(agent: BaselineAgent) -> None:
     """Run a baseline agent."""
-    agent.connect()
-    agent.search_for_tac()
-    agent.run()
+    agent.start()
 
 
 def run_controller(tac_controller: ControllerAgent, tac_parameters: TACParameters) -> None:

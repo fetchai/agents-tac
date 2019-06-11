@@ -125,6 +125,7 @@ class Dialogue(ProtocolInterface):
             result = True
         else:
             result = False
+            import pdb; pdb.set_trace()
         return result
 
     def outgoing_extend(self, messages: List[AgentMessage]) -> None:
