@@ -23,6 +23,7 @@ matplotlib = "*"
 python-dateutil = "*"
 visdom = "*"
 cryptography = "*"
+base58 = "*"
 
 [requires]
 python_version = "3.7"

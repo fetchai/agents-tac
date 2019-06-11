@@ -53,7 +53,7 @@ This repository contains submodules. Clone with recursive strategy:
 
 	  python setup.py protoc
 
-- To run tests:
+- To run tests (ensure no oef docker containers are running):
 
       tox -e py37
 

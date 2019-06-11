@@ -14,8 +14,17 @@ docker run -it -p 20000:20000 -p 3333:3333 -p 40000:40000 fetchai/oef-search:v1 
     --core_port 3333 \
     --dap_port 30000 \
     --director_api_port 40000
+```
+or
 
+```
 python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config.json
+```
+
+or
+
+```
+python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config_latest.json
 ``` 
 
 - Run the simulation example:

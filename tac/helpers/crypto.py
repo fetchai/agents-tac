@@ -17,6 +17,7 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+import base58
 import logging
 
 from cryptography.hazmat.backends import default_backend
@@ -74,21 +75,22 @@ class Crypto(object):
 
         :param pbk: the public key as an object
 
-        :return: the public key as a string
+        :return: the public key as a string (base58)
         """
         serialized_public_key = pbk.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)
         serialized_public_key = b''.join(serialized_public_key.splitlines()[1:-1])
-        return serialized_public_key.decode("utf-8")
+        serialized_public_key = base58.b58encode(serialized_public_key).decode('utf-8')
+        return serialized_public_key
 
     def _pbk_to_obj(self, pbk: str) -> object:
         """
         Converts the public key from string to object.
 
-        :param pbk: the public key as a string
+        :param pbk: the public key as a string (base58)
 
         :return: the public key object
         """
-        serialized_pbk = str.encode(pbk)
+        serialized_pbk = base58.b58decode(str.encode(pbk))
         serialized_pbk = serialized_pbk[0:64] + b'\n' + serialized_pbk[64:128] + b'\n' + serialized_pbk[128:] + b'\n'
         serialized_pbk = b'-----BEGIN PUBLIC KEY-----\n' + serialized_pbk + b'-----END PUBLIC KEY-----\n'
         pbk_object = serialization.load_pem_public_key(serialized_pbk, backend=default_backend())
