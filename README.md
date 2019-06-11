@@ -42,6 +42,10 @@ This repository contains submodules. Clone with recursive strategy:
 
       python3 setup.py install
 
+## 🤖 🤖 🤖 TAC Simulation 🤖 🤖 🤖 
+
+[For simulation go here](../blob/master/examples/simulation_demo)
+
 ## Development
 
 - Install development dependencies:
