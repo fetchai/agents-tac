@@ -1,4 +1,5 @@
 # tac-agents
+
 Framework for Trading Agents Competition
 
 ## Cloning
@@ -24,8 +25,10 @@ This repository contains submodules. Clone with recursive strategy:
 ## Dependencies
 
 - The project requires the [Google Protocol Buffers](https://developers.google.com/protocol-buffers/) compiler. A guide on how to install it is found [here](https://fetchai.github.io/oef-sdk-python/user/install.html#protobuf-compiler).
-- All python specific dependencies are specified in the Pipfile.
+- All python specific dependencies are specified in the Pipfile (and installed via the commands specified in 'Preliminaries').
 - The project requires oef-search-pluto which can be pulled here:
+	
+	  docker pull fetchai/oef-search:v1
 
 	  docker pull fetchai/oef-search:latest
 
