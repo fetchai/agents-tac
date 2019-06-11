@@ -20,7 +20,7 @@
 import logging
 from typing import List, Union, Optional
 
-from oef.messages import CFP, Propose, Accept, Decline, Message as SimpleMessage, SearchResult, OEFErrorMessage, DialogueErrorMessage
+from oef.messages import CFP, Propose, Accept, Decline, Message as ByteMessage, SearchResult, OEFErrorMessage, DialogueErrorMessage
 
 from tac.agents.v2.agent import Liveness
 from tac.agents.v2.base.behaviours import FIPABehaviour
@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 STARTING_MESSAGE_ID = 1
 STARTING_MESSAGE_TARGET = 0
 
-AgentMessage = Union[SimpleMessage, CFP, Propose, Accept, Decline]
+AgentMessage = Union[ByteMessage, CFP, Propose, Accept, Decline]
 
 
 class ControllerReactions(ControllerReactionInterface):
@@ -224,7 +224,11 @@ class DialogueReactions(DialogueReactionInterface):
         dialogue = self.dialogues.create(msg.destination, msg.destination, is_seller)
         logger.debug("[{}]: saving dialogue: dialogue_id={}".format(self.name, dialogue.dialogue_label.dialogue_id))
         response = self.handle(msg, dialogue)
-        self.out_box.out_queue.put(response)
+        if isinstance(response, List):
+            for res in response:
+                self.out_box.out_queue.put(res)
+        else:
+            self.out_box.out_queue.put(response)
 
     def on_existing_dialogue(self, msg: AgentMessage) -> None:
         """
@@ -233,17 +237,22 @@ class DialogueReactions(DialogueReactionInterface):
         dialogue = self.dialogues.get_dialogue(msg.dialogue_id, msg.destination, self.crypto.public_key)
 
         if not dialogue.is_message_consistent(msg):
-            response = DialogueErrorMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination)
+            logger.debug("[{}]: this message is not consistent: {}".format(self.name, type(msg)))
+            response = ByteMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination, b'This message is not consistent with the dialogue.')
         else:
             response = self.handle(msg, dialogue)
-        self.out_box.out_queue.put(response)
+        if isinstance(response, List):
+            for res in response:
+                self.out_box.out_queue.put(res)
+        else:
+            self.out_box.out_queue.put(response)
 
     def on_unidentified_dialogue(self, msg: AgentMessage) -> None:
         """
         React to an unidentified dialogue.
         """
         logger.debug("[{}]: Unidentified dialogue.".format(self.name))
-        response = DialogueErrorMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination)
+        response = ByteMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination, b'This message belongs to an unidentified dialogue.')
         self.out_box.out_queue.put(response)
 
     def handle(self, msg: AgentMessage, dialogue: Dialogue) -> Optional[AgentMessage]:

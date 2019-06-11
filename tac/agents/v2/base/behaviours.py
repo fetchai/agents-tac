@@ -77,7 +77,7 @@ class FIPABehaviour:
             response = Decline(new_msg_id, cfp.dialogue_id, cfp.destination, cfp.msg_id)
         else:
             proposals = [random.choice(self.game_instance.get_proposals(cfp.query, dialogue.is_seller))]
-            self.game_instance.lock_manager.store_proposals(proposals, new_msg_id, cfp.dialogue_id, cfp.destination, dialogue.is_seller, self.crypto)
+            self.game_instance.lock_manager.store_proposals(proposals, new_msg_id, dialogue, cfp.destination, dialogue.is_seller, self.crypto)
             logger.debug("[{}]: sending to {} a Propose{}".format(self.name, cfp.destination,
                                                                   pprint.pformat({
                                                                       "msg_id": new_msg_id,
@@ -111,7 +111,7 @@ class FIPABehaviour:
         if self._is_profitable_transaction(transaction, dialogue):
             logger.debug("[{}]: Accepting propose (as {}).".format(self.name, dialogue.role))
             self.game_instance.lock_manager.add_lock(transaction, as_seller=dialogue.is_seller)
-            self.game_instance.lock_manager.add_pending_acceptances(propose.dialogue_id, propose.destination, new_msg_id, transaction)
+            self.game_instance.lock_manager.add_pending_acceptances(dialogue, new_msg_id, transaction)
             response = Accept(new_msg_id, propose.dialogue_id, propose.destination, propose.msg_id)
         else:
             logger.debug("[{}]: Declining propose (as {})".format(self.name, dialogue.role))
@@ -160,7 +160,7 @@ class FIPABehaviour:
         if self.game_instance.is_world_modeling:
             if dialogue.dialogue_label in self.game_instance.lock_manager.pending_tx_proposals and \
                     decline.target in self.game_instance.lock_manager.pending_tx_proposals[dialogue.dialogue_label]:
-                transaction = self.game_instance.lock_manager.pop_pending_proposal(decline.dialogue_id, decline.destination, decline.target)
+                transaction = self.game_instance.lock_manager.pop_pending_proposal(dialogue, decline.target)
                 self.game_instance.world_state.update_on_decline(transaction)
 
         transaction_id = generate_transaction_id(self.crypto.public_key, decline.destination, decline.dialogue_id, dialogue.is_seller)
@@ -198,13 +198,13 @@ class FIPABehaviour:
 
         :return: None
         """
-        transaction = self.lock_manager.pop_pending_proposal(accept.dialogue_id, accept.destination, accept.target)
+        transaction = self.game_instance.lock_manager.pop_pending_proposal(dialogue, accept.target)
         new_msg_id = accept.msg_id + 1
         if self._is_profitable_transaction(transaction, dialogue):
             if self.game_instance.is_world_modeling:
                 self.game_instance.world_state.update_on_accept(transaction)
             logger.debug("[{}]: Locking the current state (as {}).".format(self.name, dialogue.role))
-            self.lock_manager.add_lock(transaction, as_seller=dialogue.is_seller)
+            self.game_instance.lock_manager.add_lock(transaction, as_seller=dialogue.is_seller)
             result = []
             result.append(ByteMessage(new_msg_id, accept.dialogue_id, self.game_instance.controller_pbk, transaction.serialize()))
             result.append(Accept(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id))
@@ -224,6 +224,6 @@ class FIPABehaviour:
         """
         logger.debug("[{}]: on match accept".format(self.name))
 
-        transaction = self.game_instance.lock_manager.pop_pending_acceptances(accept.dialogue_id, accept.destination, accept.target)
+        transaction = self.game_instance.lock_manager.pop_pending_acceptances(dialogue, accept.target)
         result = ByteMessage(accept.msg_id + 1, accept.dialogue_id, self.game_instance.controller_pbk, transaction.serialize())
         return result

@@ -116,11 +116,12 @@ class Dialogue(ProtocolInterface):
         """
         last_sent_message = self.outgoing_messages[-1:]
         if last_sent_message == []:
-            result = False
-        elif (isinstance(last_sent_message, CFP) and isinstance(msg, Propose)) or \
-             (isinstance(last_sent_message, Propose) and isinstance(msg, Accept)) or \
-             (isinstance(last_sent_message, Propose) and isinstance(msg, Decline)) or \
-             (isinstance(last_sent_message, Accept) and isinstance(msg, Accept)):
+            return False
+        last_sent_message = last_sent_message[0]
+        if (isinstance(last_sent_message, CFP) and isinstance(msg, Propose)) or \
+           (isinstance(last_sent_message, Propose) and isinstance(msg, Accept)) or \
+           (isinstance(last_sent_message, Propose) and isinstance(msg, Decline)) or \
+           (isinstance(last_sent_message, Accept) and isinstance(msg, Accept)):
             result = True
         else:
             result = False

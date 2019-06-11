@@ -18,7 +18,7 @@
 #
 # ------------------------------------------------------------------------------
 import logging
-from asyncio import AbstractEventLoop
+import asyncio
 from queue import Queue, Empty
 from threading import Thread
 from typing import List, Optional, Any, Union
@@ -43,9 +43,8 @@ class MailBox(OEFAgent):
     The MailBox enqueues incoming messages, searches and errors from the OEF and sends outgoing messages to the OEF.
     """
 
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333,
-                 loop: Optional[AbstractEventLoop] = None):
-        super().__init__(public_key, oef_addr, oef_port, loop)
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333):
+        super().__init__(public_key, oef_addr, oef_port, loop=asyncio.new_event_loop())
         self.connect()
         self.in_queue = Queue()
         self.out_queue = Queue()
@@ -174,8 +173,11 @@ class OutBox(object):
             elif isinstance(out, Decline):
                 logger.debug("Outgoing decline: msg_id={}, dialogue_id={}, origin={}, target={}".format(out.msg_id, out.dialogue_id, out.destination, out.target))
                 self.mail_box.send_accept(out.msg_id, out.dialogue_id, out.destination, out.target)
+            elif isinstance(out, ByteMessage):
+                logger.debug("Outgoing dialogue error message: msg_id={}, dialogue_id={}, origin={}, message={}".format(out.msg_id, out.dialogue_id, out.destination, out.msg))
+                # self.mail_box.send_message(out.msg_id, out.dialogue_id, out.destination, out.target, out.message)
             else:
-                logger.debug("Unknown object on out queue...")
+                logger.debug("Unknown object on out queue... type={}".format(type(out)))
 
 
 class FIPAMailBox(MailBox):
@@ -183,9 +185,8 @@ class FIPAMailBox(MailBox):
     The FIPAMailBox enqueues additionally FIPA specific messages.
     """
 
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333,
-                 loop: Optional[AbstractEventLoop] = None):
-        super().__init__(public_key, oef_addr, oef_port, loop)
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333):
+        super().__init__(public_key, oef_addr, oef_port)
 
     def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES):
         self.in_queue.put(CFP(msg_id, dialogue_id, origin, target, query))
