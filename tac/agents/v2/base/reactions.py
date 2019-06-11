@@ -222,7 +222,7 @@ class DialogueReactions(DialogueReactionInterface):
         """
         is_seller = msg.query.model.name == TAC_SUPPLY_DATAMODEL_NAME
         dialogue = self.dialogues.create(msg.destination, msg.destination, is_seller)
-        logger.debug("[{}]: saving dialogue: dialogue_id={}".format(self.name, dialogue.dialogue_lable.dialogue_id))
+        logger.debug("[{}]: saving dialogue: dialogue_id={}".format(self.name, dialogue.dialogue_label.dialogue_id))
         response = self.handle(msg, dialogue)
         self.out_box.out_queue.put(response)
 

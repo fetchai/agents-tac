@@ -77,7 +77,7 @@ class FIPABehaviour:
             response = Decline(new_msg_id, cfp.dialogue_id, cfp.destination, cfp.msg_id)
         else:
             proposals = [random.choice(self.game_instance.get_proposals(cfp.query, dialogue.is_seller))]
-            self.game_instance.lock_manager.store_proposals(proposals, new_msg_id, cfp.dialogue_id, cfp.destination, dialogue.is_seller)
+            self.game_instance.lock_manager.store_proposals(proposals, new_msg_id, cfp.dialogue_id, cfp.destination, dialogue.is_seller, self.crypto)
             logger.debug("[{}]: sending to {} a Propose{}".format(self.name, cfp.destination,
                                                                   pprint.pformat({
                                                                       "msg_id": new_msg_id,

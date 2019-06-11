@@ -27,6 +27,7 @@ from typing import Dict, Tuple, Deque, List
 from oef.schema import Description
 
 from tac.agents.v2.base.dialogues import DialogueLabel
+from tac.helpers.crypto import Crypto
 from tac.helpers.misc import generate_transaction_id
 from tac.platform.protocol import Transaction
 
@@ -208,7 +209,7 @@ class LockManager(object):
             self._cleanup_locks_task_is_running = False
             self._cleanup_locks_task.join()
 
-    def store_proposals(self, proposals: List[Description], new_msg_id: int, dialogue_id: int, origin: str, is_seller: bool) -> None:
+    def store_proposals(self, proposals: List[Description], new_msg_id: int, dialogue_id: int, origin: str, is_seller: bool, crypto: Crypto) -> None:
         """
         Store proposals as pending transactions.
 
@@ -216,16 +217,17 @@ class LockManager(object):
         :param dialogue_id: the dialogue id
         :param origin: the public key of the message sender.
         :param is_seller: Boolean indicating the role of the agent
+        :param crypto: the crypto object
 
         :return: None
         """
         for proposal in proposals:
             proposal_id = new_msg_id  # TODO fix if more than one proposal!
-            transaction_id = generate_transaction_id(self.public_key, origin, dialogue_id, is_seller)  # TODO fix if more than one proposal!
+            transaction_id = generate_transaction_id(crypto.public_key, origin, dialogue_id, is_seller)  # TODO fix if more than one proposal!
             transaction = Transaction.from_proposal(proposal=proposal,
                                                     transaction_id=transaction_id,
                                                     is_buyer=not is_seller,
                                                     counterparty=origin,
-                                                    sender=self.public_key,
-                                                    crypto=self.crypto)
+                                                    sender=crypto.public_key,
+                                                    crypto=crypto)
             self.add_pending_proposal(dialogue_id, origin, proposal_id, transaction)

@@ -165,6 +165,17 @@ class OutBox(object):
             elif isinstance(out, CFP):
                 logger.debug("Outgoing cfp: msg_id={}, dialogue_id={}, origin={}, target={}, query={}".format(out.msg_id, out.dialogue_id, out.destination, out.target, out.query))
                 self.mail_box.send_cfp(out.msg_id, out.dialogue_id, out.destination, out.target, out.query)
+            elif isinstance(out, Propose):
+                logger.debug("Outgoing propose: msg_id={}, dialogue_id={}, origin={}, target={}, propose={}".format(out.msg_id, out.dialogue_id, out.destination, out.target, out.proposals[0].values))
+                self.mail_box.send_propose(out.msg_id, out.dialogue_id, out.destination, out.target, out.proposals)
+            elif isinstance(out, Accept):
+                logger.debug("Outgoing accept: msg_id={}, dialogue_id={}, origin={}, target={}".format(out.msg_id, out.dialogue_id, out.destination, out.target))
+                self.mail_box.send_accept(out.msg_id, out.dialogue_id, out.destination, out.target)
+            elif isinstance(out, Decline):
+                logger.debug("Outgoing decline: msg_id={}, dialogue_id={}, origin={}, target={}".format(out.msg_id, out.dialogue_id, out.destination, out.target))
+                self.mail_box.send_accept(out.msg_id, out.dialogue_id, out.destination, out.target)
+            else:
+                logger.debug("Unknown object on out queue...")
 
 
 class FIPAMailBox(MailBox):

@@ -46,7 +46,8 @@ class DialogueHandler(DialogueActions, DialogueReactions):
     """
 
     def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: OutBox, name: str):
-        super().__init__(crypto, liveness, game_instance, out_box, name)
+        DialogueActions.__init__(self, crypto, liveness, game_instance, out_box, name)
+        DialogueReactions.__init__(self, crypto, liveness, game_instance, out_box, name)
 
     def handle_dialogue_message(self, msg: AgentMessage) -> None:
         """
@@ -68,7 +69,8 @@ class DialogueHandler(DialogueActions, DialogueReactions):
 class ControllerHandler(ControllerActions, ControllerReactions):
 
     def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', name: str):
-        super().__init__(crypto, liveness, game_instance, out_box, name)
+        ControllerActions.__init__(self, crypto, liveness, game_instance, out_box, name)
+        ControllerReactions.__init__(self, crypto, liveness, game_instance, out_box, name)
 
     def handle_controller_message(self, msg: ControllerMessage) -> None:
         """
@@ -109,7 +111,8 @@ class ControllerHandler(ControllerActions, ControllerReactions):
 class OEFHandler(OEFActions, OEFReactions):
 
     def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', name: str):
-        super().__init__(crypto, liveness, game_instance, out_box, name)
+        OEFActions.__init__(self, crypto, liveness, game_instance, out_box, name)
+        OEFReactions.__init__(self, crypto, liveness, game_instance, out_box, name)
 
     def handle_oef_message(self, msg: OEFMessage) -> None:
         """
