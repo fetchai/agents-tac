@@ -22,10 +22,11 @@ import pprint
 import random
 from typing import Union, List
 
-from oef.messages import CFP, Decline, Propose, Accept, Message as ByteMessage
+from oef.messages import CFP, Decline, Propose, Accept
 
 from tac.agents.v2.base.game_instance import GameInstance
 from tac.agents.v2.base.dialogues import Dialogue
+from tac.agents.v2.mail import OutContainer
 from tac.helpers.crypto import Crypto
 from tac.helpers.misc import generate_transaction_id
 from tac.platform.protocol import Transaction
@@ -170,7 +171,7 @@ class FIPABehaviour:
         # TODO close dialogue with a CloseDialogue message object.
         return None
 
-    def on_accept(self, accept: Accept, dialogue: Dialogue) -> Union[Decline, List[Union[ByteMessage, Accept]], ByteMessage]:
+    def on_accept(self, accept: Accept, dialogue: Dialogue) -> Union[Decline, List[Union[OutContainer, Accept]], OutContainer]:
         """
         On Accept dispatcher.
 
@@ -189,7 +190,7 @@ class FIPABehaviour:
             result = self._on_initial_accept(accept, dialogue)
         return result
 
-    def _on_initial_accept(self, accept: Accept, dialogue: Dialogue) -> Union[Decline, List[Union[ByteMessage, Accept]]]:
+    def _on_initial_accept(self, accept: Accept, dialogue: Dialogue) -> Union[Decline, List[Union[OutContainer, Accept]]]:
         """
         Initial Accept handler.
 
@@ -206,14 +207,14 @@ class FIPABehaviour:
             logger.debug("[{}]: Locking the current state (as {}).".format(self.name, dialogue.role))
             self.game_instance.lock_manager.add_lock(transaction, as_seller=dialogue.is_seller)
             result = []
-            result.append(ByteMessage(new_msg_id, accept.dialogue_id, self.game_instance.controller_pbk, transaction.serialize()))
+            result.append(OutContainer(message=transaction.serialize(), message_id=new_msg_id, dialogue_id=accept.dialogue_id, destination=self.game_instance.controller_pbk))
             result.append(Accept(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id))
         else:
             logger.debug("[{}]: Decline the accept (as {}).".format(self.name, dialogue.role))
             result = Decline(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id)
         return result
 
-    def _on_match_accept(self, accept: Accept, dialogue: Dialogue) -> ByteMessage:
+    def _on_match_accept(self, accept: Accept, dialogue: Dialogue) -> OutContainer:
         """
         Match accept handler.
 
@@ -225,5 +226,5 @@ class FIPABehaviour:
         logger.debug("[{}]: on match accept".format(self.name))
 
         transaction = self.game_instance.lock_manager.pop_pending_acceptances(dialogue, accept.target)
-        result = ByteMessage(accept.msg_id + 1, accept.dialogue_id, self.game_instance.controller_pbk, transaction.serialize())
+        result = OutContainer(message=transaction.serialize(), message_id=accept.msg_id + 1, dialogue_id=accept.dialogue_id, destination=self.game_instance.controller_pbk)
         return result

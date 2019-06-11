@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 STARTING_MESSAGE_ID = 1
 STARTING_MESSAGE_TARGET = 0
 
-AgentMessage = Union[ByteMessage, CFP, Propose, Accept, Decline]
+AgentMessage = Union[ByteMessage, CFP, Propose, Accept, Decline, OutContainer]
 
 
 class ControllerReactions(ControllerReactionInterface):
@@ -172,20 +172,19 @@ class OEFReactions(OEFSearchReactionInterface):
         """
         agent_pbks = list(set(agent_pbks))
         searched_for = 'sellers' if is_searching_for_sellers else 'buyers'
-        role = 'buyer' if is_searching_for_sellers else 'seller'
-        is_seller = not is_searching_for_sellers
         logger.debug("[{}]: Found potential {}: {}".format(self.name, searched_for, agent_pbks))
 
         query = self.game_instance.build_services_query(is_searching_for_sellers)
         if query is None:
             response = 'demanding' if is_searching_for_sellers else 'supplying'
             logger.debug("[{}]: No longer {} any goods...".format(self.name, response))
+            return
         for agent_pbk in agent_pbks:
             if agent_pbk == self.crypto.public_key: continue
-            dialogue = self.game_instance.dialogues.create(agent_pbk, self.crypto.public_key, is_seller)
+            dialogue = self.game_instance.dialogues.create(agent_pbk, self.crypto.public_key, not is_searching_for_sellers)
             cfp = CFP(STARTING_MESSAGE_ID, dialogue.dialogue_label.dialogue_id, dialogue.dialogue_label.dialogue_opponent_pbk, STARTING_MESSAGE_TARGET, query)
             logger.debug("[{}]: send_cfp_as_{}: msg_id={}, dialogue_id={}, destination={}, target={}, query={}"
-                         .format(self.name, role, cfp.msg_id, cfp.dialogue_id, cfp.destination, cfp.target, query))
+                         .format(self.name, dialogue.role, cfp.msg_id, cfp.dialogue_id, cfp.destination, cfp.target, query))
             dialogue.outgoing_extend([cfp])
             self.out_box.out_queue.put(cfp)
 

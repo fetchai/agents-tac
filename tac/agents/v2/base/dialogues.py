@@ -23,11 +23,12 @@ from typing import List, Any, Dict, Union
 
 from oef.messages import CFP, Decline, Propose, Accept, Message as ByteMessage, \
     SearchResult, OEFErrorMessage, DialogueErrorMessage
+from tac.agents.v2.mail import OutContainer
 
 Action = Any
 OEFMessage = Union[SearchResult, OEFErrorMessage, DialogueErrorMessage]
 ControllerMessage = ByteMessage
-AgentMessage = Union[ByteMessage, CFP, Propose, Accept, Decline]
+AgentMessage = Union[ByteMessage, CFP, Propose, Accept, Decline, OutContainer]
 Message = Union[OEFMessage, ControllerMessage, AgentMessage]
 
 logger = logging.getLogger(__name__)
@@ -123,7 +124,7 @@ class Dialogue(ProtocolInterface):
 
     def outgoing_extend(self, messages: List[AgentMessage]) -> None:
         for message in messages:
-            if isinstance(message, ByteMessage):
+            if isinstance(message, OutContainer):
                 self.outgoing_messages_controller.extend([message])
             else:
                 self.outgoing_messages.extend([message])
