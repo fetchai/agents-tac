@@ -44,7 +44,7 @@ This repository contains submodules. Clone with recursive strategy:
 
 ## 🤖 🤖 🤖 TAC Simulation 🤖 🤖 🤖 
 
-[For simulation go here](../blob/master/examples/simulation_demo)
+[For simulation go here](../master/examples/simulation_demo)
 
 ## Development
 
