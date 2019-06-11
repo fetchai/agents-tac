@@ -84,3 +84,22 @@ To run the sandbox multiple times, use the script `run_iterated_games.py`:
 
     python3 run_iterated_games.py
 
+Usage:
+```
+usage: run_iterated_games [-h] [--nb_games NB_GAMES] [--output_dir OUTPUT_DIR]
+                          [--seeds SEEDS [SEEDS ...]] [--config CONFIG]
+
+Run the sandbox multiple times and collect scores for every run.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --nb_games NB_GAMES   How many times the competition must be run.
+  --output_dir OUTPUT_DIR
+                        The directory that will contain all the data for every
+                        game.
+  --seeds SEEDS [SEEDS ...]
+                        The list of seeds to use for different games.
+  --config CONFIG       The path for a config file (in JSON format). If None,
+                        use only command line arguments. The config file
+                        overrides the command line options.
+```
