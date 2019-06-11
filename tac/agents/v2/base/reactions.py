@@ -183,9 +183,10 @@ class OEFReactions(OEFSearchReactionInterface):
         for agent_pbk in agent_pbks:
             if agent_pbk == self.crypto.public_key: continue
             dialogue = self.game_instance.dialogues.create(agent_pbk, self.crypto.public_key, is_seller)
-            cfp = dialogue.cfp(query)
+            cfp = CFP(STARTING_MESSAGE_ID, dialogue.dialogue_label.dialogue_id, dialogue.dialogue_label.dialogue_opponent_pbk, STARTING_MESSAGE_TARGET, query)
             logger.debug("[{}]: send_cfp_as_{}: msg_id={}, dialogue_id={}, destination={}, target={}, query={}"
                          .format(self.name, role, cfp.msg_id, cfp.dialogue_id, cfp.destination, cfp.target, query))
+            dialogue.outgoing_extend([cfp])
             self.out_box.out_queue.put(cfp)
 
     def _register_to_tac(self, controller_pbk: str) -> None:

@@ -17,21 +17,20 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+import logging
 from abc import abstractmethod
 from typing import List, Any, Dict, Union
 
-from oef.messages import CFP, Decline, Propose, Accept, Message as SimpleMessage, \
+from oef.messages import CFP, Decline, Propose, Accept, Message as ByteMessage, \
     SearchResult, OEFErrorMessage, DialogueErrorMessage
-from oef.query import Query
 
 Action = Any
 OEFMessage = Union[SearchResult, OEFErrorMessage, DialogueErrorMessage]
-ControllerMessage = SimpleMessage
-AgentMessage = Union[SimpleMessage, CFP, Propose, Accept, Decline]
+ControllerMessage = ByteMessage
+AgentMessage = Union[ByteMessage, CFP, Propose, Accept, Decline]
 Message = Union[OEFMessage, ControllerMessage, AgentMessage]
 
-STARTING_MESSAGE_ID = 1
-STARTING_MESSAGE_TARGET = 0
+logger = logging.getLogger(__name__)
 
 
 class DialogueLabel:
@@ -94,14 +93,6 @@ class ProtocolInterface:
         :param msg: any message allowed in the dialogue
         """
 
-    @abstractmethod
-    def cfp(self, query: Query) -> CFP:
-        """
-        Creates a cfp.
-
-        :param query: the query
-        """
-
 
 class Dialogue(ProtocolInterface):
 
@@ -109,6 +100,7 @@ class Dialogue(ProtocolInterface):
         self.dialogue_label = dialogue_label
         self.is_seller = is_seller
         self.outgoing_messages = []  # type: List[AgentMessage]
+        self.outgoing_messages_controller = []  # type: List[AgentMessage]
         self.incoming_messages = []  # type: List[AgentMessage]
 
     def is_message_consistent(self, msg: AgentMessage):
@@ -125,11 +117,16 @@ class Dialogue(ProtocolInterface):
             result = True
         else:
             result = False
-            import pdb; pdb.set_trace()
+            logger.debug("Issue with dialogue: dialogue_id={}, dialogue_starter_pbk={}, dialogue_opponent_pbk={}, last_message_destination={}, message_origin={}".format(self.dialogue_label.dialogue_id, self.dialogue_label
+                .dialogue_starter_pbk, self.dialogue_label.dialogue_opponent_pbk, last_sent_message.destination, msg.destination))
         return result
 
     def outgoing_extend(self, messages: List[AgentMessage]) -> None:
-        self.outgoing_messages.extend(messages)
+        for message in messages:
+            if isinstance(message, ByteMessage):
+                self.outgoing_messages_controller.extend([message])
+            else:
+                self.outgoing_messages.extend([message])
 
     def incoming_extend(self, messages: List[AgentMessage]) -> None:
         self.incoming_messages.extend(messages)
@@ -137,16 +134,6 @@ class Dialogue(ProtocolInterface):
     def role(self) -> str:
         role = 'seller' if self.is_seller else 'buyer'
         return role
-
-    def cfp(self, query: Query) -> CFP:
-        """
-        Creates a cfp.
-
-        :param query: the query
-        """
-        cfp = CFP(STARTING_MESSAGE_ID, self.dialogue_label.dialogue_id, self.dialogue_label.dialogue_opponent_pbk, STARTING_MESSAGE_TARGET, query)
-        self.outgoing_extend([cfp])
-        return cfp
 
 
 class Dialogues:
