@@ -1,7 +1,7 @@
 version: '3'
 services:
   oef-node:
-    image: "qati/oef:latest"
+    image: "fetchai/oef-search:v1"
     ports:
       - "3333:3333"
       - "20000:20000"
@@ -28,6 +28,11 @@ services:
       - "30000"
       - "--director_api_port"
       - "40000"
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import oef.agents;agent=oef.agents.OEFAgent('healthcheck-agent','127.0.0.1', 3333);agent.connect();agent.disconnect()'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   visdom:
     image: "hypnosapos/visdom:latest"
@@ -44,6 +49,7 @@ services:
       - .env
     depends_on:
       - oef-node
+      - visdom
     volumes:
       - ../:/build
     build:
@@ -56,7 +62,7 @@ services:
       - "pipenv"
       - "run"
       - "python3"
-      - "examples/simulation_demo/tac_agent_spawner.py"
+      - "examples/simulation_demo/v1/tac_agent_spawner.py"
       - "--nb-agents"
       - "${NB_AGENTS}"
       - "--nb-goods"
@@ -70,7 +76,7 @@ services:
       - "--uml"
       - "${UML}"
       - "--data-output-dir"
-      - "${DATA_OUTPUT_DIR}"
+      - "sandbox/${DATA_OUTPUT_DIR}"
       - "--experiment-id"
       - "${EXPERIMENT_ID}"
       - "--plot"

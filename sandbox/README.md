@@ -76,4 +76,11 @@ In this case, be careful of the values of `NB_AGENTS` and `NB_BASELINE_AGENTS`:
 - if `NB_AGENTS` <= `NB_BASELINE_AGENTS`, the competition might start even though you didn't register your agent;
 - if  `NB_AGENTS` > `NB_BASELINE_AGENTS`, the competition waits until `NB_AGENTS` = `NB_BASELINE_AGENTS` agents to start.
   But if you're planning to run only one of your own agents, the difference should be just `1`, e.g. `NB_AGENTS=10` and `NB_BASELINE_AGENTS=9`. 
-  
+
+
+### Run sandbox multiple times
+
+To run the sandbox multiple times, use the script `run_iterated_games.py`:
+
+    python3 run_iterated_games.py
+
