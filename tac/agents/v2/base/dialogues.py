@@ -18,7 +18,7 @@
 #
 # ------------------------------------------------------------------------------
 from abc import abstractmethod
-from typing import List, Optional, Any, Dict, Union
+from typing import List, Any, Dict, Union
 
 from oef.messages import CFP, Decline, Propose, Accept, Message as SimpleMessage, \
     SearchResult, OEFErrorMessage, DialogueErrorMessage
@@ -79,12 +79,6 @@ class ProtocolInterface:
         """
 
     @abstractmethod
-    def handle(self, msg: AgentMessage) -> Optional[Action]:
-        """
-        Handles according to the protocol.
-        """
-
-    @abstractmethod
     def outgoing_extend(self, msg: AgentMessage) -> None:
         """
         Adds a new outgoing message to the dialogue.
@@ -109,13 +103,7 @@ class ProtocolInterface:
         """
 
 
-class BehaviourInterface:
-    """
-    Specifies behaviours
-    """
-
-
-class Dialogue(ProtocolInterface, BehaviourInterface):
+class Dialogue(ProtocolInterface):
 
     def __init__(self, dialogue_label: DialogueLabel, is_seller: bool):
         self.dialogue_label = dialogue_label
@@ -123,30 +111,17 @@ class Dialogue(ProtocolInterface, BehaviourInterface):
         self.outgoing_messages = []  # type: List[AgentMessage]
         self.incoming_messages = []  # type: List[AgentMessage]
 
-    def handle(self, msg: AgentMessage) -> Optional[AgentMessage]:
-        self.incoming_extend([msg])
-        response = None  # type: Optional[AgentMessage]
-        if isinstance(msg, CFP):
-            pass
-        elif isinstance(msg, Propose):
-            pass
-        elif isinstance(msg, Accept):
-            pass
-        elif isinstance(msg, Decline):
-            pass
-        self.outgoing_extend([response])
-        return response
-
     def is_message_consistent(self, msg: AgentMessage):
         """
         """
         last_sent_message = self.outgoing_messages[-1:]
         if last_sent_message == []:
-            result = False
-        elif (isinstance(last_sent_message, CFP) and isinstance(msg, Propose)) or \
-             (isinstance(last_sent_message, Propose) and isinstance(msg, Accept)) or \
-             (isinstance(last_sent_message, Propose) and isinstance(msg, Decline)) or \
-             (isinstance(last_sent_message, Accept) and isinstance(msg, Accept)):
+            return False
+        last_sent_message = last_sent_message[0]
+        if (isinstance(last_sent_message, CFP) and isinstance(msg, Propose)) or \
+           (isinstance(last_sent_message, Propose) and isinstance(msg, Accept)) or \
+           (isinstance(last_sent_message, Propose) and isinstance(msg, Decline)) or \
+           (isinstance(last_sent_message, Accept) and isinstance(msg, Accept)):
             result = True
         else:
             result = False
@@ -157,6 +132,10 @@ class Dialogue(ProtocolInterface, BehaviourInterface):
 
     def incoming_extend(self, messages: List[AgentMessage]) -> None:
         self.incoming_messages.extend(messages)
+
+    def role(self) -> str:
+        role = 'seller' if self.is_seller else 'buyer'
+        return role
 
     def cfp(self, query: Query) -> CFP:
         """
@@ -189,8 +168,8 @@ class Dialogues:
     def dialogues_as_buyer(self) -> Dict[DialogueLabel, Dialogue]:
         return self._dialogues_as_buyer
 
-    def is_permitted_for_new_dialogue(self, msg: AgentMessage) -> bool:
-        result = isinstance(msg, CFP)
+    def is_permitted_for_new_dialogue(self, msg: AgentMessage, known_pbks: List[str]) -> bool:
+        result = isinstance(msg, CFP) and (msg.destination in known_pbks)
         return result
 
     def is_dialogue_registered(self, dialogue_id: int, opponent_pbk: str, agent_pbk: str) -> DialogueLabel:

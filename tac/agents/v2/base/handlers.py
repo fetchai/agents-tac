@@ -46,7 +46,8 @@ class DialogueHandler(DialogueActions, DialogueReactions):
     """
 
     def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: OutBox, name: str):
-        super().__init__(crypto, liveness, game_instance, out_box, name)
+        DialogueActions.__init__(self, crypto, liveness, game_instance, out_box, name)
+        DialogueReactions.__init__(self, crypto, liveness, game_instance, out_box, name)
 
     def handle_dialogue_message(self, msg: AgentMessage) -> None:
         """
@@ -59,7 +60,7 @@ class DialogueHandler(DialogueActions, DialogueReactions):
         logger.debug("Handling Dialogue message. type={}".format(type(msg)))
         if self.dialogues.is_dialogue_registered(msg.dialogue_id, msg.destination, self.crypto.public_key):
             self.on_existing_dialogue(msg)
-        elif self.dialogues.is_permitted_for_new_dialogue(msg):
+        elif self.dialogues.is_permitted_for_new_dialogue(msg, self.game_instance.game_configuration.agent_pbks):
             self.on_new_dialogue(msg)
         else:
             self.on_unidentified_dialogue(msg)
@@ -68,7 +69,8 @@ class DialogueHandler(DialogueActions, DialogueReactions):
 class ControllerHandler(ControllerActions, ControllerReactions):
 
     def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', name: str):
-        super().__init__(crypto, liveness, game_instance, out_box, name)
+        ControllerActions.__init__(self, crypto, liveness, game_instance, out_box, name)
+        ControllerReactions.__init__(self, crypto, liveness, game_instance, out_box, name)
 
     def handle_controller_message(self, msg: ControllerMessage) -> None:
         """
@@ -109,7 +111,8 @@ class ControllerHandler(ControllerActions, ControllerReactions):
 class OEFHandler(OEFActions, OEFReactions):
 
     def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', name: str):
-        super().__init__(crypto, liveness, game_instance, out_box, name)
+        OEFActions.__init__(self, crypto, liveness, game_instance, out_box, name)
+        OEFReactions.__init__(self, crypto, liveness, game_instance, out_box, name)
 
     def handle_oef_message(self, msg: OEFMessage) -> None:
         """

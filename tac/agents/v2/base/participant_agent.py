@@ -17,7 +17,6 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
-import asyncio
 from typing import Optional, Union
 
 from oef.messages import CFP, Decline, Propose, Accept, Message as SimpleMessage, \
@@ -37,14 +36,14 @@ Message = Union[OEFMessage, ControllerMessage, AgentMessage]
 
 class ParticipantAgent(Agent):
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int = 3333, is_world_modeling: bool = False):
+    def __init__(self, name: str, oef_addr: str, oef_port: int = 3333, register_as: str = 'both', search_for: str = 'both', is_world_modeling: bool = False, pending_transaction_timeout: int = 30):
         super().__init__(name, oef_addr, oef_port)
-        self.mail_box = FIPAMailBox(self.crypto.public_key, oef_addr, oef_port, loop=asyncio.get_event_loop())
+        self.mail_box = FIPAMailBox(self.crypto.public_key, oef_addr, oef_port)
         self.in_box = InBox(self.mail_box)
         self.out_box = OutBox(self.mail_box)
 
         self._is_competing = False  # type: bool
-        self._game_instance = GameInstance(name, is_world_modeling)  # type: Optional[GameInstance]
+        self._game_instance = GameInstance(name, is_world_modeling, 10, register_as, search_for, pending_transaction_timeout)  # type: Optional[GameInstance]
 
         self.controller_handler = ControllerHandler(self.crypto, self.liveness, self.game_instance, self.out_box, self.name)
         self.oef_handler = OEFHandler(self.crypto, self.liveness, self.game_instance, self.out_box, self.name)
