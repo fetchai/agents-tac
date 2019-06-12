@@ -654,7 +654,7 @@ class ControllerAgent(OEFAgent):
             self._is_running = False
             self.game_handler.notify_tac_cancelled()
             self._loop.call_soon_threadsafe(self.stop)
-            self.monitor.stop()
+            if self.monitor.is_running: self.monitor.stop()
             self._message_processing_task.join()
             self._message_processing_task = None
 
