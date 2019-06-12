@@ -214,7 +214,7 @@ class NegotiationAgent(OEFAgent):
             self._on_start(response)
         elif isinstance(response, TransactionConfirmation) and origin == self.controller_pbk:
             self.on_transaction_confirmed(response)
-        elif isinstance(response, Cancelled) and origin == self.controller_pbk and self._game_phase == self.GAME_PHASES[2]:
+        elif isinstance(response, Cancelled) and origin == self.controller_pbk and (self._game_phase == self.GAME_PHASES[2] or self._game_phase == self.GAME_PHASES[1]):
             self._on_cancelled()
         elif isinstance(response, StateUpdate) and self._game_phase == self.GAME_PHASES[2]:
             self.on_state_update(response)
