@@ -1,4 +1,4 @@
-version: '3'
+version: '3.4'
 services:
   oef-node:
     image: "fetchai/oef-search:v1"
@@ -29,10 +29,13 @@ services:
       - "--director_api_port"
       - "40000"
     healthcheck:
-      test: ["CMD", "python3", "-c", "import oef.agents;agent=oef.agents.OEFAgent('healthcheck-agent','127.0.0.1', 3333);agent.connect();agent.disconnect()'"]
-      interval: 30s
+      interval: 10s
+      retries: 5
+      test:
+      - "CMD-SHELL"
+      - "python3"
+      - "oef_healthcheck.py"
       timeout: 5s
-      retries: 3
 
   visdom:
     image: "hypnosapos/visdom:latest"
