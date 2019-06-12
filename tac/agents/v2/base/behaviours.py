@@ -225,6 +225,7 @@ class FIPABehaviour:
         """
         logger.debug("[{}]: on match accept".format(self.name))
         results = []
+        new_msg_id = accept.msg_id + 1
         transaction = self.game_instance.lock_manager.pop_pending_acceptances(dialogue, accept.target)
-        results.append(OutContainer(message=transaction.serialize(), message_id=accept.msg_id + 1, dialogue_id=accept.dialogue_id, destination=self.game_instance.controller_pbk))
+        results.append(OutContainer(message=transaction.serialize(), message_id=new_msg_id, dialogue_id=accept.dialogue_id, destination=self.game_instance.controller_pbk))
         return results

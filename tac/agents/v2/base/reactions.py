@@ -170,7 +170,9 @@ class OEFReactions(OEFSearchReactionInterface):
 
         :return: None
         """
-        agent_pbks = list(set(agent_pbks))
+        agent_pbks = set(agent_pbks)
+        agent_pbks.remove(self.crypto.public_key)
+        agent_pbks = list(agent_pbks)
         searched_for = 'sellers' if is_searching_for_sellers else 'buyers'
         logger.debug("[{}]: Found potential {}: {}".format(self.name, searched_for, agent_pbks))
 
@@ -180,9 +182,8 @@ class OEFReactions(OEFSearchReactionInterface):
             logger.debug("[{}]: No longer {} any goods...".format(self.name, response))
             return
         for agent_pbk in agent_pbks:
-            if agent_pbk == self.crypto.public_key: continue
             dialogue = self.game_instance.dialogues.create(agent_pbk, self.crypto.public_key, not is_searching_for_sellers)
-            cfp = CFP(STARTING_MESSAGE_ID, dialogue.dialogue_label.dialogue_id, dialogue.dialogue_label.dialogue_opponent_pbk, STARTING_MESSAGE_TARGET, query)
+            cfp = CFP(STARTING_MESSAGE_ID, dialogue.dialogue_label.dialogue_id, agent_pbk, STARTING_MESSAGE_TARGET, query)
             logger.debug("[{}]: send_cfp_as_{}: msg_id={}, dialogue_id={}, destination={}, target={}, query={}"
                          .format(self.name, dialogue.role, cfp.msg_id, cfp.dialogue_id, cfp.destination, cfp.target, query))
             dialogue.outgoing_extend([cfp])

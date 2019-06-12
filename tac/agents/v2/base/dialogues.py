@@ -208,6 +208,7 @@ class Dialogues:
                 self_initiated_dialogue = self.dialogues[self_initiated_dialogue_label]
                 result = self_initiated_dialogue.is_matching_accept()
             else:
+                import pdb; pdb.set_trace()
                 result = False
         elif isinstance(msg, Decline):
             if msg.target == 1 and self_initiated_dialogue_label in self.dialogues:
@@ -217,6 +218,7 @@ class Dialogues:
                 other_initiated_dialogue = self.dialogues[other_initiated_dialogue_label]
                 result = self_initiated_dialogue.is_proposal_decline()
             else:
+                import pdb; pdb.set_trace()
                 result = False
         else:
             result = False
