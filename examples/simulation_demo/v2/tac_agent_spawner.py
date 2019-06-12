@@ -67,6 +67,7 @@ def parse_arguments():
     parser.add_argument("--visdom-addr", default="localhost", help="TCP/IP address of the Visdom server")
     parser.add_argument("--visdom-port", default=8097, help="TCP/IP port of the Visdom server")
     parser.add_argument("--seed", default=42, help="The random seed of the simulation.")
+    parser.add_argument("--whitelist-file", default=None, type=str, help="The file that contains the list of agent names to be whitelisted.")
 
     arguments = parser.parse_args()
     logger.debug("Arguments: {}".format(pprint.pformat(arguments.__dict__)))
@@ -224,6 +225,7 @@ def initialize_tac_parameters(arguments: argparse.Namespace) -> TACParameters:
     :param arguments: the argparse namespace
     :return: a TACParameters object
     """
+    whitelist = set(open(arguments.whitelist_file).read().splitlines(keepends=False)) if arguments.whitelist_file is not None else None
     start_datetime = dateutil.parser.parse(arguments.start_time)
     tac_parameters = TACParameters(min_nb_agents=arguments.nb_agents,
                                    money_endowment=arguments.money_endowment,
@@ -235,7 +237,8 @@ def initialize_tac_parameters(arguments: argparse.Namespace) -> TACParameters:
                                    start_time=start_datetime,
                                    registration_timeout=arguments.registration_timeout,
                                    competition_timeout=arguments.competition_timeout,
-                                   inactivity_timeout=arguments.inactivity_timeout)
+                                   inactivity_timeout=arguments.inactivity_timeout,
+                                   whitelist=whitelist)
 
     return tac_parameters
 

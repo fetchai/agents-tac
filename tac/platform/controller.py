@@ -42,6 +42,7 @@ from typing import Optional, Set
 
 import dateutil
 from oef.agents import OEFAgent
+from oef.messages import OEFErrorOperation
 from oef.schema import Description, DataModel, AttributeSchema
 
 from tac.gui.monitor import Monitor, NullMonitor
@@ -70,7 +71,8 @@ class TACParameters(object):
                  start_time: datetime.datetime = datetime.datetime.now(),
                  registration_timeout: int = 10,
                  competition_timeout: int = 20,
-                 inactivity_timeout: int = 10):
+                 inactivity_timeout: int = 10,
+                 whitelist: Optional[Set[str]] = None):
         """
         Initialize parameters for TAC
         :param min_nb_agents: the number of agents to wait for the registration.
@@ -84,6 +86,7 @@ class TACParameters(object):
         :param registration_timeout: the duration (in seconds) of the registration phase.
         :param competition_timeout: the duration (in seconds) of the competition phase.
         :param inactivity_timeout: the time when the competition will start.
+        :param whitelist: the set of agent names allowed. If None, no checks on the agent names.
         """
         self._min_nb_agents = min_nb_agents
         self._money_endowment = money_endowment
@@ -96,6 +99,7 @@ class TACParameters(object):
         self._registration_timeout = registration_timeout
         self._competition_timeout = competition_timeout
         self._inactivity_timeout = inactivity_timeout
+        self._whitelist = whitelist
         self._check_values()
 
     def _check_values(self) -> None:
@@ -168,6 +172,10 @@ class TACParameters(object):
     def inactivity_timedelta(self) -> datetime.timedelta:
         return datetime.timedelta(0, self._inactivity_timeout)
 
+    @property
+    def whitelist(self) -> Set[str]:
+        return self._whitelist
+
 
 class RequestHandler(ABC):
 
@@ -188,7 +196,7 @@ class RequestHandler(ABC):
 
 class RegisterHandler(RequestHandler):
 
-    def handle(self, request: Request) -> Optional[Response]:
+    def handle(self, request: Register) -> Optional[Response]:
         """
         Handle a register message.
         If the public key is already registered, answer with an error message.
@@ -197,24 +205,32 @@ class RegisterHandler(RequestHandler):
         :param request: the register request.
         :return: an Error response if an error occurred, else None.
         """
+
+        whitelist = self.controller_agent.game_handler.tac_parameters.whitelist
+        if whitelist is not None and request.agent_name not in whitelist:
+            error_msg = "[{}]: Agent name not in whitelist: '{}'".format(self.controller_agent.name, request.agent_name)
+            logger.error(error_msg)
+            return Error(request.public_key, self.controller_agent.crypto, ErrorCode.AGENT_NAME_NOT_IN_WHITELIST)
+
         if request.public_key in self.controller_agent.game_handler.registered_agents:
             error_msg = "[{}]: Agent already registered: '{}'".format(self.controller_agent.name, self.controller_agent.game_handler.agent_pbk_to_name[request.public_key])
             logger.error(error_msg)
             return Error(request.public_key, self.controller_agent.crypto, ErrorCode.AGENT_PBK_ALREADY_REGISTERED)
+
         if request.agent_name in self.controller_agent.game_handler.agent_pbk_to_name.values():
             error_msg = "[{}]: Agent with this name already registered: '{}'".format(self.controller_agent.name, request.agent_name)
             logger.error(error_msg)
             return Error(request.public_key, self.controller_agent.crypto, ErrorCode.AGENT_NAME_ALREADY_REGISTERED)
-        else:
-            self.controller_agent.game_handler.agent_pbk_to_name[request.public_key] = request.agent_name
-            logger.debug("[{}]: Agent registered: '{}'".format(self.controller_agent.name, self.controller_agent.game_handler.agent_pbk_to_name[request.public_key]))
-            self.controller_agent.game_handler.registered_agents.add(request.public_key)
-            return None
+
+        self.controller_agent.game_handler.agent_pbk_to_name[request.public_key] = request.agent_name
+        logger.debug("[{}]: Agent registered: '{}'".format(self.controller_agent.name, self.controller_agent.game_handler.agent_pbk_to_name[request.public_key]))
+        self.controller_agent.game_handler.registered_agents.add(request.public_key)
+        return None
 
 
 class UnregisterHandler(RequestHandler):
 
-    def handle(self, request: Request) -> Optional[Response]:
+    def handle(self, request: Unregister) -> Optional[Response]:
         """
         Handle a unregister message.
         If the public key is not registered, answer with an error message.
@@ -312,7 +328,7 @@ class TransactionHandler(RequestHandler):
 
 class GetStateUpdateHandler(RequestHandler):
 
-    def handle(self, request: Request) -> Optional[Response]:
+    def handle(self, request: GetStateUpdate) -> Optional[Response]:
         """
         Handle a 'get agent state' request.
         If the public key is not registered, answer with an error message.
@@ -696,10 +712,8 @@ class ControllerAgent(OEFAgent):
                      .format(self.name, str(tac_parameters.start_time), str(now),
                              (tac_parameters.start_time - now).total_seconds()))
 
-        while now < tac_parameters.start_time:
-            time.sleep(rate)
-            now = datetime.datetime.now()
-
+        seconds_to_wait = (tac_parameters.start_time - now).total_seconds()
+        time.sleep(0.5 if seconds_to_wait < 0 else seconds_to_wait)
         self.start_competition(tac_parameters)
 
 
@@ -719,6 +733,7 @@ def _parse_arguments():
     parser.add_argument("--registration-timeout", default=10, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
     parser.add_argument("--inactivity-timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
     parser.add_argument("--competition-timeout", default=240, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
+    parser.add_argument("--whitelist-file", default=None, type=str, help="The file that contains the list of agent names to be whitelisted.")
     parser.add_argument("--verbose", default=False, action="store_true", help="Log debug messages.")
     parser.add_argument("--gui", action="store_true", help="Show the GUI.")
     return parser.parse_args()
@@ -739,6 +754,7 @@ def main():
                                 oef_addr=arguments.oef_addr,
                                 oef_port=arguments.oef_port)
 
+        whitelist = set(open(arguments.whitelist_file).read().splitlines(keepends=False)) if arguments.whitelist is not None else None
         tac_parameters = TACParameters(
             min_nb_agents=arguments.nb_agents,
             money_endowment=arguments.money_endowment,
@@ -751,6 +767,7 @@ def main():
             registration_timeout=arguments.registration_timeout,
             competition_timeout=arguments.competition_timeout,
             inactivity_timeout=arguments.inactivity_timeout,
+            whitelist=whitelist
         )
 
         agent.connect()
