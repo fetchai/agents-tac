@@ -104,24 +104,6 @@ class Dialogue(ProtocolInterface):
         self.outgoing_messages_controller = []  # type: List[AgentMessage]
         self.incoming_messages = []  # type: List[AgentMessage]
 
-    # def is_message_consistent(self, msg: AgentMessage):
-    #     """
-    #     """
-    #     last_sent_message = self.outgoing_messages[-1:]
-    #     if last_sent_message == []:
-    #         return False
-    #     last_sent_message = last_sent_message[0]
-    #     if (isinstance(last_sent_message, CFP) and isinstance(msg, Propose)) or \
-    #        (isinstance(last_sent_message, Propose) and isinstance(msg, Accept)) or \
-    #        (isinstance(last_sent_message, Propose) and isinstance(msg, Decline)) or \
-    #        (isinstance(last_sent_message, Accept) and isinstance(msg, Accept)):
-    #         result = True
-    #     else:
-    #         result = False
-    #         logger.debug("Issue with dialogue: dialogue_id={}, dialogue_starter_pbk={}, dialogue_opponent_pbk={}, last_message_destination={}, message_origin={}".format(self.dialogue_label.dialogue_id, self.dialogue_label
-    #             .dialogue_starter_pbk, self.dialogue_label.dialogue_opponent_pbk, last_sent_message.destination, msg.destination))
-    #     return result
-
     def outgoing_extend(self, messages: List[AgentMessage]) -> None:
         for message in messages:
             if isinstance(message, OutContainer):
