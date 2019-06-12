@@ -208,7 +208,6 @@ class Dialogues:
                 self_initiated_dialogue = self.dialogues[self_initiated_dialogue_label]
                 result = self_initiated_dialogue.is_matching_accept()
             else:
-                import pdb; pdb.set_trace()
                 result = False
         elif isinstance(msg, Decline):
             if msg.target == 1 and self_initiated_dialogue_label in self.dialogues:
@@ -218,7 +217,6 @@ class Dialogues:
                 other_initiated_dialogue = self.dialogues[other_initiated_dialogue_label]
                 result = self_initiated_dialogue.is_proposal_decline()
             else:
-                import pdb; pdb.set_trace()
                 result = False
         else:
             result = False
@@ -256,7 +254,7 @@ class Dialogues:
 
     def create(self, dialogue_opponent_pbk: str, dialogue_starter_pbk: str, is_seller: bool) -> Dialogue:
         """
-        Create a new dialogue.
+        Create a self initiated dialogue.
 
         :param dialogue_opponent_pbk: the pbk of the agent with which the dialogue is kept.
         :param dialogue_starter_pbk: the pbk of the agent which started the dialogue
@@ -265,6 +263,28 @@ class Dialogues:
         :return: the created dialogue.
         """
         dialogue_label = DialogueLabel(self.next_dialogue_id(), dialogue_opponent_pbk, dialogue_starter_pbk)
+        assert dialogue_label not in self.dialogues
+        dialogue = Dialogue(dialogue_label, is_seller)
+        if is_seller:
+            assert dialogue_label not in self.dialogues_as_seller
+            self._dialogues_as_seller.update({dialogue_label: dialogue})
+        else:
+            assert dialogue_label not in self.dialogues_as_buyer
+            self._dialogues_as_buyer.update({dialogue_label: dialogue})
+        self.dialogues.update({dialogue_label: dialogue})
+        return dialogue
+
+    def save(self, dialogue_opponent_pbk: str, dialogue_starter_pbk: str, is_seller: bool, dialogue_id: int) -> Dialogue:
+        """
+        Save an opponent initiated dialogue.
+
+        :param dialogue_opponent_pbk: the pbk of the agent with which the dialogue is kept.
+        :param dialogue_starter_pbk: the pbk of the agent which started the dialogue
+        :param is_seller: boolean indicating the agent role
+
+        :return: the created dialogue.
+        """
+        dialogue_label = DialogueLabel(dialogue_id, dialogue_opponent_pbk, dialogue_starter_pbk)
         assert dialogue_label not in self.dialogues
         dialogue = Dialogue(dialogue_label, is_seller)
         if is_seller:

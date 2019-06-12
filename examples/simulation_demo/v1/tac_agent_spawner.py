@@ -27,7 +27,7 @@ import logging
 import pprint
 import random
 from threading import Thread, Timer
-from typing import List, Set, Optional
+from typing import List
 
 import dateutil
 import math

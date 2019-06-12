@@ -42,7 +42,6 @@ from typing import Optional, Set
 
 import dateutil
 from oef.agents import OEFAgent
-from oef.messages import OEFErrorOperation
 from oef.schema import Description, DataModel, AttributeSchema
 
 from tac.gui.monitor import Monitor, NullMonitor

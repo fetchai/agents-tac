@@ -28,7 +28,7 @@ from oef.schema import Description
 
 from tac.agents.v2.base.dialogues import DialogueLabel, Dialogue
 from tac.helpers.crypto import Crypto
-from tac.helpers.misc import generate_transaction_id
+from tac.agents.v2.base.helpers import generate_transaction_id
 from tac.platform.protocol import Transaction
 
 logger = logging.getLogger(__name__)
@@ -218,7 +218,7 @@ class LockManager(object):
         """
         for proposal in proposals:
             proposal_id = new_msg_id  # TODO fix if more than one proposal!
-            transaction_id = generate_transaction_id(crypto.public_key, origin, dialogue.dialogue_label.dialogue_id, is_seller)  # TODO fix if more than one proposal!
+            transaction_id = generate_transaction_id(crypto.public_key, origin, dialogue.dialogue_label, is_seller)  # TODO fix if more than one proposal!
             transaction = Transaction.from_proposal(proposal=proposal,
                                                     transaction_id=transaction_id,
                                                     is_buyer=not is_seller,

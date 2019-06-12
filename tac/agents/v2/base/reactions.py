@@ -222,7 +222,7 @@ class DialogueReactions(DialogueReactionInterface):
         React to a new dialogue.
         """
         is_seller = msg.query.model.name == TAC_SUPPLY_DATAMODEL_NAME
-        dialogue = self.dialogues.create(msg.destination, msg.destination, is_seller)
+        dialogue = self.dialogues.save(msg.destination, msg.destination, is_seller, msg.dialogue_id)
         logger.debug("[{}]: saving dialogue: dialogue_id={}".format(self.name, dialogue.dialogue_label.dialogue_id))
         results = self.handle(msg, dialogue)
         for result in results:
@@ -259,9 +259,9 @@ class DialogueReactions(DialogueReactionInterface):
             result = self.behaviour.on_propose(msg, dialogue)
             results = [result]
         elif isinstance(msg, Accept):
-            result = self.behaviour.on_accept(msg, dialogue)
-            results = [result]
+            results = self.behaviour.on_accept(msg, dialogue)
         elif isinstance(msg, Decline):
-            results = self.behaviour.on_decline(msg, dialogue)
+            result = self.behaviour.on_decline(msg, dialogue)
+            results = [result]
         dialogue.outgoing_extend(results)
         return results

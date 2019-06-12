@@ -27,8 +27,8 @@ from oef.messages import CFP, Decline, Propose, Accept
 from tac.agents.v2.base.game_instance import GameInstance
 from tac.agents.v2.base.dialogues import Dialogue
 from tac.agents.v2.mail import OutContainer
+from tac.agents.v2.base.helpers import generate_transaction_id
 from tac.helpers.crypto import Crypto
-from tac.helpers.misc import generate_transaction_id
 from tac.platform.protocol import Transaction
 
 logger = logging.getLogger(__name__)
@@ -101,7 +101,7 @@ class FIPABehaviour:
 
         logger.debug("[{}]: on propose as {}.".format(self.name, dialogue.role))
         proposal = propose.proposals[0]
-        transaction_id = generate_transaction_id(self.crypto.public_key, propose.destination, propose.dialogue_id, dialogue.is_seller)
+        transaction_id = generate_transaction_id(self.crypto.public_key, propose.destination, dialogue.dialogue_label, dialogue.is_seller)
         transaction = Transaction.from_proposal(proposal,
                                                 transaction_id,
                                                 is_buyer=not dialogue.is_seller,
@@ -113,11 +113,11 @@ class FIPABehaviour:
             logger.debug("[{}]: Accepting propose (as {}).".format(self.name, dialogue.role))
             self.game_instance.lock_manager.add_lock(transaction, as_seller=dialogue.is_seller)
             self.game_instance.lock_manager.add_pending_acceptances(dialogue, new_msg_id, transaction)
-            response = Accept(new_msg_id, propose.dialogue_id, propose.destination, propose.msg_id)
+            result = Accept(new_msg_id, propose.dialogue_id, propose.destination, propose.msg_id)
         else:
             logger.debug("[{}]: Declining propose (as {})".format(self.name, dialogue.role))
-            response = Decline(new_msg_id, propose.dialogue_id, propose.destination, propose.msg_id)
-        return response
+            result = Decline(new_msg_id, propose.dialogue_id, propose.destination, propose.msg_id)
+        return result
 
     def _is_profitable_transaction(self, transaction: Transaction, dialogue: Dialogue) -> bool:
         """
@@ -164,7 +164,7 @@ class FIPABehaviour:
                 transaction = self.game_instance.lock_manager.pop_pending_proposal(dialogue, decline.target)
                 self.game_instance.world_state.update_on_decline(transaction)
 
-        transaction_id = generate_transaction_id(self.crypto.public_key, decline.destination, decline.dialogue_id, dialogue.is_seller)
+        transaction_id = generate_transaction_id(self.crypto.public_key, decline.destination, dialogue.dialogue_label, dialogue.is_seller)
         if transaction_id in self.game_instance.lock_manager.locks:
             self.game_instance.lock_manager.pop_lock(transaction_id)
 
