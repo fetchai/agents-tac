@@ -225,7 +225,7 @@ def initialize_tac_parameters(arguments: argparse.Namespace) -> TACParameters:
     :param arguments: the argparse namespace
     :return: a TACParameters object
     """
-    whitelist = set(open(arguments.whitelist_file).read().splitlines(keepends=False)) if arguments.whitelist_file is not None else None
+    whitelist = set(open(arguments.whitelist_file).read().splitlines(keepends=False)) if arguments.whitelist_file else None
     start_datetime = dateutil.parser.parse(arguments.start_time)
     tac_parameters = TACParameters(min_nb_agents=arguments.nb_agents,
                                    money_endowment=arguments.money_endowment,

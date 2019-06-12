@@ -65,7 +65,7 @@ services:
       - "pipenv"
       - "run"
       - "python3"
-      - "examples/simulation_demo/v1/tac_agent_spawner.py"
+      - "examples/simulation_demo/v2/tac_agent_spawner.py"
       - "--nb-agents"
       - "${NB_AGENTS}"
       - "--nb-goods"
@@ -103,6 +103,8 @@ services:
       - "8097"
       - "--seed"
       - "${SEED}"
+      - "--whitelist-file"
+      - "${WHITELIST}"
 networks:
     main_net:
         ipam:
