@@ -82,7 +82,7 @@ In this case, be careful of the values of `NB_AGENTS` and `NB_BASELINE_AGENTS`:
 
 To run the sandbox multiple times, use the script `run_iterated_games.py`:
 
-    python3 run_iterated_games.py
+    python3 run_iterated_games.py --config config.json
 
 Usage:
 ```
