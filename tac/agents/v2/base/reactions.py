@@ -223,49 +223,44 @@ class DialogueReactions(DialogueReactionInterface):
         is_seller = msg.query.model.name == TAC_SUPPLY_DATAMODEL_NAME
         dialogue = self.dialogues.create(msg.destination, msg.destination, is_seller)
         logger.debug("[{}]: saving dialogue: dialogue_id={}".format(self.name, dialogue.dialogue_label.dialogue_id))
-        response = self.handle(msg, dialogue)
-        if isinstance(response, List):
-            for res in response:
-                self.out_box.out_queue.put(res)
-        else:
-            self.out_box.out_queue.put(response)
+        results = self.handle(msg, dialogue)
+        for result in results:
+            self.out_box.out_queue.put(result)
 
     def on_existing_dialogue(self, msg: AgentMessage) -> None:
         """
         React to an existing dialogue.
         """
-        dialogue = self.dialogues.get_dialogue(msg.dialogue_id, msg.destination, self.crypto.public_key)
+        dialogue = self.dialogues.get_dialogue(msg, self.crypto.public_key)
 
-        if not dialogue.is_message_consistent(msg):
-            logger.debug("[{}]: this message is not consistent: {}".format(self.name, type(msg)))
-            response = ByteMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination, b'This message is not consistent with the dialogue.')
-        else:
-            response = self.handle(msg, dialogue)
-        if isinstance(response, List):
-            for res in response:
-                self.out_box.out_queue.put(res)
-        else:
-            self.out_box.out_queue.put(response)
+        results = self.handle(msg, dialogue)
+        # if not dialogue.is_message_consistent(msg):
+        #     logger.debug("[{}]: this message is not consistent: {}".format(self.name, type(msg)))
+        #     response = ByteMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination, b'This message is not consistent with the dialogue.')
+        # else:
+        for result in results:
+            self.out_box.out_queue.put(result)
 
     def on_unidentified_dialogue(self, msg: AgentMessage) -> None:
         """
         React to an unidentified dialogue.
         """
         logger.debug("[{}]: Unidentified dialogue.".format(self.name))
-        response = ByteMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination, b'This message belongs to an unidentified dialogue.')
-        self.out_box.out_queue.put(response)
+        result = ByteMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination, b'This message belongs to an unidentified dialogue.')
+        self.out_box.out_queue.put(result)
 
     def handle(self, msg: AgentMessage, dialogue: Dialogue) -> Optional[AgentMessage]:
         dialogue.incoming_extend([msg])
         if isinstance(msg, CFP):
-            response = self.behaviour.on_cfp(msg, dialogue)
+            result = self.behaviour.on_cfp(msg, dialogue)
+            results = [result]
         elif isinstance(msg, Propose):
-            response = self.behaviour.on_propose(msg, dialogue)
+            result = self.behaviour.on_propose(msg, dialogue)
+            results = [result]
         elif isinstance(msg, Accept):
-            response = self.behaviour.on_accept(msg, dialogue)
+            result = self.behaviour.on_accept(msg, dialogue)
+            results = [result]
         elif isinstance(msg, Decline):
-            response = self.behaviour.on_decline(msg, dialogue)
-        if not isinstance(response, List):
-            response = [response]
-        dialogue.outgoing_extend(response)
-        return response
+            results = self.behaviour.on_decline(msg, dialogue)
+        dialogue.outgoing_extend(results)
+        return results

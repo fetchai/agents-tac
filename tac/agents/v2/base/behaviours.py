@@ -171,7 +171,7 @@ class FIPABehaviour:
         # TODO close dialogue with a CloseDialogue message object.
         return None
 
-    def on_accept(self, accept: Accept, dialogue: Dialogue) -> Union[Decline, List[Union[OutContainer, Accept]], OutContainer]:
+    def on_accept(self, accept: Accept, dialogue: Dialogue) -> Union[List[Decline], List[Union[OutContainer, Accept]], List[OutContainer]]:
         """
         On Accept dispatcher.
 
@@ -185,12 +185,12 @@ class FIPABehaviour:
 
         if dialogue.dialogue_label in self.game_instance.lock_manager.pending_tx_acceptances \
                 and accept.target in self.game_instance.lock_manager.pending_tx_acceptances[dialogue.dialogue_label]:
-            result = self._on_match_accept(accept, dialogue)
+            results = self._on_match_accept(accept, dialogue)
         else:
-            result = self._on_initial_accept(accept, dialogue)
-        return result
+            results = self._on_initial_accept(accept, dialogue)
+        return results
 
-    def _on_initial_accept(self, accept: Accept, dialogue: Dialogue) -> Union[Decline, List[Union[OutContainer, Accept]]]:
+    def _on_initial_accept(self, accept: Accept, dialogue: Dialogue) -> Union[List[Decline], List[Union[OutContainer, Accept]]]:
         """
         Initial Accept handler.
 
@@ -201,20 +201,20 @@ class FIPABehaviour:
         """
         transaction = self.game_instance.lock_manager.pop_pending_proposal(dialogue, accept.target)
         new_msg_id = accept.msg_id + 1
+        results = []
         if self._is_profitable_transaction(transaction, dialogue):
             if self.game_instance.is_world_modeling:
                 self.game_instance.world_state.update_on_accept(transaction)
             logger.debug("[{}]: Locking the current state (as {}).".format(self.name, dialogue.role))
             self.game_instance.lock_manager.add_lock(transaction, as_seller=dialogue.is_seller)
-            result = []
-            result.append(OutContainer(message=transaction.serialize(), message_id=new_msg_id, dialogue_id=accept.dialogue_id, destination=self.game_instance.controller_pbk))
-            result.append(Accept(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id))
+            results.append(OutContainer(message=transaction.serialize(), message_id=new_msg_id, dialogue_id=accept.dialogue_id, destination=self.game_instance.controller_pbk))
+            results.append(Accept(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id))
         else:
             logger.debug("[{}]: Decline the accept (as {}).".format(self.name, dialogue.role))
-            result = Decline(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id)
-        return result
+            results.append(Decline(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id))
+        return results
 
-    def _on_match_accept(self, accept: Accept, dialogue: Dialogue) -> OutContainer:
+    def _on_match_accept(self, accept: Accept, dialogue: Dialogue) -> List[OutContainer]:
         """
         Match accept handler.
 
@@ -224,7 +224,7 @@ class FIPABehaviour:
         :return: None
         """
         logger.debug("[{}]: on match accept".format(self.name))
-
+        results = []
         transaction = self.game_instance.lock_manager.pop_pending_acceptances(dialogue, accept.target)
-        result = OutContainer(message=transaction.serialize(), message_id=accept.msg_id + 1, dialogue_id=accept.dialogue_id, destination=self.game_instance.controller_pbk)
-        return result
+        results.append(OutContainer(message=transaction.serialize(), message_id=accept.msg_id + 1, dialogue_id=accept.dialogue_id, destination=self.game_instance.controller_pbk))
+        return results
