@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import datetime
 import inspect
 import json
 import logging
@@ -10,6 +11,7 @@ import pprint
 import random
 import shutil
 import subprocess
+import time
 from collections import defaultdict
 from typing import List, Dict, Any
 
@@ -74,6 +76,19 @@ def run_sandbox(game_name: str, seed: int, output_data_dir: str) -> int:
     return return_code
 
 
+def wait_until_next_full_5_minutes():
+    now = datetime.datetime.now()
+    minutes_to_wait = 5 - now.minute % 5
+    timedelta = datetime.timedelta(0, minutes_to_wait * 60 - now.second, - now.microsecond)
+    start_time = now + timedelta
+    seconds_to_sleep = (start_time - now).seconds
+
+    logging.info("The next competition will start at {}".format(start_time))
+    logging.info("Sleeping for {} seconds...".format(seconds_to_sleep))
+    time.sleep(seconds_to_sleep)
+    logging.info("... Done.")
+
+
 def run_games(game_names: List[str], seeds: List[int], output_data_dir: str = "data") -> List[str]:
     """
     Run a TAC for every game name in the input list.
@@ -90,6 +105,8 @@ def run_games(game_names: List[str], seeds: List[int], output_data_dir: str = "d
         shall_continue: bool = ask_for_continuation(i)
         if not shall_continue:
             break
+        else:
+            wait_until_next_full_5_minutes()
 
         logging.info("Start iteration {:02d}...".format(i + 1))
         return_code = run_sandbox(game_name, seeds[i], output_data_dir)
