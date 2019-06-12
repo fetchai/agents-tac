@@ -201,29 +201,23 @@ class Dialogues:
         elif isinstance(msg, Propose):
             result = self_initiated_dialogue_label in self.dialogues
         elif isinstance(msg, Accept):
-            result_a = False
-            result_b = False
-            if self_initiated_dialogue_label in self.dialogues:
-                self_initiated_dialogue = self.dialogues[self_initiated_dialogue_label]
-                result_a = self_initiated_dialogue.is_matching_accept()
-            if other_initiated_dialogue_label in self.dialogues:
+            if msg.target == 2 and other_initiated_dialogue_label in self.dialogues:
                 other_initiated_dialogue = self.dialogues[other_initiated_dialogue_label]
-                result_b = other_initiated_dialogue.is_initial_accept()
-            if result_a and result_b:
-                raise ValueError('Cannot determine correct dialogue.')
-            return result_a or result_b
+                result = other_initiated_dialogue.is_initial_accept()
+            elif msg.target == 3 and self_initiated_dialogue_label in self.dialogues:
+                self_initiated_dialogue = self.dialogues[self_initiated_dialogue_label]
+                result = self_initiated_dialogue.is_matching_accept()
+            else:
+                result = False
         elif isinstance(msg, Decline):
-            result_a = False
-            result_b = False
-            if self_initiated_dialogue_label in self.dialogues:
+            if msg.target == 1 and self_initiated_dialogue_label in self.dialogues:
                 self_initiated_dialogue = self.dialogues[self_initiated_dialogue_label]
-                result_a = self_initiated_dialogue.is_cfp_decline()
-            if other_initiated_dialogue_label in self.dialogues:
+                result = self_initiated_dialogue.is_cfp_decline()
+            elif msg.target == 2 and other_initiated_dialogue_label in self.dialogues:
                 other_initiated_dialogue = self.dialogues[other_initiated_dialogue_label]
-                result_b = self_initiated_dialogue.is_proposal_decline()
-            if result_a and result_b:
-                raise ValueError('Cannot determine correct dialogue.')
-            return result_a or result_b
+                result = self_initiated_dialogue.is_proposal_decline()
+            else:
+                result = False
         else:
             result = False
         return result
@@ -234,31 +228,19 @@ class Dialogues:
         if isinstance(msg, Propose):
             dialogue = self.dialogues[self_initiated_dialogue_label]
         elif isinstance(msg, Accept):
-            result_a = False
-            result_b = False
-            if self_initiated_dialogue_label in self.dialogues:
-                self_initiated_dialogue = self.dialogues[self_initiated_dialogue_label]
-                result_a = self_initiated_dialogue.is_matching_accept()
-            if other_initiated_dialogue_label in self.dialogues:
-                other_initiated_dialogue = self.dialogues[other_initiated_dialogue_label]
-                result_b = other_initiated_dialogue.is_initial_accept()
-            if result_a and result_b:
-                raise ValueError('Cannot determine correct dialogue.')
-            elif result_a is not result_b:
-                dialogue = self_initiated_dialogue if result_a else other_initiated_dialogue
+            if msg.target == 2 and other_initiated_dialogue_label in self.dialogues:
+                dialogue = self.dialogues[other_initiated_dialogue_label]
+            elif msg.target == 3 and self_initiated_dialogue_label in self.dialogues:
+                dialogue = self.dialogues[self_initiated_dialogue_label]
+            else:
+                raise ValueError('Should not be here.')
         elif isinstance(msg, Decline):
-            result_a = False
-            result_b = False
-            if self_initiated_dialogue_label in self.dialogues:
-                self_initiated_dialogue = self.dialogues[self_initiated_dialogue_label]
-                result_a = self_initiated_dialogue.is_cfp_decline()
-            if other_initiated_dialogue_label in self.dialogues:
-                other_initiated_dialogue = self.dialogues[other_initiated_dialogue_label]
-                result_b = self_initiated_dialogue.is_proposal_decline()
-            if result_a and result_b:
-                raise ValueError('Cannot determine correct dialogue.')
-            elif result_a is not result_b:
-                dialogue = self_initiated_dialogue if result_a else other_initiated_dialogue
+            if msg.target == 1 and self_initiated_dialogue_label in self.dialogues:
+                dialogue = self.dialogues[self_initiated_dialogue_label]
+            elif msg.target == 2 and other_initiated_dialogue_label in self.dialogues:
+                dialogue = self.dialogues[other_initiated_dialogue_label]
+            else:
+                raise ValueError('Should not be here.')
         else:
             raise ValueError('Should not be here.')
         return dialogue
