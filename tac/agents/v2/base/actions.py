@@ -40,6 +40,11 @@ class ControllerActions(ControllerActionInterface):
         self.name = name
 
     def request_state_update(self) -> None:
+        """
+        Request current agent state from TAC Controller.
+
+        :return: None
+        """
         pass
 
 

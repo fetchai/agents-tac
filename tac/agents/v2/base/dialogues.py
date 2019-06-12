@@ -105,6 +105,12 @@ class Dialogue(ProtocolInterface):
         self.incoming_messages = []  # type: List[AgentMessage]
 
     def outgoing_extend(self, messages: List[AgentMessage]) -> None:
+        """
+        Extends the list of messages which keeps track of outgoing messages.
+
+        :param messages: a list of messages to be added
+        :return: None
+        """
         for message in messages:
             if isinstance(message, OutContainer):
                 self.outgoing_messages_controller.extend([message])
@@ -112,13 +118,27 @@ class Dialogue(ProtocolInterface):
                 self.outgoing_messages.extend([message])
 
     def incoming_extend(self, messages: List[AgentMessage]) -> None:
+        """
+        Extends the list of messages which keeps track of incoming messages.
+
+        :param messages: a list of messages to be added
+        :return: None
+        """
         self.incoming_messages.extend(messages)
 
     def role(self) -> str:
+        """
+        Returns the role the agent has in the dialogue.
+        """
         role = 'seller' if self.is_seller else 'buyer'
         return role
 
     def is_initial_accept(self) -> bool:
+        """
+        Checks whether the dialogue is expecting an initial accept.
+
+        :return: True if yes, False otherwise.
+        """
         last_sent_message = self.outgoing_messages[-1:]
         if (last_sent_message is not []) and isinstance(last_sent_message[0], Propose):
             result = True
@@ -127,6 +147,11 @@ class Dialogue(ProtocolInterface):
         return result
 
     def is_matching_accept(self) -> bool:
+        """
+        Checks whether the dialogue is expecting a matching accept.
+
+        :return: True if yes, False otherwise.
+        """
         last_sent_message = self.outgoing_messages[-1:]
         if (last_sent_message is not []) and isinstance(last_sent_message[0], Accept):
             result = True
@@ -135,6 +160,11 @@ class Dialogue(ProtocolInterface):
         return result
 
     def is_cfp_decline(self) -> bool:
+        """
+        Checks whether the dialogue is expecting an decline following a cfp.
+
+        :return: True if yes, False otherwise.
+        """
         last_sent_message = self.outgoing_messages[-1:]
         if (last_sent_message is not []) and isinstance(last_sent_message[0], CFP):
             result = True
