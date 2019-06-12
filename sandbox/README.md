@@ -76,4 +76,30 @@ In this case, be careful of the values of `NB_AGENTS` and `NB_BASELINE_AGENTS`:
 - if `NB_AGENTS` <= `NB_BASELINE_AGENTS`, the competition might start even though you didn't register your agent;
 - if  `NB_AGENTS` > `NB_BASELINE_AGENTS`, the competition waits until `NB_AGENTS` = `NB_BASELINE_AGENTS` agents to start.
   But if you're planning to run only one of your own agents, the difference should be just `1`, e.g. `NB_AGENTS=10` and `NB_BASELINE_AGENTS=9`. 
-  
+
+
+### Run sandbox multiple times
+
+To run the sandbox multiple times, use the script `run_iterated_games.py`:
+
+    python3 run_iterated_games.py --config config.json
+
+Usage:
+```
+usage: run_iterated_games [-h] [--nb_games NB_GAMES] [--output_dir OUTPUT_DIR]
+                          [--seeds SEEDS [SEEDS ...]] [--config CONFIG]
+
+Run the sandbox multiple times and collect scores for every run.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --nb_games NB_GAMES   How many times the competition must be run.
+  --output_dir OUTPUT_DIR
+                        The directory that will contain all the data for every
+                        game.
+  --seeds SEEDS [SEEDS ...]
+                        The list of seeds to use for different games.
+  --config CONFIG       The path for a config file (in JSON format). If None,
+                        use only command line arguments. The config file
+                        overrides the command line options.
+```
