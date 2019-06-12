@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 STARTING_MESSAGE_ID = 1
 STARTING_MESSAGE_TARGET = 0
 
-AgentMessage = Union[ByteMessage, CFP, Propose, Accept, Decline]
+AgentMessage = Union[ByteMessage, CFP, Propose, Accept, Decline, OutContainer]
 
 
 class ControllerReactions(ControllerReactionInterface):
@@ -170,22 +170,23 @@ class OEFReactions(OEFSearchReactionInterface):
 
         :return: None
         """
-        agent_pbks = list(set(agent_pbks))
+        agent_pbks = set(agent_pbks)
+        agent_pbks.remove(self.crypto.public_key)
+        agent_pbks = list(agent_pbks)
         searched_for = 'sellers' if is_searching_for_sellers else 'buyers'
-        role = 'buyer' if is_searching_for_sellers else 'seller'
-        is_seller = not is_searching_for_sellers
         logger.debug("[{}]: Found potential {}: {}".format(self.name, searched_for, agent_pbks))
 
         query = self.game_instance.build_services_query(is_searching_for_sellers)
         if query is None:
             response = 'demanding' if is_searching_for_sellers else 'supplying'
             logger.debug("[{}]: No longer {} any goods...".format(self.name, response))
+            return
         for agent_pbk in agent_pbks:
-            if agent_pbk == self.crypto.public_key: continue
-            dialogue = self.game_instance.dialogues.create(agent_pbk, self.crypto.public_key, is_seller)
-            cfp = dialogue.cfp(query)
+            dialogue = self.game_instance.dialogues.create(agent_pbk, self.crypto.public_key, not is_searching_for_sellers)
+            cfp = CFP(STARTING_MESSAGE_ID, dialogue.dialogue_label.dialogue_id, agent_pbk, STARTING_MESSAGE_TARGET, query)
             logger.debug("[{}]: send_cfp_as_{}: msg_id={}, dialogue_id={}, destination={}, target={}, query={}"
-                         .format(self.name, role, cfp.msg_id, cfp.dialogue_id, cfp.destination, cfp.target, query))
+                         .format(self.name, dialogue.role(), cfp.msg_id, cfp.dialogue_id, cfp.destination, cfp.target, query))
+            dialogue.outgoing_extend([cfp])
             self.out_box.out_queue.put(cfp)
 
     def _register_to_tac(self, controller_pbk: str) -> None:
@@ -221,51 +222,46 @@ class DialogueReactions(DialogueReactionInterface):
         React to a new dialogue.
         """
         is_seller = msg.query.model.name == TAC_SUPPLY_DATAMODEL_NAME
-        dialogue = self.dialogues.create(msg.destination, msg.destination, is_seller)
+        dialogue = self.dialogues.save(msg.destination, msg.destination, is_seller, msg.dialogue_id)
         logger.debug("[{}]: saving dialogue: dialogue_id={}".format(self.name, dialogue.dialogue_label.dialogue_id))
-        response = self.handle(msg, dialogue)
-        if isinstance(response, List):
-            for res in response:
-                self.out_box.out_queue.put(res)
-        else:
-            self.out_box.out_queue.put(response)
+        results = self.handle(msg, dialogue)
+        for result in results:
+            self.out_box.out_queue.put(result)
 
     def on_existing_dialogue(self, msg: AgentMessage) -> None:
         """
         React to an existing dialogue.
         """
-        dialogue = self.dialogues.get_dialogue(msg.dialogue_id, msg.destination, self.crypto.public_key)
+        dialogue = self.dialogues.get_dialogue(msg, self.crypto.public_key)
 
-        if not dialogue.is_message_consistent(msg):
-            logger.debug("[{}]: this message is not consistent: {}".format(self.name, type(msg)))
-            response = ByteMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination, b'This message is not consistent with the dialogue.')
-        else:
-            response = self.handle(msg, dialogue)
-        if isinstance(response, List):
-            for res in response:
-                self.out_box.out_queue.put(res)
-        else:
-            self.out_box.out_queue.put(response)
+        results = self.handle(msg, dialogue)
+        # if not dialogue.is_message_consistent(msg):
+        #     logger.debug("[{}]: this message is not consistent: {}".format(self.name, type(msg)))
+        #     response = ByteMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination, b'This message is not consistent with the dialogue.')
+        # else:
+        for result in results:
+            self.out_box.out_queue.put(result)
 
     def on_unidentified_dialogue(self, msg: AgentMessage) -> None:
         """
         React to an unidentified dialogue.
         """
         logger.debug("[{}]: Unidentified dialogue.".format(self.name))
-        response = ByteMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination, b'This message belongs to an unidentified dialogue.')
-        self.out_box.out_queue.put(response)
+        result = ByteMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination, b'This message belongs to an unidentified dialogue.')
+        self.out_box.out_queue.put(result)
 
     def handle(self, msg: AgentMessage, dialogue: Dialogue) -> Optional[AgentMessage]:
         dialogue.incoming_extend([msg])
         if isinstance(msg, CFP):
-            response = self.behaviour.on_cfp(msg, dialogue)
+            result = self.behaviour.on_cfp(msg, dialogue)
+            results = [result]
         elif isinstance(msg, Propose):
-            response = self.behaviour.on_propose(msg, dialogue)
+            result = self.behaviour.on_propose(msg, dialogue)
+            results = [result]
         elif isinstance(msg, Accept):
-            response = self.behaviour.on_accept(msg, dialogue)
+            results = self.behaviour.on_accept(msg, dialogue)
         elif isinstance(msg, Decline):
-            response = self.behaviour.on_decline(msg, dialogue)
-        if not isinstance(response, List):
-            response = [response]
-        dialogue.outgoing_extend(response)
-        return response
+            result = self.behaviour.on_decline(msg, dialogue)
+            results = [result]
+        dialogue.outgoing_extend(results)
+        return results

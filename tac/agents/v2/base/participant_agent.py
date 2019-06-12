@@ -91,3 +91,5 @@ class ParticipantAgent(Agent):
             else:
                 msg: AgentMessage
                 self.dialogue_handler.handle_dialogue_message(msg)
+
+            self.out_box.send_nowait()

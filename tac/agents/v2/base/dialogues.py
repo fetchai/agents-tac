@@ -17,21 +17,21 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+import logging
 from abc import abstractmethod
 from typing import List, Any, Dict, Union
 
-from oef.messages import CFP, Decline, Propose, Accept, Message as SimpleMessage, \
+from oef.messages import CFP, Decline, Propose, Accept, Message as ByteMessage, \
     SearchResult, OEFErrorMessage, DialogueErrorMessage
-from oef.query import Query
+from tac.agents.v2.mail import OutContainer
 
 Action = Any
 OEFMessage = Union[SearchResult, OEFErrorMessage, DialogueErrorMessage]
-ControllerMessage = SimpleMessage
-AgentMessage = Union[SimpleMessage, CFP, Propose, Accept, Decline]
+ControllerMessage = ByteMessage
+AgentMessage = Union[ByteMessage, CFP, Propose, Accept, Decline, OutContainer]
 Message = Union[OEFMessage, ControllerMessage, AgentMessage]
 
-STARTING_MESSAGE_ID = 1
-STARTING_MESSAGE_TARGET = 0
+logger = logging.getLogger(__name__)
 
 
 class DialogueLabel:
@@ -94,14 +94,6 @@ class ProtocolInterface:
         :param msg: any message allowed in the dialogue
         """
 
-    @abstractmethod
-    def cfp(self, query: Query) -> CFP:
-        """
-        Creates a cfp.
-
-        :param query: the query
-        """
-
 
 class Dialogue(ProtocolInterface):
 
@@ -109,44 +101,84 @@ class Dialogue(ProtocolInterface):
         self.dialogue_label = dialogue_label
         self.is_seller = is_seller
         self.outgoing_messages = []  # type: List[AgentMessage]
+        self.outgoing_messages_controller = []  # type: List[AgentMessage]
         self.incoming_messages = []  # type: List[AgentMessage]
 
-    def is_message_consistent(self, msg: AgentMessage):
-        """
-        """
-        last_sent_message = self.outgoing_messages[-1:]
-        if last_sent_message == []:
-            return False
-        last_sent_message = last_sent_message[0]
-        if (isinstance(last_sent_message, CFP) and isinstance(msg, Propose)) or \
-           (isinstance(last_sent_message, Propose) and isinstance(msg, Accept)) or \
-           (isinstance(last_sent_message, Propose) and isinstance(msg, Decline)) or \
-           (isinstance(last_sent_message, Accept) and isinstance(msg, Accept)):
-            result = True
-        else:
-            result = False
-            import pdb; pdb.set_trace()
-        return result
-
     def outgoing_extend(self, messages: List[AgentMessage]) -> None:
-        self.outgoing_messages.extend(messages)
+        """
+        Extends the list of messages which keeps track of outgoing messages.
+
+        :param messages: a list of messages to be added
+        :return: None
+        """
+        for message in messages:
+            if isinstance(message, OutContainer):
+                self.outgoing_messages_controller.extend([message])
+            else:
+                self.outgoing_messages.extend([message])
 
     def incoming_extend(self, messages: List[AgentMessage]) -> None:
+        """
+        Extends the list of messages which keeps track of incoming messages.
+
+        :param messages: a list of messages to be added
+        :return: None
+        """
         self.incoming_messages.extend(messages)
 
     def role(self) -> str:
+        """
+        Returns the role the agent has in the dialogue.
+        """
         role = 'seller' if self.is_seller else 'buyer'
         return role
 
-    def cfp(self, query: Query) -> CFP:
+    def is_initial_accept(self) -> bool:
         """
-        Creates a cfp.
+        Checks whether the dialogue is expecting an initial accept.
 
-        :param query: the query
+        :return: True if yes, False otherwise.
         """
-        cfp = CFP(STARTING_MESSAGE_ID, self.dialogue_label.dialogue_id, self.dialogue_label.dialogue_opponent_pbk, STARTING_MESSAGE_TARGET, query)
-        self.outgoing_extend([cfp])
-        return cfp
+        last_sent_message = self.outgoing_messages[-1:]
+        if (last_sent_message is not []) and isinstance(last_sent_message[0], Propose):
+            result = True
+        else:
+            result = False
+        return result
+
+    def is_matching_accept(self) -> bool:
+        """
+        Checks whether the dialogue is expecting a matching accept.
+
+        :return: True if yes, False otherwise.
+        """
+        last_sent_message = self.outgoing_messages[-1:]
+        if (last_sent_message is not []) and isinstance(last_sent_message[0], Accept):
+            result = True
+        else:
+            result = False
+        return result
+
+    def is_cfp_decline(self) -> bool:
+        """
+        Checks whether the dialogue is expecting an decline following a cfp.
+
+        :return: True if yes, False otherwise.
+        """
+        last_sent_message = self.outgoing_messages[-1:]
+        if (last_sent_message is not []) and isinstance(last_sent_message[0], CFP):
+            result = True
+        else:
+            result = False
+        return result
+
+    def is_propose_decline(self) -> bool:
+        last_sent_message = self.outgoing_messages[-1:]
+        if (last_sent_message is not []) and isinstance(last_sent_message[0], Propose):
+            result = True
+        else:
+            result = False
+        return result
 
 
 class Dialogues:
@@ -173,16 +205,57 @@ class Dialogues:
         result = isinstance(msg, CFP) and (msg.destination in known_pbks)
         return result
 
-    def is_dialogue_registered(self, dialogue_id: int, opponent_pbk: str, agent_pbk: str) -> DialogueLabel:
-        self_initiated_dialogue = DialogueLabel(dialogue_id, opponent_pbk, agent_pbk)
-        other_initiated_dialogue = DialogueLabel(dialogue_id, opponent_pbk, opponent_pbk)
-        return (self_initiated_dialogue in self.dialogues) is not (other_initiated_dialogue in self.dialogues)
+    def is_dialogue_registered(self, msg: AgentMessage, agent_pbk: str) -> DialogueLabel:
+        self_initiated_dialogue_label = DialogueLabel(msg.dialogue_id, msg.destination, agent_pbk)
+        other_initiated_dialogue_label = DialogueLabel(msg.dialogue_id, msg.destination, msg.destination)
+        if isinstance(msg, CFP):
+            result = False
+        elif isinstance(msg, Propose):
+            result = self_initiated_dialogue_label in self.dialogues
+        elif isinstance(msg, Accept):
+            if msg.target == 2 and other_initiated_dialogue_label in self.dialogues:
+                other_initiated_dialogue = self.dialogues[other_initiated_dialogue_label]
+                result = other_initiated_dialogue.is_initial_accept()
+            elif msg.target == 3 and self_initiated_dialogue_label in self.dialogues:
+                self_initiated_dialogue = self.dialogues[self_initiated_dialogue_label]
+                result = self_initiated_dialogue.is_matching_accept()
+            else:
+                result = False
+        elif isinstance(msg, Decline):
+            if msg.target == 1 and self_initiated_dialogue_label in self.dialogues:
+                self_initiated_dialogue = self.dialogues[self_initiated_dialogue_label]
+                result = self_initiated_dialogue.is_cfp_decline()
+            elif msg.target == 2 and other_initiated_dialogue_label in self.dialogues:
+                other_initiated_dialogue = self.dialogues[other_initiated_dialogue_label]
+                result = self_initiated_dialogue.is_proposal_decline()
+            else:
+                result = False
+        else:
+            result = False
+        return result
 
-    def get_dialogue(self, dialogue_id: int, opponent_pbk: str, agent_pbk: str) -> Dialogue:
-        self_initiated_dialogue = DialogueLabel(dialogue_id, opponent_pbk, agent_pbk)
-        other_initiated_dialogue = DialogueLabel(dialogue_id, opponent_pbk, opponent_pbk)
-        dialogue_label = self_initiated_dialogue if self_initiated_dialogue in self.dialogues else other_initiated_dialogue
-        return self.dialogues[dialogue_label]
+    def get_dialogue(self, msg: AgentMessage, agent_pbk: str) -> Dialogue:
+        self_initiated_dialogue_label = DialogueLabel(msg.dialogue_id, msg.destination, agent_pbk)
+        other_initiated_dialogue_label = DialogueLabel(msg.dialogue_id, msg.destination, msg.destination)
+        if isinstance(msg, Propose):
+            dialogue = self.dialogues[self_initiated_dialogue_label]
+        elif isinstance(msg, Accept):
+            if msg.target == 2 and other_initiated_dialogue_label in self.dialogues:
+                dialogue = self.dialogues[other_initiated_dialogue_label]
+            elif msg.target == 3 and self_initiated_dialogue_label in self.dialogues:
+                dialogue = self.dialogues[self_initiated_dialogue_label]
+            else:
+                raise ValueError('Should not be here.')
+        elif isinstance(msg, Decline):
+            if msg.target == 1 and self_initiated_dialogue_label in self.dialogues:
+                dialogue = self.dialogues[self_initiated_dialogue_label]
+            elif msg.target == 2 and other_initiated_dialogue_label in self.dialogues:
+                dialogue = self.dialogues[other_initiated_dialogue_label]
+            else:
+                raise ValueError('Should not be here.')
+        else:
+            raise ValueError('Should not be here.')
+        return dialogue
 
     def next_dialogue_id(self) -> int:
         """
@@ -193,7 +266,7 @@ class Dialogues:
 
     def create(self, dialogue_opponent_pbk: str, dialogue_starter_pbk: str, is_seller: bool) -> Dialogue:
         """
-        Create a new dialogue.
+        Create a self initiated dialogue.
 
         :param dialogue_opponent_pbk: the pbk of the agent with which the dialogue is kept.
         :param dialogue_starter_pbk: the pbk of the agent which started the dialogue
@@ -202,6 +275,28 @@ class Dialogues:
         :return: the created dialogue.
         """
         dialogue_label = DialogueLabel(self.next_dialogue_id(), dialogue_opponent_pbk, dialogue_starter_pbk)
+        assert dialogue_label not in self.dialogues
+        dialogue = Dialogue(dialogue_label, is_seller)
+        if is_seller:
+            assert dialogue_label not in self.dialogues_as_seller
+            self._dialogues_as_seller.update({dialogue_label: dialogue})
+        else:
+            assert dialogue_label not in self.dialogues_as_buyer
+            self._dialogues_as_buyer.update({dialogue_label: dialogue})
+        self.dialogues.update({dialogue_label: dialogue})
+        return dialogue
+
+    def save(self, dialogue_opponent_pbk: str, dialogue_starter_pbk: str, is_seller: bool, dialogue_id: int) -> Dialogue:
+        """
+        Save an opponent initiated dialogue.
+
+        :param dialogue_opponent_pbk: the pbk of the agent with which the dialogue is kept.
+        :param dialogue_starter_pbk: the pbk of the agent which started the dialogue
+        :param is_seller: boolean indicating the agent role
+
+        :return: the created dialogue.
+        """
+        dialogue_label = DialogueLabel(dialogue_id, dialogue_opponent_pbk, dialogue_starter_pbk)
         assert dialogue_label not in self.dialogues
         dialogue = Dialogue(dialogue_label, is_seller)
         if is_seller:

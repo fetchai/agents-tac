@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # ------------------------------------------------------------------------------
@@ -22,19 +23,15 @@ import logging
 import time
 from collections import defaultdict, deque
 from threading import Thread
-from typing import Dict, Tuple, Deque, List
+from typing import Dict, Tuple, Deque
 
-from oef.schema import Description
-
-from tac.agents.v2.base.dialogues import DialogueLabel, Dialogue
-from tac.helpers.crypto import Crypto
-from tac.agents.v2.base.helpers import generate_transaction_id
 from tac.platform.protocol import Transaction
 
-logger = logging.getLogger(__name__)
-
+DIALOGUE_LABEL = Tuple[str, int]  # (origin, dialogue_id)
 MESSAGE_ID = int
 TRANSACTION_ID = str
+
+logger = logging.getLogger(__name__)
 
 
 class LockManager(object):
@@ -47,10 +44,10 @@ class LockManager(object):
         :param baseline_agent: The baseline agent the manager refers to.
         :param pending_transaction_timeout: seconds to wait before a transaction/message can be removed from any pool.
         """
-        self.agent_name = agent_name
+        self._agent_name = agent_name
 
-        self.pending_tx_proposals = defaultdict(lambda: {})  # type: Dict[DialogueLabel, Dict[MESSAGE_ID, Transaction]]
-        self.pending_tx_acceptances = defaultdict(lambda: {})  # type: Dict[DialogueLabel, Dict[MESSAGE_ID, Transaction]]
+        self.pending_tx_proposals = defaultdict(lambda: {})  # type: Dict[DIALOGUE_LABEL, Dict[MESSAGE_ID, Transaction]]
+        self.pending_tx_acceptances = defaultdict(lambda: {})  # type: Dict[DIALOGUE_LABEL, Dict[MESSAGE_ID, Transaction]]
 
         self.locks = {}  # type: Dict[TRANSACTION_ID, Transaction]
         self.locks_as_buyer = {}  # type: Dict[TRANSACTION_ID, Transaction]
@@ -60,8 +57,14 @@ class LockManager(object):
         self._cleanup_locks_task = None
         self._cleanup_locks_task_is_running = False
 
-        self._last_update_for_pending_messages = deque()  # type: Deque[Tuple[datetime.datetime, Tuple[DialogueLabel, MESSAGE_ID]]]
-        self._last_update_for_transactions = deque()  # type: Deque[Tuple[datetime.datetime, TRANSACTION_ID]]
+        # type: Deque[Tuple[datetime.datetime, Tuple[DIALOGUE_LABEL, MESSAGE_ID]]]
+        self._last_update_for_pending_messages = deque()
+        # type: Deque[Tuple[datetime.datetime, TRANSACTION_ID]]
+        self._last_update_for_transactions = deque()
+
+    @property
+    def agent_name(self) -> str:
+        return self._agent_name
 
     def cleanup_locks_job(self) -> None:
         """
@@ -92,7 +95,7 @@ class LockManager(object):
 
             # extract dialogue label and message id
             dialogue_label, message_id = next_item
-            logger.debug("[{}]: Removing message {}, {}".format(self.agent_name, dialogue_label, message_id))
+            logger.debug("[{}]: Removing message {}, {}".format(self.name, dialogue_label, message_id))
 
             # remove (safely) the associated pending proposal (if present)
             self.pending_tx_proposals.get(dialogue_label, {}).pop(message_id, None)
@@ -127,7 +130,7 @@ class LockManager(object):
 
             # extract dialogue label and message id
             transaction_id = next_item
-            logger.debug("[{}]: Removing transaction: {}".format(self.agent_name, transaction_id))
+            logger.debug("[{}]: Removing transaction: {}".format(self.name, transaction_id))
 
             # remove (safely) the associated pending proposal (if present)
             self.locks.pop(transaction_id, None)
@@ -147,33 +150,38 @@ class LockManager(object):
         now = datetime.datetime.now()
         self._last_update_for_transactions.append((now, transaction_id))
 
-    def _register_message_with_time(self, dialogue: Dialogue, msg_id: int):
+    def _register_message_with_time(self, dialogue_id: int, origin: str, msg_id: int):
         """
         Register a message with a creation datetime.
         :return: None
         """
         now = datetime.datetime.now()
-        message_id = (dialogue.dialogue_label, msg_id)
+        dialogue_label = (dialogue_id, origin)
+        message_id = (dialogue_label, msg_id)
         self._last_update_for_pending_messages.append((now, message_id))
 
-    def add_pending_proposal(self, dialogue: Dialogue, proposal_id: int, transaction: Transaction):
-        assert dialogue.dialogue_label not in self.pending_tx_proposals and proposal_id not in self.pending_tx_proposals[dialogue.dialogue_label]
-        self.pending_tx_proposals[dialogue.dialogue_label][proposal_id] = transaction
-        self._register_message_with_time(dialogue, proposal_id)
+    def add_pending_proposal(self, dialogue_id: int, origin: str, proposal_id: int, transaction: Transaction):
+        dialogue_label = (origin, dialogue_id)
+        assert dialogue_label not in self.pending_tx_proposals and proposal_id not in self.pending_tx_proposals[dialogue_label]
+        self.pending_tx_proposals[dialogue_label][proposal_id] = transaction
+        self._register_message_with_time(dialogue_id, origin, proposal_id)
 
-    def pop_pending_proposal(self, dialogue: Dialogue, proposal_id: int) -> Transaction:
-        assert dialogue.dialogue_label in self.pending_tx_proposals and proposal_id in self.pending_tx_proposals[dialogue.dialogue_label]
-        transaction = self.pending_tx_proposals[dialogue.dialogue_label].pop(proposal_id)
+    def pop_pending_proposal(self, dialogue_id: int, origin: str, proposal_id: int) -> Transaction:
+        dialogue_label = (origin, dialogue_id)
+        assert dialogue_label in self.pending_tx_proposals and proposal_id in self.pending_tx_proposals[dialogue_label]
+        transaction = self.pending_tx_proposals[dialogue_label].pop(proposal_id)
         return transaction
 
-    def add_pending_acceptances(self, dialogue: Dialogue, proposal_id: int, transaction: Transaction):
-        assert dialogue.dialogue_label not in self.pending_tx_acceptances and proposal_id not in self.pending_tx_acceptances[dialogue.dialogue_label]
-        self.pending_tx_acceptances[dialogue.dialogue_label][proposal_id] = transaction
-        self._register_message_with_time(dialogue, proposal_id)
+    def add_pending_acceptances(self, dialogue_id: int, origin: str, proposal_id: int, transaction: Transaction):
+        dialogue_label = (origin, dialogue_id)
+        assert dialogue_label not in self.pending_tx_acceptances and proposal_id not in self.pending_tx_acceptances[dialogue_label]
+        self.pending_tx_acceptances[dialogue_label][proposal_id] = transaction
+        self._register_message_with_time(dialogue_id, origin, proposal_id)
 
-    def pop_pending_acceptances(self, dialogue: Dialogue, proposal_id: int) -> Transaction:
-        assert dialogue.dialogue_label in self.pending_tx_acceptances and proposal_id in self.pending_tx_acceptances[dialogue.dialogue_label]
-        transaction = self.pending_tx_acceptances[dialogue.dialogue_label].pop(proposal_id)
+    def pop_pending_acceptances(self, dialogue_id: int, origin: str, proposal_id: int) -> Transaction:
+        dialogue_label = (origin, dialogue_id)
+        assert dialogue_label in self.pending_tx_acceptances and proposal_id in self.pending_tx_acceptances[dialogue_label]
+        transaction = self.pending_tx_acceptances[dialogue_label].pop(proposal_id)
         return transaction
 
     def add_lock(self, transaction: Transaction, as_seller: bool):
@@ -203,26 +211,3 @@ class LockManager(object):
         if self._cleanup_locks_task_is_running:
             self._cleanup_locks_task_is_running = False
             self._cleanup_locks_task.join()
-
-    def store_proposals(self, proposals: List[Description], new_msg_id: int, dialogue: Dialogue, origin: str, is_seller: bool, crypto: Crypto) -> None:
-        """
-        Store proposals as pending transactions.
-
-        :param new_msg_id: the new message id
-        :param dialogue: the dialogue
-        :param origin: the public key of the message sender.
-        :param is_seller: Boolean indicating the role of the agent
-        :param crypto: the crypto object
-
-        :return: None
-        """
-        for proposal in proposals:
-            proposal_id = new_msg_id  # TODO fix if more than one proposal!
-            transaction_id = generate_transaction_id(crypto.public_key, origin, dialogue.dialogue_label, is_seller)  # TODO fix if more than one proposal!
-            transaction = Transaction.from_proposal(proposal=proposal,
-                                                    transaction_id=transaction_id,
-                                                    is_buyer=not is_seller,
-                                                    counterparty=origin,
-                                                    sender=crypto.public_key,
-                                                    crypto=crypto)
-            self.add_pending_proposal(dialogue, proposal_id, transaction)

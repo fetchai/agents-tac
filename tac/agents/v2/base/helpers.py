@@ -21,6 +21,7 @@ from typing import Union
 
 from oef.messages import Message as SimpleMessage, SearchResult, OEFErrorMessage, DialogueErrorMessage
 
+from tac.agents.v2.base.dialogues import DialogueLabel
 from tac.helpers.crypto import Crypto
 from tac.platform.protocol import Response
 
@@ -46,3 +47,18 @@ def is_controller_message(msg: Message, crypto: Crypto) -> bool:
         return False
 
     return True
+
+
+def generate_transaction_id(agent_pbk: str, origin: str, dialogue_label: DialogueLabel, agent_is_seller: bool) -> str:
+    """
+    Make a transaction id.
+    :param agent_pbk: the pbk of the agent.
+    :param origin: the public key of the message sender.
+    :param dialogue_id: the dialogue id
+    :param agent_is_seller: boolean indicating if the agent is a seller
+    :return: a transaction id
+    """
+    # the format is {buyer_pbk}_{seller_pbk}_{dialogue_id}
+    buyer_pbk, seller_pbk = (origin, agent_pbk) if agent_is_seller else (agent_pbk, origin)
+    transaction_id = "{}_{}_{}_{}".format(buyer_pbk, seller_pbk, dialogue_label.dialogue_id, dialogue_label.dialogue_starter_pbk)
+    return transaction_id
