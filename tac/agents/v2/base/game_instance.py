@@ -27,7 +27,7 @@ from oef.schema import Description
 
 from tac.agents.v2.base.dialogues import Dialogues
 from tac.agents.v2.base.lock_manager import LockManager
-from tac.agents.v2.base.strategy import BaselineStrategy
+from tac.agents.v2.base.strategy import Strategy
 from tac.platform.game import AgentState, WorldState, GameConfiguration
 from tac.helpers.misc import build_query, get_goods_quantities_description
 from tac.platform.protocol import GameData
@@ -63,9 +63,11 @@ class GameInstance:
     The GameInstance maintains state of the game from the agent's perspective.
     """
 
-    def __init__(self, agent_name: str, is_world_modeling: bool = False, services_interval: int = 10, register_as: str = 'both', search_for: str = 'both', pending_transaction_timeout: int = 10):
+    def __init__(self, agent_name: str, strategy: Strategy, services_interval: int = 10, pending_transaction_timeout: int = 10):
         self.agent_name = agent_name
         self.controller_pbk = None  # type: Optional[str]
+
+        self._strategy = strategy
 
         self._search = Search()
         self._dialogues = Dialogues()
@@ -75,15 +77,11 @@ class GameInstance:
         self._game_configuration = None  # type: Optional[GameConfiguration]
         self._initial_agent_state = None  # type: Optional[AgentState]
         self._agent_state = None  # type: Optional[AgentState]
-        self._is_world_modeling = is_world_modeling
         self._world_state = None  # type: Optional[WorldState]
 
         self._services_interval = datetime.timedelta(0, services_interval)
         self._last_update_time = datetime.datetime.now() - self._services_interval
         self._last_search_time = datetime.datetime.now() - datetime.timedelta(0, round(services_interval / 2.0))
-
-        self._register_as = register_as
-        self._search_for = search_for
 
         self.goods_supplied_description = None
         self.goods_demanded_description = None
@@ -97,7 +95,7 @@ class GameInstance:
                                                      game_data.agent_pbks, game_data.agent_names, game_data.good_pbks)
         self._initial_agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
         self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
-        if self.is_world_modeling:
+        if self.strategy.is_world_modeling:
             opponent_pbks = self.game_configuration.agent_pbks
             opponent_pbks.remove(game_data.public_key)
             self._world_state = WorldState(opponent_pbks, self.game_configuration.good_pbks, self.initial_agent_state)
@@ -113,6 +111,10 @@ class GameInstance:
         self._world_state = None
         self.goods_supplied_description = None
         self.goods_demanded_description = None
+
+    @property
+    def strategy(self) -> Strategy:
+        return self._strategy
 
     @property
     def search(self) -> Search:
@@ -143,10 +145,6 @@ class GameInstance:
         return self._world_state
 
     @property
-    def is_world_modeling(self):
-        return self._is_world_modeling
-
-    @property
     def services_interval(self):
         return self._services_interval
 
@@ -157,22 +155,6 @@ class GameInstance:
     @property
     def last_search_time(self):
         return self._last_search_time
-
-    @property
-    def is_registering_as_seller(self):
-        return self._register_as == 'seller' or self._register_as == 'both'
-
-    @property
-    def is_searching_for_sellers(self):
-        return self._search_for == 'sellers' or self._search_for == 'both'
-
-    @property
-    def is_registering_as_buyer(self):
-        return self._register_as == 'buyer' or self._register_as == 'both'
-
-    @property
-    def is_searching_for_buyers(self):
-        return self._search_for == 'buyers' or self._search_for == 'both'
 
     def is_time_to_update_services(self) -> bool:
         """
@@ -254,7 +236,7 @@ class GameInstance:
         :return: a list of good pbks
         """
         state_after_locks = self.state_after_locks(is_seller=is_supply)
-        pbks = BaselineStrategy.supplied_good_pbks(self.game_configuration.good_pbks, state_after_locks.current_holdings) if is_supply else BaselineStrategy.demanded_good_pbks(self.game_configuration.good_pbks, state_after_locks.current_holdings)
+        pbks = self.strategy.supplied_good_pbks(self.game_configuration.good_pbks, state_after_locks.current_holdings) if is_supply else self.strategy.demanded_good_pbks(self.game_configuration.good_pbks, state_after_locks.current_holdings)
         return pbks
 
     def get_goods_quantities(self, is_supply: bool) -> List[int]:
@@ -266,7 +248,7 @@ class GameInstance:
         :return: the vector of good quantities offered/requested.
         """
         state_after_locks = self.state_after_locks(is_seller=is_supply)
-        quantities = BaselineStrategy.supplied_good_quantities(state_after_locks.current_holdings) if is_supply else BaselineStrategy.demanded_good_quantities(state_after_locks.current_holdings)
+        quantities = self.strategy.supplied_good_quantities(state_after_locks.current_holdings) if is_supply else self.strategy.demanded_good_quantities(state_after_locks.current_holdings)
         return quantities
 
     def state_after_locks(self, is_seller: bool):
@@ -295,7 +277,7 @@ class GameInstance:
         :return: a list of descriptions
         """
         state_after_locks = self.state_after_locks(is_seller=is_seller)
-        candidate_proposals = BaselineStrategy.get_proposals(self.game_configuration.good_pbks, state_after_locks.current_holdings, state_after_locks.utility_params, self.game_configuration.tx_fee, is_seller, self.is_world_modeling, self._world_state)
+        candidate_proposals = self.strategy.get_proposals(self.game_configuration.good_pbks, state_after_locks.current_holdings, state_after_locks.utility_params, self.game_configuration.tx_fee, is_seller, self._world_state)
         proposals = []
         for proposal in candidate_proposals:
             if not query.check(proposal): continue

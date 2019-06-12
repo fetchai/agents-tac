@@ -1,12 +1,14 @@
 import argparse
 
 from tac.agents.v2.base.participant_agent import ParticipantAgent
+from tac.agents.v2.base.strategy import Strategy
+from tac.agents.v2.examples.strategy import BaselineStrategy
 
 
 class BaselineAgent(ParticipantAgent):
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int = 3333, register_as: str = 'both', search_for: str = 'both', is_world_modeling: bool = False, pending_transaction_timeout: int = 30):
-        super().__init__(name, oef_addr, oef_port, register_as, search_for, is_world_modeling, pending_transaction_timeout)
+    def __init__(self, name: str, oef_addr: str, oef_port: int, strategy: Strategy, services_interval: int = 10, pending_transaction_timeout: int = 30):
+        super().__init__(name, oef_addr, oef_port, strategy, services_interval, pending_transaction_timeout)
 
 
 def _parse_arguments():
@@ -19,7 +21,8 @@ if __name__ == '__main__':
 
     arguments = _parse_arguments()
 
-    agent = BaselineAgent(arguments.name, "127.0.0.1", 3333, False)
+    strategy = BaselineStrategy(register_as='both', search_for='both', is_world_modeling=False)
+    agent = BaselineAgent(arguments.name, "127.0.0.1", 3333, strategy, 10, 30)
     try:
         agent.start()
     finally:
