@@ -18,8 +18,8 @@ This repository contains submodules. Clone with recursive strategy:
 - `notebooks`: contains jupyter notebooks with exploratory code.
 - `proto`: contains the protobuf schema.
 - `sandbox`: setup for using Docker compose.
-- `scripts`: list of scripts for different purposes (e.g. do data analysis)
 - `tac`: the main folder containing the Python package.
+- `templates`: template agents.
 - `tests`: tests for the package.
 
 ## Dependencies
@@ -28,9 +28,7 @@ This repository contains submodules. Clone with recursive strategy:
 - All python specific dependencies are specified in the Pipfile (and installed via the commands specified in 'Preliminaries').
 - The project requires oef-search-pluto which can be pulled here:
 	
-	  docker pull fetchai/oef-search:v1
-
-	  docker pull fetchai/oef-search:latest
+	  docker pull fetchai/oef-search:v4
 
 ## Preliminaries
 
@@ -67,6 +65,13 @@ This repository contains submodules. Clone with recursive strategy:
 - To run linters:
 
       tox -e flake8
+
+- To start OEF (latest build):
+
+```
+python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config_latest.json
+``` 
+
 
 ## Resources
 
