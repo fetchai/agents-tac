@@ -2,9 +2,18 @@ import asyncio
 
 import oef.agents
 
+import sys
 
 if __name__ == '__main__':
-    agent = oef.agents.OEFAgent('healthcheck-agent','127.0.0.1', 3333, loop=asyncio.get_event_loop())
-    agent.connect()
-    agent.disconnect()
-    exit(0)
+    try:
+        host = sys.argv[1]
+        port = sys.argv[2]
+        print("Connecting to {}:{}".format(host, port))
+        agent = oef.agents.OEFAgent('healthcheck-agent', host, port, loop=asyncio.get_event_loop())
+        agent.connect()
+        agent.disconnect()
+        print("OK!")
+        exit(0)
+    except Exception as e:
+        print(str(e))
+        exit(1)
