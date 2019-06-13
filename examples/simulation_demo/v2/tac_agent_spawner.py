@@ -32,6 +32,7 @@ import dateutil
 import math
 
 from tac.agents.v2.examples.baseline import BaselineAgent
+from tac.agents.v2.examples.strategy import BaselineStrategy
 from tac.gui.monitor import VisdomMonitor, NullMonitor
 from tac.helpers.plantuml import plantuml_gen
 from tac.platform.controller import ControllerAgent, TACParameters
@@ -48,7 +49,7 @@ def parse_arguments():
     parser.add_argument("--base-good-endowment", default=2, type=int, help="The base amount of per good instances every agent receives.")
     parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
     parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
-    parser.add_argument("--tx-fee", default=1, type=int, help="The transaction fee.")
+    parser.add_argument("--tx-fee", default=1.0, type=float, help="The transaction fee.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
     parser.add_argument("--nb-baseline-agents", type=int, default=10, help="Number of baseline agent to run. Defaults to the number of agents of the competition.")
@@ -159,7 +160,8 @@ def initialize_baseline_agent(agent_name: str, oef_addr: str, oef_port: int, reg
     """
 
     # Notice: we create a new asyncio loop, so we can run it in an independent thread.
-    return BaselineAgent(agent_name, oef_addr, oef_port, register_as=register_as, search_for=search_for, is_world_modeling=is_world_modeling, pending_transaction_timeout=pending_transaction_timeout)
+    strategy = BaselineStrategy(register_as=register_as, search_for=search_for, is_world_modeling=is_world_modeling)
+    return BaselineAgent(agent_name, oef_addr, oef_port, strategy, pending_transaction_timeout=pending_transaction_timeout)
 
 
 def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port: int, register_as: str, search_for: str, pending_transaction_timeout: int) -> List[BaselineAgent]:

@@ -53,7 +53,7 @@ class Strategy:
         return self._search_for == 'buyers' or self._search_for == 'both'
 
     @abstractmethod
-    def supplied_good_quantities(current_holdings: List[int]) -> List[int]:
+    def supplied_good_quantities(self, current_holdings: List[int]) -> List[int]:
         """
         Generates list of quantities which are supplied.
 
@@ -62,7 +62,7 @@ class Strategy:
         """
 
     @abstractmethod
-    def supplied_good_pbks(good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
+    def supplied_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
         """
         Generates set of good pbks which are supplied.
 
@@ -72,7 +72,7 @@ class Strategy:
         """
 
     @abstractmethod
-    def demanded_good_quantities(current_holdings: List[int]) -> List[int]:
+    def demanded_good_quantities(self, current_holdings: List[int]) -> List[int]:
         """
         Generates list of quantities which are demanded.
 
@@ -81,7 +81,7 @@ class Strategy:
         """
 
     @abstractmethod
-    def demanded_good_pbks(good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
+    def demanded_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
         """
         Generates set of good pbks which are demanded.
 
@@ -91,7 +91,7 @@ class Strategy:
         """
 
     @abstractmethod
-    def get_proposals(good_pbks: List[str], current_holdings: List[int], utility_params: List[int], tx_fee: float, is_seller: bool, world_state: Optional[WorldState]) -> List[Description]:
+    def get_proposals(self, good_pbks: List[str], current_holdings: List[int], utility_params: List[int], tx_fee: float, is_seller: bool, world_state: Optional[WorldState]) -> List[Description]:
         """
         Generates proposals from the seller/buyer.
 
