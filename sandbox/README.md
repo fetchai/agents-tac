@@ -1,15 +1,19 @@
 # Sandbox
 
-This folders contains the `docker-compose` scripts to run an ensemble of 
-Docker image to support TAC.
+This folder lets you run the sandbox for the competition.
 
-Please install [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/).
+## 1. Getting Started
 
-## Build
+- Before getting started, check that:
+
+  - [x] You have followed the steps under 'Dependencies' and 'Preliminaries' on root readme.
+  - [x] You are connected to the internet (to pull the latest docker images).
+
+- Then, ensure that the sandbox has been built:
 
     docker-compose build
 
-## Configuration
+## 2. Configuration
 
 To configure the execution of TAC, you can tune the following parameters:
 - `NB_AGENTS` is the minimum number of agents required for the competition to start.
@@ -29,26 +33,19 @@ To configure the execution of TAC, you can tune the following parameters:
 - `COMPETITION_TIMEOUT` is the amount of time (in seconds) to wait from the start of the competition until the termination of the competition.
 - `SEED` is the seed for the random module.
 
-To change the parameters:
 
-- Either, export the variable before the command:
-
-      export NB_BASELINE_AGENTS=2
-      docker-compose up
-
-- Or, set the variable in one command:
-
-      NB_BASELINE_AGENTS=2 docker-compose up
-
-- Or, specify the values in the [`.env`](.env) file and then run command:
-    
-      docker-compose up
+Specify the values in the [`.env`](.env) file.
 
 To double-check whether the variable has been set successfully, use:
 
     docker-compose config
 
-To see realtime data visualization, connect to the Visdom server at `http://localhost:8097`.
+## 3. Run the sandbox:
+
+There are three ways to run the sandbox:
+- with baseline agents only
+- with baseline agents and your own agents
+- multiple times
 
 ### Run TAC with baseline agents only
 
@@ -56,28 +53,27 @@ To run a TAC instance with only baseline agents, set `NB_AGENTS` equal to `NB_BA
 `REGISTRATION_TIME` should be high enough (e.g. 5-10 seconds) to allow all the baseline agents to register to TAC.
     
 Notice: if `NB_AGENTS` > `NB_BASELINE_AGENTS`, there are not enough agents to start the TAC.
-    
+
+- Start the sandbox (this starts an OEF-Node, a controller agent and a list of `NB_BASELINE_AGENTS` baseline agents):
+
+      docker-compose up
+
 ### Run TAC with baseline agents and your own agent implementation(s)
 
-If you want to include your own agents:  
+If you want to include your own agents, set `NB_AGENTS` to a number equal to `NB_BASELINE_AGENTS` plus the number of own agents you want to connect.  
 
-- Set up an OEF-Node, a Controller agent and a list of baseline agents:
+- Start the sandbox (this starts an OEF-Node, a controller agent and a list of `NB_BASELINE_AGENTS` baseline agents):
 
       docker-compose up
       
-- Connect your agent to `localhost:3333`, e.g.:
+- Connect your agents to `localhost:3333`, e.g.:
+```
+python3 ../template/v2/*.py
+```
 
-      python3 ../scripts/template_basic.py
-
-- Or connect our baseline agent to `localhost:3333`, e.g.:
-
-	  python3 ../scripts/template_baseline.py
-      
-In this case, be careful of the values of `NB_AGENTS` and `NB_BASELINE_AGENTS`:
+Be careful with the values of `NB_AGENTS` and `NB_BASELINE_AGENTS`:
 - if `NB_AGENTS` <= `NB_BASELINE_AGENTS`, the competition might start even though you didn't register your agent;
-- if  `NB_AGENTS` > `NB_BASELINE_AGENTS`, the competition waits until `NB_AGENTS` = `NB_BASELINE_AGENTS` agents to start.
-  But if you're planning to run only one of your own agents, the difference should be just `1`, e.g. `NB_AGENTS=10` and `NB_BASELINE_AGENTS=9`. 
-
+- if  `NB_AGENTS` > `NB_BASELINE_AGENTS`, the competition start until `NB_AGENTS` = `NB_BASELINE_AGENTS` agents to start. If you're planning to run only one of your own agents, the difference should be just `1`, e.g. `NB_AGENTS=10` and `NB_BASELINE_AGENTS=9`. 
 
 ### Run sandbox multiple times
 
@@ -104,3 +100,7 @@ optional arguments:
                         use only command line arguments. The config file
                         overrides the command line options.
 ```
+
+## 4. Visualization:
+
+To see realtime data visualization, connect to the Visdom server at `http://localhost:8097`.
