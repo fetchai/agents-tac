@@ -35,6 +35,8 @@ services:
       - "CMD-SHELL"
       - "python3"
       - "oef_healthcheck.py"
+      - "127.0.0.1"
+      - "3333"
       timeout: 5s
 
   visdom:
@@ -76,8 +78,6 @@ services:
       - "${OEF_ADDR}"
       - "--oef-port"
       - "${OEF_PORT}"
-      - "--uml"
-      - "${UML}"
       - "--data-output-dir"
       - "sandbox/${DATA_OUTPUT_DIR}"
       - "--experiment-id"

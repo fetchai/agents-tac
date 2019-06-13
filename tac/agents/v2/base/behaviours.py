@@ -23,6 +23,7 @@ import random
 from typing import Union, List
 
 from oef.messages import CFP, Decline, Propose, Accept
+from oef.utils import Context
 
 from tac.agents.v2.base.game_instance import GameInstance
 from tac.agents.v2.base.dialogues import Dialogue
@@ -75,7 +76,7 @@ class FIPABehaviour:
                                                                       "origin": cfp.destination,
                                                                       "target": cfp.msg_id
                                                                   })))
-            response = Decline(new_msg_id, cfp.dialogue_id, cfp.destination, cfp.msg_id)
+            response = Decline(new_msg_id, cfp.dialogue_id, cfp.destination, cfp.msg_id, Context())
         else:
             proposals = [random.choice(self.game_instance.get_proposals(cfp.query, dialogue.is_seller))]
             self.game_instance.lock_manager.store_proposals(proposals, new_msg_id, dialogue, cfp.destination, dialogue.is_seller, self.crypto)
@@ -87,7 +88,7 @@ class FIPABehaviour:
                                                                       "target": cfp.msg_id,
                                                                       "propose": proposals[0].values  # TODO fix if more than one proposal!
                                                                   })))
-            response = Propose(new_msg_id, cfp.dialogue_id, cfp.destination, cfp.msg_id, proposals)
+            response = Propose(new_msg_id, cfp.dialogue_id, cfp.destination, cfp.msg_id, proposals, Context())
         return response
 
     def on_propose(self, propose: Propose, dialogue: Dialogue) -> Union[Accept, Decline]:
@@ -113,10 +114,10 @@ class FIPABehaviour:
             logger.debug("[{}]: Accepting propose (as {}).".format(self.name, dialogue.role()))
             self.game_instance.lock_manager.add_lock(transaction, as_seller=dialogue.is_seller)
             self.game_instance.lock_manager.add_pending_acceptances(dialogue, new_msg_id, transaction)
-            result = Accept(new_msg_id, propose.dialogue_id, propose.destination, propose.msg_id)
+            result = Accept(new_msg_id, propose.dialogue_id, propose.destination, propose.msg_id, Context())
         else:
             logger.debug("[{}]: Declining propose (as {})".format(self.name, dialogue.role()))
-            result = Decline(new_msg_id, propose.dialogue_id, propose.destination, propose.msg_id)
+            result = Decline(new_msg_id, propose.dialogue_id, propose.destination, propose.msg_id, Context())
         return result
 
     def _is_profitable_transaction(self, transaction: Transaction, dialogue: Dialogue) -> bool:
@@ -207,10 +208,10 @@ class FIPABehaviour:
             logger.debug("[{}]: Locking the current state (as {}).".format(self.name, dialogue.role()))
             self.game_instance.lock_manager.add_lock(transaction, as_seller=dialogue.is_seller)
             results.append(OutContainer(message=transaction.serialize(), message_id=new_msg_id, dialogue_id=accept.dialogue_id, destination=self.game_instance.controller_pbk))
-            results.append(Accept(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id))
+            results.append(Accept(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id, Context()))
         else:
             logger.debug("[{}]: Decline the accept (as {}).".format(self.name, dialogue.role()))
-            results.append(Decline(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id))
+            results.append(Decline(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id, Context()))
         return results
 
     def _on_match_accept(self, accept: Accept, dialogue: Dialogue) -> List[OutContainer]:

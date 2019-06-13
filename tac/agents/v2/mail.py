@@ -28,6 +28,7 @@ from oef.messages import PROPOSE_TYPES, CFP_TYPES, CFP, Decline, Propose, Accept
     SearchResult, OEFErrorOperation, OEFErrorMessage, DialogueErrorMessage
 from oef.query import Query
 from oef.schema import Description
+from oef.utils import Context
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +52,7 @@ class MailBox(OEFAgent):
         self._mail_box_thread = None  # type: Optional[Thread]
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
-        self.in_queue.put(ByteMessage(msg_id, dialogue_id, origin, content))
+        self.in_queue.put(ByteMessage(msg_id, dialogue_id, origin, content, Context()))
 
     def on_search_result(self, search_id: int, agents: List[str]):
         self.in_queue.put(SearchResult(search_id, agents))
@@ -189,16 +190,16 @@ class FIPAMailBox(MailBox):
         super().__init__(public_key, oef_addr, oef_port)
 
     def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES):
-        self.in_queue.put(CFP(msg_id, dialogue_id, origin, target, query))
+        self.in_queue.put(CFP(msg_id, dialogue_id, origin, target, query, Context()))
 
     def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES):
-        self.in_queue.put(Propose(msg_id, dialogue_id, origin, target, proposals))
+        self.in_queue.put(Propose(msg_id, dialogue_id, origin, target, proposals, Context()))
 
     def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int):
-        self.in_queue.put(Accept(msg_id, dialogue_id, origin, target))
+        self.in_queue.put(Accept(msg_id, dialogue_id, origin, target, Context()))
 
     def on_decline(self, msg_id: int, dialogue_id: int, origin: str, target: int):
-        self.in_queue.put(Decline(msg_id, dialogue_id, origin, target))
+        self.in_queue.put(Decline(msg_id, dialogue_id, origin, target, Context()))
 
 
 class OutContainer:
