@@ -88,7 +88,7 @@ class ControllerReactions(ControllerReactionInterface):
         self.liveness._is_stopped = True
         self.game_instance._game_phase = GamePhase.POST_GAME
 
-        # TODO to remove soon
+        self.out_box.mail_box.stop()
         self.game_instance.lock_manager.stop()
 
     def on_tac_error(self, error: Error) -> None:
