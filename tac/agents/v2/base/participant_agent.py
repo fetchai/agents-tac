@@ -27,6 +27,7 @@ from tac.agents.v2.mail import FIPAMailBox, InBox, OutBox
 from tac.agents.v2.base.game_instance import GameInstance, GamePhase
 from tac.agents.v2.base.helpers import is_oef_message, is_controller_message
 from tac.agents.v2.base.handlers import DialogueHandler, ControllerHandler, OEFHandler
+from tac.agents.v2.base.strategy import Strategy
 
 OEFMessage = Union[SearchResult, OEFErrorMessage, DialogueErrorMessage]
 ControllerMessage = SimpleMessage
@@ -36,14 +37,14 @@ Message = Union[OEFMessage, ControllerMessage, AgentMessage]
 
 class ParticipantAgent(Agent):
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int = 3333, register_as: str = 'both', search_for: str = 'both', is_world_modeling: bool = False, pending_transaction_timeout: int = 30):
+    def __init__(self, name: str, oef_addr: str, oef_port: int, strategy: Strategy, services_interval: int = 10, pending_transaction_timeout: int = 30):
         super().__init__(name, oef_addr, oef_port)
         self.mail_box = FIPAMailBox(self.crypto.public_key, oef_addr, oef_port)
         self.in_box = InBox(self.mail_box)
         self.out_box = OutBox(self.mail_box)
 
         self._is_competing = False  # type: bool
-        self._game_instance = GameInstance(name, is_world_modeling, 10, register_as, search_for, pending_transaction_timeout)  # type: Optional[GameInstance]
+        self._game_instance = GameInstance(name, strategy, services_interval, pending_transaction_timeout)  # type: Optional[GameInstance]
 
         self.controller_handler = ControllerHandler(self.crypto, self.liveness, self.game_instance, self.out_box, self.name)
         self.oef_handler = OEFHandler(self.crypto, self.liveness, self.game_instance, self.out_box, self.name)

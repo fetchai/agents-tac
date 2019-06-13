@@ -158,7 +158,7 @@ class FIPABehaviour:
         logger.debug("[{}]: on_decline: msg_id={}, dialogue_id={}, origin={}, target={}"
                      .format(self.name, decline.msg_id, decline.dialogue_id, decline.destination, decline.target))
 
-        if self.game_instance.is_world_modeling:
+        if self.game_instance.strategy.is_world_modeling:
             if dialogue.dialogue_label in self.game_instance.lock_manager.pending_tx_proposals and \
                     decline.target in self.game_instance.lock_manager.pending_tx_proposals[dialogue.dialogue_label]:
                 transaction = self.game_instance.lock_manager.pop_pending_proposal(dialogue, decline.target)
@@ -168,7 +168,6 @@ class FIPABehaviour:
         if transaction_id in self.game_instance.lock_manager.locks:
             self.game_instance.lock_manager.pop_lock(transaction_id)
 
-        # TODO close dialogue with a CloseDialogue message object.
         return None
 
     def on_accept(self, accept: Accept, dialogue: Dialogue) -> Union[List[Decline], List[Union[OutContainer, Accept]], List[OutContainer]]:
@@ -203,7 +202,7 @@ class FIPABehaviour:
         new_msg_id = accept.msg_id + 1
         results = []
         if self._is_profitable_transaction(transaction, dialogue):
-            if self.game_instance.is_world_modeling:
+            if self.game_instance.strategy.is_world_modeling:
                 self.game_instance.world_state.update_on_accept(transaction)
             logger.debug("[{}]: Locking the current state (as {}).".format(self.name, dialogue.role()))
             self.game_instance.lock_manager.add_lock(transaction, as_seller=dialogue.is_seller)
