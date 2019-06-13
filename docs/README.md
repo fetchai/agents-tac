@@ -1,11 +1,7 @@
 # TAC Documentation
 
-
-
 ## Build
 
-- [build the `docker-tac-develop` Docker image](../docker-tac-develop/README.md#build).
-- [run the `docker-tac-develop` Docker image](../docker-tac-develop/README.md#run).
 - Activate the virtual environment:
 
       pipenv shell
@@ -17,8 +13,7 @@
 - Run:
 
       make html
-    
-    
+      sphinx-apidoc -o reference/api/ ../tac/
    
 To display the documentation in your browser, e.g. Firefox, open the `index.html` file in `./_build/html/index.html`.
 

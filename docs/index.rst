@@ -19,7 +19,7 @@ Welcome to TAC's documentation!
    sections/generator
    sections/glossary
 
-   tac
+   reference/api/tac
 
 Indices and tables
 ==================

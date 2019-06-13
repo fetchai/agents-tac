@@ -32,13 +32,19 @@ sys.path.insert(0, os.path.abspath('../'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.mathjax',
-    'sphinx.ext.githubpages',
-    'nbsphinx',
-    'sphinxcontrib.plantuml',
-    'sphinx.ext.todo',
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosectionlabel'
+              'sphinx.ext.githubpages',
+              'nbsphinx',
+              'sphinxcontrib.plantuml',
+              'sphinx.ext.todo',
+              'sphinx.ext.autodoc',
+              'sphinx.ext.autosectionlabel'
 ]
+
+# autodoc conf
+apidoc_module_dir = '../tac'
+apidoc_excluded_paths = []
+apidoc_output_dir = "reference/api"
+apidoc_separate_modules = True
 
 # autosectionlabel
 autosectionlabel_prefix_document = True
