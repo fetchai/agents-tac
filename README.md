@@ -26,6 +26,7 @@ This repository contains submodules. Clone with recursive strategy:
 
 - The project requires the [Google Protocol Buffers](https://developers.google.com/protocol-buffers/) compiler. A guide on how to install it is found [here](https://fetchai.github.io/oef-sdk-python/user/install.html#protobuf-compiler).
 - All python specific dependencies are specified in the Pipfile (and installed via the commands specified in 'Preliminaries').
+- The package requires that you install [Docker](https://www.docker.com/) and the sanbox requires that you in addition install [Docker Compose](https://docs.docker.com/compose/).
 - The project requires oef-search-pluto which can be pulled here:
 	
 	  docker pull fetchai/oef-search:v4
