@@ -100,12 +100,12 @@ class OEFActions(OEFSearchActionInterface):
 
         :return: None
         """
-        if self.game_instance.is_registering_as_seller:
+        if self.game_instance.strategy.is_registering_as_seller:
             logger.debug("[{}]: Updating service directory as seller with goods supplied.".format(self.name))
             goods_supplied_description = self.game_instance.get_service_description(is_supply=True)
             self.game_instance.goods_supplied_description = goods_supplied_description
             self.out_box.out_queue.put(OutContainer(service_description=goods_supplied_description, message_id=1))
-        if self.game_instance.is_registering_as_buyer:
+        if self.game_instance.strategy.is_registering_as_buyer:
             logger.debug("[{}]: Updating service directory as buyer with goods demanded.".format(self.name))
             goods_demanded_description = self.game_instance.get_service_description(is_supply=False)
             self.game_instance.goods_demanded_description = goods_demanded_description
@@ -120,7 +120,7 @@ class OEFActions(OEFSearchActionInterface):
 
         :return: None
         """
-        if self.game_instance.is_searching_for_sellers:
+        if self.game_instance.strategy.is_searching_for_sellers:
             query = self.game_instance.build_services_query(is_searching_for_sellers=True)
             if query is None:
                 logger.warning("[{}]: Not searching the OEF for sellers because the agent demands no goods.".format(self.name))
@@ -130,7 +130,7 @@ class OEFActions(OEFSearchActionInterface):
                 search_id = self.game_instance.search.get_next_id()
                 self.game_instance.search.ids_for_sellers.add(search_id)
                 self.out_box.out_queue.put(OutContainer(query=query, search_id=search_id))
-        if self.game_instance.is_searching_for_buyers:
+        if self.game_instance.strategy.is_searching_for_buyers:
             query = self.game_instance.build_services_query(is_searching_for_sellers=False)
             if query is None:
                 logger.warning("[{}]: Not searching the OEF for buyers because the agent supplies no goods.".format(self.name))
