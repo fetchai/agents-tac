@@ -18,15 +18,18 @@
 #
 # ------------------------------------------------------------------------------
 import logging
-from typing import List, Union, Optional
+from typing import List, Union
 
-from oef.messages import CFP, Propose, Accept, Decline, Message as ByteMessage, SearchResult, OEFErrorMessage, DialogueErrorMessage
+from oef.messages import CFP, Propose, Accept, Decline, Message as ByteMessage, SearchResult, OEFErrorMessage, \
+    DialogueErrorMessage
+from oef.utils import Context
 
 from tac.agents.v2.agent import Liveness
 from tac.agents.v2.base.behaviours import FIPABehaviour
 from tac.agents.v2.base.dialogues import Dialogue
-from tac.agents.v2.base.interfaces import ControllerReactionInterface, OEFSearchReactionInterface, DialogueReactionInterface
 from tac.agents.v2.base.game_instance import GameInstance, GamePhase
+from tac.agents.v2.base.interfaces import ControllerReactionInterface, OEFSearchReactionInterface, \
+    DialogueReactionInterface
 from tac.agents.v2.mail import OutBox, OutContainer
 from tac.helpers.crypto import Crypto
 from tac.helpers.misc import TAC_SUPPLY_DATAMODEL_NAME
@@ -88,7 +91,6 @@ class ControllerReactions(ControllerReactionInterface):
         self.liveness._is_stopped = True
         self.game_instance._game_phase = GamePhase.POST_GAME
 
-        self.out_box.mail_box.stop()
         self.game_instance.lock_manager.stop()
 
     def on_tac_error(self, error: Error) -> None:
@@ -174,7 +176,8 @@ class OEFReactions(OEFSearchReactionInterface):
         :return: None
         """
         agent_pbks = set(agent_pbks)
-        agent_pbks.remove(self.crypto.public_key)
+        if self.crypto.public_key in agent_pbks:
+            agent_pbks.remove(self.crypto.public_key)
         agent_pbks = list(agent_pbks)
         searched_for = 'sellers' if is_searching_for_sellers else 'buyers'
         logger.debug("[{}]: Found potential {}: {}".format(self.name, searched_for, agent_pbks))
@@ -186,7 +189,7 @@ class OEFReactions(OEFSearchReactionInterface):
             return
         for agent_pbk in agent_pbks:
             dialogue = self.game_instance.dialogues.create(agent_pbk, self.crypto.public_key, not is_searching_for_sellers)
-            cfp = CFP(STARTING_MESSAGE_ID, dialogue.dialogue_label.dialogue_id, agent_pbk, STARTING_MESSAGE_TARGET, query)
+            cfp = CFP(STARTING_MESSAGE_ID, dialogue.dialogue_label.dialogue_id, agent_pbk, STARTING_MESSAGE_TARGET, query, Context())
             logger.debug("[{}]: send_cfp_as_{}: msg_id={}, dialogue_id={}, destination={}, target={}, query={}"
                          .format(self.name, dialogue.role(), cfp.msg_id, cfp.dialogue_id, cfp.destination, cfp.target, query))
             dialogue.outgoing_extend([cfp])
@@ -250,11 +253,12 @@ class DialogueReactions(DialogueReactionInterface):
         React to an unidentified dialogue.
         """
         logger.debug("[{}]: Unidentified dialogue.".format(self.name))
-        result = ByteMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination, b'This message belongs to an unidentified dialogue.')
+        result = ByteMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination, b'This message belongs to an unidentified dialogue.', Context())
         self.out_box.out_queue.put(result)
 
-    def handle(self, msg: AgentMessage, dialogue: Dialogue) -> Optional[AgentMessage]:
+    def handle(self, msg: AgentMessage, dialogue: Dialogue) -> List[AgentMessage]:
         dialogue.incoming_extend([msg])
+        results = []
         if isinstance(msg, CFP):
             result = self.behaviour.on_cfp(msg, dialogue)
             results = [result]
