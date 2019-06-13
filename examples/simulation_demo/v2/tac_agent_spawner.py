@@ -69,7 +69,7 @@ def parse_arguments():
     parser.add_argument("--visdom-addr", default="localhost", help="TCP/IP address of the Visdom server")
     parser.add_argument("--visdom-port", default=8097, help="TCP/IP port of the Visdom server")
     parser.add_argument("--seed", default=42, help="The random seed of the simulation.")
-    parser.add_argument("--whitelist-file", default=None, type=str, help="The file that contains the list of agent names to be whitelisted.")
+    parser.add_argument("--whitelist-file", nargs="?", default=None, type=str, help="The file that contains the list of agent names to be whitelisted.")
 
     arguments = parser.parse_args()
     logger.debug("Arguments: {}".format(pprint.pformat(arguments.__dict__)))
