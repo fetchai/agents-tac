@@ -81,6 +81,8 @@ class Agent:
             self.act()
             self.react()
 
+        logger.debug("[{}]: Exiting main loop...".format(self.name))
+
     def stop(self) -> None:
         """
         Stops the mailbox.
