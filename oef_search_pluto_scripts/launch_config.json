@@ -1,5 +1,5 @@
 {
-  "image": "fetchai/oef-search:mtcore",
+  "image": "fetchai/oef-search:v4",
   "params": [
     [
       "--rm",

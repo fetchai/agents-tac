@@ -122,6 +122,8 @@ setup(
         "flask",
         "python-dateutil",
         "visdom",
+        "cryptography",
+        "base58"
     ],
     tests_require=["tox"],
     entry_points={
