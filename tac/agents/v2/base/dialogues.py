@@ -205,7 +205,7 @@ class Dialogues:
         result = isinstance(msg, CFP) and (msg.destination in known_pbks)
         return result
 
-    def is_dialogue_registered(self, msg: AgentMessage, agent_pbk: str) -> DialogueLabel:
+    def is_dialogue_registered(self, msg: AgentMessage, agent_pbk: str) -> bool:
         self_initiated_dialogue_label = DialogueLabel(msg.dialogue_id, msg.destination, agent_pbk)
         other_initiated_dialogue_label = DialogueLabel(msg.dialogue_id, msg.destination, msg.destination)
         if isinstance(msg, CFP):
@@ -227,7 +227,7 @@ class Dialogues:
                 result = self_initiated_dialogue.is_cfp_decline()
             elif msg.target == 2 and other_initiated_dialogue_label in self.dialogues:
                 other_initiated_dialogue = self.dialogues[other_initiated_dialogue_label]
-                result = self_initiated_dialogue.is_proposal_decline()
+                result = other_initiated_dialogue.is_propose_decline()
             else:
                 result = False
         else:

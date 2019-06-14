@@ -44,7 +44,7 @@ class LockManager(object):
         """
         Initialize a LockManager.
 
-        :param baseline_agent: The baseline agent the manager refers to.
+        :param agent_name: The name of the agent the manager refers to.
         :param pending_transaction_timeout: seconds to wait before a transaction/message can be removed from any pool.
         """
         self.agent_name = agent_name

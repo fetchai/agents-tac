@@ -627,14 +627,13 @@ class Game:
 class AgentState:
     """Represent the state of an agent during the game."""
 
-    def __init__(self, money: int, endowment: Endowment, utility_params: UtilityParams):
+    def __init__(self, money: float, endowment: Endowment, utility_params: UtilityParams):
         """
         Instantiate an agent state object.
 
         :param money: the money of the agent in this state.
         :param endowment: the endowment for every good.
         :param utility_params: the utility params for every good.
-        :param tx_fee: the fee of a transaction (i.e. state transition)
         """
         assert len(endowment) == len(utility_params)
         self.balance = money
@@ -933,7 +932,7 @@ class GameTransaction:
         }
 
     @classmethod
-    def from_request_to_game_tx(self, transaction: Transaction) -> 'GameTransaction':
+    def from_request_to_game_tx(cls, transaction: Transaction) -> 'GameTransaction':
         """
         From a transaction request message to a game transaction
         :param transaction: the request message for a transaction.

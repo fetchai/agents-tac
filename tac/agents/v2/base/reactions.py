@@ -66,6 +66,11 @@ class ControllerReactions(ControllerReactionInterface):
         self.game_instance.init(game_data)
         self.game_instance._game_phase = GamePhase.GAME
 
+        dashboard = self.game_instance.dashboard
+        if dashboard is not None:
+            dashboard.init()
+            dashboard.update_from_agent_state(self.game_instance.agent_state)
+
     def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
         """
         Handles 'on transaction confirmed' event emitted by the controller.
@@ -76,7 +81,12 @@ class ControllerReactions(ControllerReactionInterface):
         """
         logger.debug("[{}]: Received transaction confirmation from the controller: transaction_id={}".format(self.name, tx_confirmation.transaction_id))
         transaction = self.game_instance.lock_manager.pop_lock(tx_confirmation.transaction_id)
-        self.game_instance._agent_state.update(transaction, self.game_instance.game_configuration.tx_fee)
+        self.game_instance.agent_state.update(transaction, self.game_instance.game_configuration.tx_fee)
+
+        dashboard = self.game_instance.dashboard
+        if dashboard is not None:
+            dashboard.update_from_agent_state(self.game_instance.agent_state)
+            dashboard.add_transaction(transaction)
 
     def on_state_update(self, agent_state: StateUpdate) -> None:
         pass
