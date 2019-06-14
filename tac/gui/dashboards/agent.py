@@ -23,7 +23,7 @@ class TransactionTable(object):
     def __init__(self):
         self.tx_table = dict()
         self.tx_table["#"] = []
-        self.tx_table["Transaction ID"] = []
+        # self.tx_table["Transaction ID"] = []
         self.tx_table["Role"] = []
         self.tx_table["Counterparty"] = []
         self.tx_table["Amount"] = []
@@ -32,10 +32,10 @@ class TransactionTable(object):
     def add_transaction(self, tx: Transaction):
         self.tx_table["#"].append(str(len(self.tx_table["#"])))
         print(tx.transaction_id)
-        self.tx_table["Transaction ID"].append("..." + tx.transaction_id[-10:])
+        # self.tx_table["Transaction ID"].append("..." + tx.transaction_id[-10:])
         self.tx_table["Role"].append("Buyer" if tx.buyer else "Seller")
-        self.tx_table["Counterparty"].append(tx.counterparty[:10] + "...")
-        self.tx_table["Amount"].append("{:02f}".format(tx.amount))
+        self.tx_table["Counterparty"].append(tx.counterparty[:5] + "..." + tx.counterparty[-5:])
+        self.tx_table["Amount"].append("{:02.2f}".format(tx.amount))
         self.tx_table["Goods Exchanged"].append("\n"
                                                 .join(map(lambda x: "{}: {}".format(x[0], x[1]),
                                                           filter(lambda x: x[1] > 0,
@@ -76,13 +76,6 @@ class AgentDashboard(Dashboard):
         self._transactions_history.append(new_tx)
         self._transaction_table.add_transaction(new_tx)
         self.viz.text(self._transaction_table.to_html(), win=self._transaction_window)
-
-    # def update_info(self):
-    #     window_name = "configuration_details"
-    #     self.viz.properties([
-    #         {'type': 'number', 'name': 'agent name', 'value': self.agent_name},
-    #         {'type': 'number', 'name': '# transactions', 'value': len(self._transactions_history)},
-    #     ], env=self.env_name, win=window_name, opts=dict(title="Configuration"))
 
     def _update_holdings(self, agent_state: AgentState):
         scaled_holdings = agent_state.current_holdings / np.sum(agent_state.current_holdings)
