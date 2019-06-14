@@ -58,7 +58,7 @@ class DialogueHandler(DialogueActions, DialogueReactions):
         :return: None
         """
         logger.debug("Handling Dialogue message. type={}".format(type(msg)))
-        if self.dialogues.is_dialogue_registered(msg, self.crypto.public_key):
+        if self.dialogues.is_belonging_to_registered_dialogue(msg, self.crypto.public_key):
             self.on_existing_dialogue(msg)
         elif self.dialogues.is_permitted_for_new_dialogue(msg, self.game_instance.game_configuration.agent_pbks):
             self.on_new_dialogue(msg)
@@ -67,6 +67,9 @@ class DialogueHandler(DialogueActions, DialogueReactions):
 
 
 class ControllerHandler(ControllerActions, ControllerReactions):
+    """
+    Handles the message exchange with the controller.
+    """
 
     def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', name: str):
         ControllerActions.__init__(self, crypto, liveness, game_instance, out_box, name)
@@ -109,6 +112,9 @@ class ControllerHandler(ControllerActions, ControllerReactions):
 
 
 class OEFHandler(OEFActions, OEFReactions):
+    """
+    Handles the message exchange with the OEF.
+    """
 
     def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', name: str):
         OEFActions.__init__(self, crypto, liveness, game_instance, out_box, name)

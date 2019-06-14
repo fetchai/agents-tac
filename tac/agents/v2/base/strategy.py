@@ -18,6 +18,7 @@
 #
 # ------------------------------------------------------------------------------
 from abc import abstractmethod
+from enum import Enum
 from typing import List, Set, Optional
 
 from oef.schema import Description
@@ -25,9 +26,28 @@ from oef.schema import Description
 from tac.platform.game import WorldState
 
 
+class RegisterAs(Enum):
+    SELLER = 'seller'
+    BUYER = 'buyer'
+    BOTH = 'both'
+
+
+class SearchFor(Enum):
+    SELLER = 'sellers'
+    BUYER = 'buyers'
+    BOTH = 'both'
+
+
 class Strategy:
 
-    def __init__(self, register_as: str = 'both', search_for: str = 'both', is_world_modeling: bool = False):
+    def __init__(self, register_as: RegisterAs = RegisterAs.BOTH, search_for: SearchFor = SearchFor.BOTH, is_world_modeling: bool = False):
+        """
+        Initializes the strategy
+
+        :param register_as: determines whether the agent registers as seller, buyer or both
+        :param search_for: determines whether the agent searches for sellers, buyers or both
+        :param is_world_modeling: determines whether the agent has a model of the world
+        """
         self._register_as = register_as
         self._search_for = search_for
         self._is_world_modeling = is_world_modeling
@@ -37,20 +57,20 @@ class Strategy:
         return self._is_world_modeling
 
     @property
-    def is_registering_as_seller(self):
-        return self._register_as == 'seller' or self._register_as == 'both'
+    def is_registering_as_seller(self) -> bool:
+        return self._register_as == RegisterAs.SELLER or self._register_as == RegisterAs.BUYER
 
     @property
-    def is_searching_for_sellers(self):
-        return self._search_for == 'sellers' or self._search_for == 'both'
+    def is_searching_for_sellers(self) -> bool:
+        return self._search_for == SearchFor.SELLER or self._search_for == SearchFor.BOTH
 
     @property
-    def is_registering_as_buyer(self):
-        return self._register_as == 'buyer' or self._register_as == 'both'
+    def is_registering_as_buyer(self) -> bool:
+        return self._register_as == RegisterAs.BUYER or self._register_as == RegisterAs.BOTH
 
     @property
-    def is_searching_for_buyers(self):
-        return self._search_for == 'buyers' or self._search_for == 'both'
+    def is_searching_for_buyers(self) -> bool:
+        return self._search_for == SearchFor.BUYER or self._search_for == SearchFor.BOTH
 
     @abstractmethod
     def supplied_good_quantities(self, current_holdings: List[int]) -> List[int]:
@@ -91,7 +111,7 @@ class Strategy:
         """
 
     @abstractmethod
-    def get_proposals(self, good_pbks: List[str], current_holdings: List[int], utility_params: List[int], tx_fee: float, is_seller: bool, world_state: Optional[WorldState]) -> List[Description]:
+    def get_proposals(self, good_pbks: List[str], current_holdings: List[int], utility_params: List[float], tx_fee: float, is_seller: bool, world_state: Optional[WorldState]) -> List[Description]:
         """
         Generates proposals from the seller/buyer.
 

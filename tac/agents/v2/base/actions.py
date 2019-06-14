@@ -73,7 +73,7 @@ class OEFActions(OEFSearchActionInterface):
 
     def update_services(self) -> None:
         """
-        Update service on OEF Service Directory
+        Update services on OEF Service Directory
 
         :return: None
         """
@@ -82,7 +82,7 @@ class OEFActions(OEFSearchActionInterface):
 
     def unregister_service(self) -> None:
         """
-        Unregister service on OEF Service Directory.
+        Unregister service from OEF Service Directory.
 
         :return: None
         """

@@ -30,11 +30,24 @@ Message = Union[OEFMessage]
 
 
 def is_oef_message(msg: Message) -> bool:
+    """
+    Checks whether a message is from the oef.
+
+    :param msg: the message
+    :return: boolean indicating whether or not the message is from the oef
+    """
     msg_type = type(msg)
     return msg_type in {SearchResult, OEFErrorMessage, DialogueErrorMessage}
 
 
 def is_controller_message(msg: Message, crypto: Crypto) -> bool:
+    """
+    Checks whether a message is from the controller.
+
+    :param msg: the message
+    :param crypto: the crypto of the agent
+    :return: boolean indicating whether or not the message is from the controller
+    """
     if not isinstance(msg, SimpleMessage):
         return False
 
@@ -54,11 +67,11 @@ def generate_transaction_id(agent_pbk: str, origin: str, dialogue_label: Dialogu
     Make a transaction id.
     :param agent_pbk: the pbk of the agent.
     :param origin: the public key of the message sender.
-    :param dialogue_id: the dialogue id
+    :param dialogue_label: the dialogue label
     :param agent_is_seller: boolean indicating if the agent is a seller
     :return: a transaction id
     """
-    # the format is {buyer_pbk}_{seller_pbk}_{dialogue_id}
+    # the format is {buyer_pbk}_{seller_pbk}_{dialogue_id}_{dialogue_starter_pbk}
     buyer_pbk, seller_pbk = (origin, agent_pbk) if agent_is_seller else (agent_pbk, origin)
     transaction_id = "{}_{}_{}_{}".format(buyer_pbk, seller_pbk, dialogue_label.dialogue_id, dialogue_label.dialogue_starter_pbk)
     return transaction_id

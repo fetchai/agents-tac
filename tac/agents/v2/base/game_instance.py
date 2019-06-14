@@ -41,12 +41,17 @@ class GamePhase(Enum):
 
 
 class Search:
+    """Deals with the search state"""
 
     def __init__(self):
-        self.id = 0
+        self._id = 0
         self.ids_for_tac = set()  # type: Set[int]
         self.ids_for_sellers = set()  # type: Set[int]
         self.ids_for_buyers = set()  # type: Set[int]
+
+    @property
+    def id(self) -> int:
+        return self._id
 
     def get_next_id(self) -> int:
         """
@@ -54,8 +59,8 @@ class Search:
 
         :return: a search id
         """
-        self.id += 1
-        return self.id
+        self._id += 1
+        return self._id
 
 
 class GameInstance:
@@ -89,7 +94,7 @@ class GameInstance:
         self.lock_manager = LockManager(agent_name, pending_transaction_timeout=pending_transaction_timeout)
         self.lock_manager.start()
 
-    def init(self, game_data: GameData):
+    def init(self, game_data: GameData) -> None:
         # populate data structures about the started competition
         self._game_configuration = GameConfiguration(game_data.nb_agents, game_data.nb_goods, game_data.tx_fee,
                                                      game_data.agent_pbks, game_data.agent_names, game_data.good_pbks)
@@ -100,7 +105,7 @@ class GameInstance:
             opponent_pbks.remove(game_data.public_key)
             self._world_state = WorldState(opponent_pbks, self.game_configuration.good_pbks, self.initial_agent_state)
 
-    def reset(self):
+    def reset(self) -> None:
         self.controller_pbk = None
         self._search = Search()
         self._dialogues = Dialogues()
@@ -121,39 +126,39 @@ class GameInstance:
         return self._search
 
     @property
-    def dialogues(self):
+    def dialogues(self) -> Dialogues:
         return self._dialogues
 
     @property
-    def game_phase(self):
+    def game_phase(self) -> GamePhase:
         return self._game_phase
 
     @property
-    def game_configuration(self):
+    def game_configuration(self) -> GameConfiguration:
         return self._game_configuration
 
     @property
-    def initial_agent_state(self):
+    def initial_agent_state(self) -> AgentState:
         return self._initial_agent_state
 
     @property
-    def agent_state(self):
+    def agent_state(self) -> AgentState:
         return self._agent_state
 
     @property
-    def world_state(self):
+    def world_state(self) -> WorldState:
         return self._world_state
 
     @property
-    def services_interval(self):
+    def services_interval(self) -> datetime.timedelta:
         return self._services_interval
 
     @property
-    def last_update_time(self):
+    def last_update_time(self) -> datetime.datetime:
         return self._last_update_time
 
     @property
-    def last_search_time(self):
+    def last_search_time(self) -> datetime.datetime:
         return self._last_search_time
 
     def is_time_to_update_services(self) -> bool:

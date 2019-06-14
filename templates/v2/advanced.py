@@ -10,7 +10,7 @@ from typing import List, Set
 from oef.schema import Description
 
 from tac.platform.game import WorldState
-from tac.agents.v2.base.strategy import Strategy
+from tac.agents.v2.base.strategy import Strategy, RegisterAs, SearchFor
 from tac.agents.v2.examples.baseline import BaselineAgent
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ class MyStrategy(Strategy):
     My strategy implementation.
     """
 
-    def __init__(self, register_as: str = 'both', search_for: str = 'both', is_world_modeling: bool = False):
+    def __init__(self, register_as: RegisterAs = RegisterAs.BOTH, search_for: SearchFor = SearchFor.BOTH, is_world_modeling: bool = False):
         super().__init__(register_as, search_for, is_world_modeling)
 
     def supplied_good_quantities(self, current_holdings: List[int]) -> List[int]:
