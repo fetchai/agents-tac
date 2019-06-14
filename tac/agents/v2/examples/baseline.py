@@ -10,16 +10,18 @@ from tac.gui.dashboards.base import start_visdom_server
 
 class BaselineAgent(ParticipantAgent):
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int, strategy: Strategy, services_interval: int = 10, pending_transaction_timeout: int = 30, dashboard: Optional[AgentDashboard] = None):
-        super().__init__(name, oef_addr, oef_port, strategy, services_interval, pending_transaction_timeout, dashboard)
+    def __init__(self, name: str, oef_addr: str, oef_port: int, strategy: Strategy, search_interval: int = 10, pending_transaction_timeout: int = 30, dashboard: Optional[AgentDashboard] = None):
+        super().__init__(name, oef_addr, oef_port, strategy, search_interval, pending_transaction_timeout, dashboard)
 
 
 def _parse_arguments():
     parser = argparse.ArgumentParser("BaselineAgent", description="Launch the BaselineAgent.")
-    parser.add_argument("--name", default="baseline_agent", help="Name of the agent.")
+    parser.add_argument("--name", type=str, default="baseline_agent", help="Name of the agent.")
     parser.add_argument("--gui", action="store_true", help="Show the GUI.")
     parser.add_argument("--visdom_addr", type=str, default="localhost", help="Show the GUI.")
     parser.add_argument("--visdom_port", type=int, default=8097, help="Show the GUI.")
+    parser.add_argument("--search-interval", type=int, default=10, help="The number of seconds to wait before doing another search.")
+    parser.add_argument("--pending-transaction-timeout", type=int, default=30, help="The timeout in seconds to wait for pending transaction/negotiations.")
     return parser.parse_args()
 
 
@@ -35,7 +37,8 @@ if __name__ == '__main__':
         dashboard = None
 
     strategy = BaselineStrategy(register_as=RegisterAs.BOTH, search_for=SearchFor.BOTH, is_world_modeling=False)
-    agent = BaselineAgent(arguments.name, "127.0.0.1", 3333, strategy, 10, 30, dashboard)
+    agent = BaselineAgent(arguments.name, "127.0.0.1", 3333, strategy, arguments.search_interval, arguments.pending_transaction_timeout, dashboard)
+
     try:
         agent.start()
     finally:

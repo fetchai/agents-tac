@@ -163,7 +163,7 @@ def initialize_baseline_agent(agent_name: str, oef_addr: str, oef_port: int, reg
 
     # Notice: we create a new asyncio loop, so we can run it in an independent thread.
     strategy = BaselineStrategy(register_as=RegisterAs(register_as), search_for=SearchFor(search_for), is_world_modeling=is_world_modeling)
-    return BaselineAgent(agent_name, oef_addr, oef_port, strategy, services_interval=services_interval, pending_transaction_timeout=pending_transaction_timeout)
+    return BaselineAgent(agent_name, oef_addr, oef_port, strategy, search_interval=services_interval, pending_transaction_timeout=pending_transaction_timeout)
 
 
 def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port: int, register_as: str, search_for: str, services_interval: int, pending_transaction_timeout: int) -> List[BaselineAgent]:

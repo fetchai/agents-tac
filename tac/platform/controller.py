@@ -44,7 +44,7 @@ import dateutil
 from oef.agents import OEFAgent
 from oef.schema import Description, DataModel, AttributeSchema
 
-from tac.gui.monitor import Monitor, NullMonitor
+from tac.gui.monitor import Monitor, NullMonitor, VisdomMonitor
 from tac.helpers.crypto import Crypto
 from tac.helpers.misc import generate_pbks
 from tac.platform.game import Game, GameTransaction
@@ -55,7 +55,7 @@ from tac.platform.stats import GameStats
 if __name__ != "__main__":
     logger = logging.getLogger(__name__)
 else:
-    logger = logging.getLogger("tac.agents.controller")
+    logger = logging.getLogger("tac.platform.controller")
 
 
 class TACParameters(object):
@@ -727,7 +727,7 @@ def _parse_arguments():
     parser.add_argument("--base-good-endowment", default=2, type=int, help="The base amount of per good instances every agent receives.")
     parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
     parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
-    parser.add_argument("--tx-fee", default=1, type=int, help="Number of goods")
+    parser.add_argument("--tx-fee", default=1.0, type=float, help="Number of goods")
     parser.add_argument("--start-time", default=str(datetime.datetime.now() + datetime.timedelta(0, 10)), type=str, help="The start time for the competition (in UTC format).")
     parser.add_argument("--registration-timeout", default=10, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
     parser.add_argument("--inactivity-timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
@@ -735,6 +735,8 @@ def _parse_arguments():
     parser.add_argument("--whitelist-file", default=None, type=str, help="The file that contains the list of agent names to be whitelisted.")
     parser.add_argument("--verbose", default=False, action="store_true", help="Log debug messages.")
     parser.add_argument("--gui", action="store_true", help="Show the GUI.")
+    parser.add_argument("--visdom-addr", default="localhost", help="TCP/IP address of the Visdom server.")
+    parser.add_argument("--visdom-port", default=8097, help="TCP/IP port of the Visdom server.")
     return parser.parse_args()
 
 
@@ -747,13 +749,16 @@ def main():
     else:
         logger.setLevel(logging.INFO)
 
+    monitor = VisdomMonitor(visdom_addr=arguments.visdom_addr, visdom_port=arguments.visdom_port) if arguments.gui else NullMonitor()
+
     try:
 
         agent = ControllerAgent(name=arguments.name,
                                 oef_addr=arguments.oef_addr,
-                                oef_port=arguments.oef_port)
+                                oef_port=arguments.oef_port,
+                                monitor=monitor)
 
-        whitelist = set(open(arguments.whitelist_file).read().splitlines(keepends=False)) if arguments.whitelist is not None else None
+        whitelist = set(open(arguments.whitelist_file).read().splitlines(keepends=False)) if arguments.whitelist_file else None
         tac_parameters = TACParameters(
             min_nb_agents=arguments.nb_agents,
             money_endowment=arguments.money_endowment,
