@@ -22,7 +22,6 @@ from typing import Union
 
 from oef.messages import CFP, Propose, Accept, Decline, Message as SimpleMessage, SearchResult, OEFErrorMessage, DialogueErrorMessage
 
-from tac.agents.v2.base.dialogues import Dialogue
 from tac.platform.protocol import Error, TransactionConfirmation, StateUpdate, GameData
 
 AgentMessage = Union[SimpleMessage, CFP, Propose, Accept, Decline]
@@ -30,8 +29,17 @@ AgentMessage = Union[SimpleMessage, CFP, Propose, Accept, Decline]
 
 class ControllerReactionInterface:
     """
-    This interface contains the methods to react to the ControllerAgent.
+    This interface contains the methods to react to events from the ControllerAgent.
     """
+
+    @abstractmethod
+    def on_dialogue_error(self, dialogue_error_msg: DialogueErrorMessage) -> None:
+        """
+        Handles dialogue error event emitted by the controller.
+
+        :param dialogue_error_msg: the dialogue error message
+        :return: None
+        """
 
     @abstractmethod
     def on_start(self, game_data: GameData) -> None:
@@ -88,25 +96,42 @@ class ControllerActionInterface:
     def request_state_update(self) -> None:
         """
         Request a state update from the controller.
+
+        :return: None
         """
 
 
 class OEFSearchReactionInterface:
     """
-    This interface contains the methods to react to the OEF.
+    This interface contains the methods to react to events from the OEF.
     """
 
     @abstractmethod
-    def on_search_result(self, search_result: SearchResult):
-        """Handle search results."""
+    def on_search_result(self, search_result: SearchResult) -> None:
+        """
+        Handle search results.
+
+        :param search_result: the search result
+        :return: None
+        """
 
     @abstractmethod
-    def on_oef_error(self, oef_error: OEFErrorMessage):
-        """Handle an OEF error message."""
+    def on_oef_error(self, oef_error: OEFErrorMessage) -> None:
+        """
+        Handle an OEF error message.
+
+        :param oef_error: the oef error
+        :return: None
+        """
 
     @abstractmethod
-    def on_dialogue_error(self, dialogue_error: DialogueErrorMessage):
-        """Handler a dialogue error message"""
+    def on_dialogue_error(self, dialogue_error: DialogueErrorMessage) -> None:
+        """
+        Handler a dialogue error message
+
+        :param dialogue_error_msg: the dialogue error message
+        :return: None
+        """
 
 
 class OEFSearchActionInterface:
@@ -115,44 +140,81 @@ class OEFSearchActionInterface:
     """
 
     @abstractmethod
+    def search_for_tac(self) -> None:
+        """
+        Search for active TAC Controller.
+
+        :return: None
+        """
+
+    @abstractmethod
+    def update_services(self) -> None:
+        """
+        Update services on OEF Service Directory
+
+        :return: None
+        """
+
+    @abstractmethod
     def unregister_service(self) -> None:
-        """Unregisters services to the OEF."""
+        """
+        Unregister service from OEF Service Directory.
+
+        :return: None
+        """
 
     @abstractmethod
     def register_service(self) -> None:
-        """Registers services to the OEF."""
+        """
+        Register services to OEF Service Directory.
+
+        :return: None
+        """
 
     @abstractmethod
     def search_services(self) -> None:
-        """Searches services on the OEF."""
+        """
+        Search services on OEF Service Directory.
+
+        :return: None
+        """
 
 
 class DialogueReactionInterface:
     """
-    This interface contains the methods to maintain a Dialogue with other agents.
+    This interface contains the methods to react to events from other agents.
     """
 
     @abstractmethod
-    def on_new_dialogue(self, msg: AgentMessage) -> Dialogue:
+    def on_new_dialogue(self, msg: AgentMessage) -> None:
         """Given a new message, create a Dialogue object that specifies:
         - the protocol rules that messages must follow;
         - how the agent behaves in this dialogue.
+
+        :param msg: the agent message
+        :return: None
         """
 
     @abstractmethod
-    def on_existing_dialogue(self, msg: AgentMessage) -> Dialogue:
+    def on_existing_dialogue(self, msg: AgentMessage) -> None:
         """
         React to a message of an existing dialogue.
+
+        :param msg: the agent message
+        :return: None
         """
 
     @abstractmethod
-    def on_unidentified_dialogue(self, msg: AgentMessage) -> Dialogue:
+    def on_unidentified_dialogue(self, msg: AgentMessage) -> None:
         """
         React to a message of an unidentified dialogue.
+
+        :param msg: the agent message
+        :return: None
         """
 
 
 class DialogueActionInterface:
     """
-    This interface contains the methods to maintain a Dialogue with other agents.
+    This interface contains the methods to interact with other agents.
     """

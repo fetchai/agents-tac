@@ -51,16 +51,16 @@ class MailBox(OEFAgent):
         self.out_queue = Queue()
         self._mail_box_thread = None  # type: Optional[Thread]
 
-    def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
+    def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
         self.in_queue.put(ByteMessage(msg_id, dialogue_id, origin, content, Context()))
 
-    def on_search_result(self, search_id: int, agents: List[str]):
+    def on_search_result(self, search_id: int, agents: List[str]) -> None:
         self.in_queue.put(SearchResult(search_id, agents))
 
-    def on_oef_error(self, answer_id: int, operation: OEFErrorOperation):
+    def on_oef_error(self, answer_id: int, operation: OEFErrorOperation) -> None:
         self.in_queue.put(OEFErrorMessage(answer_id, operation))
 
-    def on_dialogue_error(self, answer_id: int, dialogue_id: int, origin: str):
+    def on_dialogue_error(self, answer_id: int, dialogue_id: int, origin: str) -> None:
         self.in_queue.put(DialogueErrorMessage(answer_id, dialogue_id, origin))
 
     def is_running(self) -> bool:
@@ -141,7 +141,7 @@ class OutBox(object):
     def mail_box(self) -> MailBox:
         return self._mail_box
 
-    def send_nowait(self):
+    def send_nowait(self) -> None:
         """
         Checks whether the out queue contains a message or search query and sends it in that case. Non-blocking.
 
@@ -189,16 +189,16 @@ class FIPAMailBox(MailBox):
     def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333):
         super().__init__(public_key, oef_addr, oef_port)
 
-    def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES):
+    def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES) -> None:
         self.in_queue.put(CFP(msg_id, dialogue_id, origin, target, query, Context()))
 
-    def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES):
+    def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES) -> None:
         self.in_queue.put(Propose(msg_id, dialogue_id, origin, target, proposals, Context()))
 
-    def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int):
+    def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
         self.in_queue.put(Accept(msg_id, dialogue_id, origin, target, Context()))
 
-    def on_decline(self, msg_id: int, dialogue_id: int, origin: str, target: int):
+    def on_decline(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
         self.in_queue.put(Decline(msg_id, dialogue_id, origin, target, Context()))
 
 

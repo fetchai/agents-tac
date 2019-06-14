@@ -60,13 +60,13 @@ class DialogueLabel:
     def dialogue_starter_pbk(self) -> str:
         return self._dialogue_starter_pbk
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if type(other) == DialogueLabel:
             return self._dialogue_id == other.dialogue_id and self._dialogue_starter_pbk == other.dialogue_starter_pbk and self._dialogue_opponent_pbk == other.dialogue_opponent_pbk
         else:
             return False
 
-    def __hash__(self):
+    def __hash__(self) -> str:
         return hash((self.dialogue_id, self.dialogue_opponent_pbk, self.dialogue_starter_pbk))
 
 

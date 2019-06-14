@@ -73,7 +73,7 @@ class LockManager(object):
             self._cleanup_pending_messages()
             self._cleanup_pending_transactions()
 
-    def _cleanup_pending_messages(self):
+    def _cleanup_pending_messages(self) -> None:
         """
         Remove all the pending messages (i.e. either proposals or acceptances)
         that have been stored for an amount of time longer than the timeout.
@@ -107,7 +107,7 @@ class LockManager(object):
                 break
             next_date, next_item = queue[0]
 
-    def _cleanup_pending_transactions(self):
+    def _cleanup_pending_transactions(self) -> None:
         """
         Remove all the pending messages (i.e. either proposals or acceptances)
         that have been stored for an amount of time longer than the timeout.
@@ -139,7 +139,7 @@ class LockManager(object):
                 break
             next_date, next_item = queue[0]
 
-    def _register_transaction_with_time(self, transaction_id: str):
+    def _register_transaction_with_time(self, transaction_id: str) -> None:
         """
         Register a transaction with a creation datetime.
         :return: None
@@ -147,7 +147,7 @@ class LockManager(object):
         now = datetime.datetime.now()
         self._last_update_for_transactions.append((now, transaction_id))
 
-    def _register_message_with_time(self, dialogue: Dialogue, msg_id: int):
+    def _register_message_with_time(self, dialogue: Dialogue, msg_id: int) -> None:
         """
         Register a message with a creation datetime.
         :return: None
@@ -156,7 +156,7 @@ class LockManager(object):
         message_id = (dialogue.dialogue_label, msg_id)
         self._last_update_for_pending_messages.append((now, message_id))
 
-    def add_pending_proposal(self, dialogue: Dialogue, proposal_id: int, transaction: Transaction):
+    def add_pending_proposal(self, dialogue: Dialogue, proposal_id: int, transaction: Transaction) -> None:
         assert dialogue.dialogue_label not in self.pending_tx_proposals and proposal_id not in self.pending_tx_proposals[dialogue.dialogue_label]
         self.pending_tx_proposals[dialogue.dialogue_label][proposal_id] = transaction
         self._register_message_with_time(dialogue, proposal_id)
@@ -166,7 +166,7 @@ class LockManager(object):
         transaction = self.pending_tx_proposals[dialogue.dialogue_label].pop(proposal_id)
         return transaction
 
-    def add_pending_acceptances(self, dialogue: Dialogue, proposal_id: int, transaction: Transaction):
+    def add_pending_acceptances(self, dialogue: Dialogue, proposal_id: int, transaction: Transaction) -> None:
         assert dialogue.dialogue_label not in self.pending_tx_acceptances and proposal_id not in self.pending_tx_acceptances[dialogue.dialogue_label]
         self.pending_tx_acceptances[dialogue.dialogue_label][proposal_id] = transaction
         self._register_message_with_time(dialogue, proposal_id)
@@ -176,7 +176,7 @@ class LockManager(object):
         transaction = self.pending_tx_acceptances[dialogue.dialogue_label].pop(proposal_id)
         return transaction
 
-    def add_lock(self, transaction: Transaction, as_seller: bool):
+    def add_lock(self, transaction: Transaction, as_seller: bool) -> None:
         transaction_id = transaction.transaction_id
         assert transaction_id not in self.locks
         self._register_transaction_with_time(transaction_id)
@@ -186,20 +186,20 @@ class LockManager(object):
         else:
             self.locks_as_buyer[transaction_id] = transaction
 
-    def pop_lock(self, transaction_id: str):
+    def pop_lock(self, transaction_id: str) -> Transaction:
         assert transaction_id in self.locks
         transaction = self.locks.pop(transaction_id)
         self.locks_as_buyer.pop(transaction_id, None)
         self.locks_as_seller.pop(transaction_id, None)
         return transaction
 
-    def start(self):
+    def start(self) -> None:
         if not self._cleanup_locks_task_is_running:
             self._cleanup_locks_task_is_running = True
             self._cleanup_locks_task = Thread(target=self.cleanup_locks_job)
             self._cleanup_locks_task.start()
 
-    def stop(self):
+    def stop(self) -> None:
         if self._cleanup_locks_task_is_running:
             self._cleanup_locks_task_is_running = False
             self._cleanup_locks_task.join()

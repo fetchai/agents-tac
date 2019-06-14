@@ -57,19 +57,19 @@ class Strategy:
         return self._is_world_modeling
 
     @property
-    def is_registering_as_seller(self):
+    def is_registering_as_seller(self) -> bool:
         return self._register_as == RegisterAs.SELLER or self._register_as == RegisterAs.BUYER
 
     @property
-    def is_searching_for_sellers(self):
+    def is_searching_for_sellers(self) -> bool:
         return self._search_for == SearchFor.SELLERS or self._search_for == SearchFor.BOTH
 
     @property
-    def is_registering_as_buyer(self):
+    def is_registering_as_buyer(self) -> bool:
         return self._register_as == RegisterAs.BUYER or self._register_as == RegisterAs.BOTH
 
     @property
-    def is_searching_for_buyers(self):
+    def is_searching_for_buyers(self) -> bool:
         return self._search_for == SearchFor.BUYERS or self._search_for == SearchFor.BOTH
 
     @abstractmethod

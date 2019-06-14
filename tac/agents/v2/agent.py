@@ -36,7 +36,7 @@ class Liveness:
         self._is_stopped = True
 
     @property
-    def is_stopped(self):
+    def is_stopped(self) -> bool:
         return self._is_stopped
 
 
@@ -59,7 +59,7 @@ class Agent:
         return self._crypto
 
     @property
-    def liveness(self):
+    def liveness(self) -> bool:
         return self._liveness
 
     def start(self) -> None:

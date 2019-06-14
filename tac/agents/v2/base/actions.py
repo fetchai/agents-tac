@@ -82,7 +82,7 @@ class OEFActions(OEFSearchActionInterface):
 
     def unregister_service(self) -> None:
         """
-        Unregister service on OEF Service Directory.
+        Unregister service from OEF Service Directory.
 
         :return: None
         """

@@ -67,6 +67,9 @@ class DialogueHandler(DialogueActions, DialogueReactions):
 
 
 class ControllerHandler(ControllerActions, ControllerReactions):
+    """
+    Handles the message exchange with the controller.
+    """
 
     def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', name: str):
         ControllerActions.__init__(self, crypto, liveness, game_instance, out_box, name)
@@ -109,6 +112,9 @@ class ControllerHandler(ControllerActions, ControllerReactions):
 
 
 class OEFHandler(OEFActions, OEFReactions):
+    """
+    Handles the message exchange with the OEF.
+    """
 
     def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', name: str):
         OEFActions.__init__(self, crypto, liveness, game_instance, out_box, name)

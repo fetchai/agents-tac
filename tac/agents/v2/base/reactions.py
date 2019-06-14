@@ -44,6 +44,9 @@ AgentMessage = Union[ByteMessage, CFP, Propose, Accept, Decline, OutContainer]
 
 
 class ControllerReactions(ControllerReactionInterface):
+    """
+    Implements the event handlers for the controller.
+    """
 
     def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', name: str):
         self.crypto = crypto
@@ -52,9 +55,15 @@ class ControllerReactions(ControllerReactionInterface):
         self.out_box = out_box
         self.name = name
 
-    def on_dialogue_error(self, dialogue_error: DialogueErrorMessage):
-        logger.debug("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}"
-                     .format(self.name, dialogue_error.msg_id, dialogue_error.dialogue_id, dialogue_error.origin))
+    def on_dialogue_error(self, dialogue_error_msg: DialogueErrorMessage) -> None:
+        """
+        Handles dialogue error event emitted by the controller.
+
+        :param dialogue_error_msg: the dialogue error message
+        :return: None
+        """
+        logger.warning("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}"
+                       .format(self.name, dialogue_error_msg.msg_id, dialogue_error_msg.dialogue_id, dialogue_error_msg.origin))
 
     def on_start(self, game_data: GameData) -> None:
         """
@@ -62,7 +71,7 @@ class ControllerReactions(ControllerReactionInterface):
 
         :return: None
         """
-        logger.debug("[{}]: Received start event from the controller. Starting...".format(self.name))
+        logger.debug("[{}]: Received start event from the controller. Starting to compete...".format(self.name))
         self.game_instance.init(game_data)
         self.game_instance._game_phase = GamePhase.GAME
 
@@ -78,7 +87,14 @@ class ControllerReactions(ControllerReactionInterface):
         transaction = self.game_instance.lock_manager.pop_lock(tx_confirmation.transaction_id)
         self.game_instance._agent_state.update(transaction, self.game_instance.game_configuration.tx_fee)
 
-    def on_state_update(self, agent_state: StateUpdate) -> None:
+    def on_state_update(self, state_update: StateUpdate) -> None:
+        """
+        Handles 'on state update' event emitted by the controller.
+
+        :param state_update: StateUpdate
+
+        :return: None
+        """
         pass
 
     def on_cancelled(self) -> None:
@@ -128,8 +144,13 @@ class OEFReactions(OEFSearchReactionInterface):
         self.out_box = out_box
         self.name = name
 
-    def on_search_result(self, search_result: SearchResult):
-        """Split the search results from the OEF."""
+    def on_search_result(self, search_result: SearchResult) -> None:
+        """
+        Split the search results from the OEF.
+
+        :param search_result: the search result
+        :return: None
+        """
         search_id = search_result.msg_id
         logger.debug("[{}]: on search result: {} {}".format(self.name, search_id, search_result.agents))
         if search_id in self.game_instance.search.ids_for_tac:
@@ -141,11 +162,23 @@ class OEFReactions(OEFSearchReactionInterface):
         else:
             logger.debug("[{}]: Unknown search id: search_id={}".format(self.name, search_id))
 
-    def on_oef_error(self, oef_error: OEFErrorMessage):
+    def on_oef_error(self, oef_error: OEFErrorMessage) -> None:
+        """
+        Handle an OEF error message.
+
+        :param oef_error: the oef error
+        :return: None
+        """
         logger.debug("[{}]: Received OEF error: answer_id={}, operation={}"
                      .format(self.name, oef_error.msg_id, oef_error.oef_error_operation))
 
-    def on_dialogue_error(self, dialogue_error: DialogueErrorMessage):
+    def on_dialogue_error(self, dialogue_error: DialogueErrorMessage) -> None:
+        """
+        Handler a dialogue error message
+
+        :param dialogue_error_msg: the dialogue error message
+        :return: None
+        """
         logger.debug("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}"
                      .format(self.name, dialogue_error.msg_id, dialogue_error.dialogue_id, dialogue_error.origin))
 
@@ -226,6 +259,9 @@ class DialogueReactions(DialogueReactionInterface):
     def on_new_dialogue(self, msg: AgentMessage) -> None:
         """
         React to a new dialogue.
+
+        :param msg: the agent message
+        :return: None
         """
         is_seller = msg.query.model.name == TAC_SUPPLY_DATAMODEL_NAME
         dialogue = self.dialogues.create_opponent_initiated(msg.destination, msg.dialogue_id, is_seller)
@@ -237,26 +273,35 @@ class DialogueReactions(DialogueReactionInterface):
     def on_existing_dialogue(self, msg: AgentMessage) -> None:
         """
         React to an existing dialogue.
+
+        :param msg: the agent message
+        :return: None
         """
         dialogue = self.dialogues.get_dialogue(msg, self.crypto.public_key)
 
         results = self.handle(msg, dialogue)
-        # if not dialogue.is_message_consistent(msg):
-        #     logger.debug("[{}]: this message is not consistent: {}".format(self.name, type(msg)))
-        #     response = ByteMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination, b'This message is not consistent with the dialogue.')
-        # else:
         for result in results:
             self.out_box.out_queue.put(result)
 
     def on_unidentified_dialogue(self, msg: AgentMessage) -> None:
         """
         React to an unidentified dialogue.
+
+        :param msg: agent message
+        :return: None
         """
         logger.debug("[{}]: Unidentified dialogue.".format(self.name))
         result = ByteMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination, b'This message belongs to an unidentified dialogue.', Context())
         self.out_box.out_queue.put(result)
 
     def handle(self, msg: AgentMessage, dialogue: Dialogue) -> List[AgentMessage]:
+        """
+        Handles a message according to the defined behaviour.
+
+        :param msg: the agent message
+        :param dialogue: the dialogue
+        :return: a list of agent messages
+        """
         dialogue.incoming_extend([msg])
         results = []
         if isinstance(msg, CFP):
