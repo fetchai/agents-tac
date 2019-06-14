@@ -58,7 +58,7 @@ class DialogueHandler(DialogueActions, DialogueReactions):
         :return: None
         """
         logger.debug("Handling Dialogue message. type={}".format(type(msg)))
-        if self.dialogues.is_dialogue_registered(msg, self.crypto.public_key):
+        if self.dialogues.is_belonging_to_registered_dialogue(msg, self.crypto.public_key):
             self.on_existing_dialogue(msg)
         elif self.dialogues.is_permitted_for_new_dialogue(msg, self.game_instance.game_configuration.agent_pbks):
             self.on_new_dialogue(msg)

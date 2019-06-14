@@ -188,10 +188,10 @@ class OEFReactions(OEFSearchReactionInterface):
             logger.debug("[{}]: No longer {} any goods...".format(self.name, response))
             return
         for agent_pbk in agent_pbks:
-            dialogue = self.game_instance.dialogues.create(agent_pbk, self.crypto.public_key, not is_searching_for_sellers)
+            dialogue = self.game_instance.dialogues.create_self_initiated(agent_pbk, self.crypto.public_key, not is_searching_for_sellers)
             cfp = CFP(STARTING_MESSAGE_ID, dialogue.dialogue_label.dialogue_id, agent_pbk, STARTING_MESSAGE_TARGET, query, Context())
             logger.debug("[{}]: send_cfp_as_{}: msg_id={}, dialogue_id={}, destination={}, target={}, query={}"
-                         .format(self.name, dialogue.role(), cfp.msg_id, cfp.dialogue_id, cfp.destination, cfp.target, query))
+                         .format(self.name, dialogue.role, cfp.msg_id, cfp.dialogue_id, cfp.destination, cfp.target, query))
             dialogue.outgoing_extend([cfp])
             self.out_box.out_queue.put(cfp)
 
@@ -228,7 +228,7 @@ class DialogueReactions(DialogueReactionInterface):
         React to a new dialogue.
         """
         is_seller = msg.query.model.name == TAC_SUPPLY_DATAMODEL_NAME
-        dialogue = self.dialogues.save(msg.destination, msg.destination, is_seller, msg.dialogue_id)
+        dialogue = self.dialogues.create_opponent_initiated(msg.destination, msg.dialogue_id, is_seller)
         logger.debug("[{}]: saving dialogue: dialogue_id={}".format(self.name, dialogue.dialogue_label.dialogue_id))
         results = self.handle(msg, dialogue)
         for result in results:

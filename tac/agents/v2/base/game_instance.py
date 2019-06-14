@@ -41,12 +41,17 @@ class GamePhase(Enum):
 
 
 class Search:
+    """Deals with the search state"""
 
     def __init__(self):
-        self.id = 0
+        self._id = 0
         self.ids_for_tac = set()  # type: Set[int]
         self.ids_for_sellers = set()  # type: Set[int]
         self.ids_for_buyers = set()  # type: Set[int]
+
+    @property
+    def id(self) -> int:
+        return self._id
 
     def get_next_id(self) -> int:
         """
@@ -54,8 +59,8 @@ class Search:
 
         :return: a search id
         """
-        self.id += 1
-        return self.id
+        self._id += 1
+        return self._id
 
 
 class GameInstance:

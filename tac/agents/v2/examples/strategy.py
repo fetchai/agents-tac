@@ -17,19 +17,18 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
-import copy
 from typing import List, Set
 
 from oef.schema import Description
 
-from tac.platform.game import WorldState
-from tac.agents.v2.base.strategy import Strategy
+from tac.agents.v2.base.strategy import RegisterAs, SearchFor, Strategy
 from tac.helpers.misc import get_goods_quantities_description, marginal_utility
+from tac.platform.game import WorldState
 
 
 class BaselineStrategy(Strategy):
 
-    def __init__(self, register_as: str = 'both', search_for: str = 'both', is_world_modeling: bool = False):
+    def __init__(self, register_as: RegisterAs, search_for: SearchFor, is_world_modeling: bool = False):
         super().__init__(register_as, search_for, is_world_modeling)
 
     def supplied_good_quantities(self, current_holdings: List[int]) -> List[int]:
@@ -83,24 +82,23 @@ class BaselineStrategy(Strategy):
         :return: a list of proposals in Description form
         """
         quantities = self.supplied_good_quantities(current_holdings) if is_seller else self.demanded_good_quantities(current_holdings)
-        proposals = []
-        zeroslist = [0] * len(quantities)
+        share_of_tx_fee = round(tx_fee / 2.0, 2)
         rounding_adjustment = 0.01
+        proposals = []
         for good_id, good_pbk in zip(range(len(quantities)), good_pbks):
             if is_seller and quantities[good_id] == 0: continue
-            lis = copy.deepcopy(zeroslist)
-            lis[good_id] = 1
-            desc = get_goods_quantities_description(good_pbks, lis, is_supply=is_seller)
-            delta_holdings = [i * -1 for i in lis] if is_seller else lis
+            proposal = [0] * len(quantities)
+            proposal[good_id] = 1
+            desc = get_goods_quantities_description(good_pbks, proposal, is_supply=is_seller)
+            delta_holdings = [i * -1 for i in proposal] if is_seller else proposal
             switch = -1 if is_seller else 1
-            marginal_utility_from_single_good = marginal_utility(utility_params, current_holdings, delta_holdings) * switch
-            share_of_tx_fee = round(tx_fee / 2.0, 2)
+            marginal_utility_from_delta_holdings = marginal_utility(utility_params, current_holdings, delta_holdings) * switch
             if self.is_world_modeling:
-                desc.values["price"] = world_state.expected_price(good_pbk, round(marginal_utility_from_single_good, 2), is_seller, share_of_tx_fee)
+                desc.values["price"] = world_state.expected_price(good_pbk, round(marginal_utility_from_delta_holdings, 2), is_seller, share_of_tx_fee)
             else:
                 if is_seller:
-                    desc.values["price"] = round(marginal_utility_from_single_good, 2) + share_of_tx_fee + rounding_adjustment
+                    desc.values["price"] = round(marginal_utility_from_delta_holdings, 2) + share_of_tx_fee + rounding_adjustment
                 else:
-                    desc.values["price"] = round(marginal_utility_from_single_good, 2) - share_of_tx_fee - rounding_adjustment
+                    desc.values["price"] = round(marginal_utility_from_delta_holdings, 2) - share_of_tx_fee - rounding_adjustment
             proposals.append(desc)
         return proposals

@@ -100,7 +100,7 @@ class FIPABehaviour:
         :return: None
         """
 
-        logger.debug("[{}]: on propose as {}.".format(self.name, dialogue.role()))
+        logger.debug("[{}]: on propose as {}.".format(self.name, dialogue.role))
         proposal = propose.proposals[0]
         transaction_id = generate_transaction_id(self.crypto.public_key, propose.destination, dialogue.dialogue_label, dialogue.is_seller)
         transaction = Transaction.from_proposal(proposal,
@@ -111,12 +111,12 @@ class FIPABehaviour:
                                                 crypto=self.crypto)
         new_msg_id = propose.msg_id + 1
         if self._is_profitable_transaction(transaction, dialogue):
-            logger.debug("[{}]: Accepting propose (as {}).".format(self.name, dialogue.role()))
+            logger.debug("[{}]: Accepting propose (as {}).".format(self.name, dialogue.role))
             self.game_instance.lock_manager.add_lock(transaction, as_seller=dialogue.is_seller)
             self.game_instance.lock_manager.add_pending_acceptances(dialogue, new_msg_id, transaction)
             result = Accept(new_msg_id, propose.dialogue_id, propose.destination, propose.msg_id, Context())
         else:
-            logger.debug("[{}]: Declining propose (as {})".format(self.name, dialogue.role()))
+            logger.debug("[{}]: Declining propose (as {})".format(self.name, dialogue.role))
             result = Decline(new_msg_id, propose.dialogue_id, propose.destination, propose.msg_id, Context())
         return result
 
@@ -143,7 +143,7 @@ class FIPABehaviour:
         result = proposal_delta_score >= 0
         logger.debug("[{}]: is good proposal for {}? {}: tx_id={}, "
                      "delta_score={}, amount={}"
-                     .format(self.name, dialogue.role(), result, transaction.transaction_id,
+                     .format(self.name, dialogue.role, result, transaction.transaction_id,
                              proposal_delta_score, transaction.amount))
         return result
 
@@ -205,12 +205,12 @@ class FIPABehaviour:
         if self._is_profitable_transaction(transaction, dialogue):
             if self.game_instance.strategy.is_world_modeling:
                 self.game_instance.world_state.update_on_accept(transaction)
-            logger.debug("[{}]: Locking the current state (as {}).".format(self.name, dialogue.role()))
+            logger.debug("[{}]: Locking the current state (as {}).".format(self.name, dialogue.role))
             self.game_instance.lock_manager.add_lock(transaction, as_seller=dialogue.is_seller)
             results.append(OutContainer(message=transaction.serialize(), message_id=new_msg_id, dialogue_id=accept.dialogue_id, destination=self.game_instance.controller_pbk))
             results.append(Accept(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id, Context()))
         else:
-            logger.debug("[{}]: Decline the accept (as {}).".format(self.name, dialogue.role()))
+            logger.debug("[{}]: Decline the accept (as {}).".format(self.name, dialogue.role))
             results.append(Decline(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id, Context()))
         return results
 

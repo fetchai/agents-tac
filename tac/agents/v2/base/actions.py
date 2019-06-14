@@ -73,7 +73,7 @@ class OEFActions(OEFSearchActionInterface):
 
     def update_services(self) -> None:
         """
-        Update service on OEF Service Directory
+        Update services on OEF Service Directory
 
         :return: None
         """

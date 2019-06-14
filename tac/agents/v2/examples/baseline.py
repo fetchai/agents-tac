@@ -1,7 +1,7 @@
 import argparse
 
 from tac.agents.v2.base.participant_agent import ParticipantAgent
-from tac.agents.v2.base.strategy import Strategy
+from tac.agents.v2.base.strategy import Strategy, SearchFor, RegisterAs
 from tac.agents.v2.examples.strategy import BaselineStrategy
 
 
@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     arguments = _parse_arguments()
 
-    strategy = BaselineStrategy(register_as='both', search_for='both', is_world_modeling=False)
+    strategy = BaselineStrategy(register_as=RegisterAs.BOTH, search_for=SearchFor.BOTH, is_world_modeling=False)
     agent = BaselineAgent(arguments.name, "127.0.0.1", 3333, strategy, 10, 30)
     try:
         agent.start()

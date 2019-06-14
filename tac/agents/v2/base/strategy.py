@@ -18,6 +18,7 @@
 #
 # ------------------------------------------------------------------------------
 from abc import abstractmethod
+from enum import Enum
 from typing import List, Set, Optional
 
 from oef.schema import Description
@@ -25,9 +26,28 @@ from oef.schema import Description
 from tac.platform.game import WorldState
 
 
+class RegisterAs(Enum):
+    SELLER = 'seller'
+    BUYER = 'buyer'
+    BOTH = 'both'
+
+
+class SearchFor(Enum):
+    SELLER = 'sellers'
+    BUYER = 'buyers'
+    BOTH = 'both'
+
+
 class Strategy:
 
-    def __init__(self, register_as: str = 'both', search_for: str = 'both', is_world_modeling: bool = False):
+    def __init__(self, register_as: RegisterAs, search_for: SearchFor, is_world_modeling: bool = False):
+        """
+        Initializes the strategy
+
+        :param register_as: determines whether the agent registers as seller, buyer or both
+        :param search_for: determines whether the agent searches for sellers, buyers or both
+        :param is_world_modeling: determines whether the agent has a model of the world
+        """
         self._register_as = register_as
         self._search_for = search_for
         self._is_world_modeling = is_world_modeling
@@ -38,19 +58,19 @@ class Strategy:
 
     @property
     def is_registering_as_seller(self):
-        return self._register_as == 'seller' or self._register_as == 'both'
+        return self._register_as == RegisterAs.SELLER or self._register_as == RegisterAs.BUYER
 
     @property
     def is_searching_for_sellers(self):
-        return self._search_for == 'sellers' or self._search_for == 'both'
+        return self._search_for == SearchFor.SELLERS or self._search_for == SearchFor.BOTH
 
     @property
     def is_registering_as_buyer(self):
-        return self._register_as == 'buyer' or self._register_as == 'both'
+        return self._register_as == RegisterAs.BUYER or self._register_as == RegisterAs.BOTH
 
     @property
     def is_searching_for_buyers(self):
-        return self._search_for == 'buyers' or self._search_for == 'both'
+        return self._search_for == SearchFor.BUYERS or self._search_for == SearchFor.BOTH
 
     @abstractmethod
     def supplied_good_quantities(self, current_holdings: List[int]) -> List[int]:
