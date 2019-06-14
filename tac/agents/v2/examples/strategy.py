@@ -28,7 +28,7 @@ from tac.platform.game import WorldState
 
 class BaselineStrategy(Strategy):
 
-    def __init__(self, register_as: RegisterAs, search_for: SearchFor, is_world_modeling: bool = False):
+    def __init__(self, register_as: RegisterAs = RegisterAs.BOTH, search_for: SearchFor = SearchFor.BOTH, is_world_modeling: bool = False):
         super().__init__(register_as, search_for, is_world_modeling)
 
     def supplied_good_quantities(self, current_holdings: List[int]) -> List[int]:

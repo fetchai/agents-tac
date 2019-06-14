@@ -40,7 +40,7 @@ class SearchFor(Enum):
 
 class Strategy:
 
-    def __init__(self, register_as: RegisterAs, search_for: SearchFor, is_world_modeling: bool = False):
+    def __init__(self, register_as: RegisterAs = RegisterAs.BOTH, search_for: SearchFor = SearchFor.BOTH, is_world_modeling: bool = False):
         """
         Initializes the strategy
 
