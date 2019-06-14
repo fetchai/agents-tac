@@ -27,3 +27,4 @@ if __name__ == '__main__':
         agent.start()
     finally:
         agent.stop()
+        agent.game_instance.lock_manager.stop()

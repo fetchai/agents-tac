@@ -31,6 +31,7 @@ from typing import List
 import dateutil
 import math
 
+from tac.agents.v2.base.strategy import RegisterAs, SearchFor
 from tac.agents.v2.examples.baseline import BaselineAgent
 from tac.agents.v2.examples.strategy import BaselineStrategy
 from tac.gui.monitor import VisdomMonitor, NullMonitor
@@ -161,7 +162,7 @@ def initialize_baseline_agent(agent_name: str, oef_addr: str, oef_port: int, reg
     """
 
     # Notice: we create a new asyncio loop, so we can run it in an independent thread.
-    strategy = BaselineStrategy(register_as=register_as, search_for=search_for, is_world_modeling=is_world_modeling)
+    strategy = BaselineStrategy(register_as=RegisterAs(register_as), search_for=SearchFor(search_for), is_world_modeling=is_world_modeling)
     return BaselineAgent(agent_name, oef_addr, oef_port, strategy, services_interval=services_interval, pending_transaction_timeout=pending_transaction_timeout)
 
 

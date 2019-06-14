@@ -59,7 +59,7 @@ class Agent:
         return self._crypto
 
     @property
-    def liveness(self) -> bool:
+    def liveness(self) -> Liveness:
         return self._liveness
 
     def start(self) -> None:

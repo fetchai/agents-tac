@@ -82,9 +82,9 @@ class MailBox(OEFAgent):
         :return: None
         """
         self._loop.call_soon_threadsafe(super().stop)
-        # self.halt_loop()  TODO this does not work!
-        self._mail_box_thread.join()
-        self._mail_box_thread = None
+        if self._mail_box_thread is not None:
+            self._mail_box_thread.join()
+            self._mail_box_thread = None
 
 
 class InBox(object):

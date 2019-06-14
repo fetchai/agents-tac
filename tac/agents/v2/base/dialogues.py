@@ -127,7 +127,7 @@ class Dialogue:
 
         :return: True if yes, False otherwise.
         """
-        last_sent_message = self.outgoing_messages[-1:]
+        last_sent_message = self._outgoing_messages[-1:]
         result = (last_sent_message is not []) and isinstance(last_sent_message[0], CFP)
         return result
 
@@ -137,7 +137,7 @@ class Dialogue:
 
         :return: True if yes, False otherwise.
         """
-        last_sent_message = self.outgoing_messages[-1:]
+        last_sent_message = self._outgoing_messages[-1:]
         result = (last_sent_message is not []) and isinstance(last_sent_message[0], Propose)
         return result
 
@@ -147,7 +147,7 @@ class Dialogue:
 
         :return: True if yes, False otherwise.
         """
-        last_sent_message = self.outgoing_messages[-1:]
+        last_sent_message = self._outgoing_messages[-1:]
         result = (last_sent_message is not []) and isinstance(last_sent_message[0], Accept)
         return result
 
@@ -157,7 +157,7 @@ class Dialogue:
 
         :return: True if yes, False otherwise.
         """
-        last_sent_message = self.outgoing_messages[-1:]
+        last_sent_message = self._outgoing_messages[-1:]
         result = (last_sent_message is not []) and isinstance(last_sent_message[0], CFP)
         return result
 
@@ -167,7 +167,7 @@ class Dialogue:
 
         :return: True if yes, False otherwise.
         """
-        last_sent_message = self.outgoing_messages[-1:]
+        last_sent_message = self._outgoing_messages[-1:]
         result = (last_sent_message is not []) and isinstance(last_sent_message[0], Propose)
         return result
 
@@ -205,7 +205,7 @@ class Dialogues:
         result = isinstance(msg, CFP) and (msg.destination in known_pbks)
         return result
 
-    def is_belonging_to_registered_dialogue(self, msg: AgentMessage, agent_pbk: str) -> DialogueLabel:
+    def is_belonging_to_registered_dialogue(self, msg: AgentMessage, agent_pbk: str) -> bool:
         """
         Checks whether an agent message is part of a registered dialogue.
 
@@ -231,7 +231,7 @@ class Dialogues:
                 result = self_initiated_dialogue.is_expecting_cfp_decline()
             elif msg.target == 2 and other_initiated_dialogue_label in self.dialogues:
                 other_initiated_dialogue = self.dialogues[other_initiated_dialogue_label]
-                result = self_initiated_dialogue.is_expecting_proposal_decline()
+                result = other_initiated_dialogue.is_expecting_propose_decline()
         return result
 
     def get_dialogue(self, msg: AgentMessage, agent_pbk: str) -> Dialogue:
