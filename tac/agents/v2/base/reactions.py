@@ -78,7 +78,7 @@ class ControllerReactions(ControllerReactionInterface):
         dashboard = self.game_instance.dashboard
         if dashboard is not None:
             dashboard.init()
-            dashboard.update_from_agent_state(self.game_instance.agent_state)
+            dashboard.update_from_agent_state(self.game_instance.agent_state, append=False)
 
     def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
         """
@@ -94,7 +94,7 @@ class ControllerReactions(ControllerReactionInterface):
 
         dashboard = self.game_instance.dashboard
         if dashboard is not None:
-            dashboard.update_from_agent_state(self.game_instance.agent_state)
+            dashboard.update_from_agent_state(self.game_instance.agent_state, append=True)
             dashboard.add_transaction(transaction)
 
     def on_state_update(self, state_update: StateUpdate) -> None:

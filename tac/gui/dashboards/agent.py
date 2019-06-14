@@ -69,11 +69,12 @@ class AgentDashboard(Dashboard):
         self._transaction_window = None
 
     def init(self):
-        self._transaction_window = self.viz.text(self._transaction_table.to_html())
+        self.viz.delete_env(self.env_name)
+        self._transaction_window = self.viz.text(self._transaction_table.to_html(), env=self.env_name)
 
     def add_transaction(self, new_tx: Transaction):
         self._transaction_table.add_transaction(new_tx)
-        self.viz.text(self._transaction_table.to_html(), win=self._transaction_window)
+        self.viz.text(self._transaction_table.to_html(), win=self._transaction_window, env=self.env_name)
 
     def _update_holdings(self, agent_state: AgentState):
         scaled_holdings = agent_state.current_holdings / np.sum(agent_state.current_holdings)
@@ -87,30 +88,31 @@ class AgentDashboard(Dashboard):
                              rownames=["Utilities", "Holdings"],
                              xlabel="Goods"))
 
-    def _update_score(self, agent_state: AgentState):
+    def _update_score(self, agent_state: AgentState, append: bool = True):
 
         window_name = "{}_score_history".format(self.env_name)
-        self.viz.line(X=[self._update_nb], Y=[agent_state.get_score()], update="append",
+        self.viz.line(X=[self._update_nb], Y=[agent_state.get_score()], update="append" if append else "replace",
                       env=self.env_name, win=window_name,
                       opts=dict(
                           title="{}'s Score".format(repr(self.agent_name)),
                           xlabel="Transactions",
                           ylabel="Score"))
 
-    def _update_balance(self, agent_state: AgentState):
+    def _update_balance(self, agent_state: AgentState, append: bool = True):
 
         window_name = "{}_balance_history".format(self.env_name)
-        self.viz.line(X=[self._update_nb], Y=[agent_state.balance], env=self.env_name, win=window_name, update="append",
+        self.viz.line(X=[self._update_nb], Y=[agent_state.balance], env=self.env_name, win=window_name,
+                      update="append" if append else "replace",
                       opts=dict(
                           title="{}'s Balance".format(repr(self.agent_name)),
                           xlabel="Transactions",
                           ylabel="Score"))
 
-    def update_from_agent_state(self, agent_state: AgentState):
+    def update_from_agent_state(self, agent_state: AgentState, append: bool = True):
         if not self._is_running():
             raise Exception("Dashboard not running, update not allowed.")
 
         self._update_nb += 1
         self._update_holdings(agent_state)
-        self._update_score(agent_state)
-        self._update_balance(agent_state)
+        self._update_score(agent_state, append=append)
+        self._update_balance(agent_state, append=append)
