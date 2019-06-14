@@ -21,6 +21,8 @@ def parse_arguments():
     parser.add_argument("--name", default="my_agent", help="Name of the agent")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
+    parser.add_argument("--search-interval", type=int, default=10, help="The number of seconds to wait before doing another search.")
+    parser.add_argument("--pending-transaction-timeout", type=int, default=30, help="The timeout in seconds to wait for pending transaction/negotiations.")
 
     return parser.parse_args()
 
@@ -89,8 +91,9 @@ class MyStrategy(Strategy):
 def main():
     args = parse_arguments()
 
-    strategy = MyStrategy(register_as='both', search_for='both', is_world_modeling=False)
-    agent = BaselineAgent(name=args.name, oef_addr=args.oef_addr, oef_port=args.oef_port, strategy=strategy)
+    strategy = MyStrategy(register_as=RegisterAs.BOTH, search_for=SearchFor.BOTH, is_world_modeling=False)
+    agent = BaselineAgent(name=args.name, oef_addr=args.oef_addr, oef_port=args.oef_port, strategy=strategy,
+                          search_interval=args.search_interval, pending_transaction_timeout=args.pending_transaction_timeout)
 
     try:
         agent.start()
