@@ -20,7 +20,7 @@
 import datetime
 import logging
 import random
-from typing import List, Set
+from typing import List, Set, Dict
 
 import dateutil.parser
 import math
@@ -299,3 +299,21 @@ def generate_pbks(nb_things: int, thing_name: str) -> List[str]:
     max_number_of_digits = math.ceil(math.log10(nb_things))
     string_format = "tac_" + thing_name + "_{:0" + str(max_number_of_digits) + "}"
     return [string_format.format(i) for i in range(nb_things)]
+
+
+def generate_html_table_from_dict(d: Dict[str, List[str]], title="") -> str:
+    style_tag = "<style>table, th, td{border: 1px solid black;padding:10px;}</style>"
+    html_head = "<head>{}</head>".format(style_tag)
+    title_tag = "<h2>{}</h2>".format(title) if title else ""
+
+    table_head = "<tr><th>{}</th></tr>".format("</th><th>".join(d.keys()))
+    table_body = ""
+    for row in zip(*d.values()):
+        table_row = "<tr><td>" + "</td><td>".join(row) + "</td></tr>"
+        table_body += table_row
+
+    table = "<table>{}{}</table>".format(table_head, table_body)
+
+    html_table = "<html>" + html_head + title_tag + table + "</html>"
+
+    return html_table

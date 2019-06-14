@@ -1,38 +1,21 @@
 # -*- coding: utf-8 -*-
 import argparse
-import inspect
 import json
 import os
-import subprocess
-import time
 from typing import Optional
 
 import numpy as np
-from visdom import Visdom
 
+from tac.gui.dashboards.base import start_visdom_server, Dashboard
 from tac.platform.game import Game
 from tac.platform.stats import GameStats
 
-CUR_PATH = inspect.getfile(inspect.currentframe())
-CUR_DIR = os.path.dirname(CUR_PATH)
-ROOT_PATH = os.path.join(CUR_DIR, "..", "..")
-
-viz = None  # type: Optional[Visdom]
 DEFAULT_ENV_NAME = "tac_simulation_env_main"
 
 
-def start_visdom_server() -> subprocess.Popen:
-    visdom_server_args = ["python", "-m", "visdom.server", "-env_path", os.path.join(CUR_DIR, ".visdom_env")]
-    print(" ".join(visdom_server_args))
-    prog = subprocess.Popen(visdom_server_args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    time.sleep(1.0)
-    print("Visdom server running at http://localhost:8097")
-    return prog
-
-
-class Dashboard(object):
+class ControllerDashboard(Dashboard):
     """
-    Class to manage Visdom dashboard.
+    Class to manage a Visdom dashboard for the controller agent.
     It assumes that a Visdom server is running at the address and port provided in input
     (default: http://localhost:8097)
     """
@@ -40,22 +23,9 @@ class Dashboard(object):
     def __init__(self, game_stats: GameStats,
                  visdom_addr: str = "localhost",
                  visdom_port: int = 8097,
-                 env_name: Optional[str] = None):
-        self._proc = None  # type: Optional[subprocess.Popen]
-        self.viz = None  # type: Optional[Visdom]
-        self.visdom_addr = visdom_addr
-        self.visdom_port = visdom_port
-        self.env_name = env_name if env_name is not None else DEFAULT_ENV_NAME
+                 env_name: Optional[str] = "tac_controller"):
+        super().__init__(visdom_addr, visdom_port, env_name)
         self.game_stats = game_stats
-
-    def _is_running(self):
-        return self.viz is not None
-
-    def start(self):
-        self.viz = Visdom(server=self.visdom_addr, port=self.visdom_port, env=self.env_name)
-
-    def stop(self):
-        self.viz = None
 
     def update(self):
         if not self._is_running():
@@ -78,7 +48,7 @@ class Dashboard(object):
         game_data = json.load(open(game_data_json_filepath))
         game = Game.from_dict(game_data)
         game_stats = GameStats(game)
-        return Dashboard(game_stats, env_name)
+        return ControllerDashboard(game_stats, env_name)
 
     def _update_info(self):
         window_name = "configuration_details"
@@ -196,11 +166,11 @@ class Dashboard(object):
                       )
 
     def __enter__(self):
-        d.start()
-        d.update()
+        self.start()
+        self.update()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        d.stop()
+        self.stop()
 
 
 def parse_args():
@@ -216,7 +186,7 @@ if __name__ == '__main__':
 
     arguments = parse_args()
     process = start_visdom_server()
-    d = Dashboard.from_datadir(arguments.datadir, arguments.env_name)
+    d = ControllerDashboard.from_datadir(arguments.datadir, arguments.env_name)
 
     d.start()
     while True:

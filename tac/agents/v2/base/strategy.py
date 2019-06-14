@@ -111,7 +111,8 @@ class Strategy:
         """
 
     @abstractmethod
-    def get_proposals(self, good_pbks: List[str], current_holdings: List[int], utility_params: List[float], tx_fee: float, is_seller: bool, world_state: Optional[WorldState]) -> List[Description]:
+    def get_proposals(self, good_pbks: List[str], current_holdings: List[int], utility_params: List[float],
+                      tx_fee: float, is_seller: bool, world_state: Optional[WorldState]) -> List[Description]:
         """
         Generates proposals from the seller/buyer.
 

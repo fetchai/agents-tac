@@ -28,6 +28,7 @@ from oef.schema import Description
 from tac.agents.v2.base.dialogues import Dialogues
 from tac.agents.v2.base.lock_manager import LockManager
 from tac.agents.v2.base.strategy import Strategy
+from tac.gui.dashboards.agent import AgentDashboard
 from tac.platform.game import AgentState, WorldState, GameConfiguration
 from tac.helpers.misc import build_query, get_goods_quantities_description
 from tac.platform.protocol import GameData
@@ -68,7 +69,11 @@ class GameInstance:
     The GameInstance maintains state of the game from the agent's perspective.
     """
 
-    def __init__(self, agent_name: str, strategy: Strategy, services_interval: int = 10, pending_transaction_timeout: int = 10):
+    def __init__(self, agent_name: str,
+                 strategy: Strategy,
+                 services_interval: int = 10,
+                 pending_transaction_timeout: int = 10,
+                 dashboard: Optional[AgentDashboard] = None):
         self.agent_name = agent_name
         self.controller_pbk = None  # type: Optional[str]
 
@@ -94,8 +99,16 @@ class GameInstance:
         self.lock_manager = LockManager(agent_name, pending_transaction_timeout=pending_transaction_timeout)
         self.lock_manager.start()
 
+        self.dashboard = dashboard
+        if self.dashboard is not None:
+            self.dashboard.start()
+
     def init(self, game_data: GameData) -> None:
-        # populate data structures about the started competition
+        """
+        Populate data structures with the game data.
+        
+        :return: None
+        """
         self._game_configuration = GameConfiguration(game_data.nb_agents, game_data.nb_goods, game_data.tx_fee,
                                                      game_data.agent_pbks, game_data.agent_names, game_data.good_pbks)
         self._initial_agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
@@ -106,6 +119,11 @@ class GameInstance:
             self._world_state = WorldState(opponent_pbks, self.game_configuration.good_pbks, self.initial_agent_state)
 
     def reset(self) -> None:
+        """
+        Reset the game instance.
+
+        :return: None
+        """
         self.controller_pbk = None
         self._search = Search()
         self._dialogues = Dialogues()

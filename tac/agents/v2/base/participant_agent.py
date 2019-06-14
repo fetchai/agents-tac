@@ -28,6 +28,7 @@ from tac.agents.v2.base.game_instance import GameInstance, GamePhase
 from tac.agents.v2.base.helpers import is_oef_message, is_controller_message
 from tac.agents.v2.base.handlers import DialogueHandler, ControllerHandler, OEFHandler
 from tac.agents.v2.base.strategy import Strategy
+from tac.gui.dashboards.agent import AgentDashboard
 
 OEFMessage = Union[SearchResult, OEFErrorMessage, DialogueErrorMessage]
 ControllerMessage = SimpleMessage
@@ -37,14 +38,30 @@ Message = Union[OEFMessage, ControllerMessage, AgentMessage]
 
 class ParticipantAgent(Agent):
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int, strategy: Strategy, services_interval: int = 10, pending_transaction_timeout: int = 30):
+    def __init__(self, name: str,
+                 oef_addr: str,
+                 oef_port: int,
+                 strategy: Strategy,
+                 services_interval: int = 10,
+                 pending_transaction_timeout: int = 30,
+                 dashboard: Optional[AgentDashboard] = None):
+        """
+        Initialize a participant agent.
+        :param name: the name of the agent.
+        :param oef_addr: the TCP/IP address of the OEF node.
+        :param oef_port: the TCP/IP port of the OEF node.
+        :param strategy: the strategy object that specify the behaviour during the competition.
+        :param services_interval: the number of seconds between different searches.
+        :param pending_transaction_timeout: the timeout for cleanup of pending negotiations and unconfirmed transactions.
+        :param dashboard: a Visdom dashboard to visualize agent statistics during the competition.
+        """
         super().__init__(name, oef_addr, oef_port)
         self.mail_box = FIPAMailBox(self.crypto.public_key, oef_addr, oef_port)
         self.in_box = InBox(self.mail_box)
         self.out_box = OutBox(self.mail_box)
 
         self._is_competing = False  # type: bool
-        self._game_instance = GameInstance(name, strategy, services_interval, pending_transaction_timeout)  # type: Optional[GameInstance]
+        self._game_instance = GameInstance(name, strategy, services_interval, pending_transaction_timeout, dashboard)  # type: Optional[GameInstance]
 
         self.controller_handler = ControllerHandler(self.crypto, self.liveness, self.game_instance, self.out_box, self.name)
         self.oef_handler = OEFHandler(self.crypto, self.liveness, self.game_instance, self.out_box, self.name)
