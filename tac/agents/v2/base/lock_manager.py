@@ -148,7 +148,7 @@ class LockManager(object):
     def _register_transaction_with_time(self, transaction_id: str) -> None:
         """
         Register a transaction with a creation datetime.
-        
+
         :param transaction_id: the transaction id
         :return: None
         """
