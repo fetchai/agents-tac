@@ -18,17 +18,20 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+
+"""Baseline agent, ready to run."""
+
 import argparse
 import logging
 
-from tac.agents.baseline import BaselineAgent, BaselineStrategy
+from tac.agents.v1.examples.baseline import BaselineAgent
 
 logger = logging.getLogger(__name__)
 
 
 def parse_arguments():
-    parser = argparse.ArgumentParser("my_agent", description="Launch my agent.")
-    parser.add_argument("--public-key", default="my_agent", help="Public key of the agent.")
+    parser = argparse.ArgumentParser("baseline_agent", description="Launch my agent.")
+    parser.add_argument("--public-key", default="baseline_agent", help="Public key of the agent.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
     parser.add_argument("--agent-gui", action="store_true", help="Show the GUI.")
@@ -36,23 +39,14 @@ def parse_arguments():
     return parser.parse_args()
 
 
-class MyAgent(BaselineAgent, BaselineStrategy):
-    """
-    My agent implementation.
-    """
-
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333, service_registration_strategy: str = 'both', **kwargs):
-        super().__init__(public_key, oef_addr, oef_port, service_registration_strategy, **kwargs)
-
-
 def main():
     args = parse_arguments()
-    agent = MyAgent(public_key=args.public_key, oef_addr=args.oef_addr, oef_port=args.oef_port)
+    agent = BaselineAgent(public_key=args.public_key, oef_addr=args.oef_addr, oef_port=args.oef_port)
 
     agent.connect()
     agent.search_for_tac()
 
-    logger.debug("Running my agent...")
+    logger.debug("Running baseline agent...")
     agent.run()
 
 

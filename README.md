@@ -45,6 +45,10 @@ This repository contains submodules. Clone with recursive strategy:
 
 [For simulation go here](../master/examples/simulation_demo)
 
+## 🛠🛠🛠 Templates 🛠🛠🛠
+
+[For templates go here](../master/templates)
+
 ## 🏆 🏆 🏆 Competition 🏆 🏆 🏆 
 
 [For competition go here](../master/sandbox)
