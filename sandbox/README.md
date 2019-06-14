@@ -13,6 +13,10 @@ This folder lets you run the sandbox for the competition.
 
     docker-compose build
 
+- In case you experience an error run:
+
+    docker-compose build --no-cache
+
 ## 2. Configuration
 
 To configure the execution of TAC, you can tune the following parameters:
