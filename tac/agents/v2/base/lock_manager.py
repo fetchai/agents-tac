@@ -67,6 +67,8 @@ class LockManager(object):
         """
         Periodically check for transactions in one of the pending pools.
         If they have been there for too much time, remove them.
+
+        :return: None
         """
         while self._cleanup_locks_task_is_running:
             time.sleep(2.0)
@@ -77,6 +79,8 @@ class LockManager(object):
         """
         Remove all the pending messages (i.e. either proposals or acceptances)
         that have been stored for an amount of time longer than the timeout.
+
+        :return: None
         """
         timeout = datetime.timedelta(0, self.pending_transaction_timeout)
         queue = self._last_update_for_pending_messages
@@ -111,6 +115,8 @@ class LockManager(object):
         """
         Remove all the pending messages (i.e. either proposals or acceptances)
         that have been stored for an amount of time longer than the timeout.
+
+        :return: None
         """
         queue = self._last_update_for_transactions
         timeout = datetime.timedelta(0, self.pending_transaction_timeout)
@@ -142,6 +148,8 @@ class LockManager(object):
     def _register_transaction_with_time(self, transaction_id: str) -> None:
         """
         Register a transaction with a creation datetime.
+        
+        :param transaction_id: the transaction id
         :return: None
         """
         now = datetime.datetime.now()
@@ -150,6 +158,9 @@ class LockManager(object):
     def _register_message_with_time(self, dialogue: Dialogue, msg_id: int) -> None:
         """
         Register a message with a creation datetime.
+
+        :param dialogue: the dialogue
+        :param msg_id: the message id
         :return: None
         """
         now = datetime.datetime.now()
@@ -157,26 +168,63 @@ class LockManager(object):
         self._last_update_for_pending_messages.append((now, message_id))
 
     def add_pending_proposal(self, dialogue: Dialogue, proposal_id: int, transaction: Transaction) -> None:
+        """
+        Add a proposal (in the form of a transaction) to the pending list.
+
+        :param dialogue: the dialogue associated with the proposal
+        :param proposal_id: the message id of the proposal
+        :param transaction: the transaction
+        :return: None
+        """
         assert dialogue.dialogue_label not in self.pending_tx_proposals and proposal_id not in self.pending_tx_proposals[dialogue.dialogue_label]
         self.pending_tx_proposals[dialogue.dialogue_label][proposal_id] = transaction
         self._register_message_with_time(dialogue, proposal_id)
 
     def pop_pending_proposal(self, dialogue: Dialogue, proposal_id: int) -> Transaction:
+        """
+        Remove a proposal (in the form of a transaction) from the pending list.
+
+        :param dialogue: the dialogue associated with the proposal
+        :param proposal_id: the message id of the proposal
+        :return: the transaction
+        """
         assert dialogue.dialogue_label in self.pending_tx_proposals and proposal_id in self.pending_tx_proposals[dialogue.dialogue_label]
         transaction = self.pending_tx_proposals[dialogue.dialogue_label].pop(proposal_id)
         return transaction
 
     def add_pending_acceptances(self, dialogue: Dialogue, proposal_id: int, transaction: Transaction) -> None:
+        """
+        Add an acceptance (in the form of a transaction) to the pending list.
+
+        :param dialogue: the dialogue associated with the proposal
+        :param proposal_id: the message id of the proposal
+        :param transaction: the transaction
+        :return: None
+        """
         assert dialogue.dialogue_label not in self.pending_tx_acceptances and proposal_id not in self.pending_tx_acceptances[dialogue.dialogue_label]
         self.pending_tx_acceptances[dialogue.dialogue_label][proposal_id] = transaction
         self._register_message_with_time(dialogue, proposal_id)
 
     def pop_pending_acceptances(self, dialogue: Dialogue, proposal_id: int) -> Transaction:
+        """
+        Remove an acceptance (in the form of a transaction) from the pending list.
+
+        :param dialogue: the dialogue associated with the proposal
+        :param proposal_id: the message id of the proposal
+        :return: the transaction
+        """
         assert dialogue.dialogue_label in self.pending_tx_acceptances and proposal_id in self.pending_tx_acceptances[dialogue.dialogue_label]
         transaction = self.pending_tx_acceptances[dialogue.dialogue_label].pop(proposal_id)
         return transaction
 
     def add_lock(self, transaction: Transaction, as_seller: bool) -> None:
+        """
+        Add a lock (in the form of a transaction).
+
+        :param transaction: the transaction
+        :param as_seller: whether the agent is a seller or not
+        :return: None
+        """
         transaction_id = transaction.transaction_id
         assert transaction_id not in self.locks
         self._register_transaction_with_time(transaction_id)
@@ -187,6 +235,12 @@ class LockManager(object):
             self.locks_as_buyer[transaction_id] = transaction
 
     def pop_lock(self, transaction_id: str) -> Transaction:
+        """
+        Remove a lock (in the form of a transaction).
+
+        :param transaction_id: the transaction id
+        :return: the transaction
+        """
         assert transaction_id in self.locks
         transaction = self.locks.pop(transaction_id)
         self.locks_as_buyer.pop(transaction_id, None)
@@ -194,12 +248,22 @@ class LockManager(object):
         return transaction
 
     def start(self) -> None:
+        """
+        Start the lock manager.
+
+        :return: None
+        """
         if not self._cleanup_locks_task_is_running:
             self._cleanup_locks_task_is_running = True
             self._cleanup_locks_task = Thread(target=self.cleanup_locks_job)
             self._cleanup_locks_task.start()
 
     def stop(self) -> None:
+        """
+        Stop the lock manager.
+
+        :return: None
+        """
         if self._cleanup_locks_task_is_running:
             self._cleanup_locks_task_is_running = False
             self._cleanup_locks_task.join()
@@ -208,6 +272,7 @@ class LockManager(object):
         """
         Store proposals as pending transactions.
 
+        :param proposals: the list of proposals
         :param new_msg_id: the new message id
         :param dialogue: the dialogue
         :param origin: the public key of the message sender.

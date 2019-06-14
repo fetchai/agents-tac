@@ -8,7 +8,7 @@ The second iteration of our agents have a more advanced architecture whereby the
 - Run the OEF Docker image on `localhost`, using this command:
 
 ```
-docker run -it -p 20000:20000 -p 3333:3333 -p 40000:40000 fetchai/oef-search:v1 node no_sh \
+docker run -it -p 20000:20000 -p 3333:3333 -p 40000:40000 fetchai/oef-search:v4 node no_sh \
     --node_key Search1 \
     --core_key Core1 \
     --search_port 20000 \
