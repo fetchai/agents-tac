@@ -66,6 +66,9 @@ services:
     entrypoint:
       - "pipenv"
       - "run"
+      - "sandbox/wait-for-oef.sh"
+      - "172.28.1.1"
+      - "3333"
       - "python3"
       - "examples/simulation_demo/v2/tac_agent_spawner.py"
       - "--nb-agents"

@@ -44,31 +44,27 @@ ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/lib
 ENV DEBIAN_FRONTEND noninteractive
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
-# -- Install Pipenv:
-RUN apt install python3.7-dev -y
-RUN curl --silent https://bootstrap.pypa.io/get-pip.py | python3.7
-# Backwards compatility.
-RUN rm -fr /usr/bin/python3 && ln /usr/bin/python3.7 /usr/bin/python3
-RUN pip3 install pipenv
 
-# Docs dependencies:
-RUN apt install pandoc -y
-# python package to parse plantuml files. docs: https://pythonhosted.org/plantuml/
-RUN apt install plantuml -y
+USER default
 
-RUN mkdir /build
+RUN sudo apt install python3.7-dev -y
+RUN sudo apt install python3-pip -y
+RUN sudo pip install pipenv
+
+## Docs dependencies:
+#RUN apt install pandoc -y
+## python package to parse plantuml files. docs: https://pythonhosted.org/plantuml/
+#RUN apt install plantuml -y
+
+RUN sudo mkdir /build
 WORKDIR /build
 COPY . /build
 
 RUN make clean
-RUN sed -i 's/^oef =.*//' ./Pipfile
 
-#USER default
-
-# TODO remove when new SDK version will be public
 RUN pipenv --python python3.7
 RUN pipenv install --dev --skip-lock
-RUN pipenv run python3 setup.py install
+RUN pipenv run pip3 install .
 
 ENTRYPOINT ["/bin/bash"]
 
