@@ -5,7 +5,11 @@
 
 import argparse
 import logging
+from typing import List, Set
 
+from oef.schema import Description
+
+from tac.platform.game import WorldState
 from tac.agents.v2.base.strategy import Strategy
 from tac.agents.v2.examples.baseline import BaselineAgent
 
@@ -29,7 +33,57 @@ class MyStrategy(Strategy):
     def __init__(self, register_as: str = 'both', search_for: str = 'both', is_world_modeling: bool = False):
         super().__init__(register_as, search_for, is_world_modeling)
 
-        raise NotImplementedError("Your agent must implement the interface defined in Strategy.")
+    def supplied_good_quantities(self, current_holdings: List[int]) -> List[int]:
+        """
+        Generates list of quantities which are supplied.
+
+        :param current_holdings: a list of current good holdings
+        :return: a list of quantities
+        """
+        raise NotImplementedError("Your agent must implement this method.")
+
+    def supplied_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
+        """
+        Generates set of good pbks which are supplied.
+
+        :param good_pbks: a list of good pbks
+        :param current_holdings: a list of current good holdings
+        :return: a set of pbks
+        """
+        raise NotImplementedError("Your agent must implement this method.")
+
+    def demanded_good_quantities(self, current_holdings: List[int]) -> List[int]:
+        """
+        Generates list of quantities which are demanded.
+
+        :param current_holdings: a list of current good holdings
+        :return: a list of quantities
+        """
+        raise NotImplementedError("Your agent must implement this method.")
+
+    def demanded_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
+        """
+        Generates set of good pbks which are demanded.
+
+        :param good_pbks: a list of good pbks
+        :param current_holdings: a list of current good holdings
+        :return: a set of pbks
+        """
+        raise NotImplementedError("Your agent must implement this method.")
+
+    def get_proposals(self, good_pbks: List[str], current_holdings: List[int], utility_params: List[int], tx_fee: float, is_seller: bool, world_state: WorldState) -> List[Description]:
+        """
+        Generates proposals from the seller/buyer.
+
+        :param good_pbks: a list of good pbks
+        :param current_holdings: a list of current good holdings
+        :param utility_params: a list of utility params
+        :param tx_fee: the transaction fee
+        :param is_seller: Boolean indicating the role of the agent
+
+        :return: a list of proposals in Description form
+        """
+        raise NotImplementedError("Your agent must implement this method.")
 
 
 def main():
