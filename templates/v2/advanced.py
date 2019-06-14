@@ -9,6 +9,7 @@ from typing import List, Set
 
 from oef.schema import Description
 
+from tac.gui.dashboards.agent import AgentDashboard
 from tac.platform.game import WorldState
 from tac.agents.v2.base.strategy import Strategy, RegisterAs, SearchFor
 from tac.agents.v2.examples.baseline import BaselineAgent
@@ -23,6 +24,9 @@ def parse_arguments():
     parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
     parser.add_argument("--search-interval", type=int, default=10, help="The number of seconds to wait before doing another search.")
     parser.add_argument("--pending-transaction-timeout", type=int, default=30, help="The timeout in seconds to wait for pending transaction/negotiations.")
+    parser.add_argument("--gui", action="store_true", help="Show the GUI.")
+    parser.add_argument("--visdom_addr", type=str, default="localhost", help="Show the GUI.")
+    parser.add_argument("--visdom_port", type=int, default=8097, help="Show the GUI.")
 
     return parser.parse_args()
 
@@ -91,9 +95,14 @@ class MyStrategy(Strategy):
 def main():
     args = parse_arguments()
 
+    if args.gui:
+        dashboard = AgentDashboard(agent_name=args.name, env_name=args.name)
+    else:
+        dashboard = None
+
     strategy = MyStrategy(register_as=RegisterAs.BOTH, search_for=SearchFor.BOTH, is_world_modeling=False)
     agent = BaselineAgent(name=args.name, oef_addr=args.oef_addr, oef_port=args.oef_port, strategy=strategy,
-                          search_interval=args.search_interval, pending_transaction_timeout=args.pending_transaction_timeout)
+                          search_interval=args.search_interval, pending_transaction_timeout=args.pending_transaction_timeout, dashboard=dashboard)
 
     try:
         agent.start()

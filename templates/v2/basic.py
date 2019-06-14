@@ -48,6 +48,7 @@ def parse_arguments():
 
 def main():
     args = parse_arguments()
+
     if args.gui:
         dashboard = AgentDashboard(agent_name=args.name, env_name=args.name)
     else:
