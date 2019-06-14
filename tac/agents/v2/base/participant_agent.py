@@ -111,7 +111,3 @@ class ParticipantAgent(Agent):
                 self.dialogue_handler.handle_dialogue_message(msg)
 
             self.out_box.send_nowait()
-
-    # def stop(self) -> None:
-    #     super().stop()
-        # self.game_instance.dashboard.stop()

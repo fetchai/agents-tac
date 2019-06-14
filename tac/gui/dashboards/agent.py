@@ -64,7 +64,6 @@ class AgentDashboard(Dashboard):
 
         self.agent_name = agent_name
 
-        self._transactions_history = []
         self._update_nb = -1
         self._transaction_table = TransactionTable()
         self._transaction_window = None
@@ -73,7 +72,6 @@ class AgentDashboard(Dashboard):
         self._transaction_window = self.viz.text(self._transaction_table.to_html())
 
     def add_transaction(self, new_tx: Transaction):
-        self._transactions_history.append(new_tx)
         self._transaction_table.add_transaction(new_tx)
         self.viz.text(self._transaction_table.to_html(), win=self._transaction_window)
 
