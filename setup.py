@@ -123,8 +123,7 @@ setup(
         "python-dateutil",
         "visdom",
         "cryptography",
-        "base58",
-        "html"
+        "base58"
     ],
     tests_require=["tox"],
     entry_points={

@@ -7,7 +7,7 @@ from typing import Optional
 import numpy as np
 
 from tac.gui.dashboards.base import Dashboard
-from tac.helpers.misc import generate_html_table_from_dict
+from tac.helpers.misc import generate_html_table_from_dict, escape_html
 from tac.platform.game import AgentState
 from tac.platform.protocol import Transaction
 
@@ -44,7 +44,7 @@ class TransactionTable(object):
     def to_html(self):
         srcdoc = generate_html_table_from_dict(self.tx_table, title="Transactions")
         html_code = '<iframe srcdoc="{encoded_html}" style="{style}" />'.format(
-            encoded_html=html.escape(srcdoc),
+            encoded_html=escape_html(srcdoc),
             style="width: 1024px;height: 1024px;")
         return html_code
 
