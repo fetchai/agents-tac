@@ -19,6 +19,7 @@
 # ------------------------------------------------------------------------------
 import base58
 import logging
+import re
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
@@ -30,6 +31,16 @@ logger = logging.getLogger(__name__)
 class CryptoError(Exception):
     """Exception to be thrown when cryptographic signatures don't match!."""
 
+class PublicKey:
+    """"""
+    def __init__(self, pem_bytes):
+        self._pem_bytes = pem_bytes
+
+PEM_TO_CLASS = {
+    b"PUBLIC KEY": PublicKey,
+}
+
+PEM_RE = re.compile(b'-----BEGIN PUBLIC KEY-----\n?(.*?)-----END PUBLIC KEY-----\n?')
 
 class Crypto(object):
     def __init__(self):
@@ -44,12 +55,18 @@ class Crypto(object):
         self._chosen_hash = hashes.SHA256()
         self._private_key = self._generate_pk()
         self._public_key_obj = self._compute_pbk()
-        self._public_key = self._pbk_to_str(self._public_key_obj)
-        assert self._pbk_to_str(self._public_key_obj) == self._pbk_to_str(self._pbk_to_obj(self._public_key))
+        self._public_key_b64 = self._pbk_to_b64(self._public_key_obj)
+        self._public_key_b58 = self._pbk_to_b58(self._public_key_b64)
+        self._fingerprint_hex = self._pbk_to_hex(self._public_key_b64)
+        assert self._pbk_to_str(self._public_key_obj) == self._pbk_to_str(self._pbk_to_obj(self._public_key_b58))
 
     @property
-    def public_key(self):
-        return self._public_key
+    def public_key(self) -> str:
+        return self._public_key_b58
+
+    @property
+    def fingerprint(self) -> str:
+        return self._fingerprint_hex
 
     def _generate_pk(self) -> object:
         """
@@ -69,7 +86,7 @@ class Crypto(object):
         public_key = self._private_key.public_key()
         return public_key
 
-    def _pbk_to_str(self, pbk: object) -> str:
+    def _pbk_to_b64(self, pbk: object) -> str:
         """
         Converts the public key from object to string.
 
@@ -79,8 +96,30 @@ class Crypto(object):
         """
         serialized_public_key = pbk.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)
         serialized_public_key = b''.join(serialized_public_key.splitlines()[1:-1])
-        serialized_public_key = base58.b58encode(serialized_public_key).decode('utf-8')
         return serialized_public_key
+
+    def _pbk_to_b58(self, pbk: str) -> str:
+        """
+        Converts the public key from object to string.
+
+        :param pbk: the public key as an object
+
+        :return: the public key as a string (base58)
+        """
+        pbk = base58.b58encode(pbk).decode('utf-8')
+        return pbk
+
+    def _pbk_to_str(self, pbk: object) -> str:
+        """
+        Converts the public key from object to string.
+
+        :param pbk: the public key as an object
+
+        :return: the public key as a string (base58)
+        """
+        pbk = self._pbk_to_b64(pbk)
+        pbk = self._pbk_to_b58(pbk)
+        return pbk
 
     def _pbk_to_obj(self, pbk: str) -> object:
         """
@@ -137,3 +176,19 @@ class Crypto(object):
         hasher.update(data)
         digest = hasher.finalize()
         return digest
+
+    def _pbk_to_hex(self, pbk: bytes) -> str:
+        pbk = self._hash_data(pbk)
+        pbk = pbk.hex()
+        return pbk
+
+    def parse(self, pem_str: bytes):
+        """
+        Extract PEM objects from *pem_str*.
+        :param pem_str: String to parse.
+
+        :return: list of :ref:`pem-objects`
+        """
+        result = re.search(PEM_RE,pem_str)
+        return result
+
