@@ -33,8 +33,8 @@ class RegisterAs(Enum):
 
 
 class SearchFor(Enum):
-    SELLER = 'sellers'
-    BUYER = 'buyers'
+    SELLERS = 'sellers'
+    BUYERS = 'buyers'
     BOTH = 'both'
 
 
@@ -62,7 +62,7 @@ class Strategy:
 
     @property
     def is_searching_for_sellers(self) -> bool:
-        return self._search_for == SearchFor.SELLER or self._search_for == SearchFor.BOTH
+        return self._search_for == SearchFor.SELLERS or self._search_for == SearchFor.BOTH
 
     @property
     def is_registering_as_buyer(self) -> bool:
@@ -70,7 +70,7 @@ class Strategy:
 
     @property
     def is_searching_for_buyers(self) -> bool:
-        return self._search_for == SearchFor.BUYER or self._search_for == SearchFor.BOTH
+        return self._search_for == SearchFor.BUYERS or self._search_for == SearchFor.BOTH
 
     @abstractmethod
     def supplied_good_quantities(self, current_holdings: List[int]) -> List[int]:
