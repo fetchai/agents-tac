@@ -25,6 +25,7 @@ visdom = "*"
 cryptography = "*"
 base58 = "*"
 oef = "==0.4.0"
+html = "*"
 
 [requires]
 python_version = "3.7"

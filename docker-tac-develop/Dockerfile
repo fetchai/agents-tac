@@ -60,7 +60,7 @@ RUN sudo mkdir /build
 WORKDIR /build
 COPY . /build
 
-RUN make clean
+RUN sudo make clean
 
 RUN pipenv --python python3.7
 RUN pipenv install --dev --skip-lock

@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from tac.gui.dashboard import Dashboard
+from tac.gui.dashboards.controller import ControllerDashboard
 
 from tac.platform.stats import GameStats
 
@@ -49,7 +49,7 @@ class VisdomMonitor(Monitor):
     def __init__(self, visdom_addr: str = "localhost", visdom_port: int = 8097):
         self.visdom_addr = visdom_addr
         self.visdom_port = visdom_port
-        self.dashboard = None  # type: Optional[Dashboard]
+        self.dashboard = None  # type: Optional[ControllerDashboard]
 
     @property
     def is_running(self) -> bool:
@@ -58,7 +58,7 @@ class VisdomMonitor(Monitor):
     def start(self, game_stats: GameStats):
         if self.is_running:
             raise Exception("A dashboard is already running.")
-        self.dashboard = Dashboard(game_stats, self.visdom_addr, self.visdom_port)
+        self.dashboard = ControllerDashboard(game_stats, self.visdom_addr, self.visdom_port)
         self.dashboard.start()
 
     def update(self):
