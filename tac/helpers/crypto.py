@@ -40,7 +40,7 @@ PEM_TO_CLASS = {
     b"PUBLIC KEY": PublicKey,
 }
 
-PEM_RE = re.compile(b'-----BEGIN PUBLIC KEY-----\n?(.*?)-----END PUBLIC KEY-----\n?')
+PEM_RE = re.compile(b'-----BEGIN PUBLIC KEY-----\\n?(.*?)-----END PUBLIC KEY-----\\n?')
 
 class Crypto(object):
     def __init__(self):
@@ -55,6 +55,7 @@ class Crypto(object):
         self._chosen_hash = hashes.SHA256()
         self._private_key = self._generate_pk()
         self._public_key_obj = self._compute_pbk()
+        self._public_key_pem = self._pbk_to_pem(self._public_key_obj)
         self._public_key_b64 = self._pbk_to_b64(self._public_key_obj)
         self._public_key_b58 = self._pbk_to_b58(self._public_key_b64)
         self._fingerprint_hex = self._pbk_to_hex(self._public_key_b64)
@@ -96,6 +97,17 @@ class Crypto(object):
         """
         serialized_public_key = pbk.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)
         serialized_public_key = b''.join(serialized_public_key.splitlines()[1:-1])
+        return serialized_public_key
+
+    def _pbk_to_pem(self, pbk: object) -> str:
+        """
+        Converts the public key from object to string.
+
+        :param pbk: the public key as an object
+
+        :return: the public key as a string in pem format (base64)
+        """
+        serialized_public_key = pbk.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)
         return serialized_public_key
 
     def _pbk_to_b58(self, pbk: str) -> str:
@@ -189,6 +201,6 @@ class Crypto(object):
 
         :return: list of :ref:`pem-objects`
         """
-        result = re.search(PEM_RE,pem_str)
+        result = re.match(PEM_RE,pem_str)
         return result
 
