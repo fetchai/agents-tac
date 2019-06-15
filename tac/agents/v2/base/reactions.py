@@ -95,7 +95,9 @@ class ControllerReactions(ControllerReactionInterface):
         dashboard = self.game_instance.dashboard
         if dashboard is not None:
             dashboard.update_from_agent_state(self.game_instance.agent_state, append=True)
-            dashboard.add_transaction(transaction)
+            # recover agent name from public key
+            agent_name = self.game_instance.game_configuration.agent_names[list(self.game_instance.game_configuration.agent_pbks).index(transaction.counterparty)]
+            dashboard.add_transaction(transaction, agent_name=agent_name)
 
     def on_state_update(self, state_update: StateUpdate) -> None:
         """
