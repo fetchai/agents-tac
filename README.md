@@ -8,6 +8,24 @@ This repository contains submodules. Clone with recursive strategy:
 
 	  git clone git@github.com:uvue-git/tac-agents.git --recursive && cd tac-agents
 
+## Quick Links
+
+### 📜 📜 📜 Specification 📜 📜 📜
+
+[For the framework specification go here](../master/docs/Trading_Agent_Competition____Specification.pdf)
+
+### 🤖 🤖 🤖 Simulation 🤖 🤖 🤖 
+
+[For the simulations go here](../master/examples/simulation_demo)
+
+### 🛠🛠🛠 Templates 🛠🛠🛠
+
+[For the agent templates go here](../master/templates)
+
+### 🏆 🏆 🏆 Competition 🏆 🏆 🏆 
+
+[For the competition sandbox go here](../master/sandbox)
+
 ## Repository structure
 
 - `data`: default folder for storage of the simulation data.
@@ -40,18 +58,6 @@ This repository contains submodules. Clone with recursive strategy:
 - Install the package:
 
       python3 setup.py install
-
-## 🤖 🤖 🤖 Simulation 🤖 🤖 🤖 
-
-[For simulation go here](../master/examples/simulation_demo)
-
-## 🛠🛠🛠 Templates 🛠🛠🛠
-
-[For templates go here](../master/templates)
-
-## 🏆 🏆 🏆 Competition 🏆 🏆 🏆 
-
-[For competition go here](../master/sandbox)
 
 ## Development
 
