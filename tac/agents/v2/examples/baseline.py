@@ -9,8 +9,8 @@ from tac.gui.dashboards.agent import AgentDashboard
 
 class BaselineAgent(ParticipantAgent):
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int, strategy: Strategy, search_interval: int = 10, pending_transaction_timeout: int = 30, dashboard: Optional[AgentDashboard] = None):
-        super().__init__(name, oef_addr, oef_port, strategy, search_interval, pending_transaction_timeout, dashboard)
+    def __init__(self, name: str, oef_addr: str, oef_port: int, strategy: Strategy, services_interval: int = 10, pending_transaction_timeout: int = 30, dashboard: Optional[AgentDashboard] = None):
+        super().__init__(name, oef_addr, oef_port, strategy, services_interval, pending_transaction_timeout, dashboard)
 
 
 def _parse_arguments():
@@ -18,7 +18,7 @@ def _parse_arguments():
     parser.add_argument("--name", type=str, default="baseline_agent", help="Name of the agent.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
-    parser.add_argument("--search-interval", type=int, default=10, help="The number of seconds to wait before doing another search.")
+    parser.add_argument("--services-interval", type=int, default=10, help="The number of seconds to wait before doing another search.")
     parser.add_argument("--pending-transaction-timeout", type=int, default=30, help="The timeout in seconds to wait for pending transaction/negotiations.")
     parser.add_argument("--gui", action="store_true", help="Show the GUI.")
     parser.add_argument("--visdom_addr", type=str, default="localhost", help="Address of the Visdom server.")
@@ -35,7 +35,7 @@ if __name__ == '__main__':
         dashboard = None
 
     strategy = BaselineStrategy(register_as=RegisterAs.BOTH, search_for=SearchFor.BOTH, is_world_modeling=False)
-    agent = BaselineAgent(args.name, args.oef_addr, args.oef_port, strategy, args.search_interval, args.pending_transaction_timeout, dashboard)
+    agent = BaselineAgent(args.name, args.oef_addr, args.oef_port, strategy, args.services_interval, args.pending_transaction_timeout, dashboard)
 
     try:
         agent.start()
