@@ -78,7 +78,7 @@ class ControllerReactions(ControllerReactionInterface):
         dashboard = self.game_instance.dashboard
         if dashboard is not None:
             dashboard.init()
-            dashboard.update_from_agent_state(self.game_instance.agent_state)
+            dashboard.update_from_agent_state(self.game_instance.agent_state, append=False)
 
     def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
         """
@@ -94,8 +94,10 @@ class ControllerReactions(ControllerReactionInterface):
 
         dashboard = self.game_instance.dashboard
         if dashboard is not None:
-            dashboard.update_from_agent_state(self.game_instance.agent_state)
-            dashboard.add_transaction(transaction)
+            dashboard.update_from_agent_state(self.game_instance.agent_state, append=True)
+            # recover agent name from public key
+            agent_name = self.game_instance.game_configuration.agent_names[list(self.game_instance.game_configuration.agent_pbks).index(transaction.counterparty)]
+            dashboard.add_transaction(transaction, agent_name=agent_name)
 
     def on_state_update(self, state_update: StateUpdate) -> None:
         """
@@ -116,8 +118,6 @@ class ControllerReactions(ControllerReactionInterface):
         logger.debug("[{}]: Received cancellation from the controller.".format(self.name))
         self.liveness._is_stopped = True
         self.game_instance._game_phase = GamePhase.POST_GAME
-
-        self.game_instance.lock_manager.stop()
 
     def on_tac_error(self, error: Error) -> None:
         """

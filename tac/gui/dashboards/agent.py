@@ -23,18 +23,15 @@ class TransactionTable(object):
     def __init__(self):
         self.tx_table = dict()
         self.tx_table["#"] = []
-        # self.tx_table["Transaction ID"] = []
         self.tx_table["Role"] = []
         self.tx_table["Counterparty"] = []
         self.tx_table["Amount"] = []
         self.tx_table["Goods Exchanged"] = []
 
-    def add_transaction(self, tx: Transaction):
+    def add_transaction(self, tx: Transaction, agent_name: Optional[str] = None):
         self.tx_table["#"].append(str(len(self.tx_table["#"])))
-        print(tx.transaction_id)
-        # self.tx_table["Transaction ID"].append("..." + tx.transaction_id[-10:])
         self.tx_table["Role"].append("Buyer" if tx.buyer else "Seller")
-        self.tx_table["Counterparty"].append(tx.counterparty[:5] + "..." + tx.counterparty[-5:])
+        self.tx_table["Counterparty"].append(agent_name if agent_name is not None else tx.counterparty[:5] + "..." + tx.counterparty[-5:])
         self.tx_table["Amount"].append("{:02.2f}".format(tx.amount))
         self.tx_table["Goods Exchanged"].append("\n"
                                                 .join(map(lambda x: "{}: {}".format(x[0], x[1]),
@@ -69,11 +66,12 @@ class AgentDashboard(Dashboard):
         self._transaction_window = None
 
     def init(self):
-        self._transaction_window = self.viz.text(self._transaction_table.to_html())
+        self.viz.delete_env(self.env_name)
+        self._transaction_window = self.viz.text(self._transaction_table.to_html(), env=self.env_name)
 
-    def add_transaction(self, new_tx: Transaction):
-        self._transaction_table.add_transaction(new_tx)
-        self.viz.text(self._transaction_table.to_html(), win=self._transaction_window)
+    def add_transaction(self, new_tx: Transaction, agent_name: Optional[str] = None):
+        self._transaction_table.add_transaction(new_tx, agent_name=agent_name)
+        self.viz.text(self._transaction_table.to_html(), win=self._transaction_window, env=self.env_name)
 
     def _update_holdings(self, agent_state: AgentState):
         scaled_holdings = agent_state.current_holdings / np.sum(agent_state.current_holdings)
@@ -87,30 +85,31 @@ class AgentDashboard(Dashboard):
                              rownames=["Utilities", "Holdings"],
                              xlabel="Goods"))
 
-    def _update_score(self, agent_state: AgentState):
+    def _update_score(self, agent_state: AgentState, append: bool = True):
 
         window_name = "{}_score_history".format(self.env_name)
-        self.viz.line(X=[self._update_nb], Y=[agent_state.get_score()], update="append",
+        self.viz.line(X=[self._update_nb], Y=[agent_state.get_score()], update="append" if append else "replace",
                       env=self.env_name, win=window_name,
                       opts=dict(
                           title="{}'s Score".format(repr(self.agent_name)),
                           xlabel="Transactions",
                           ylabel="Score"))
 
-    def _update_balance(self, agent_state: AgentState):
+    def _update_balance(self, agent_state: AgentState, append: bool = True):
 
         window_name = "{}_balance_history".format(self.env_name)
-        self.viz.line(X=[self._update_nb], Y=[agent_state.balance], env=self.env_name, win=window_name, update="append",
+        self.viz.line(X=[self._update_nb], Y=[agent_state.balance], env=self.env_name, win=window_name,
+                      update="append" if append else "replace",
                       opts=dict(
                           title="{}'s Balance".format(repr(self.agent_name)),
                           xlabel="Transactions",
                           ylabel="Score"))
 
-    def update_from_agent_state(self, agent_state: AgentState):
+    def update_from_agent_state(self, agent_state: AgentState, append: bool = True):
         if not self._is_running():
             raise Exception("Dashboard not running, update not allowed.")
 
         self._update_nb += 1
         self._update_holdings(agent_state)
-        self._update_score(agent_state)
-        self._update_balance(agent_state)
+        self._update_score(agent_state, append=append)
+        self._update_balance(agent_state, append=append)
