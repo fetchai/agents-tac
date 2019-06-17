@@ -106,7 +106,7 @@ class GameInstance:
     def init(self, game_data: GameData) -> None:
         """
         Populate data structures with the game data.
-        
+
         :return: None
         """
         self._game_configuration = GameConfiguration(game_data.nb_agents, game_data.nb_goods, game_data.tx_fee,

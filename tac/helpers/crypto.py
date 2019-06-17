@@ -31,6 +31,10 @@ class CryptoError(Exception):
     """Exception to be thrown when cryptographic signatures don't match!."""
 
 
+CHOSEN_ALGORITHM_ID = b'MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE'
+CHOSEN_PBK_LENGTH = 160
+
+
 class Crypto(object):
     def __init__(self):
         """
@@ -44,12 +48,34 @@ class Crypto(object):
         self._chosen_hash = hashes.SHA256()
         self._private_key = self._generate_pk()
         self._public_key_obj = self._compute_pbk()
-        self._public_key = self._pbk_to_str(self._public_key_obj)
-        assert self._pbk_to_str(self._public_key_obj) == self._pbk_to_str(self._pbk_to_obj(self._public_key))
+        self._public_key_pem = self._pbk_obj_to_pem(self._public_key_obj)
+        self._public_key_b64 = self._pbk_pem_to_b64(self._public_key_pem)
+        self._public_key_b58 = self._pbk_b64_to_b58(self._public_key_b64)
+        self._fingerprint_hex = self._pbk_b64_to_hex(self._public_key_b64)
+        assert self._pbk_obj_to_b58(self._public_key_obj) == self._pbk_obj_to_b58(self._pbk_b58_to_obj(self._public_key_b58))
 
     @property
-    def public_key(self):
-        return self._public_key
+    def public_key(self) -> str:
+        """
+        Returns a 219 character public key in base58 format
+        """
+        return self._public_key_b58
+
+    @property
+    def public_key_pem(self) -> bytes:
+        """
+        Returns a PEM encoded public key in base64 format. It consists of an algorithm identifier and the public key as a bit string.
+        """
+        return self._public_key_pem
+
+    @property
+    def fingerprint(self) -> str:
+        """
+        Returns a 64 character fingerprint of the public key in hexadecimal format (32 bytes).
+
+        :return: the fingerprint
+        """
+        return self._fingerprint_hex
 
     def _generate_pk(self) -> object:
         """
@@ -69,7 +95,40 @@ class Crypto(object):
         public_key = self._private_key.public_key()
         return public_key
 
-    def _pbk_to_str(self, pbk: object) -> str:
+    def _pbk_obj_to_pem(self, pbk: object) -> bytes:
+        """
+        Serializes the public key from object to bytes.
+
+        :param pbk: the public key as an object
+
+        :return: the public key as a bytes string in pem format (base64)
+        """
+        result = pbk.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)
+        return result
+
+    def _pbk_pem_to_b64(self, pbk: bytes) -> bytes:
+        """
+        Converts the public key from pem bytes string format to standard bytes string format.
+
+        :param pbk: the public key as a bytes string (PEM base64)
+
+        :return: the public key as a bytes string (base64)
+        """
+        result = b''.join(pbk.splitlines()[1:-1])
+        return result
+
+    def _pbk_b64_to_b58(self, pbk: bytes) -> str:
+        """
+        Converts the public key from base64 to base58 string.
+
+        :param pbk: the public key as a bytes string (base64)
+
+        :return: the public key as a string (base58)
+        """
+        result = base58.b58encode(pbk).decode('utf-8')
+        return result
+
+    def _pbk_obj_to_b58(self, pbk: object) -> str:
         """
         Converts the public key from object to string.
 
@@ -77,24 +136,48 @@ class Crypto(object):
 
         :return: the public key as a string (base58)
         """
-        serialized_public_key = pbk.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)
-        serialized_public_key = b''.join(serialized_public_key.splitlines()[1:-1])
-        serialized_public_key = base58.b58encode(serialized_public_key).decode('utf-8')
-        return serialized_public_key
+        pbk = self._pbk_obj_to_pem(pbk)
+        pbk = self._pbk_pem_to_b64(pbk)
+        pbk = self._pbk_b64_to_b58(pbk)
+        return pbk
 
-    def _pbk_to_obj(self, pbk: str) -> object:
+    def _pbk_b58_to_b64(self, pbk: str) -> bytes:
         """
-        Converts the public key from string to object.
+        Converts the public key from base58 string to base64 bytes string.
+
+        :param pbk: the public key in base58
+
+        :return: the public key in base64
+        """
+        pbk_b64 = base58.b58decode(str.encode(pbk))
+        return pbk_b64
+
+    def _pbk_b64_to_pem(self, pbk: bytes) -> bytes:
+        """
+        Converts the public key from standard bytes string format to pem bytes string format.
+
+        :param pbk: the public key as a bytes string (base64)
+
+        :return: the public key as a bytes string (PEM base64)
+        """
+        assert len(pbk) == CHOSEN_PBK_LENGTH, "Public key is not of expected length."
+        assert pbk[0:32] == CHOSEN_ALGORITHM_ID, "Public key has not expected algorithm id."
+        pbk = pbk[0:64] + b'\n' + pbk[64:128] + b'\n' + pbk[128:] + b'\n'
+        pbk_pem = b'-----BEGIN PUBLIC KEY-----\n' + pbk + b'-----END PUBLIC KEY-----\n'
+        return pbk_pem
+
+    def _pbk_b58_to_obj(self, pbk: str) -> object:
+        """
+        Converts the public key from string (base58) to object.
 
         :param pbk: the public key as a string (base58)
 
         :return: the public key object
         """
-        serialized_pbk = base58.b58decode(str.encode(pbk))
-        serialized_pbk = serialized_pbk[0:64] + b'\n' + serialized_pbk[64:128] + b'\n' + serialized_pbk[128:] + b'\n'
-        serialized_pbk = b'-----BEGIN PUBLIC KEY-----\n' + serialized_pbk + b'-----END PUBLIC KEY-----\n'
-        pbk_object = serialization.load_pem_public_key(serialized_pbk, backend=default_backend())
-        return pbk_object
+        pbk = self._pbk_b58_to_b64(pbk)
+        pbk = self._pbk_b64_to_pem(pbk)
+        pbk_obj = serialization.load_pem_public_key(pbk, backend=default_backend())
+        return pbk_obj
 
     def sign_data(self, data: bytes) -> bytes:
         """
@@ -137,3 +220,13 @@ class Crypto(object):
         hasher.update(data)
         digest = hasher.finalize()
         return digest
+
+    def _pbk_b64_to_hex(self, pbk: bytes) -> str:
+        """
+        Hashes the public key to obtain a fingerprint.
+
+        :return: the fingerprint in hex format
+        """
+        pbk_hash = self._hash_data(pbk)
+        pbk_hex = pbk_hash.hex()
+        return pbk_hex

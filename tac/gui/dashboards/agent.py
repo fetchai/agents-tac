@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import html
 import inspect
 import os
 from typing import Optional
