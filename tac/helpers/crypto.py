@@ -38,11 +38,7 @@ CHOSEN_PBK_LENGTH = 160
 class Crypto(object):
     def __init__(self):
         """
-        Instantiate a price bandit object.
-
-        :param price: the price this bandit is modelling
-        :param beta_a: the a parameter of the beta distribution
-        :param beta_b: the b parameter of the beta distribution
+        Instantiate a crypto object.
         """
         self._chosen_ec = ec.SECP384R1()
         self._chosen_hash = hashes.SHA256()
