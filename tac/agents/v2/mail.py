@@ -44,7 +44,7 @@ class MailBox(OEFAgent):
     The MailBox enqueues incoming messages, searches and errors from the OEF and sends outgoing messages to the OEF.
     """
 
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333):
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000):
         super().__init__(public_key, oef_addr, oef_port, loop=asyncio.new_event_loop())
         self.connect()
         self.in_queue = Queue()
@@ -186,7 +186,7 @@ class FIPAMailBox(MailBox):
     The FIPAMailBox enqueues additionally FIPA specific messages.
     """
 
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 3333):
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000):
         super().__init__(public_key, oef_addr, oef_port)
 
     def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES) -> None:

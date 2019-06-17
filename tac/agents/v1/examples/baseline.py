@@ -48,7 +48,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser("baseline", description="Launch the baseline agent.")
     parser.add_argument("--name", default="baseline", help="Name of the agent.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
-    parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
+    parser.add_argument("--oef-port", default=10000, help="TCP/IP port of the OEF Agent")
     # parser.add_argument("--gui", action="store_true", help="Show the GUI.")
 
     return parser.parse_args()
@@ -70,7 +70,7 @@ class BaselineAgent(NegotiationAgent):
     to their marginal utility and buying goods at a price plus fee equal or below their marginal utility.
     """
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int = 3333, register_as: str = 'both', search_for: str = 'both', is_world_modeling: bool = False, pending_transaction_timeout: int = 30, **kwargs):
+    def __init__(self, name: str, oef_addr: str, oef_port: int = 10000, register_as: str = 'both', search_for: str = 'both', is_world_modeling: bool = False, pending_transaction_timeout: int = 30, **kwargs):
         super().__init__(name, oef_addr, oef_port, is_world_modeling, **kwargs)
         self._register_as = register_as
         self._search_for = search_for

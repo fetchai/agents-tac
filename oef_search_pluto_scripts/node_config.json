@@ -9,7 +9,7 @@
   "log_dir": "",
   "ssl_certificate": "/app/server.pem",
   "core_key": "London-core",
-  "core_port": 3333,
+  "core_port": 10000,
   "core_binary": "fetch_teams/OEFCore",
   "search_peers": ["KEY:HOST:PORT"],
    "bootstrap": {

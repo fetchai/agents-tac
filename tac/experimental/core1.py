@@ -204,7 +204,7 @@ class MailBox(OEFAgent):
     The MailBox enqueues incoming messages, searches and errors from the OEF and sends outgoing messages to the OEF.
     """
 
-    def __init__(self, crypto: Crypto, oef_addr: str, oef_port: int = 3333,
+    def __init__(self, crypto: Crypto, oef_addr: str, oef_port: int = 10000,
                  loop: Optional[AbstractEventLoop] = None):
 
         self.crypto = crypto
@@ -279,7 +279,7 @@ class FIPAMailBox(MailBox):
     The FIPAMailBox enqueues additionally FIPA specific messages.
     """
 
-    def __init__(self, crypto: Crypto, oef_addr: str, oef_port: int = 3333,
+    def __init__(self, crypto: Crypto, oef_addr: str, oef_port: int = 10000,
                  loop: Optional[AbstractEventLoop] = None):
         super().__init__(crypto, oef_addr, oef_port, loop)
 
@@ -431,7 +431,7 @@ class TACGameInstance:
 
 class TACParticipantAgent(ControllerInterface, DialogueInterface, OEFSearchInterface):
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int = 3333, is_world_modeling: bool = False):
+    def __init__(self, name: str, oef_addr: str, oef_port: int = 10000, is_world_modeling: bool = False):
         self._name = name
         self._crypto = Crypto()
         self.mail_box = FIPAMailBox(self.crypto, oef_addr, oef_port, loop=asyncio.get_event_loop())

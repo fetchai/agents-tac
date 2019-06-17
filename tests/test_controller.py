@@ -25,7 +25,7 @@ class TestController:
         job.start()
 
         crypto = Crypto()
-        agent1 = OEFAgent(crypto.public_key, "127.0.0.1", 3333, loop=asyncio.new_event_loop())
+        agent1 = OEFAgent(crypto.public_key, "127.0.0.1", 10000, loop=asyncio.new_event_loop())
         agent1.connect()
         agent1.send_message(0, 0, controller_agent.public_key, Register(agent1.public_key, crypto, 'agent_name').serialize())
 

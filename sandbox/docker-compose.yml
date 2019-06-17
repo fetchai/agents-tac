@@ -1,9 +1,9 @@
 version: '3.4'
 services:
   oef-node:
-    image: "fetchai/oef-search:v1"
+    image: "fetchai/oef-search:v4"
     ports:
-      - "3333:3333"
+      - "10000:10000"
       - "20000:20000"
       - "40000:40000"
     networks:
@@ -11,23 +11,13 @@ services:
         ipv4_address: 172.28.1.1
     logging:
       driver: none
-    entrypoint:
-      - "/bin/sh"
-      - "/app/oef.sh"
+    volumes:
+      - "../oef_search_pluto_scripts:/config"
+    command:
       - "node"
       - "no_sh"
-      - "--node_key"
-      - "Search1"
-      - "--core_key"
-      - "Core1"
-      - "--search_port"
-      - "20000"
-      - "--core_port"
-      - "3333"
-      - "--dap_port"
-      - "30000"
-      - "--director_api_port"
-      - "40000"
+      - "--config_file"
+      - "/config/node_config.json"
     healthcheck:
       interval: 10s
       retries: 5
@@ -36,7 +26,7 @@ services:
       - "python3"
       - "oef_healthcheck.py"
       - "127.0.0.1"
-      - "3333"
+      - "10000"
       timeout: 5s
 
   visdom:
@@ -68,7 +58,7 @@ services:
       - "run"
       - "sandbox/wait-for-oef.sh"
       - "172.28.1.1"
-      - "3333"
+      - "10000"
       - "python3"
       - "examples/simulation_demo/v2/tac_agent_spawner.py"
       - "--nb-agents"

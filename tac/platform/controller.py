@@ -560,7 +560,7 @@ class ControllerAgent(OEFAgent):
 
     def __init__(self, name: str = "controller",
                  oef_addr: str = "127.0.0.1",
-                 oef_port: int = 3333,
+                 oef_port: int = 10000,
                  version: int = 1,
                  monitor: Optional[Monitor] = None,
                  **kwargs):
@@ -723,7 +723,7 @@ def _parse_arguments():
     parser.add_argument("--nb-goods", default=5, type=int, help="Number of goods")
     parser.add_argument("--money-endowment", type=int, default=200, help="Initial amount of money.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
-    parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
+    parser.add_argument("--oef-port", default=10000, help="TCP/IP port of the OEF Agent")
     parser.add_argument("--base-good-endowment", default=2, type=int, help="The base amount of per good instances every agent receives.")
     parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
     parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")

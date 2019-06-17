@@ -31,7 +31,7 @@ class TACRegistrationAgent(TACParticipantAgent):
 
 if __name__ == '__main__':
 
-    agent = TACRegistrationAgent("tac_reg_agent", "127.0.0.1", 3333, False)
+    agent = TACRegistrationAgent("tac_reg_agent", "127.0.0.1", 10000, False)
     try:
         agent.start()
     finally:

@@ -41,7 +41,7 @@ class Liveness:
 
 
 class Agent:
-    def __init__(self, name: str, oef_addr: str, oef_port: int = 3333):
+    def __init__(self, name: str, oef_addr: str, oef_port: int = 10000):
         self._name = name
         self._crypto = Crypto()
         self._liveness = Liveness()
