@@ -499,7 +499,7 @@ class DialogueHandler(DialogueActions):
 
 
 class Agent:
-    def __init__(self, name: str, oef_addr: str, oef_port: int = 3333):
+    def __init__(self, name: str, oef_addr: str, oef_port: int = 10000):
         self._name = name
         self._crypto = Crypto()
         self._liveness = Liveness()
@@ -568,7 +568,7 @@ class Agent:
 
 class TACParticipantAgent(Agent):
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int = 3333, is_world_modeling: bool = False):
+    def __init__(self, name: str, oef_addr: str, oef_port: int = 10000, is_world_modeling: bool = False):
         super().__init__(name, oef_addr, oef_port)
         self.mail_box = FIPAMailBox(self.crypto.public_key, oef_addr, oef_port, loop=asyncio.get_event_loop())
         self.in_box = InBox(self.mail_box)

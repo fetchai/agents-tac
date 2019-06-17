@@ -70,7 +70,7 @@ If you want to include your own agents, set `NB_AGENTS` to a number equal to `NB
 
       docker-compose up
       
-- Connect your agents to `localhost:3333`, e.g.:
+- Connect your agents to `localhost:10000`, e.g.:
 ```
 python3 ../template/v2/*.py
 ```

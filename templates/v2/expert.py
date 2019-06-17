@@ -16,7 +16,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser("my_agent", description="Launch my agent.")
     parser.add_argument("--name", default="my_agent", help="Name of the agent")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
-    parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
+    parser.add_argument("--oef-port", default=10000, help="TCP/IP port of the OEF Agent")
 
     return parser.parse_args()
 

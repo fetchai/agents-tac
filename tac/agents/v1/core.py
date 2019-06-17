@@ -42,7 +42,7 @@ class NegotiationAgent(OEFAgent):
     TAC_CONTROLLER_SEARCH_ID = 1
     GAME_PHASES = ['pre_game', 'game_setup', 'game', 'post_game']
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int = 3333, is_world_modeling: bool = False, **kwargs) -> None:
+    def __init__(self, name: str, oef_addr: str, oef_port: int = 10000, is_world_modeling: bool = False, **kwargs) -> None:
         self.crypto = Crypto()
         super().__init__(self.crypto.public_key, oef_addr, oef_port, **kwargs)
 

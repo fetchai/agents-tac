@@ -36,7 +36,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser("my_agent", description="Launch my agent.")
     parser.add_argument("--name", default="my_baseline_agent", help="Name of the agent.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
-    parser.add_argument("--oef-port", default=3333, help="TCP/IP port of the OEF Agent")
+    parser.add_argument("--oef-port", default=10000, help="TCP/IP port of the OEF Agent")
     parser.add_argument("--services-interval", type=int, default=10, help="The number of seconds to wait before doing another search.")
     parser.add_argument("--pending-transaction-timeout", type=int, default=30, help="The timeout in seconds to wait for pending transaction/negotiations.")
     parser.add_argument("--gui", action="store_true", help="Show the GUI.")

@@ -17,7 +17,7 @@ def oef_addr() -> str:
 @pytest.fixture(scope="module")
 def oef_port() -> int:
     """The port of the connection to the OEF Node to use during the tests."""
-    return 3333
+    return 10000
 
 
 def _stop_oef_search_images():

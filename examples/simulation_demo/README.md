@@ -63,7 +63,7 @@ Example:
           --nb-goods 10
           --nb-baseline-agents 10
           --oef-addr oef.economicagents.com 
-          --oef-port 3333
+          --oef-port 10000
           --service-registration-strategy both
           --uml True
           --data-output-dir data
