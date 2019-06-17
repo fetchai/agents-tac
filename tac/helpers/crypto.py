@@ -200,7 +200,7 @@ class Crypto(object):
 
         :return: bool indicating whether the integrity is confirmed or not
         """
-        signer_pbk = self._pbk_to_obj(signer_pbk)
+        signer_pbk = self._pbk_b58_to_obj(signer_pbk)
         digest = self._hash_data(data)
         try:
             signer_pbk.verify(signature, digest, ec.ECDSA(utils.Prehashed(self._chosen_hash)))
