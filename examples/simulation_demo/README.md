@@ -15,11 +15,11 @@ This tutorial shows how to simulate a TAC.
 python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config.json
 ```
 
-- Second, (from root and in shell) start a `visdom` server:
+- Second, (in a new terminal window, from root and in shell) start a `visdom` server:
 
       python -m visdom.server
   
-- Third, (from root and in shell) run the simulation example with the gui flag to visualize data in realtime. Either v1
+- Third, (in a new terminal window, from root and in shell) run the simulation example with the gui flag to visualize data in realtime. Either v1
 
       python examples/simulation_demo/v1/tac_agent_spawner.py --gui
 
