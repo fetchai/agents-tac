@@ -23,7 +23,7 @@ python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_
 
       python examples/simulation_demo/v1/tac_agent_spawner.py --gui
 
-or (untested)
+or
 
       python examples/simulation_demo/v2/tac_agent_spawner.py --gui
 
