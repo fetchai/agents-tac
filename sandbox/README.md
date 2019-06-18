@@ -11,11 +11,15 @@ This folder lets you run the sandbox for the competition.
 
 - Then, ensure that the sandbox has been built:
 
-    docker-compose build
+```
+docker-compose build
+```
 
 - In case you experience an error run:
 
-    docker-compose build --no-cache
+```
+docker-compose build --no-cache
+```
 
 ## 2. Configuration
 
