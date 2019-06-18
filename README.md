@@ -65,6 +65,8 @@ This repository contains submodules. Clone with recursive strategy:
 
 ## Development
 
+The following steps are only relevant if you intend to contribute to the repository.
+
 - Install development dependencies:
 
 	  pipenv install --dev
