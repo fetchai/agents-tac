@@ -14,6 +14,10 @@ This repository contains submodules. Clone with recursive strategy:
 
 [For the framework specification go here](../master/docs/Trading_Agent_Competition____Specification.pdf)
 
+### 📁 📁 📁 Documentation 📁 📁 📁
+
+[For the package documentation go here](../master/docs)
+
 ### 🤖 🤖 🤖 Simulation 🤖 🤖 🤖 
 
 [For the simulations go here](../master/examples/simulation_demo)
