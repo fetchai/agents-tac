@@ -14,13 +14,17 @@ CUR_PATH = inspect.getfile(inspect.currentframe())
 ROOT_DIR = os.path.dirname(CUR_PATH) + "/.."
 
 
-@pytest.fixture(scope="module")
+def pytest_addoption(parser):
+    parser.addoption("--ci", action="store_true", default=False)
+
+
+@pytest.fixture(scope="session")
 def oef_addr() -> str:
     """The IP address pointing to the OEF Node to use during the tests."""
     return "127.0.0.1"
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def oef_port() -> int:
     """The port of the connection to the OEF Node to use during the tests."""
     return 10000
@@ -33,8 +37,13 @@ def _stop_oef_search_images():
             container.stop()
 
 
-@pytest.fixture(scope="module")
-def network_node(oef_addr, oef_port):
+@pytest.fixture(scope="session")
+def network_node(oef_addr, oef_port, pytestconfig):
+    if pytestconfig.getoption("ci"):
+        logger.warning("Skipping creation of OEF Docker image...")
+        yield
+        return
+
     _stop_oef_search_images()
     client = docker.from_env()
 
