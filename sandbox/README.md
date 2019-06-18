@@ -8,6 +8,7 @@ This folder lets you run the sandbox for the competition.
 
   - [x] You have followed the steps under 'Dependencies' and 'Preliminaries' on root readme.
   - [x] You are connected to the internet (to pull the latest docker images).
+  - [x] Your terminal is in the folder (`cd sandbox`).
 
 - Then, ensure that the sandbox has been built:
 
