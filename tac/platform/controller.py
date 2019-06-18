@@ -597,8 +597,7 @@ class ControllerAgent(OEFAgent):
         The TAC Controller expects that 'content' is a Protobuf serialization of a tac.messages.Request object.
         The request is dispatched to the right request handler (using the ControllerHandler).
         The handler returns an optional response, that is sent back to the sender.
-        Notice: the message sent back has the same message id, such that the client knows to which request
-                the response is associated to.
+        Notice: the message sent back has the same message id, such that the client knows to which request the response is associated to.
 
         :param msg_id: the message id
         :param dialogue_id: the dialogue id
