@@ -29,7 +29,7 @@ or (untested)
 
 - Finally, lean back and watch the competition on `http://localhost:8097` in your browser (you might have to select the right environment `tac && tac_controller` and deselect `main` in the visdom browser tab).
 
-![Screenshot of visdom env selection](../master/docs/visdom_env.png)
+![Screenshot of visdom env selection](../../docs/visdom_env.png)
 
 ### Optional parameters/flags
 
