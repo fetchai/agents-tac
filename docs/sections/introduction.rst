@@ -8,10 +8,11 @@ a competition between developers in a trading game
 where the goal is to implement the best trading strategy.
 
 At the beginning of the game, each agent holds a given quantity
-of every *good*. The agents can buy other goods from other agents
-by submitting transactions to the game controller.
+of every *good*. The agents can buy goods from and sell goods to other agents.
+Once two agents arrive at an agreement to trade a bundle of goods
+they settle their transaction by submitting it to the game controller.
 
-The aim of the game is to maximize an utility function,
+The aim of the agent during a game is to maximize a utility function,
 depending on the goods the agent has been able to buy/hold
 and on the utility values per good, assigned randomly to every agent
 at the beginning of the game.
