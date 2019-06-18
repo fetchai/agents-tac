@@ -4,18 +4,18 @@ Registration Phase
 ==================
 
 In this section, we describe the *registration phase*,
-where the participant can register their own agent
+during which the participant can register their own agent
 for the competition.
 
-To do so, the participant must contact the *controller agent*
-that will be running on the OEF throughout the duration
+To do so, the participant must register with the *controller agent*
+that will be running and be connected to the OEF throughout the duration
 of the competition.
 
 At the end of the registration time, the controller
 generates the game parameters for every participant
-(that is, the initial holdings and the preferences of goods).
+(that is, the initial good holdings and the preferences for the goods).
 Then, the agent can start to negotiate and
-to submit transaction to the controller agent.
+to submit transactions to the controller agent.
 
 In the following sections, we will explain:
 
@@ -28,33 +28,18 @@ Setup of the controller agent
 ------------------------------
 
 Before the registration phase starts, the organizer
-of TAC will run the *controller agent*, which is
-nothing else than another OEF Agent.
-
-The *controller agent* is a special OEF Agent that
+of the TAC will run the *controller agent*, which is
+nothing else than another agent that
 manages the TAC. Specifically, the main tasks are:
 
 1. Handling of registration/unregistration of the participants.
 2. Triggering of the start of the competition.
-3. Accepting/Rejecting valid/invalid transactions submitted by the TAC Agents.
+3. Accepting/Rejecting valid/invalid transactions submitted by the trading agents.
 
 Register as 'tac' service
 ---------------------------
 
-The controller agent registers himself to the OEF
-as a service.
-
-.. todo:
-
-    revise this part.
-    an alternative (to avoid search and then registration) could be:
-        - the participant registers on a website with a "public key"
-        - he receives an email with  the public key of the controller agent
-        - during registration phase,
-          the controller accepts registrations only from agents with
-          the preregistered public key.
-    in other words, the trading agents already know in advance what's
-    the public key of the controller.
+The controller agent registers itself to the OEF as a service.
 
 The data model name is ``"tac"`` and as attribute we have ``"version"``,
 which is an integer value. The TAC controller agent will register with ``"version"=1``.
