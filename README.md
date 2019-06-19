@@ -10,11 +10,11 @@ This repository contains submodules. Clone with recursive strategy:
 
 ## Quick Links
 
-### 📜 📜 📜 Specification 📜 📜 📜
+### 📏 📏 📏 Specification 📏 📏 📏
 
 The [framework specification](../master/docs/Trading_Agent_Competition____Specification.pdf) introduces the agent and competition frameworks and discusses the project vision and components.
 
-### 📁 📁 📁 Documentation 📁 📁 📁
+### 📜 📜 📜 Documentation 📜 📜 📜
 
 The [package documentation](../master/docs) introduces the key components of the agent and competition frameworks and helps agent developers getting started.
 
@@ -28,9 +28,7 @@ The [agent templates](../master/templates) provide starting points for agent dev
 
 ### 🏆 🏆 🏆 Competition 🏆 🏆 🏆
 
-The competition sandbox provides the code to build the docker image to run the competiton.
-
-[For the competition sandbox go here](../master/sandbox)
+The [competition sandbox](../master/sandbox) provides the code to build the docker image to run the competiton.
 
 ## Repository structure
 
