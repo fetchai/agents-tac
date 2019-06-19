@@ -21,11 +21,12 @@ from typing import Any, Dict, Optional
 
 import numpy as np
 import matplotlib
-matplotlib.use('agg')
 import os
 import pylab as plt
 
 from tac.platform.game import Game, AgentState
+
+matplotlib.use('agg')
 
 
 class GameStats:

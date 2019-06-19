@@ -60,7 +60,7 @@ services:
       - "172.28.1.1"
       - "10000"
       - "python3"
-      - "examples/simulation_demo/v2/tac_agent_spawner.py"
+      - "simulation/v2/tac_agent_spawner.py"
       - "--nb-agents"
       - "${NB_AGENTS}"
       - "--nb-goods"
