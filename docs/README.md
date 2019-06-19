@@ -27,3 +27,19 @@ firefox _build/html/index.html
 ```
 open _build/html/index.html
 ```
+
+## Dependencies
+
+To generate `plantuml` files you need to install it:
+
+- On mac:
+
+```
+brew install plantuml
+```
+
+- On ubuntu:
+
+```
+apt install plantuml -y
+```
