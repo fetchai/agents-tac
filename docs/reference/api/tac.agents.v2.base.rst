@@ -11,7 +11,6 @@ tac.agents.v2.base.actions module
    :members:
    :undoc-members:
    :show-inheritance:
-
 tac.agents.v2.base.behaviours module
 ------------------------------------
 
@@ -19,7 +18,6 @@ tac.agents.v2.base.behaviours module
    :members:
    :undoc-members:
    :show-inheritance:
-
 tac.agents.v2.base.dialogues module
 -----------------------------------
 
@@ -27,7 +25,6 @@ tac.agents.v2.base.dialogues module
    :members:
    :undoc-members:
    :show-inheritance:
-
 tac.agents.v2.base.game\_instance module
 ----------------------------------------
 
@@ -35,7 +32,6 @@ tac.agents.v2.base.game\_instance module
    :members:
    :undoc-members:
    :show-inheritance:
-
 tac.agents.v2.base.handlers module
 ----------------------------------
 
@@ -43,7 +39,6 @@ tac.agents.v2.base.handlers module
    :members:
    :undoc-members:
    :show-inheritance:
-
 tac.agents.v2.base.helpers module
 ---------------------------------
 
@@ -51,7 +46,6 @@ tac.agents.v2.base.helpers module
    :members:
    :undoc-members:
    :show-inheritance:
-
 tac.agents.v2.base.interfaces module
 ------------------------------------
 
@@ -59,7 +53,6 @@ tac.agents.v2.base.interfaces module
    :members:
    :undoc-members:
    :show-inheritance:
-
 tac.agents.v2.base.lock\_manager module
 ---------------------------------------
 
@@ -67,7 +60,6 @@ tac.agents.v2.base.lock\_manager module
    :members:
    :undoc-members:
    :show-inheritance:
-
 tac.agents.v2.base.participant\_agent module
 --------------------------------------------
 
@@ -75,7 +67,6 @@ tac.agents.v2.base.participant\_agent module
    :members:
    :undoc-members:
    :show-inheritance:
-
 tac.agents.v2.base.reactions module
 -----------------------------------
 
@@ -83,7 +74,6 @@ tac.agents.v2.base.reactions module
    :members:
    :undoc-members:
    :show-inheritance:
-
 tac.agents.v2.base.strategy module
 ----------------------------------
 

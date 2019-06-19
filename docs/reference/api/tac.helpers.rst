@@ -11,7 +11,6 @@ tac.helpers.advanced module
    :members:
    :undoc-members:
    :show-inheritance:
-
 tac.helpers.crypto module
 -------------------------
 
@@ -19,7 +18,6 @@ tac.helpers.crypto module
    :members:
    :undoc-members:
    :show-inheritance:
-
 tac.helpers.misc module
 -----------------------
 
@@ -27,7 +25,6 @@ tac.helpers.misc module
    :members:
    :undoc-members:
    :show-inheritance:
-
 tac.helpers.plantuml module
 ---------------------------
 
@@ -35,7 +32,6 @@ tac.helpers.plantuml module
    :members:
    :undoc-members:
    :show-inheritance:
-
 tac.helpers.price\_model module
 -------------------------------
 

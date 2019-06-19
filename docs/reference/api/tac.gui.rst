@@ -1,6 +1,13 @@
 tac.gui package
 ===============
 
+Subpackages
+-----------
+
+.. toctree::
+
+   tac.gui.dashboards
+
 Submodules
 ----------
 
@@ -11,15 +18,6 @@ tac.gui.app module
    :members:
    :undoc-members:
    :show-inheritance:
-
-tac.gui.dashboard module
-------------------------
-
-.. automodule:: tac.gui.dashboard
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 tac.gui.monitor module
 ----------------------
 
