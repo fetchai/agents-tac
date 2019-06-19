@@ -12,21 +12,31 @@ This repository contains submodules. Clone with recursive strategy:
 
 ### 📜 📜 📜 Specification 📜 📜 📜
 
+The specification introduces the agent and competition frameworks and discusses the project vision and components.
+
 [For the framework specification go here](../master/docs/Trading_Agent_Competition____Specification.pdf)
 
 ### 📁 📁 📁 Documentation 📁 📁 📁
 
+The documentation introduces the key components of the agent and competition frameworks and helps agent developers getting started.
+
 [For the package documentation go here](../master/docs)
 
-### 🤖 🤖 🤖 Simulation 🤖 🤖 🤖 
+### 🤖 🤖 🤖 Simulation 🤖 🤖 🤖
+
+The simulation provides code to simulate a competition with a population of baseline agents.
 
 [For the simulations go here](../master/examples/simulation_demo)
 
 ### 🛠🛠🛠 Templates 🛠🛠🛠
 
+The templates provide starting points for agent development.
+
 [For the agent templates go here](../master/templates)
 
-### 🏆 🏆 🏆 Competition 🏆 🏆 🏆 
+### 🏆 🏆 🏆 Competition 🏆 🏆 🏆
+
+The competition sandbox provides the code to build the docker image to run the competiton.
 
 [For the competition sandbox go here](../master/sandbox)
 
@@ -65,7 +75,7 @@ This repository contains submodules. Clone with recursive strategy:
 
 ## Development
 
-The following steps are only relevant if you intend to contribute to the repository.
+The following steps are only relevant if you intend to contribute to the repository. They are not required for agent development.
 
 - Install development dependencies:
 
@@ -87,12 +97,17 @@ The following steps are only relevant if you intend to contribute to the reposit
 
       tox -e flake8
 
-- To start OEF (latest build):
+- We recommend you use the tested OEF build:
+
+```
+python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config.json
+```
+
+- To start OEF latest build (the latest build might not be compatible with the current repo):
 
 ```
 python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config_latest.json
 ``` 
-
 
 ## Resources
 
