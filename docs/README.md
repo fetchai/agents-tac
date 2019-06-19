@@ -6,7 +6,7 @@
 
       pipenv shell
 
-- Enter in `docs`:
+- Enter `docs`:
     
       cd docs
 
@@ -14,10 +14,16 @@
 
       make html
       sphinx-apidoc -o reference/api/ ../tac/
-   
-To display the documentation in your browser, e.g. Firefox, open the `index.html` file in `./_build/html/index.html`.
 
-**NOTICE**: run this command outside the Docker image.
+## Display
 
-    firefox _build/html/index.html
+To display the documentation in your browser, open the `index.html` file in `./_build/html/index.html`.
 
+- From terminal do
+```
+firefox _build/html/index.html
+```
+- or
+```
+open _build/html/index.html
+```
