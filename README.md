@@ -12,27 +12,19 @@ This repository contains submodules. Clone with recursive strategy:
 
 ### 📜 📜 📜 Specification 📜 📜 📜
 
-The specification introduces the agent and competition frameworks and discusses the project vision and components.
-
-[For the framework specification go here](../master/docs/Trading_Agent_Competition____Specification.pdf)
+The [framework specification](../master/docs/Trading_Agent_Competition____Specification.pdf) introduces the agent and competition frameworks and discusses the project vision and components.
 
 ### 📁 📁 📁 Documentation 📁 📁 📁
 
-The documentation introduces the key components of the agent and competition frameworks and helps agent developers getting started.
-
-[For the package documentation go here](../master/docs)
+The [package documentation](../master/docs) introduces the key components of the agent and competition frameworks and helps agent developers getting started.
 
 ### 🤖 🤖 🤖 Simulation 🤖 🤖 🤖
 
-The simulation provides code to simulate a competition with a population of baseline agents.
-
-[For the simulations go here](../master/examples/simulation_demo)
+The [simulation](../master/examples/simulation_demo) provides code to simulate a competition with a population of baseline agents.
 
 ### 🛠🛠🛠 Templates 🛠🛠🛠
 
-The templates provide starting points for agent development.
-
-[For the agent templates go here](../master/templates)
+The [agent templates](../master/templates) provide starting points for agent development.
 
 ### 🏆 🏆 🏆 Competition 🏆 🏆 🏆
 
