@@ -20,7 +20,7 @@ The [package documentation](../master/docs) introduces the key components of the
 
 ### 🤖 🤖 🤖 Simulation 🤖 🤖 🤖
 
-The [simulation](../master/examples/simulation_demo) provides code to simulate a competition with a population of baseline agents.
+The [simulation](../master/simulation) provides code to simulate a competition with a population of baseline agents.
 
 ### 🛠🛠🛠 Templates 🛠🛠🛠
 
@@ -36,10 +36,10 @@ The [competition sandbox](../master/sandbox) provides the code to build the dock
 - `docker-images`: submodule to the [docker-images](https://github.com/uvue-git/docker-images.git)
 - `docker-tac-develop`: Docker image for the development of TAC related stuff.  
 - `docs`: the docs for this project.
-- `examples`: some examples/demos showing the usage of this package (including simulation of the TAC).
 - `notebooks`: contains jupyter notebooks with exploratory code.
 - `proto`: contains the protobuf schema.
 - `sandbox`: setup for using Docker compose.
+- `simulation`: contains scripts for simulation of the TAC.
 - `tac`: the main folder containing the Python package.
 - `templates`: template agents.
 - `tests`: tests for the package.

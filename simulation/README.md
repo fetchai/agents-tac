@@ -1,4 +1,4 @@
-# simulation_demo
+# Simulation
 
 This tutorial shows how to simulate a TAC.
 
@@ -21,11 +21,11 @@ python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_
   
 - Third, (in a new terminal window, from root and in shell) run the simulation example with the gui flag to visualize data in realtime. Either v1
 
-      python examples/simulation_demo/v1/tac_agent_spawner.py --gui
+      python simulation/v1/tac_agent_spawner.py --gui
 
 or
 
-      python examples/simulation_demo/v2/tac_agent_spawner.py --gui
+      python simulation/v2/tac_agent_spawner.py --gui
 
 - Finally, lean back and watch the competition on `http://localhost:8097` in your browser (you might have to select the right environment `tac && tac_controller` and deselect `main` in the visdom browser tab).
 
@@ -33,7 +33,7 @@ or
 
 ### Optional parameters/flags
 
-For a full list, do `python examples/simulation_demo/tac_agent_spawner.py -h`
+For a full list, do `python simulation/tac_agent_spawner.py -h`
 
 - `--nb-agents` is the number of agents to participate in the competition.
 - `--nb-goods` is the number of goods in the competition.
