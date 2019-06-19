@@ -399,6 +399,7 @@ class ControllerDispatcher(object):
         try:
             return handle_request(request)
         except Exception as e:
+            logger.debug("[{}]: Error caught:".format(self.controller_agent.name, str(e)))
             return Error(request.public_key, self.controller_agent.crypto, ErrorCode.GENERIC_ERROR)
 
     def decode(self, msg: bytes, public_key: str) -> Request:
