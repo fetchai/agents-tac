@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
 
    tac.agents.v2.base
+   tac.agents.v2.examples
 
 Submodules
 ----------
@@ -18,7 +19,6 @@ tac.agents.v2.agent module
    :members:
    :undoc-members:
    :show-inheritance:
-
 tac.agents.v2.mail module
 -------------------------
 

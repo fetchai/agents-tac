@@ -11,7 +11,6 @@ tac.experimental.core1 module
    :members:
    :undoc-members:
    :show-inheritance:
-
 tac.experimental.core2 module
 -----------------------------
 
@@ -19,7 +18,6 @@ tac.experimental.core2 module
    :members:
    :undoc-members:
    :show-inheritance:
-
 tac.experimental.registration\_agent1 module
 --------------------------------------------
 
@@ -27,7 +25,6 @@ tac.experimental.registration\_agent1 module
    :members:
    :undoc-members:
    :show-inheritance:
-
 tac.experimental.registration\_agent2 module
 --------------------------------------------
 

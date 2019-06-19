@@ -310,7 +310,7 @@ class Transaction(Request):
 
 
 class GetStateUpdate(Request):
-    """Message to register an agent to the competition."""
+    """Message to request an agent state update from the controller."""
 
     def to_pb(self) -> tac_pb2.TACAgent.Message:
         msg = tac_pb2.TACAgent.GetStateUpdate()

@@ -6,6 +6,7 @@ Subpackages
 
 .. toctree::
 
+   tac.agents.v1.base
    tac.agents.v1.examples
 
 Submodules
