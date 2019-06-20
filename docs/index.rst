@@ -18,6 +18,7 @@ Welcome to TAC's documentation!
    sections/glossary
 
    reference/api/tac
+   reference/api/modules
 
 Indices and tables
 ==================
