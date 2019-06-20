@@ -34,7 +34,7 @@ sys.path.insert(0, os.path.abspath('../'))
 extensions = ['sphinx.ext.mathjax',
               'sphinx.ext.githubpages',
               'nbsphinx',
-              'sphinxcontrib.plantuml',
+              'sphinxcontrib.mermaid',
               'sphinx.ext.todo',
               'sphinx.ext.autodoc',
               'sphinx.ext.autosectionlabel'

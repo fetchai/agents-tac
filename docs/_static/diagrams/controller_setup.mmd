@@ -1,0 +1,11 @@
+sequenceDiagram
+    participant OEF
+    participant Controller
+
+    Note right of Controller: register as a controller agent.
+
+    OEF->Controller: register_service("tac", Description{version=1})
+    Controller->Controller: run()
+    activate Controller
+
+    Note right of Controller: Waiting for 'Register' messages from TAC agents, until 'start time'.

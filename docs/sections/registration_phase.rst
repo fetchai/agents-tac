@@ -48,7 +48,7 @@ The controller agent will wait for *registration_timeout*. At the end, if there 
 participant, it will start the competition. Otherwise, it will send back a "Cancelled" message to every
 registered participant
 
-.. uml:: ../_static/diagrams/controller_setup.uml
+.. mermaid:: ../_static/diagrams/controller_setup.mmd
     :align: center
     :caption: The setup of the controller agent.
 
