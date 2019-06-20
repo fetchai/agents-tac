@@ -1,14 +1,38 @@
 .. _baseline_agent:
 
-Baseline Agent
-==============
+Baseline Agent v2
+=================
 
-In this section, we describe the behaviour of a baseline agent.
+In this section, we describe the baseline agent v2 :class:`~tac.agents.v2.examples.baseline.BaselineAgent`. This agent inherits from :class:`~tac.agents.v2.base.participant_agent.ParticipantAgent` and implements the :class:`~tac.agents.v2.examples.strategy.BaselineStrategy`. :class:`~tac.agents.v2.base.participant_agent.ParticipantAgent` is a TAC specific implementation of a generic :class:`~tac.agents.v2.agent.Agent`.
 
-Registration
-------------
 
-Once the game started, the baseline agent register both as *seller* and as *buyer* on the OEF's Service Directory.
+Main Loop and Event Loop
+------------------------
+
+A generic :class:`~tac.agents.v2.agent.Agent` can be started via :meth:`~tac.agents.v2.agent.Agent.start`. This starts the :class:`~tac.agents.v2.mail.MailBox` and a main loop implemented in :meth:`~tac.agents.v2.agent.Agent.run_main_loop`.
+
+The mailbox is responsible for handling incoming and outgoing messages. The :class:`~tac.agents.v2.mail.InBox` enqueues incoming messages on an :attr:`~tac.agents.v2.mail.MailBox.in_queue` for later processing, the :class:`~tac.agents.v2.mail.OutBox` picks messages from the :attr:`~tac.agents.v2.mail.MailBox.out_queue` and sends them to the OEF.
+
+The main loop deals with processing enqueued events/messages. It has the methods :meth:`~tac.agents.v2.agent.Agent.act` and :meth:`~tac.agents.v2.agent.Agent.react` which handle the active and reactive agent behaviours.
+
+Actions and Reactions
+---------------------
+
+The v2 architecture distinguishes between `actions` and `reactions`. Actions are scheduled behaviours by the agent whereas reactions are behaviours which the agent makes in response to individual messages it receives.
+
+We split both actions and reactions into three domains: :class:`~tac.agents.v2.base.actions.ControllerActions` and :class:`~tac.agents.v2.base.reactions.ControllerReactions`,  :class:`~tac.agents.v2.base.actions.OEFActions` and :class:`~tac.agents.v2.base.reactions.OEFReactions` and :class:`~tac.agents.v2.base.actions.DialogueActions` and :class:`~tac.agents.v2.base.reactions.DialogueReactions` related. Dialogues are agent to agent communications.
+
+
+Controller Registration
+-----------------------
+
+The :class:`~tac.agents.v2.base.participant_agent.ParticipantAgent` implements the registration with the controller via :meth:`~tac.agents.`
+
+
+Services (/Goods) Registration
+------------------------------
+
+Once the game has started, the baseline agent can register on the OEF's Service Directory either as a *seller*, as a *buyer* or both. To be specific, the agent can either register the goods it is willing to sell, the goods it is willing to buy or both. The registration options are available in :class:`~tac.agents.v2.base.strategy.RegisterAs`.
 
 Registration as seller
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -21,8 +45,8 @@ Registration as buyer
 
 .. todo::
 
-Search for buyers/sellers
---------------------------
+Search
+------
 
 .. todo::
 

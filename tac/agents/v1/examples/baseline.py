@@ -25,6 +25,7 @@ import logging
 import pprint
 import random
 import time
+from enum import Enum
 from typing import List, Optional, Set, Tuple
 
 from oef.messages import CFP_TYPES, PROPOSE_TYPES
@@ -64,13 +65,25 @@ STARTING_MESSAGE_ID = 1
 DIALOGUE_LABEL = Tuple[str, int]  # (origin, dialogue_id)
 
 
+class RegisterAs(Enum):
+    SELLER = 'seller'
+    BUYER = 'buyer'
+    BOTH = 'both'
+
+
+class SearchFor(Enum):
+    SELLERS = 'sellers'
+    BUYERS = 'buyers'
+    BOTH = 'both'
+
+
 class BaselineAgent(NegotiationAgent):
     """
     The baseline agent simply tries to improve its utility by selling good bundles at a price equal
     to their marginal utility and buying goods at a price plus fee equal or below their marginal utility.
     """
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int = 10000, register_as: str = 'both', search_for: str = 'both', is_world_modeling: bool = False, pending_transaction_timeout: int = 30, **kwargs):
+    def __init__(self, name: str, oef_addr: str, oef_port: int = 10000, register_as: str = RegisterAs.BOTH, search_for: str = SearchFor.BOTH, is_world_modeling: bool = False, pending_transaction_timeout: int = 30, **kwargs):
         super().__init__(name, oef_addr, oef_port, is_world_modeling, **kwargs)
         self._register_as = register_as
         self._search_for = search_for
@@ -89,19 +102,19 @@ class BaselineAgent(NegotiationAgent):
 
     @property
     def is_registering_as_seller(self):
-        return self._register_as == 'seller' or self._register_as == 'both'
+        return self._register_as == RegisterAs.SELLER or self._register_as == RegisterAs.BOTH
 
     @property
     def is_searching_for_sellers(self):
-        return self._search_for == 'sellers' or self._search_for == 'both'
+        return self._search_for == SearchFor.SELLER or self._search_for == SearchFor.BOTH
 
     @property
     def is_registering_as_buyer(self):
-        return self._register_as == 'buyer' or self._register_as == 'both'
+        return self._register_as == RegisterAs.BUYER or self._register_as == RegisterAs.BOTH
 
     @property
     def is_searching_for_buyers(self):
-        return self._search_for == 'buyers' or self._search_for == 'both'
+        return self._search_for == SearchFor.BUYER or self._search_for == SearchFor.BOTH
 
     def on_start(self) -> None:
         """
