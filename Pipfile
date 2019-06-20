@@ -25,6 +25,9 @@ visdom = "*"
 cryptography = "*"
 base58 = "*"
 oef = "==0.4.0"
+sphinxcontrib-mermaid = "*"
+sphinx = "*"
+nbsphinx = "*"
 
 [requires]
 python_version = "3.7"

@@ -2,6 +2,10 @@
 
 ## Build
 
+- Before getting started, check that:
+
+  - [x] You have followed the steps under 'Dependencies' and 'Preliminaries' on root readme.
+
 - Activate the virtual environment:
 
       pipenv shell
@@ -26,20 +30,4 @@ firefox _build/html/index.html
 - or
 ```
 open _build/html/index.html
-```
-
-## Dependencies
-
-To generate `plantuml` files you need to install it:
-
-- On mac:
-
-```
-brew install plantuml
-```
-
-- On ubuntu:
-
-```
-apt install plantuml -y
 ```
