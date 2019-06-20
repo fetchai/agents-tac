@@ -1,0 +1,32 @@
+sequenceDiagram
+	participant Agent_1
+	participant Agent_2
+	participant Agent_3
+    participant OEF
+    participant Controller
+
+    Note over OEF: For the sake of brevity, assume that messages sent between agents are in fact sent through the OEF.
+
+    Controller->>OEF: register_service("tac")
+    Controller->>Controller: run()
+    activate Controller
+
+    Agent_1->>OEF: search_services("tac")
+    Agent_2->>OEF: search_services("tac")
+    Agent_3->>OEF: search_services("tac")
+
+    OEF->>Agent_1: search result: [Controller]
+    OEF->>Agent_2: search result: [Controller]
+    OEF->>Agent_3: search result: [Controller]
+
+    Agent_1->>Controller: Register()
+    Agent_2->>Controller: Register()
+    Agent_3->>Controller: Register()
+
+    Note over Controller: When at least N TAC agents will be registered for the competition, generate a Game instance and send details to the participants.
+
+    Controller->>Agent_1: GameData(money, endowment, utility_params, nb_agents, nb_goods, tx_fee, agent_pbks, agent_names, good_pbks)
+    Controller->>Agent_2: GameData(money, endowment, utility_params, nb_agents, nb_goods, tx_fee, agent_pbks, agent_names, good_pbks)
+    Controller->>Agent_3: GameData(money, endowment, utility_params, nb_agents, nb_goods, tx_fee, agent_pbks, agent_names, good_pbks)
+    
+    deactivate Controller
