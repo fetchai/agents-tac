@@ -76,7 +76,7 @@ In order to complete a registration, a trading agent should do the following ste
 Search for controller agent
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. uml:: ../_static/diagrams/search_controller.uml
+.. mermaid:: ../_static/diagrams/search_controller.mmd
     :align: center
     :caption: TAC Agent search for controller agents.
 
@@ -90,7 +90,7 @@ the registration, the agent can unregister from the competition by sending the :
 message.
 
 
-.. uml:: ../_static/diagrams/register_to_tac.uml
+.. mermaid:: ../_static/diagrams/register_to_tac.mmd
     :align: center
     :caption: an agent registers to TAC.
 
@@ -120,6 +120,6 @@ Summary
 In the following, a transition diagram that sumarize the *registration phase*:
 
 
-.. uml:: ../_static/diagrams/registration.uml
+.. mermaid:: ../_static/diagrams/registration.mmd
    :align: center
    :caption: The transition diagram for the registration phase.

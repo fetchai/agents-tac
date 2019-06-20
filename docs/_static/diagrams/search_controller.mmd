@@ -1,0 +1,9 @@
+sequenceDiagram
+	participant Agent
+    participant OEF
+    participant Controller
+
+    activate Controller
+    Agent->>OEF: search_services("tac", version==1)
+    OEF->>Agent: search result: ["Controller"]
+    deactivate Controller
