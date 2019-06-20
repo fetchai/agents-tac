@@ -15,18 +15,35 @@ The mailbox is responsible for handling incoming and outgoing messages. The :cla
 
 The main loop deals with processing enqueued events/messages. It has the methods :meth:`~tac.agents.v2.agent.Agent.act` and :meth:`~tac.agents.v2.agent.Agent.react` which handle the active and reactive agent behaviours.
 
+
 Actions and Reactions
 ---------------------
 
 The v2 architecture distinguishes between `actions` and `reactions`. Actions are scheduled behaviours by the agent whereas reactions are behaviours which the agent makes in response to individual messages it receives.
 
-We split both actions and reactions into three domains: :class:`~tac.agents.v2.base.actions.ControllerActions` and :class:`~tac.agents.v2.base.reactions.ControllerReactions`,  :class:`~tac.agents.v2.base.actions.OEFActions` and :class:`~tac.agents.v2.base.reactions.OEFReactions` and :class:`~tac.agents.v2.base.actions.DialogueActions` and :class:`~tac.agents.v2.base.reactions.DialogueReactions` related. Dialogues are agent to agent communications.
+We split both actions and reactions into three domains: :class:`~tac.agents.v2.base.actions.ControllerActions` and :class:`~tac.agents.v2.base.reactions.ControllerReactions`,  :class:`~tac.agents.v2.base.actions.OEFActions` and :class:`~tac.agents.v2.base.reactions.OEFReactions` and :class:`~tac.agents.v2.base.actions.DialogueActions` and :class:`~tac.agents.v2.base.reactions.DialogueReactions` related. Dialogues are agent to agent communications and maintained in :class:`~tac.agents.v2.base.dialogues.Dialogues`.
+
+
+Handlers
+--------
+
+The three types of handlers :class:`~tac.agents.v2.base.handlers.ControllerHandler`, :class:`~tac.agents.v2.base.handlers.OEFHandler` and :class:`~tac.agents.v2.base.handlers.DialogueHandler` inherit from the actions and reactions of their specific type. They are resonsible for handling the implemented behaviours.
+
+
+Strategy
+--------
+
+The strategy of a :class:`~tac.agents.v2.base.participant_agent.ParticipantAgent` has to implement is defined via an interface :class:`~tac.agents.v2.base.strategy.Strategy`. We also provide a sample implementation of a strategy called :class:`~tac.agents.v2.examples.strategy.BaselineStrategy` and utilised by the :class:`~tac.agents.v2.examples.baseline.BaselineAgent`.
+
+The `advanced.py` template can be used to build a :class:`~tac.agents.v2.examples.baseline.BaselineAgent` with a custom strategy.
+
+We have implemented a basic model of a :class:`~tac.platform.game.WorldState` which can be used and extended to enrich an agents strategy.
 
 
 Controller Registration
 -----------------------
 
-The :class:`~tac.agents.v2.base.participant_agent.ParticipantAgent` implements the registration with the controller via :meth:`~tac.agents.`
+The :class:`~tac.agents.v2.base.participant_agent.ParticipantAgent` implements the registration with the controller via :meth:`~tac.agents.v2.base.actions.OEFActions.search_for_tac`.
 
 
 Services (/Goods) Registration
