@@ -2,7 +2,7 @@ import argparse
 from typing import Optional
 
 from tac.agents.v2.base.participant_agent import ParticipantAgent
-from tac.agents.v2.base.strategy import Strategy
+from tac.agents.v2.base.strategy import Strategy, RegisterAs, SearchFor
 from tac.agents.v2.examples.strategy import BaselineStrategy
 from tac.gui.dashboards.agent import AgentDashboard
 
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     else:
         dashboard = None
 
-    strategy = BaselineStrategy(register_as=args.register_as, search_for=args.search_for, is_world_modeling=args.is_world_modeling)
+    strategy = BaselineStrategy(register_as=RegisterAs(args.register_as), search_for=SearchFor(args.search_for), is_world_modeling=args.is_world_modeling)
     agent = BaselineAgent(args.name, args.oef_addr, args.oef_port, strategy, args.services_interval, args.pending_transaction_timeout, dashboard)
 
     try:

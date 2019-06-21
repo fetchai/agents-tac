@@ -103,7 +103,7 @@ def main():
     else:
         dashboard = None
 
-    strategy = MyStrategy(register_as=args.register_as, search_for=args.search_for, is_world_modeling=args.is_world_modeling)
+    strategy = MyStrategy(register_as=RegisterAs(args.register_as), search_for=SearchFor(args.search_for), is_world_modeling=args.is_world_modeling)
     agent = BaselineAgent(name=args.name, oef_addr=args.oef_addr, oef_port=args.oef_port, strategy=strategy,
                           services_interval=args.services_interval, pending_transaction_timeout=args.pending_transaction_timeout, dashboard=dashboard)
 
