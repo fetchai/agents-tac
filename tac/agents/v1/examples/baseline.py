@@ -735,15 +735,15 @@ class BaselineAgent(NegotiationAgent):
 
     def _get_goods_pbks(self, is_supply: bool) -> Set[str]:
         """
-        Wraps the function which determines supplied and demanded good pbks.
+        Wraps the function which determines supplied and demanded good public keys.
 
-        :param is_supply: Boolean indicating whether it is referencing the supplied or demanded pbks.
+        :param is_supply: Boolean indicating whether it is referencing the supplied or demanded public keys.
 
-        :return: a list of good pbks
+        :return: a list of good public keys
         """
         state_after_locks = self._state_after_locks(is_seller=is_supply)
-        pbks = BaselineStrategy.supplied_good_pbks(self.game_configuration.good_pbks, state_after_locks.current_holdings) if is_supply else BaselineStrategy.demanded_good_pbks(self.game_configuration.good_pbks, state_after_locks.current_holdings)
-        return pbks
+        good_pbks = BaselineStrategy.supplied_good_pbks(self.game_configuration.good_pbks, state_after_locks.current_holdings) if is_supply else BaselineStrategy.demanded_good_pbks(self.game_configuration.good_pbks, state_after_locks.current_holdings)
+        return good_pbks
 
     def _get_proposals(self, query: CFP_TYPES, is_seller: bool) -> List[Description]:
         """
@@ -779,11 +779,11 @@ class BaselineStrategy:
 
     def supplied_good_pbks(good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
         """
-        Generates set of good pbks which are supplied.
+        Generates set of good public keys which are supplied.
 
-        :param good_pbks: a list of good pbks
+        :param good_pbks: a list of good public keys
         :param current_holdings: a list of current good holdings
-        :return: a set of pbks
+        :return: a set of public keys
         """
         return {good_pbk for good_pbk, quantity in zip(good_pbks, current_holdings) if quantity > 1}
 
@@ -798,11 +798,11 @@ class BaselineStrategy:
 
     def demanded_good_pbks(good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
         """
-        Generates set of good pbks which are demanded.
+        Generates set of good public keys which are demanded.
 
-        :param good_pbks: a list of good pbks
+        :param good_pbks: a list of good public keys
         :param current_holdings: a list of current good holdings
-        :return: a set of pbks
+        :return: a set of public keys
         """
         return {good_pbk for good_pbk, quantity in zip(good_pbks, current_holdings)}
 
@@ -810,7 +810,7 @@ class BaselineStrategy:
         """
         Generates proposals from the seller/buyer.
 
-        :param good_pbks: a list of good pbks
+        :param good_pbks: a list of good public keys
         :param current_holdings: a list of current good holdings
         :param utility_params: a list of utility params
         :param tx_fee: the transaction fee

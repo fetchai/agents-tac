@@ -251,7 +251,7 @@ class NegotiationAgent(OEFAgent):
         Handle search results.
 
         :param search_id: the id set in the search query
-        :param agent_pbks: a list of agent pbks
+        :param agent_pbks: a list of agent public keys
 
         :return: None
         """

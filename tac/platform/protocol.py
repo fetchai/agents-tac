@@ -449,9 +449,9 @@ class GameData(Response):
         :param nb_agents: the number of agents.
         :param nb_goods: the number of goods.
         :param tx_fee: the transaction fee.
-        :param agent_pbks: the pbks of the agents.
+        :param agent_pbks: the public keys of the agents.
         :param agent_names: the names of the agents.
-        :param good_pbks: the pbks of the goods.
+        :param good_pbks: the public keys of the goods.
         """
         assert len(endowment) == len(utility_params)
         super().__init__(public_key, crypto)

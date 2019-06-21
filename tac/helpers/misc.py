@@ -203,7 +203,7 @@ def build_datamodel(good_pbks: List[str], is_supply: bool) -> DataModel:
     """
     Build a data model for supply and demand (i.e. for offered or requested goods).
 
-    :param good_pbks: the list of good pbks
+    :param good_pbks: the list of good public keys
     :param is_supply: Boolean indicating whether it is a supply or demand data model
 
     :return: the data model.
@@ -241,7 +241,7 @@ def get_goods_quantities_description(good_pbks: List[str], good_quantities: List
      ...
      True
 
-    :param good_pbks: the pbks of the goods.
+    :param good_pbks: the public keys of the goods.
     :param good_quantities: the quantities per good.
     :param is_supply: True if the description is indicating supply, False if it's indicating demand.
 
@@ -259,14 +259,14 @@ def build_query(good_pbks: Set[int], is_searching_for_sellers: bool) -> Query:
         - to look for sellers if the agent is a buyer, or
         - to look for buyers if the agent is a seller.
 
-    In particular, if the agent is a buyer and the demanded good pbks are {'tac_good_0', 'tac_good_2', 'tac_good_3'}, the resulting constraint expression is:
+    In particular, if the agent is a buyer and the demanded good public keys are {'tac_good_0', 'tac_good_2', 'tac_good_3'}, the resulting constraint expression is:
 
         tac_good_0 >= 1 OR tac_good_2 >= 1 OR tac_good_3 >= 1
 
     That is, the OEF will return all the sellers that have at least one of the good in the query
     (assuming that the sellers are registered with the data model specified).
 
-    :param good_pbks: the good pbks to put in the query
+    :param good_pbks: the good public keys to put in the query
     :param is_searching_for_sellers: Boolean indicating whether the query is for sellers (supply) or buyers (demand).
 
     :return: the query
@@ -292,9 +292,9 @@ def from_iso_format(date_string: str) -> datetime.datetime:
 
 def generate_pbks(nb_things: int, thing_name: str) -> List[str]:
     """
-    Generate pbks for things.
+    Generate public keys for things.
     :param nb_things: the number of things.
-    :return: a list of pbks.
+    :return: a list of public keys.
     """
     max_number_of_digits = math.ceil(math.log10(nb_things))
     string_format = "tac_" + thing_name + "_{:0" + str(max_number_of_digits) + "}"

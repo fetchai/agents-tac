@@ -42,11 +42,11 @@ class BaselineStrategy(Strategy):
 
     def supplied_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
         """
-        Generates set of good pbks which are supplied.
+        Generates set of good public keys which are supplied.
 
-        :param good_pbks: a list of good pbks
+        :param good_pbks: a list of good public keys
         :param current_holdings: a list of current good holdings
-        :return: a set of pbks
+        :return: a set of public keys
         """
         return {good_pbk for good_pbk, quantity in zip(good_pbks, current_holdings) if quantity > 1}
 
@@ -61,11 +61,11 @@ class BaselineStrategy(Strategy):
 
     def demanded_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
         """
-        Generates set of good pbks which are demanded.
+        Generates set of good public keys which are demanded.
 
-        :param good_pbks: a list of good pbks
+        :param good_pbks: a list of good public keys
         :param current_holdings: a list of current good holdings
-        :return: a set of pbks
+        :return: a set of public keys
         """
         return {good_pbk for good_pbk, quantity in zip(good_pbks, current_holdings)}
 
@@ -73,7 +73,7 @@ class BaselineStrategy(Strategy):
         """
         Generates proposals from the seller/buyer.
 
-        :param good_pbks: a list of good pbks
+        :param good_pbks: a list of good public keys
         :param current_holdings: a list of current good holdings
         :param utility_params: a list of utility params
         :param tx_fee: the transaction fee

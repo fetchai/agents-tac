@@ -213,7 +213,7 @@ class OEFReactions(OEFSearchReactionInterface):
         """
         Process the search result for services.
 
-        :param agent_pbks: the agent pbks matching the search query
+        :param agent_pbks: the agent public keys matching the search query
         :param is_searching_for_sellers: whether it is searching for sellers or not
 
         :return: None

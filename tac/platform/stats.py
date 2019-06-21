@@ -138,8 +138,8 @@ class GameStats:
 
         plt.clf()
         plt.plot(history)
-        pbks = self.game.configuration.agent_pbks
-        plt.legend(pbks, loc="best")
+        agent_pbks = self.game.configuration.agent_pbks
+        plt.legend(agent_pbks, loc="best")
         plt.xlabel("Transactions")
         plt.ylabel("Score")
 
