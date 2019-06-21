@@ -37,7 +37,8 @@ extensions = ['sphinx.ext.mathjax',
               'sphinxcontrib.mermaid',
               'sphinx.ext.todo',
               'sphinx.ext.autodoc',
-              'sphinx.ext.autosectionlabel'
+              'sphinx.ext.autosectionlabel',
+              'sphinx.ext.intersphinx'
 ]
 
 # autodoc conf
@@ -183,5 +184,7 @@ texinfo_documents = [
      'Miscellaneous'),
 ]
 
-
+intersphinx_mapping = {
+    'oef': ('https://fetchai.github.io/oef-sdk-python/', None),
+}
 

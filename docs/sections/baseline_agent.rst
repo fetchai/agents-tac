@@ -49,15 +49,27 @@ The :class:`~tac.agents.v2.base.participant_agent.ParticipantAgent` implements t
 Services (/Goods) Registration
 ------------------------------
 
-Once the game has started, the baseline agent can register on the OEF's Service Directory either as a *seller*, as a *buyer* or both. To be specific, the agent can either register the goods it is willing to sell, the goods it is willing to buy or both. The registration options are available in :class:`~tac.agents.v2.base.strategy.RegisterAs`. The registration and unregistering of services is handled via the OEF action :meth:`~tac.agents.v2.base.actions.OEFActions.update_services`.
+Once the game has started, the :class:`~tac.agents.v2.base.participant_agent.ParticipantAgent` can register on the OEF's Service Directory either as a *seller*, as a *buyer* or both. To be specific, the agent can either register the goods it is willing to sell, the goods it is willing to buy or both. The registration options are available in :class:`~tac.agents.v2.base.strategy.RegisterAs`. The registration and unregistering of services is handled via the OEF action :meth:`~tac.agents.v2.base.actions.OEFActions.update_services`.
 
 
 Services (/Goods) Search
 ------------------------
 
-The agent can search for the demand and supply registered by other agents on the OEF's Service Directory. The search options are available in :class:`~tac.agents.v2.base.strategy.SearchFor`. The search is handled via the OEF action :meth:`~tac.agents.v2.base.actions.OEFActions.search_services`.
+The :class:`~tac.agents.v2.base.participant_agent.ParticipantAgent` can search for the demand and supply registered by other agents on the OEF's Service Directory. The search options are available in :class:`~tac.agents.v2.base.strategy.SearchFor`. The search is handled via the OEF action :meth:`~tac.agents.v2.base.actions.OEFActions.search_services`.
 
 Negotiation
 ------------
 
-.. todo::
+The :class:`~tac.agents.v2.base.participant_agent.ParticipantAgent` implements the FIPA negotiation protocol. A FIPA negotiation starts with a call for proposal (:class:`~oef.messages.CFP`) which contains a :class:`~oef.query.Query` referencing the services which are demanded or supplied by the sending agent. The receiving agent then responds with a suitable proposal (:class:`~oef.messages.Propose`) which contains a list of :class:`~oef.schema.Description` objects (think individual proposals).
+
+.. mermaid:: ../_static/diagrams/fipa_negotiation_1.mmd
+    :align: center
+    :caption: A successful FIPA negotiation between two agents.
+
+.. mermaid:: ../_static/diagrams/fipa_negotiation_2.mmd
+    :align: center
+    :caption: An unsuccessful FIPA negotiation between two agents breaking down after proposal.
+
+.. mermaid:: ../_static/diagrams/fipa_negotiation_3.mmd
+    :align: center
+    :caption: An unsuccessful FIPA negotiation between two agents breaking down after cfp.
