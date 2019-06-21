@@ -1,6 +1,8 @@
 # Templates
 Templates for agent development.
 
+Check out the [package documentation](../../master/docs) to learn more about the agent and competition framework.
+
 ## Available templates
 
 - `basic.py` this lets you run a preconfigured baseline agent without further development

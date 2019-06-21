@@ -49,23 +49,13 @@ The :class:`~tac.agents.v2.base.participant_agent.ParticipantAgent` implements t
 Services (/Goods) Registration
 ------------------------------
 
-Once the game has started, the baseline agent can register on the OEF's Service Directory either as a *seller*, as a *buyer* or both. To be specific, the agent can either register the goods it is willing to sell, the goods it is willing to buy or both. The registration options are available in :class:`~tac.agents.v2.base.strategy.RegisterAs`.
-
-Registration as seller
-~~~~~~~~~~~~~~~~~~~~~~
-
-.. todo::
+Once the game has started, the baseline agent can register on the OEF's Service Directory either as a *seller*, as a *buyer* or both. To be specific, the agent can either register the goods it is willing to sell, the goods it is willing to buy or both. The registration options are available in :class:`~tac.agents.v2.base.strategy.RegisterAs`. The registration and unregistering of services is handled via the OEF action :meth:`~tac.agents.v2.base.actions.OEFActions.update_services`.
 
 
-Registration as buyer
-~~~~~~~~~~~~~~~~~~~~~~
+Services (/Goods) Search
+------------------------
 
-.. todo::
-
-Search
-------
-
-.. todo::
+The agent can search for the demand and supply registered by other agents on the OEF's Service Directory. The search options are available in :class:`~tac.agents.v2.base.strategy.SearchFor`. The search is handled via the OEF action :meth:`~tac.agents.v2.base.actions.OEFActions.search_services`.
 
 Negotiation
 ------------

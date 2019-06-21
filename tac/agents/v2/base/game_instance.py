@@ -252,15 +252,15 @@ class GameInstance:
 
     def get_goods_pbks(self, is_supply: bool) -> Set[str]:
         """
-        Wraps the function which determines supplied and demanded good pbks.
+        Wraps the function which determines supplied and demanded good public keys.
 
-        :param is_supply: Boolean indicating whether it is referencing the supplied or demanded pbks.
+        :param is_supply: Boolean indicating whether it is referencing the supplied or demanded public keys.
 
-        :return: a list of good pbks
+        :return: a list of good public keys
         """
         state_after_locks = self.state_after_locks(is_seller=is_supply)
-        pbks = self.strategy.supplied_good_pbks(self.game_configuration.good_pbks, state_after_locks.current_holdings) if is_supply else self.strategy.demanded_good_pbks(self.game_configuration.good_pbks, state_after_locks.current_holdings)
-        return pbks
+        good_pbks = self.strategy.supplied_good_pbks(self.game_configuration.good_pbks, state_after_locks.current_holdings) if is_supply else self.strategy.demanded_good_pbks(self.game_configuration.good_pbks, state_after_locks.current_holdings)
+        return good_pbks
 
     def get_goods_quantities(self, is_supply: bool) -> List[int]:
         """

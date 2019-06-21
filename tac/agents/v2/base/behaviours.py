@@ -140,7 +140,7 @@ class FIPABehaviour:
             return False
         proposal_delta_score = state_after_locks.get_score_diff_from_transaction(transaction, self.game_instance.game_configuration.tx_fee)
 
-        result = proposal_delta_score >= 0
+        result = self.game_instance.strategy.is_acceptable_proposal(proposal_delta_score)
         logger.debug("[{}]: is good proposal for {}? {}: tx_id={}, "
                      "delta_score={}, amount={}"
                      .format(self.name, dialogue.role, result, transaction.transaction_id,

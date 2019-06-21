@@ -112,8 +112,8 @@ class GameConfiguration:
         assert self.nb_agents > 1, "Must have at least two agents."
         assert self.nb_goods > 1, "Must have at least two goods."
         assert len(set(self.agent_names)) == self.nb_agents, "Agents' names must be unique."
-        assert len(set(self.agent_pbks)) == self.nb_agents, "Agents' pbks must be unique."
-        assert len(set(self.good_pbks)) == self.nb_goods, "Goods' pbks must be unique."
+        assert len(set(self.agent_pbks)) == self.nb_agents, "Agents' public keys must be unique."
+        assert len(set(self.good_pbks)) == self.nb_goods, "Goods' public keys must be unique."
 
     def to_dict(self) -> Dict[str, Any]:
         """Get a dictionary from the object."""
@@ -373,9 +373,9 @@ class Game:
         :param base_good_endowment: the base amount of instances per good.
         :param lower_bound_factor: the lower bound of a uniform distribution.
         :param upper_bound_factor: the upper bound of a uniform distribution
-        :param agent_pbks: the pbks for the agents.
+        :param agent_pbks: the public keys for the agents.
         :param agent_names: the names for the agents.
-        :param good_pbks: the pbks for the goods.
+        :param good_pbks: the public keys for the goods.
         :return: a game.
         """
         game_configuration = GameConfiguration(nb_agents, nb_goods, tx_fee, agent_pbks, agent_names, good_pbks)
@@ -771,8 +771,8 @@ class WorldState:
         """
         Instantiate an agent state object.
 
-        :param opponent_pbks: the pbks of the opponents
-        :param good_pbks: the pbks of the goods
+        :param opponent_pbks: the public keys of the opponents
+        :param good_pbks: the public keys of the goods
         :param agent_state: the initial state of the agent
         """
         self.opponent_states = dict(

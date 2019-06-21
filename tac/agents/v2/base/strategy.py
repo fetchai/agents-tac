@@ -84,11 +84,11 @@ class Strategy:
     @abstractmethod
     def supplied_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
         """
-        Generates set of good pbks which are supplied.
+        Generates set of good public keys which are supplied.
 
-        :param good_pbks: a list of good pbks
+        :param good_pbks: a list of good public keys
         :param current_holdings: a list of current good holdings
-        :return: a set of pbks
+        :return: a set of public keys
         """
 
     @abstractmethod
@@ -103,11 +103,11 @@ class Strategy:
     @abstractmethod
     def demanded_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
         """
-        Generates set of good pbks which are demanded.
+        Generates set of good public keys which are demanded.
 
-        :param good_pbks: a list of good pbks
+        :param good_pbks: a list of good public keys
         :param current_holdings: a list of current good holdings
-        :return: a set of pbks
+        :return: a set of public keys
         """
 
     @abstractmethod
@@ -116,7 +116,7 @@ class Strategy:
         """
         Generates proposals from the seller/buyer.
 
-        :param good_pbks: a list of good pbks
+        :param good_pbks: a list of good public keys
         :param current_holdings: a list of current good holdings
         :param utility_params: a list of utility params
         :param tx_fee: the transaction fee
@@ -125,3 +125,14 @@ class Strategy:
 
         :return: a list of proposals in Description form
         """
+
+    def is_acceptable_proposal(self, proposal_delta_score: float) -> bool:
+        """
+        Determines whether a proposal is acceptable.
+
+        :param proposal_delta_score: the difference in score the proposal causes
+
+        :return: a boolean indicating whether the proposal is acceptable or not
+        """    
+        result = proposal_delta_score >= 0
+        return result
