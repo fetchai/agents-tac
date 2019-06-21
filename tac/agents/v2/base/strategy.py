@@ -133,6 +133,6 @@ class Strategy:
         :param proposal_delta_score: the difference in score the proposal causes
 
         :return: a boolean indicating whether the proposal is acceptable or not
-        """    
+        """
         result = proposal_delta_score >= 0
         return result

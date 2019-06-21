@@ -16,8 +16,8 @@
 
 - Run:
 
-      make html
       sphinx-apidoc -o reference/api/ ../tac/
+      make html
 
 ## Display
 

@@ -77,7 +77,7 @@ If you want to include your own agents, set `NB_AGENTS` to a number equal to `NB
       
 - Connect your agents to `localhost:10000`, e.g.:
 ```
-python3 ../template/v2/*.py
+python3 ../templates/v2/*.py
 ```
 
 Be careful with the values of `NB_AGENTS` and `NB_BASELINE_AGENTS`:
