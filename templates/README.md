@@ -11,21 +11,32 @@ Check out the [package documentation](../../master/docs) to learn more about the
 
 ## Testing with Sandbox (recommended)
 
-To test your agent run it against baseline agents in the sandbox.
+To test your agent run it against baseline agents in the sandbox. Follow the steps 1.-3. in sandbox readme, then start your own agent:
+
+```
+python3 templates/v2/basic.py --name basic1 --gui
+```
+
+The following additional parameters can be used to tune the agent:
+
+- `--register-as`: `choices=['seller', 'buyer', 'both']`, The string indicates whether the baseline agent registers as seller, buyer or both on the oef.
+- `--search-for`, `choices=['sellers', 'buyers', 'both']`, The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.
+- `--is-world-modeling`, `type=bool`, Whether the agent uses a workd model or not.   
+- `--services-interval`, `type=int`, The number of seconds to wait before doing another search.
 
 ## Testing manually (not recommended)
 
-- Start the oef:
+- First, start the oef:
 ```
 python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config.json
 ```
 
-- Start the visdom server in shell:
+- Second, start the visdom server in shell:
 ```
 python3 -m visdom.server
 ```
 
-- Start the controller, followed by two agents in separate terminals.
+- Third, tart the controller, followed by two agents in separate terminals.
 ```
 python3 tac/platform/controller.py --verbose --registration-timeout 20 --nb-agents 2 --tx-fee 0.0 --gui
 ```
@@ -36,14 +47,11 @@ python3 templates/v2/basic.py --name basic0 --gui
 python3 templates/v2/basic.py --name basic1 --gui
 ```
 
-## GUI
+The following parameters can be used to tune the agent:
 
-To visualize the statistics of your agent:
+- `--register-as`: `choices=['seller', 'buyer', 'both']`, The string indicates whether the baseline agent registers as seller, buyer or both on the oef.
+- `--search-for`, `choices=['sellers', 'buyers', 'both']`, The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.
+- `--is-world-modeling`, `type=bool`, Whether the agent uses a workd model or not.   
+- `--services-interval`, `type=int`, The number of seconds to wait before doing another search.
 
-- in another terminal, after executing `pipenv shell`, run a [Visdom](https://github.com/facebookresearch/visdom) server:
-
-      python3 -m visdom.server
-      
-- Use the flag `--gui` when launching the template scripts.
-
-- Navigate to `http://localhost:8097/` and select the appropriate environment.
+- Fourth, navigate to `http://localhost:8097/` and select the appropriate environment.

@@ -42,7 +42,7 @@ class Strategy:
 
     def __init__(self, register_as: RegisterAs = RegisterAs.BOTH, search_for: SearchFor = SearchFor.BOTH, is_world_modeling: bool = False):
         """
-        Initializes the strategy
+        Initializes the strategy of the agent
 
         :param register_as: determines whether the agent registers as seller, buyer or both
         :param search_for: determines whether the agent searches for sellers, buyers or both
@@ -75,7 +75,7 @@ class Strategy:
     @abstractmethod
     def supplied_good_quantities(self, current_holdings: List[int]) -> List[int]:
         """
-        Generates list of quantities which are supplied.
+        Generates list of quantities which are supplied by the agent.
 
         :param current_holdings: a list of current good holdings
         :return: a list of quantities
@@ -84,7 +84,7 @@ class Strategy:
     @abstractmethod
     def supplied_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
         """
-        Generates set of good public keys which are supplied.
+        Generates set of good public keys which are supplied by the agent.
 
         :param good_pbks: a list of good public keys
         :param current_holdings: a list of current good holdings
@@ -94,7 +94,7 @@ class Strategy:
     @abstractmethod
     def demanded_good_quantities(self, current_holdings: List[int]) -> List[int]:
         """
-        Generates list of quantities which are demanded.
+        Generates list of quantities which are demanded by the agent.
 
         :param current_holdings: a list of current good holdings
         :return: a list of quantities
@@ -103,7 +103,7 @@ class Strategy:
     @abstractmethod
     def demanded_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
         """
-        Generates set of good public keys which are demanded.
+        Generates set of good public keys which are demanded by the agent.
 
         :param good_pbks: a list of good public keys
         :param current_holdings: a list of current good holdings
@@ -114,7 +114,7 @@ class Strategy:
     def get_proposals(self, good_pbks: List[str], current_holdings: List[int], utility_params: List[float],
                       tx_fee: float, is_seller: bool, world_state: Optional[WorldState]) -> List[Description]:
         """
-        Generates proposals from the seller/buyer.
+        Generates proposals from the agent in the role of seller/buyer.
 
         :param good_pbks: a list of good public keys
         :param current_holdings: a list of current good holdings
@@ -128,11 +128,11 @@ class Strategy:
 
     def is_acceptable_proposal(self, proposal_delta_score: float) -> bool:
         """
-        Determines whether a proposal is acceptable.
+        Determines whether a proposal is acceptable to the agent.
 
         :param proposal_delta_score: the difference in score the proposal causes
 
         :return: a boolean indicating whether the proposal is acceptable or not
-        """    
+        """
         result = proposal_delta_score >= 0
         return result
