@@ -64,6 +64,9 @@ class VisdomMonitor(Monitor):
     def update(self):
         self.dashboard.update()
 
+    def set_gamestats(self, game_stats: GameStats):
+        self.dashboard.game_stats = game_stats
+
     def stop(self):
         if not self.is_running:
             raise Exception("The dashboard not running.")

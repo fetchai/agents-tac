@@ -2,7 +2,7 @@
 import argparse
 import json
 import os
-from typing import Optional
+from typing import Optional, List
 
 import numpy as np
 
@@ -20,26 +20,31 @@ class ControllerDashboard(Dashboard):
     (default: http://localhost:8097)
     """
 
-    def __init__(self, game_stats: GameStats,
+    def __init__(self, game_stats: Optional[GameStats] = None,
                  visdom_addr: str = "localhost",
                  visdom_port: int = 8097,
                  env_name: Optional[str] = "tac_controller"):
         super().__init__(visdom_addr, visdom_port, env_name)
         self.game_stats = game_stats
 
+        self.registered_agents = []  # type: List[str]
+
     def update(self):
         if not self._is_running():
             raise Exception("Dashboard not running, update not allowed.")
-        self._update_info()
-        self._update_utility_params()
-        self._update_current_holdings()
-        self._update_initial_holdings()
-        self._update_plot_scores()
-        self._update_plot_balance_history()
-        self._update_plot_price_history()
-        self._update_plot_eq_vs_mean_price()
-        self._update_plot_eq_vs_current_score()
-        self._update_adjusted_score()
+
+        self._update_registered_agents()
+        if self.game_stats is not None:
+            self._update_info()
+            self._update_utility_params()
+            self._update_current_holdings()
+            self._update_initial_holdings()
+            self._update_plot_scores()
+            self._update_plot_balance_history()
+            self._update_plot_price_history()
+            self._update_plot_eq_vs_mean_price()
+            self._update_plot_eq_vs_current_score()
+            self._update_adjusted_score()
 
     @staticmethod
     def from_datadir(datadir: str, env_name: str):
@@ -58,6 +63,12 @@ class ControllerDashboard(Dashboard):
             {'type': 'number', 'name': 'tx fee', 'value': self.game_stats.game.configuration.tx_fee},
             {'type': 'number', 'name': '# transactions', 'value': len(self.game_stats.game.transactions)},
         ], env=self.env_name, win=window_name, opts=dict(title="Configuration"))
+
+    def _update_registered_agents(self):
+        window_name = "registered_agents"
+        self.viz.properties([
+            {'type': 'string', 'name': '{}'.format(agent_name), 'value': ""} for agent_name in self.registered_agents
+        ], env=self.env_name, win=window_name, opts=dict(title="Registered Agents"))
 
     def _update_utility_params(self):
         utility_params = self.game_stats.game.initialization.utility_params

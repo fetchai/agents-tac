@@ -221,6 +221,12 @@ class RegisterHandler(RequestHandler):
             logger.error(error_msg)
             return Error(request.public_key, self.controller_agent.crypto, ErrorCode.AGENT_NAME_ALREADY_REGISTERED)
 
+        try:
+            self.controller_agent.monitor.dashboard.registered_agents.append(request.agent_name)
+            self.controller_agent.monitor.update()
+        except Exception as e:
+            logger.error(str(e))
+
         self.controller_agent.game_handler.agent_pbk_to_name[request.public_key] = request.agent_name
         logger.debug("[{}]: Agent registered: '{}'".format(self.controller_agent.name, self.controller_agent.game_handler.agent_pbk_to_name[request.public_key]))
         self.controller_agent.game_handler.registered_agents.add(request.public_key)
@@ -399,7 +405,8 @@ class ControllerDispatcher(object):
         try:
             return handle_request(request)
         except Exception as e:
-            logger.debug("[{}]: Error caught:".format(self.controller_agent.name, str(e)))
+            logger.debug("[{}]: Error caught: {}".format(self.controller_agent.name, str(e)))
+            logger.exception(e)
             return Error(request.public_key, self.controller_agent.crypto, ErrorCode.GENERIC_ERROR)
 
     def decode(self, msg: bytes, public_key: str) -> Request:
@@ -453,8 +460,13 @@ class GameHandler:
         # assert that there is no competition running.
         assert not self.is_game_running()
         self.current_game = self._create_game()
-        self.controller_agent.monitor.start(GameStats(self.current_game))
-        self.controller_agent.monitor.update()
+
+        try:
+            self.controller_agent.monitor.set_gamestats(GameStats(self.current_game))
+            self.controller_agent.monitor.update()
+        except Exception as e:
+            logger.error(str(e))
+
         self._send_game_data_to_agents()
 
         # start the inactivity timeout.
@@ -693,9 +705,12 @@ class ControllerAgent(OEFAgent):
                      .format(self.name, pprint.pformat(tac_parameters.__dict__)))
         self._is_running = True
         self._message_processing_task = Thread(target=self.run)
-        self._message_processing_task.start()
+
+        self.monitor.start(None)
+        self.monitor.update()
 
         self.game_handler = GameHandler(self, tac_parameters)
+        self._message_processing_task.start()
         self.game_handler.handle_registration_phase()
 
     def wait_and_start_competition(self, tac_parameters: TACParameters, rate: float = 0.5) -> None:
@@ -780,8 +795,7 @@ def main():
 
     finally:
         if agent is not None:
-            # agent.terminate()
-            pass
+            agent.terminate()
 
 
 if __name__ == '__main__':
