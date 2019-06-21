@@ -125,3 +125,14 @@ class Strategy:
 
         :return: a list of proposals in Description form
         """
+
+    def is_acceptable_proposal(self, proposal_delta_score: float) -> bool:
+        """
+        Determines whether a proposal is acceptable.
+
+        :param proposal_delta_score: the difference in score the proposal causes
+
+        :return: a boolean indicating whether the proposal is acceptable or not
+        """    
+        result = proposal_delta_score >= 0
+        return result
