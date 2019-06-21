@@ -1,7 +1,9 @@
 sequenceDiagram
+	participant Agent_0
 	participant Agent_1
     participant Agent_2
     participant Controller
+    participant OEF
 
     activate Controller
     Agent_1->>Agent_2: send_cfp(msg_id: 1, dialogue_id: 1, destination: agent_2_pbk, target: 0, query=Query)
