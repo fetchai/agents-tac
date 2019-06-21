@@ -63,7 +63,7 @@ The [competition sandbox](../master/sandbox) provides the code to build the dock
 
       python3 setup.py install
 
-## Development
+## Contribute
 
 The following steps are only relevant if you intend to contribute to the repository. They are not required for agent development.
 
