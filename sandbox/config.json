@@ -1,5 +1,5 @@
 {
-  "nb_games": 2,
+  "nb_games": 6,
   "output_dir": "TAC",
-  "seeds": [42, 56]
+  "seeds": [37, 56, 12, 73, 19, 44]
 }
