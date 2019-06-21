@@ -126,3 +126,4 @@ tac/gui/.visdom_env/
 !tac/gui/.visdom_env/view/layouts.json
 
 sandbox/TAC
+sandbox/data
