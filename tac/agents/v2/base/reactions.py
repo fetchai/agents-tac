@@ -72,7 +72,7 @@ class ControllerReactions(ControllerReactionInterface):
         :return: None
         """
         logger.debug("[{}]: Received start event from the controller. Starting to compete...".format(self.name))
-        self.game_instance.init(game_data)
+        self.game_instance.init(game_data, self.crypto.public_key)
         self.game_instance._game_phase = GamePhase.GAME
 
         dashboard = self.game_instance.dashboard
