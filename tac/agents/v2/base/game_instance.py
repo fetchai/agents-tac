@@ -103,7 +103,7 @@ class GameInstance:
         if self.dashboard is not None:
             self.dashboard.start()
 
-    def init(self, game_data: GameData) -> None:
+    def init(self, game_data: GameData, agent_pbk: str) -> None:
         """
         Populate data structures with the game data.
 
@@ -115,7 +115,7 @@ class GameInstance:
         self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
         if self.strategy.is_world_modeling:
             opponent_pbks = self.game_configuration.agent_pbks
-            opponent_pbks.remove(game_data.public_key)
+            opponent_pbks.remove(agent_pbk)
             self._world_state = WorldState(opponent_pbks, self.game_configuration.good_pbks, self.initial_agent_state)
 
     def reset(self) -> None:
