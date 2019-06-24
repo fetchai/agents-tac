@@ -1,16 +1,14 @@
 {
-  "image": "fetchai/oef-search:latest",
+  "image": "fetchai/oef-search:v4",
   "params": [
     [
+      "-d",
       "--rm",
+      "--privileged",
       "--cap-add",
       "sys_ptrace",
-      "-p",
-      "20000:20000",
-      "-p",
-      "10000:10000",
-      "-p",
-      "40000:40000"
+      "--network",
+      "host"
     ]
   ],
   "cmd": {
@@ -18,7 +16,7 @@
       "positional_args": ["run_mode", "run_sh_in_the_end"],
       "run_mode": "node",
       "run_sh_in_the_end": "no_sh",
-      "config_file": "/config/node_config_latest.json"
+      "config_file": "/config/node_config.json"
     }
   }
 }

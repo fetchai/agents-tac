@@ -1,32 +1,23 @@
 
-pipeline {
+node {
 
-  agent {
-    docker {
-      image 'gcr.io/organic-storm-201412/docker-tac-develop:latest'
-    }
-  }
+    checkout scm
 
-  stages {
+    sh('python ./oef_search_pluto_scripts/launch.py -c oef_search_pluto_scripts/launch_config_ci.json')
 
-    stage('Prebuild'){
+    docker.image('gcr.io/organic-storm-201412/docker-tac-develop:latest').inside("--network host") {
 
-        steps {
-            sh 'apk update'
-            //cryptography dependencies
-            sh 'apk add gcc g++ gfortran python3-dev musl-dev libffi-dev openssl-dev  freetype-dev libpng-dev openblas-dev'
-        }
+        stage('Unit Tests') {
+
+            sh 'pip install tox'
+            sh 'tox -e py37 -- --ci'
+
+        } // unit tests
 
     }
 
-    stage('Unit Tests') {
+}
 
-        steps {
-            sh 'pipenv run tox -e py37 -- --ci'
-        }
-
-    } // build & test
-
-  } // stages
-
-} // pipeline
+//docker.image('fetchai/oef-search:latest')
+//    .withRun('-v ${WORKSPACE}/oef_search_pluto_scripts:/config:ro --network host',
+//             'node no_sh --config_file /config/node_config.json') { c ->

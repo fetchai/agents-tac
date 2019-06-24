@@ -7,6 +7,7 @@ import time
 
 import docker
 import pytest
+from docker.models.containers import Container
 
 logger = logging.getLogger(__name__)
 
@@ -37,28 +38,10 @@ def _stop_oef_search_images():
             container.stop()
 
 
-@pytest.fixture(scope="session")
-def network_node(oef_addr, oef_port, pytestconfig):
-    if pytestconfig.getoption("ci"):
-        logger.warning("Skipping creation of OEF Docker image...")
-        yield
-        return
-
-    _stop_oef_search_images()
-    client = docker.from_env()
-
-    logger.info(ROOT_DIR + '/oef_search_pluto_scripts')
-    ports = {'20000/tcp': ("0.0.0.0", 20000), '30000/tcp': ("0.0.0.0", 30000), '{}/tcp'.format(oef_port): ("0.0.0.0", oef_port)}
-    volumes = {ROOT_DIR + '/oef_search_pluto_scripts': {'bind': '/config', 'mode': 'rw'}}
-    c = client.containers.run("fetchai/oef-search:v4",
-                              "node no_sh --config_file /config/node_config.json",
-                              detach=True, ports=ports, volumes=volumes)
-
-    # wait for the setup...
-    logger.info("Setting up the OEF node...")
-    attempt = 0
+def _wait_for_oef(max_attempts: int = 15, sleep_rate: float = 1.0):
     success = False
-    while not success and attempt < 15:
+    attempt = 0
+    while not success and attempt < max_attempts:
         attempt += 1
         logger.info("Attempt {}...".format(attempt))
         oef_healthcheck = subprocess.Popen(["python3", ROOT_DIR + "/sandbox/oef_healthcheck.py", "127.0.0.1", "10000"])
@@ -67,17 +50,51 @@ def network_node(oef_addr, oef_port, pytestconfig):
         if oef_healthcheck.returncode == 0:
             success = True
         else:
-            logger.info("OEF not available yet - sleeping for 1 second...")
+            logger.info("OEF not available yet - sleeping for {} second...".format(sleep_rate))
+            time.sleep(sleep_rate)
+
+    return success
+
+
+def _create_oef_docker_image(oef_addr_, oef_port_) -> Container:
+    client = docker.from_env()
+
+    logger.info(ROOT_DIR + '/oef_search_pluto_scripts')
+    ports = {'20000/tcp': ("0.0.0.0", 20000), '30000/tcp': ("0.0.0.0", 30000),
+             '{}/tcp'.format(oef_port_): ("0.0.0.0", oef_port_)}
+    volumes = {ROOT_DIR + '/oef_search_pluto_scripts': {'bind': '/config', 'mode': 'rw'}}
+    c = client.containers.run("fetchai/oef-search:v4",
+                              "node no_sh --config_file /config/node_config.json",
+                              detach=True, ports=ports, volumes=volumes)
+    return c
+
+
+@pytest.fixture(scope="session")
+def network_node(oef_addr, oef_port, pytestconfig):
+    if pytestconfig.getoption("ci"):
+        logger.warning("Skipping creation of OEF Docker image...")
+        success = _wait_for_oef(max_attempts=15, sleep_rate=3.0)
+        if not success:
+            pytest.fail("OEF doesn't work. Exiting...")
+        else:
+            yield
+            return
+    else:
+        _stop_oef_search_images()
+        c = _create_oef_docker_image(oef_addr, oef_port)
+
+        # wait for the setup...
+        logger.info("Setting up the OEF node...")
+        success = _wait_for_oef(max_attempts=15, sleep_rate=3.0)
+
+        if not success:
+            c.stop()
+            c.remove()
+            pytest.fail("OEF doesn't work. Exiting...")
+        else:
+            logger.info("Done!")
             time.sleep(1.0)
-
-    if not success:
-        c.stop()
-        c.remove()
-        pytest.fail("OEF doesn't work. Exiting...")
-
-    logger.info("Done!")
-    time.sleep(1.0)
-    yield
-    logger.info("Stopping the OEF node...")
-    c.stop()
-    c.remove()
+            yield
+            logger.info("Stopping the OEF node...")
+            c.stop()
+            c.remove()
