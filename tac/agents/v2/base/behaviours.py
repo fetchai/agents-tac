@@ -34,6 +34,8 @@ from tac.platform.protocol import Transaction
 
 logger = logging.getLogger(__name__)
 
+STARTING_MESSAGE_ID = 1
+
 
 class FIPABehaviour:
     """
@@ -207,7 +209,7 @@ class FIPABehaviour:
                 self.game_instance.world_state.update_on_accept(transaction)
             logger.debug("[{}]: Locking the current state (as {}).".format(self.name, dialogue.role))
             self.game_instance.lock_manager.add_lock(transaction, as_seller=dialogue.is_seller)
-            results.append(OutContainer(message=transaction.serialize(), message_id=new_msg_id, dialogue_id=accept.dialogue_id, destination=self.game_instance.controller_pbk))
+            results.append(OutContainer(message=transaction.serialize(), message_id=STARTING_MESSAGE_ID, dialogue_id=accept.dialogue_id, destination=self.game_instance.controller_pbk))
             results.append(Accept(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id, Context()))
         else:
             logger.debug("[{}]: Decline the accept (as {}).".format(self.name, dialogue.role))
@@ -225,7 +227,6 @@ class FIPABehaviour:
         """
         logger.debug("[{}]: on match accept".format(self.name))
         results = []
-        new_msg_id = accept.msg_id + 1
         transaction = self.game_instance.lock_manager.pop_pending_acceptances(dialogue, accept.target)
-        results.append(OutContainer(message=transaction.serialize(), message_id=new_msg_id, dialogue_id=accept.dialogue_id, destination=self.game_instance.controller_pbk))
+        results.append(OutContainer(message=transaction.serialize(), message_id=STARTING_MESSAGE_ID, dialogue_id=accept.dialogue_id, destination=self.game_instance.controller_pbk))
         return results

@@ -275,7 +275,7 @@ class DialogueReactions(DialogueReactionInterface):
         """
         is_seller = msg.query.model.name == TAC_SUPPLY_DATAMODEL_NAME
         dialogue = self.dialogues.create_opponent_initiated(msg.destination, msg.dialogue_id, is_seller)
-        logger.debug("[{}]: saving dialogue: dialogue_id={}".format(self.name, dialogue.dialogue_label.dialogue_id))
+        logger.debug("[{}]: saving dialogue (as {}): dialogue_id={}".format(self.name, dialogue.role, dialogue.dialogue_label.dialogue_id))
         results = self.handle(msg, dialogue)
         for result in results:
             self.out_box.out_queue.put(result)

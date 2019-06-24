@@ -173,7 +173,7 @@ class OutBox(object):
                 self.mail_box.send_accept(out.msg_id, out.dialogue_id, out.destination, out.target)
             elif isinstance(out, Decline):
                 logger.debug("Outgoing decline: msg_id={}, dialogue_id={}, origin={}, target={}".format(out.msg_id, out.dialogue_id, out.destination, out.target))
-                self.mail_box.send_accept(out.msg_id, out.dialogue_id, out.destination, out.target)
+                self.mail_box.send_decline(out.msg_id, out.dialogue_id, out.destination, out.target)
             elif isinstance(out, ByteMessage):
                 logger.debug("Outgoing dialogue error message: msg_id={}, dialogue_id={}, origin={}, message={}".format(out.msg_id, out.dialogue_id, out.destination, out.msg))
                 # self.mail_box.send_message(out.msg_id, out.dialogue_id, out.destination, out.target, out.message)
