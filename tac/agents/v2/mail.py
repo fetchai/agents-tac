@@ -74,8 +74,8 @@ class MailBox(OEFAgent):
         :return: None
         """
         self._mail_box_thread = Thread(target=super().run)
-        self._task.add_done_callback(callback)
         self._mail_box_thread.start()
+        self._task.add_done_callback(callback)
 
     def stop(self) -> None:
         """
