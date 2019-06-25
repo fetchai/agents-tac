@@ -35,7 +35,8 @@ from tac.agents.v2.base.interfaces import ControllerReactionInterface, OEFSearch
 from tac.agents.v2.mail import OutBox, OutContainer
 from tac.helpers.crypto import Crypto
 from tac.helpers.misc import TAC_SUPPLY_DATAMODEL_NAME
-from tac.platform.protocol import Error, ErrorCode, GameData, TransactionConfirmation, StateUpdate, Register
+from tac.platform.protocol import Error, ErrorCode, GameData, TransactionConfirmation, StateUpdate, Register, \
+    GetStateUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +112,15 @@ class ControllerReactions(ControllerReactionInterface):
 
         :return: None
         """
-        pass
+        self.game_instance.reset()
+        self.game_instance.init(state_update.initial_state, state_update.crypto.public_key)
+        self.game_instance._game_phase = GamePhase.GAME
+        for tx in state_update.transactions:
+            self.game_instance.agent_state.update(tx, state_update.initial_state.tx_fee)
+
+        dashboard = self.game_instance.dashboard
+        if dashboard is not None:
+            dashboard.update_from_agent_state(self.game_instance.agent_state, append=False)
 
     def on_cancelled(self) -> None:
         """
@@ -151,12 +160,13 @@ class ControllerReactions(ControllerReactionInterface):
 
 class OEFReactions(OEFSearchReactionInterface):
 
-    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', name: str):
+    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', name: str, rejoin: bool = False):
         self.crypto = crypto
         self.liveness = liveness
         self.game_instance = game_instance
         self.out_box = out_box
         self.name = name
+        self.rejoin = rejoin
 
     def on_search_result(self, search_result: SearchResult) -> None:
         """
@@ -209,8 +219,12 @@ class OEFReactions(OEFSearchReactionInterface):
         elif len(agent_pbks) > 1:
             logger.debug("[{}]: Found more than one TAC controller.".format(self.name))
             self.liveness._is_stopped = True
+        elif self.rejoin:
+            logger.debug("[{}]: Found the TAC controller. Rejoining...".format(self.name))
+            controller_pbk = agent_pbks[0]
+            self._rejoin_tac(controller_pbk)
         else:
-            logger.debug("[{}]: Found the TAC controller.".format(self.name))
+            logger.debug("[{}]: Found the TAC controller. Registering...".format(self.name))
             controller_pbk = agent_pbks[0]
             self._register_to_tac(controller_pbk)
 
@@ -254,6 +268,19 @@ class OEFReactions(OEFSearchReactionInterface):
         self.game_instance.controller_pbk = controller_pbk
         self.game_instance._game_phase = GamePhase.GAME_SETUP
         msg = Register(self.crypto.public_key, self.crypto, self.name).serialize()
+        self.out_box.out_queue.put(OutContainer(message=msg, message_id=0, dialogue_id=0, destination=controller_pbk))
+
+    def _rejoin_tac(self, controller_pbk: str) -> None:
+        """
+        Rejoin the TAC run by a Controller.
+
+        :param controller_pbk: the public key of the controller.
+
+        :return: None
+        """
+        self.game_instance.controller_pbk = controller_pbk
+        self.game_instance._game_phase = GamePhase.GAME_SETUP
+        msg = GetStateUpdate(self.crypto.public_key, self.crypto).serialize()
         self.out_box.out_queue.put(OutContainer(message=msg, message_id=0, dialogue_id=0, destination=controller_pbk))
 
 
