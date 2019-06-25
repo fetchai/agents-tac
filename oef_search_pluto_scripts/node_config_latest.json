@@ -8,9 +8,18 @@
   "http_port": 7500,
   "log_dir": "",
   "ssl_certificate": "/app/server.pem",
-  "core_key": "London-core",
-  "core_port": 10000,
-  "core_binary": "fetch_teams/OEFCore",
+  "core": {
+    "core_binary": "fetch_teams/OEFCore",
+     "config": {
+      "core_key": "CoreKey",
+      "core_uri": "tcp://127.0.0.1:10000",
+      "search_uri": "tcp://127.0.0.1:20000",
+      "tasks_thread_count": 10,
+      "comms_thread_count": 10,
+      "karma_policy": {
+      }
+    }
+  },
   "search_peers": ["KEY:HOST:PORT"],
    "bootstrap": {
     "bootstrap-url": "",
