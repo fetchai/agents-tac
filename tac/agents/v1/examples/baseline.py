@@ -83,7 +83,7 @@ class BaselineAgent(NegotiationAgent):
     to their marginal utility and buying goods at a price plus fee equal or below their marginal utility.
     """
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int = 10000, register_as: str = RegisterAs.BOTH, search_for: str = SearchFor.BOTH, is_world_modeling: bool = False, pending_transaction_timeout: int = 30, **kwargs):
+    def __init__(self, name: str, oef_addr: str, oef_port: int = 10000, register_as: RegisterAs = RegisterAs.BOTH, search_for: SearchFor = SearchFor.BOTH, is_world_modeling: bool = False, pending_transaction_timeout: int = 30, **kwargs):
         super().__init__(name, oef_addr, oef_port, is_world_modeling, **kwargs)
         self._register_as = register_as
         self._search_for = search_for
@@ -106,7 +106,7 @@ class BaselineAgent(NegotiationAgent):
 
     @property
     def is_searching_for_sellers(self):
-        return self._search_for == SearchFor.SELLER or self._search_for == SearchFor.BOTH
+        return self._search_for == SearchFor.SELLERS or self._search_for == SearchFor.BOTH
 
     @property
     def is_registering_as_buyer(self):
@@ -114,7 +114,7 @@ class BaselineAgent(NegotiationAgent):
 
     @property
     def is_searching_for_buyers(self):
-        return self._search_for == SearchFor.BUYER or self._search_for == SearchFor.BOTH
+        return self._search_for == SearchFor.BUYERS or self._search_for == SearchFor.BOTH
 
     def on_start(self) -> None:
         """
