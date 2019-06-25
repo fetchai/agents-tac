@@ -29,6 +29,7 @@ from oef.messages import PROPOSE_TYPES, CFP_TYPES, CFP, Decline, Propose, Accept
 from oef.query import Query
 from oef.schema import Description
 from oef.utils import Context
+from tac.helpers.advanced import callback
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,7 @@ class MailBox(OEFAgent):
         :return: None
         """
         self._mail_box_thread = Thread(target=super().run)
+        self._task.add_done_callback(callback)
         self._mail_box_thread.start()
 
     def stop(self) -> None:
