@@ -32,7 +32,7 @@ from typing import List
 import dateutil
 import math
 
-from tac.agents.v1.examples.baseline import BaselineAgent
+from tac.agents.v1.examples.baseline import BaselineAgent, RegisterAs, SearchFor
 from tac.gui.monitor import VisdomMonitor, NullMonitor
 from tac.helpers.plantuml import plantuml_gen
 from tac.platform.controller import ControllerAgent, TACParameters
@@ -287,8 +287,8 @@ if __name__ == '__main__':
         baseline_agents = initialize_baseline_agents(nb_baseline_agents=arguments.nb_baseline_agents,
                                                      oef_addr=arguments.oef_addr,
                                                      oef_port=arguments.oef_port,
-                                                     register_as=arguments.register_as,
-                                                     search_for=arguments.search_for,
+                                                     register_as=RegisterAs(arguments.register_as),
+                                                     search_for=SearchFor(arguments.search_for),
                                                      pending_transaction_timeout=arguments.pending_transaction_timeout)
 
         tac_parameters = initialize_tac_parameters(arguments)

@@ -95,7 +95,7 @@ class LockManager(object):
 
             # extract dialogue label and message id
             dialogue_label, message_id = next_item
-            logger.debug("[{}]: Removing message {}, {}".format(self.name, dialogue_label, message_id))
+            logger.debug("[{}]: Removing message {}, {}".format(self.agent_name, dialogue_label, message_id))
 
             # remove (safely) the associated pending proposal (if present)
             self.pending_tx_proposals.get(dialogue_label, {}).pop(message_id, None)
@@ -130,7 +130,7 @@ class LockManager(object):
 
             # extract dialogue label and message id
             transaction_id = next_item
-            logger.debug("[{}]: Removing transaction: {}".format(self.name, transaction_id))
+            logger.debug("[{}]: Removing transaction: {}".format(self.agent_name, transaction_id))
 
             # remove (safely) the associated pending proposal (if present)
             self.locks.pop(transaction_id, None)
