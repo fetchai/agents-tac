@@ -171,6 +171,16 @@ class Dialogue:
         result = (last_sent_message is not []) and isinstance(last_sent_message[0], Propose)
         return result
 
+    def is_expecting_accept_decline(self) -> bool:
+        """
+        Checks whether the dialogue is expecting an decline following an accept.
+
+        :return: True if yes, False otherwise.
+        """
+        last_sent_message = self._outgoing_messages[-1:]
+        result = (last_sent_message is not []) and isinstance(last_sent_message[0], Accept)
+        return result
+
 
 class Dialogues:
     """This class keeps track of all dialogues"""
@@ -232,6 +242,9 @@ class Dialogues:
             elif msg.target == 2 and other_initiated_dialogue_label in self.dialogues:
                 other_initiated_dialogue = self.dialogues[other_initiated_dialogue_label]
                 result = other_initiated_dialogue.is_expecting_propose_decline()
+            elif msg.target == 3 and self_initiated_dialogue_label in self.dialogues:
+                self_initiated_dialogue = self.dialogues[self_initiated_dialogue_label]
+                result = self_initiated_dialogue.is_expecting_accept_decline()
         return result
 
     def get_dialogue(self, msg: AgentMessage, agent_pbk: str) -> Dialogue:
@@ -257,6 +270,8 @@ class Dialogues:
                 dialogue = self.dialogues[self_initiated_dialogue_label]
             elif msg.target == 2 and other_initiated_dialogue_label in self.dialogues:
                 dialogue = self.dialogues[other_initiated_dialogue_label]
+            elif msg.target == 3 and self_initiated_dialogue_label in self.dialogues:
+                dialogue = self.dialogues[self_initiated_dialogue_label]
             else:
                 raise ValueError('Should have found dialogue.')
         else:
