@@ -17,14 +17,21 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+from typing import Optional
+
 import base58
 import logging
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec, utils
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
 
 logger = logging.getLogger(__name__)
+
+
+def _load_pem_private_key_from_path(path):
+    return load_pem_private_key(open(path, "rb").read(), None, default_backend())
 
 
 class CryptoError(Exception):
@@ -36,13 +43,14 @@ CHOSEN_PBK_LENGTH = 160
 
 
 class Crypto(object):
-    def __init__(self):
+
+    def __init__(self, private_key_pem_path: Optional[str] = None):
         """
         Instantiate a crypto object.
         """
         self._chosen_ec = ec.SECP384R1()
         self._chosen_hash = hashes.SHA256()
-        self._private_key = self._generate_pk()
+        self._private_key = self._generate_pk() if private_key_pem_path is None else self._load_pem_private_key_from_path(private_key_pem_path)
         self._public_key_obj = self._compute_pbk()
         self._public_key_pem = self._pbk_obj_to_pem(self._public_key_obj)
         self._public_key_b64 = self._pbk_pem_to_b64(self._public_key_pem)
@@ -80,6 +88,21 @@ class Crypto(object):
         :return: private key
         """
         private_key = ec.generate_private_key(self._chosen_ec, default_backend())
+        return private_key
+
+    def _load_pem_private_key_from_path(self, path) -> object:
+        """
+        Load a private key in PEM format from a file.
+
+        :param path: the path to the PEM file.
+
+        :return: the private key.
+        """
+        private_key = load_pem_private_key(open(path, "rb").read(), None, default_backend())
+        try:
+            assert private_key.curve.name == self._chosen_ec.name
+        except AssertionError:
+            raise ValueError("Expected elliptic curve: {} actual: {}".format(private_key.curve.name, self._chosen_ec.name))
         return private_key
 
     def _compute_pbk(self) -> object:
