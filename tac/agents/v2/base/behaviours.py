@@ -29,6 +29,7 @@ from tac.agents.v2.base.game_instance import GameInstance
 from tac.agents.v2.base.dialogues import Dialogue
 from tac.agents.v2.mail import OutContainer
 from tac.agents.v2.base.helpers import generate_transaction_id
+from tac.agents.v2.base.stats_manager import EndState
 from tac.helpers.crypto import Crypto
 from tac.platform.protocol import Transaction
 
@@ -79,6 +80,7 @@ class FIPABehaviour:
                                                                       "target": cfp.msg_id
                                                                   })))
             response = Decline(new_msg_id, cfp.dialogue_id, cfp.destination, cfp.msg_id, Context())
+            self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_CFP, dialogue.is_self_initiated)
         else:
             proposals = [random.choice(self.game_instance.get_proposals(cfp.query, dialogue.is_seller))]
             self.game_instance.lock_manager.store_proposals(proposals, new_msg_id, dialogue, cfp.destination, dialogue.is_seller, self.crypto)
@@ -120,6 +122,7 @@ class FIPABehaviour:
         else:
             logger.debug("[{}]: Declining propose (as {})".format(self.name, dialogue.role))
             result = Decline(new_msg_id, propose.dialogue_id, propose.destination, propose.msg_id, Context())
+            self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_PROPOSE, dialogue.is_self_initiated)
         return result
 
     def _is_profitable_transaction(self, transaction: Transaction, dialogue: Dialogue) -> bool:
@@ -171,6 +174,13 @@ class FIPABehaviour:
         if transaction_id in self.game_instance.lock_manager.locks:
             self.game_instance.lock_manager.pop_lock(transaction_id)
 
+        if decline.target == 1:
+            self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_CFP, dialogue.is_self_initiated)
+        elif decline.target == 2:
+            self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_PROPOSE, dialogue.is_self_initiated)
+        elif decline.target == 3:
+            self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_ACCEPT, dialogue.is_self_initiated)
+
         return None
 
     def on_accept(self, accept: Accept, dialogue: Dialogue) -> Union[List[Decline], List[Union[OutContainer, Accept]], List[OutContainer]]:
@@ -214,6 +224,7 @@ class FIPABehaviour:
         else:
             logger.debug("[{}]: Decline the accept (as {}).".format(self.name, dialogue.role))
             results.append(Decline(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id, Context()))
+            self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_ACCEPT, dialogue.is_self_initiated)
         return results
 
     def _on_match_accept(self, accept: Accept, dialogue: Dialogue) -> List[OutContainer]:

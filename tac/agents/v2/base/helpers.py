@@ -62,16 +62,33 @@ def is_controller_message(msg: Message, crypto: Crypto) -> bool:
     return True
 
 
-def generate_transaction_id(agent_pbk: str, origin: str, dialogue_label: DialogueLabel, agent_is_seller: bool) -> str:
+def generate_transaction_id(agent_pbk: str, opponent_pbk: str, dialogue_label: DialogueLabel, agent_is_seller: bool) -> str:
     """
     Make a transaction id.
     :param agent_pbk: the pbk of the agent.
-    :param origin: the public key of the message sender.
+    :param opponent_pbk: the public key of the opponent.
     :param dialogue_label: the dialogue label
     :param agent_is_seller: boolean indicating if the agent is a seller
     :return: a transaction id
     """
     # the format is {buyer_pbk}_{seller_pbk}_{dialogue_id}_{dialogue_starter_pbk}
-    buyer_pbk, seller_pbk = (origin, agent_pbk) if agent_is_seller else (agent_pbk, origin)
+    assert opponent_pbk == dialogue_label.dialogue_opponent_pbk
+    buyer_pbk, seller_pbk = (opponent_pbk, agent_pbk) if agent_is_seller else (agent_pbk, opponent_pbk)
     transaction_id = "{}_{}_{}_{}".format(buyer_pbk, seller_pbk, dialogue_label.dialogue_id, dialogue_label.dialogue_starter_pbk)
     return transaction_id
+
+
+def dialogue_label_from_transaction_id(agent_pbk: str, transaction_id: str) -> DialogueLabel:
+    """
+    Recover dialogue label from transaction id
+    :param agent_pbk: the pbk of the agent.
+    :param transaction_id: the transaction id
+    :return: a dialogue label
+    """
+    buyer_pbk, seller_pbk, dialogue_id, dialogue_starter_pbk = transaction_id.split('_')
+    if agent_pbk == buyer_pbk:
+        dialogue_opponent_pbk = seller_pbk
+    else:
+        dialogue_opponent_pbk = buyer_pbk
+    dialogue_label = DialogueLabel(dialogue_id, dialogue_opponent_pbk, dialogue_starter_pbk)
+    return dialogue_label

@@ -795,7 +795,7 @@ def main():
 
     finally:
         if agent is not None:
-            agent.terminate()
+            pass # agent.terminate()
 
 
 if __name__ == '__main__':

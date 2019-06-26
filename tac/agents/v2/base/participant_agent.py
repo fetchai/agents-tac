@@ -115,3 +115,4 @@ class ParticipantAgent(Agent):
     def stop(self) -> None:
         super().stop()
         self.game_instance.lock_manager.stop()
+        self.game_instance.stats_manager.stop()

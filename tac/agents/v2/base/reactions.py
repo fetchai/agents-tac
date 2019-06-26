@@ -27,7 +27,9 @@ from oef.utils import Context
 from tac.agents.v2.agent import Liveness
 from tac.agents.v2.base.behaviours import FIPABehaviour
 from tac.agents.v2.base.dialogues import Dialogue
+from tac.agents.v2.base.helpers import dialogue_label_from_transaction_id
 from tac.agents.v2.base.game_instance import GameInstance, GamePhase
+from tac.agents.v2.base.stats_manager import EndState
 from tac.agents.v2.base.interfaces import ControllerReactionInterface, OEFSearchReactionInterface, \
     DialogueReactionInterface
 from tac.agents.v2.mail import OutBox, OutContainer
@@ -91,6 +93,8 @@ class ControllerReactions(ControllerReactionInterface):
         logger.debug("[{}]: Received transaction confirmation from the controller: transaction_id={}".format(self.name, tx_confirmation.transaction_id))
         transaction = self.game_instance.lock_manager.pop_lock(tx_confirmation.transaction_id)
         self.game_instance.agent_state.update(transaction, self.game_instance.game_configuration.tx_fee)
+        dialogue_label = dialogue_label_from_transaction_id(self.crypto.public_key, tx_confirmation.transaction_id)
+        self.game_instance.stats_manager.add_dialogue_endstate(EndState.SUCCESSFUL, self.crypto.public_key == dialogue_label.dialogue_starter_pbk)
 
         dashboard = self.game_instance.dashboard
         if dashboard is not None:
@@ -162,6 +166,7 @@ class OEFReactions(OEFSearchReactionInterface):
         :return: None
         """
         search_id = search_result.msg_id
+        self.game_instance.stats_manager.search_end(search_id)
         logger.debug("[{}]: on search result: {} {}".format(self.name, search_id, search_result.agents))
         if search_id in self.game_instance.search.ids_for_tac:
             self._on_controller_search_result(search_result.agents)

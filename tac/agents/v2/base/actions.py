@@ -70,6 +70,7 @@ class OEFActions(OEFSearchActionInterface):
         search_id = self.game_instance.search.get_next_id()
         self.game_instance.search.ids_for_tac.add(search_id)
         self.out_box.out_queue.put(OutContainer(query=query, search_id=search_id))
+        self.game_instance.stats_manager.search_start(search_id)
 
     def update_services(self) -> None:
         """
@@ -130,6 +131,7 @@ class OEFActions(OEFSearchActionInterface):
                 search_id = self.game_instance.search.get_next_id()
                 self.game_instance.search.ids_for_sellers.add(search_id)
                 self.out_box.out_queue.put(OutContainer(query=query, search_id=search_id))
+                self.game_instance.stats_manager.search_start(search_id)
         if self.game_instance.strategy.is_searching_for_buyers:
             query = self.game_instance.build_services_query(is_searching_for_sellers=False)
             if query is None:
@@ -140,6 +142,7 @@ class OEFActions(OEFSearchActionInterface):
                 search_id = self.game_instance.search.get_next_id()
                 self.game_instance.search.ids_for_buyers.add(search_id)
                 self.out_box.out_queue.put(OutContainer(query=query, search_id=search_id))
+                self.game_instance.stats_manager.search_start(search_id)
 
 
 class DialogueActions(DialogueActionInterface):

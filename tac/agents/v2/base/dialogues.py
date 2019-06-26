@@ -82,6 +82,7 @@ class Dialogue:
         """
         self._dialogue_label = dialogue_label
         self._is_seller = is_seller
+        self._is_self_initiated = dialogue_label.dialogue_opponent_pbk is not dialogue_label.dialogue_starter_pbk
         self._role = 'seller' if is_seller else 'buyer'
         self._outgoing_messages = []  # type: List[AgentMessage]
         self._outgoing_messages_controller = []  # type: List[AgentMessage]
@@ -94,6 +95,10 @@ class Dialogue:
     @property
     def is_seller(self) -> bool:
         return self._is_seller
+
+    @property
+    def is_self_initiated(self) -> bool:
+        return self._is_self_initiated
 
     @property
     def role(self) -> str:

@@ -9,6 +9,7 @@ from tac.gui.dashboards.base import Dashboard
 from tac.helpers.misc import generate_html_table_from_dict, escape_html
 from tac.platform.game import AgentState
 from tac.platform.protocol import Transaction
+from tac.agents.v2.base.stats_manager import StatsManager
 
 CUR_PATH = inspect.getfile(inspect.currentframe())
 CUR_DIR = os.path.dirname(CUR_PATH)
@@ -60,7 +61,8 @@ class AgentDashboard(Dashboard):
 
         self.agent_name = agent_name
 
-        self._update_nb = -1
+        self._update_nb_agent_state = -1
+        self._update_nb_stats_manager = -1
         self._transaction_table = TransactionTable()
         self._transaction_window = None
 
@@ -87,7 +89,7 @@ class AgentDashboard(Dashboard):
     def _update_score(self, agent_state: AgentState, append: bool = True):
 
         window_name = "{}_score_history".format(self.env_name)
-        self.viz.line(X=[self._update_nb], Y=[agent_state.get_score()], update="append" if append else "replace",
+        self.viz.line(X=[self._update_nb_agent_state], Y=[agent_state.get_score()], update="append" if append else "replace",
                       env=self.env_name, win=window_name,
                       opts=dict(
                           title="{}'s Score".format(repr(self.agent_name)),
@@ -97,18 +99,59 @@ class AgentDashboard(Dashboard):
     def _update_balance(self, agent_state: AgentState, append: bool = True):
 
         window_name = "{}_balance_history".format(self.env_name)
-        self.viz.line(X=[self._update_nb], Y=[agent_state.balance], env=self.env_name, win=window_name,
+        self.viz.line(X=[self._update_nb_agent_state], Y=[agent_state.balance], env=self.env_name, win=window_name,
                       update="append" if append else "replace",
                       opts=dict(
                           title="{}'s Balance".format(repr(self.agent_name)),
                           xlabel="Transactions",
                           ylabel="Score"))
 
+    def _update_avg_search_time(self, stats_manager: StatsManager, append: bool = True):
+
+        window_name = "{}_avg_search_time".format(self.env_name)
+        self.viz.line(X=[self._update_nb_stats_manager], Y=[stats_manager.avg_search_time()], update="append" if append else "replace",
+                      env=self.env_name, win=window_name,
+                      opts=dict(
+                          title="{}'s Avg Search Time".format(repr(self.agent_name)),
+                          xlabel="Ticks",
+                          ylabel="Avg Search Time"))
+
+    def _update_negotiation_metrics_self(self, stats_manager: StatsManager, append: bool = True):
+
+        window_name = "{}_negotiation_metrics_self".format(self.env_name)
+        self.viz.line(X=[self._update_nb_stats_manager], Y=[stats_manager.negotiation_metrics_self()], update="append" if append else "replace",
+                      env=self.env_name, win=window_name,
+                      opts=dict(
+                          legend=['successful', 'declined cfp', 'declined propose', 'declined accept'],
+                          title="{}'s Negotiation Counts (Self Initiated)".format(repr(self.agent_name)),
+                          xlabel="Ticks",
+                          ylabel="Count"))
+
+    def _update_negotiation_metrics_other(self, stats_manager: StatsManager, append: bool = True):
+
+        window_name = "{}_negotiation_metrics_other".format(self.env_name)
+        self.viz.line(X=[self._update_nb_stats_manager], Y=[stats_manager.negotiation_metrics_other()], update="append" if append else "replace",
+                      env=self.env_name, win=window_name,
+                      opts=dict(
+                          legend=['successful', 'declined cfp', 'declined propose', 'declined accept'],
+                          title="{}'s Negotiation Counts (Other Initiated)".format(repr(self.agent_name)),
+                          xlabel="Ticks",
+                          ylabel="Count"))
+
     def update_from_agent_state(self, agent_state: AgentState, append: bool = True):
         if not self._is_running():
             raise Exception("Dashboard not running, update not allowed.")
 
-        self._update_nb += 1
+        self._update_nb_agent_state += 1
         self._update_holdings(agent_state)
         self._update_score(agent_state, append=append)
         self._update_balance(agent_state, append=append)
+
+    def update_from_stats_manager(self, stats_manager: StatsManager, append: bool = True):
+        if not self._is_running():
+            raise Exception("Dashboard not running, update not allowed.")
+
+        self._update_nb_stats_manager += 1
+        self._update_avg_search_time(stats_manager, append=append)
+        self._update_negotiation_metrics_self(stats_manager, append=append)
+        self._update_negotiation_metrics_other(stats_manager, append=append)

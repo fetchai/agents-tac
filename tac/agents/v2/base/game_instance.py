@@ -28,6 +28,7 @@ from oef.schema import Description
 from tac.agents.v2.base.dialogues import Dialogues
 from tac.agents.v2.base.lock_manager import LockManager
 from tac.agents.v2.base.strategy import Strategy
+from tac.agents.v2.base.stats_manager import StatsManager
 from tac.gui.dashboards.agent import AgentDashboard
 from tac.platform.game import AgentState, WorldState, GameConfiguration
 from tac.helpers.misc import build_query, get_goods_quantities_description
@@ -99,9 +100,12 @@ class GameInstance:
         self.lock_manager = LockManager(agent_name, pending_transaction_timeout=pending_transaction_timeout)
         self.lock_manager.start()
 
+        self.stats_manager = StatsManager(dashboard)
+
         self.dashboard = dashboard
         if self.dashboard is not None:
             self.dashboard.start()
+            self.stats_manager.start()
 
     def init(self, game_data: GameData, agent_pbk: str) -> None:
         """
