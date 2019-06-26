@@ -127,3 +127,5 @@ tac/gui/.visdom_env/
 
 sandbox/TAC
 sandbox/data
+
+*.pem
