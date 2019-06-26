@@ -1,29 +1,23 @@
 
-pipeline {
+node {
 
-  agent none
+    checkout scm
 
-  stages {
+    //sh('python ./oef_search_pluto_scripts/launch.py -c oef_search_pluto_scripts/launch_config_ci.json')
 
-    stage('Unit Tests') {
+    docker.image('gcr.io/organic-storm-201412/docker-tac-develop:latest').inside("--network host") {
 
-        stage('Python 3.7') {
+        stage('Unit Tests') {
 
-          agent {
-            docker {
-              image "python:3.7-alpine"
-            }
-          }
-
-          steps {
             sh 'pip install tox'
-            sh 'tox -e py37'
-          }
+            sh 'tox -e py37 -- --no-oef'
 
-        } // Python 3.7
+        } // unit tests
 
-    } // build & test
+    }
 
-  } // stages
+}
 
-} // pipeline
+//docker.image('fetchai/oef-search:latest')
+//    .withRun('-v ${WORKSPACE}/oef_search_pluto_scripts:/config:ro --network host',
+//             'node no_sh --config_file /config/node_config.json') { c ->
