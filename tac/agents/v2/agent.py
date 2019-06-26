@@ -41,9 +41,9 @@ class Liveness:
 
 
 class Agent:
-    def __init__(self, name: str, oef_addr: str, oef_port: int = 10000):
+    def __init__(self, name: str, oef_addr: str, oef_port: int = 10000, private_key_pem_path: Optional[str] = None):
         self._name = name
-        self._crypto = Crypto()
+        self._crypto = Crypto(private_key_pem_path=private_key_pem_path)
         self._liveness = Liveness()
 
         self.mail_box = None  # type: Optional[MailBox]

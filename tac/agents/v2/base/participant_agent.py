@@ -44,7 +44,8 @@ class ParticipantAgent(Agent):
                  strategy: Strategy,
                  services_interval: int = 10,
                  pending_transaction_timeout: int = 30,
-                 dashboard: Optional[AgentDashboard] = None):
+                 dashboard: Optional[AgentDashboard] = None,
+                 private_key_pem_path: Optional[str] = None):
         """
         Initialize a participant agent.
         :param name: the name of the agent.
@@ -54,8 +55,9 @@ class ParticipantAgent(Agent):
         :param services_interval: the number of seconds between different searches.
         :param pending_transaction_timeout: the timeout for cleanup of pending negotiations and unconfirmed transactions.
         :param dashboard: a Visdom dashboard to visualize agent statistics during the competition.
+        :param private_key_pem_path: the path to a private key in PEM format.
         """
-        super().__init__(name, oef_addr, oef_port)
+        super().__init__(name, oef_addr, oef_port, private_key_pem_path)
         self.mail_box = FIPAMailBox(self.crypto.public_key, oef_addr, oef_port)
         self.in_box = InBox(self.mail_box)
         self.out_box = OutBox(self.mail_box)
