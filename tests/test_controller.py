@@ -3,6 +3,7 @@ import asyncio
 import datetime
 from threading import Thread
 
+import pytest
 from oef.agents import OEFAgent
 from tac.platform.protocol import Register
 
