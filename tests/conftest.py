@@ -17,6 +17,7 @@ ROOT_DIR = os.path.dirname(CUR_PATH) + "/.."
 
 def pytest_addoption(parser):
     parser.addoption("--ci", action="store_true", default=False)
+    parser.addoption("--no-oef", action="store_true", default=False, help="Skip tests that require the OEF.")
 
 
 @pytest.fixture(scope="session")
@@ -71,6 +72,11 @@ def _create_oef_docker_image(oef_addr_, oef_port_) -> Container:
 
 @pytest.fixture(scope="session")
 def network_node(oef_addr, oef_port, pytestconfig):
+
+    if pytestconfig.getoption("no_oef"):
+        pytest.skip('skipped: no OEF running')
+        return
+
     if pytestconfig.getoption("ci"):
         logger.warning("Skipping creation of OEF Docker image...")
         success = _wait_for_oef(max_attempts=15, sleep_rate=3.0)

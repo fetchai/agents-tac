@@ -3,14 +3,14 @@ node {
 
     checkout scm
 
-    sh('python ./oef_search_pluto_scripts/launch.py -c oef_search_pluto_scripts/launch_config_ci.json')
+    //sh('python ./oef_search_pluto_scripts/launch.py -c oef_search_pluto_scripts/launch_config_ci.json')
 
     docker.image('gcr.io/organic-storm-201412/docker-tac-develop:latest').inside("--network host") {
 
         stage('Unit Tests') {
 
             sh 'pip install tox'
-            sh 'tox -e py37 -- --ci'
+            sh 'tox -e py37 -- --no-oef'
 
         } // unit tests
 
