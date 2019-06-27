@@ -290,15 +290,15 @@ def from_iso_format(date_string: str) -> datetime.datetime:
     return dateutil.parser.parse(date_string)
 
 
-def generate_pbks(nb_things: int, thing_name: str) -> List[str]:
+def generate_good_pbk_to_name(nb_goods: int) -> Dict[str, str]:
     """
     Generate public keys for things.
-    :param nb_things: the number of things.
-    :return: a list of public keys.
+    :param nb_goods: the number of things.
+    :return: a dictionary mapping goods' public keys to names.
     """
-    max_number_of_digits = math.ceil(math.log10(nb_things))
-    string_format = "tac_" + thing_name + "_{:0" + str(max_number_of_digits) + "}"
-    return [string_format.format(i) for i in range(nb_things)]
+    max_number_of_digits = math.ceil(math.log10(nb_goods))
+    string_format = 'tac_good_{:0' + str(max_number_of_digits) + '}'
+    return {string_format.format(i) + '_pbk': string_format.format(i) for i in range(nb_goods)}
 
 
 def generate_html_table_from_dict(d: Dict[str, List[str]], title="") -> str:

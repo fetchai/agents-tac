@@ -9,6 +9,11 @@ message StrIntPair {
     int32 second = 2;
 }
 
+message StrStrPair {
+    string first = 1;
+    string second = 2;
+}
+
 message TACController {
 
     message Registered {
@@ -25,9 +30,8 @@ message TACController {
         int32 nb_agents = 4;
         int32 nb_goods = 5;
         double tx_fee = 6;
-        repeated string agent_pbks = 7;
-        repeated string agent_names = 8;
-        repeated string good_pbks = 9;
+        repeated StrStrPair agent_pbk_to_name = 7;
+        repeated StrStrPair good_pbk_to_name = 8;
     }
 
     message TransactionConfirmation {

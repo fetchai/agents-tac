@@ -83,15 +83,18 @@ class GameStats:
         temp_game = Game(self.game.configuration, self.game.initialization)
 
         # initial scores
-        result[0, :] = temp_game.get_scores()
+        scores_dict = temp_game.get_scores()
+        result[0, :] = list(scores_dict.values())
+        keys = list(scores_dict.keys())
 
         # compute the partial scores for every agent after every transaction
         # (remember that indexes of the transaction start from one, because index 0 is reserved for the initial scores)
         for idx, tx in enumerate(self.game.transactions):
             temp_game.settle_transaction(tx)
-            result[idx + 1, :] = temp_game.get_scores()
+            scores_dict = temp_game.get_scores()
+            result[idx + 1, :] = list(scores_dict.values())
 
-        return result
+        return keys, result
 
     def balance_history(self):
         nb_transactions = len(self.game.transactions)
@@ -101,15 +104,18 @@ class GameStats:
         temp_game = Game(self.game.configuration, self.game.initialization)
 
         # initial balances
-        result[0, :] = np.asarray(temp_game.initialization.initial_money_amounts, dtype=np.int32)
+        balances_dict = temp_game.get_balances()
+        result[0, :] = np.asarray(list(balances_dict.values()), dtype=np.int32)
+        keys = list(balances_dict.keys())
 
         # compute the partial scores for every agent after every transaction
         # (remember that indexes of the transaction start from one, because index 0 is reserved for the initial scores)
         for idx, tx in enumerate(self.game.transactions):
             temp_game.settle_transaction(tx)
-            result[idx + 1, :] = np.asarray(temp_game.get_balances(), dtype=np.int32)
+            balances_dict = temp_game.get_balances()
+            result[idx + 1, :] = np.asarray(list(balances_dict.values()), dtype=np.int32)
 
-        return result
+        return keys, result
 
     def price_history(self):
         nb_transactions = len(self.game.transactions)
@@ -204,18 +210,21 @@ class GameStats:
         temp_game = Game(self.game.configuration, self.game.initialization)
 
         # initial scores
-        current_scores[0, :] = temp_game.get_scores()
+        scores_dict = temp_game.get_scores()
+        current_scores[0, :] = list(scores_dict.values())
+        keys = list(scores_dict.keys())
 
         # compute the partial scores for every agent after every transaction
         # (remember that indexes of the transaction start from one, because index 0 is reserved for the initial scores)
         for idx, tx in enumerate(self.game.transactions):
             temp_game.settle_transaction(tx)
-            current_scores[0, :] = temp_game.get_scores()
+            scores_dict = temp_game.get_scores()
+            current_scores[0, :] = list(scores_dict.values())
 
         result[1, :] = current_scores[0, :]
         result = np.transpose(result)
 
-        return result
+        return keys, result
 
     def adjusted_score(self) -> np.ndarray:
         """
@@ -244,20 +253,23 @@ class GameStats:
 
         # initial scores
         initial_scores = np.zeros((1, nb_agents), dtype=np.float32)
-        initial_scores[0, :] = temp_game.get_scores()
+        scores_dict = temp_game.get_scores()
+        initial_scores[0, :] = list(scores_dict.values())
+        keys = list(scores_dict.keys())
         current_scores = np.zeros((1, nb_agents), dtype=np.float32)
-        current_scores[0, :] = temp_game.get_scores()
+        current_scores[0, :] = initial_scores[0, :]
 
         # compute the partial scores for every agent after every transaction
         # (remember that indexes of the transaction start from one, because index 0 is reserved for the initial scores)
         for idx, tx in enumerate(self.game.transactions):
             temp_game.settle_transaction(tx)
-            current_scores[0, :] = temp_game.get_scores()
+            scores_dict = temp_game.get_scores()
+            current_scores[0, :] = list(scores_dict.values())
 
         result[0, :] = np.divide(np.subtract(current_scores, initial_scores), np.subtract(eq_scores, initial_scores))
         result = np.transpose(result)
 
-        return result
+        return keys, result
 
     def dump(self, directory: str, experiment_name: str) -> None:
         """

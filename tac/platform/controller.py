@@ -46,7 +46,7 @@ from oef.schema import Description, DataModel, AttributeSchema
 
 from tac.gui.monitor import Monitor, NullMonitor, VisdomMonitor
 from tac.helpers.crypto import Crypto
-from tac.helpers.misc import generate_pbks
+from tac.helpers.misc import generate_good_pbk_to_name
 from tac.platform.game import Game, GameTransaction
 from tac.platform.protocol import Response, Request, Register, Unregister, Error, GameData, \
     Transaction, TransactionConfirmation, ErrorCode, Cancelled, GetStateUpdate, StateUpdate
@@ -222,7 +222,7 @@ class RegisterHandler(RequestHandler):
             return Error(request.public_key, self.controller_agent.crypto, ErrorCode.AGENT_NAME_ALREADY_REGISTERED)
 
         try:
-            self.controller_agent.monitor.dashboard.registered_agents.append(request.agent_name)
+            self.controller_agent.monitor.dashboard.agent_pbk_to_name.update({request.public_key: request.agent_name})
             self.controller_agent.monitor.update()
         except Exception as e:
             logger.error(str(e))
@@ -434,6 +434,7 @@ class GameHandler:
 
         self.registered_agents = set()  # type: Set[str]
         self.agent_pbk_to_name = defaultdict()  # type: Dict[str, str]
+        self.good_pbk_to_name = generate_good_pbk_to_name(self.tac_parameters.nb_goods)  # type: Dict[str, str]
         self.current_game = None  # type: Optional[Game]
         self.inactivity_timeout_timedelta = datetime.timedelta(seconds=tac_parameters.inactivity_timeout) \
             if tac_parameters.inactivity_timeout is not None else datetime.timedelta(seconds=15)
@@ -446,6 +447,7 @@ class GameHandler:
         self.current_game = None
         self.registered_agents = set()
         self.agent_pbk_to_name = defaultdict()
+        self.good_pbk_to_name = defaultdict()
 
     def is_game_running(self) -> bool:
         """
@@ -480,18 +482,10 @@ class GameHandler:
     def _create_game(self) -> Game:
         """
         Create a TAC game.
-        In particular:
-        - take the number of goods and generate a set of score values {0, 1, 2, ..., nb_goods}
-        - use the public keys as labels for the agents in the game.
-        - use the same money amount for every agent.
 
         :return: a Game instance.
         """
-        agent_pbks = sorted(self.registered_agents)
-        nb_agents = len(agent_pbks)
-
-        good_pbks = generate_pbks(self.tac_parameters.nb_goods, 'good')
-        agent_names = [self.agent_pbk_to_name[agent_pbk] for agent_pbk in agent_pbks]
+        nb_agents = len(self.registered_agents)
 
         game = Game.generate_game(nb_agents,
                                   self.tac_parameters.nb_goods,
@@ -500,9 +494,8 @@ class GameHandler:
                                   self.tac_parameters.base_good_endowment,
                                   self.tac_parameters.lower_bound_factor,
                                   self.tac_parameters.upper_bound_factor,
-                                  agent_pbks,
-                                  agent_names,
-                                  good_pbks)
+                                  self.agent_pbk_to_name,
+                                  self.good_pbk_to_name)
 
         return game
 
@@ -524,9 +517,8 @@ class GameHandler:
                 self.current_game.configuration.nb_agents,
                 self.current_game.configuration.nb_goods,
                 self.current_game.configuration.tx_fee,
-                self.current_game.configuration.agent_pbks,
-                self.current_game.configuration.agent_names,
-                self.current_game.configuration.good_pbks
+                self.current_game.configuration.agent_pbk_to_name,
+                self.current_game.configuration.good_pbk_to_name
             )
             logger.debug("[{}]: sending GameData to '{}': {}"
                          .format(self.controller_agent.name, public_key, str(game_data_response)))
