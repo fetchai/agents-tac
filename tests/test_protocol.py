@@ -12,7 +12,7 @@ class TestRequest:
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
             crypto = Crypto()
-            expected_msg = Register(crypto.public_key, crypto, "agent_name")
+            expected_msg = Register(crypto.public_key, crypto, "tac_agent_0")
             actual_msg = Request.from_pb(expected_msg.serialize(), crypto.public_key, crypto)
 
             assert expected_msg == actual_msg
@@ -32,7 +32,7 @@ class TestRequest:
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
             crypto = Crypto()
-            expected_msg = Transaction("transaction_id", True, "seller", 10, {'tac_good_0': 1, 'tac_good_1': 1},
+            expected_msg = Transaction("transaction_id", True, "seller", 10, {'tac_good_0_pbk': 1, 'tac_good_1_pbk': 1},
                                        crypto.public_key, crypto)
             actual_msg = Request.from_pb(expected_msg.serialize(), crypto.public_key, crypto)
 
@@ -97,7 +97,7 @@ class TestResponse:
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
             crypto = Crypto()
-            expected_msg = GameData(crypto.public_key, crypto, 10, [1, 1, 2], [0.04, 0.80, 0.16], 3, 3, 1.0, ['tac_agent_0_pbk', 'tac_agent_1_pbk', 'tac_agent_2_pbk'], ['tac_agent_0', 'tac_agent_1', 'tac_agent_2'], ['tag_good_0', 'tag_good_1', 'tag_good_2'])
+            expected_msg = GameData(crypto.public_key, crypto, 10, [1, 1, 2], [0.04, 0.80, 0.16], 3, 3, 1.0, {'tac_agent_0_pbk': 'tac_agent_0', 'tac_agent_1_pbk': 'tac_agent_1', 'tac_agent_2_pbk': 'tac_agent_2'}, {'tag_good_0_pbk': 'tag_good_0', 'tag_good_1_pbk': 'tag_good_1', 'tag_good_2_pbk': 'tag_good_2'})
             actual_msg = Response.from_pb(expected_msg.serialize(), crypto.public_key, crypto)
 
             assert expected_msg == actual_msg
@@ -117,8 +117,8 @@ class TestResponse:
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
             crypto = Crypto()
-            game_state = GameData(crypto.public_key, crypto, 10, [1, 1, 2], [0.04, 0.80, 0.16], 3, 3, 1.0, ['tac_agent_0_pbk', 'tac_agent_1_pbk', 'tac_agent_2_pbk'], ['tac_agent_0', 'tac_agent_1', 'tac_agent_2'], ['tag_good_0', 'tag_good_1', 'tag_good_2'])
-            transactions = [Transaction("transaction_id", True, "seller", 10.0, {"good_01": 1}, crypto.public_key, crypto)]
+            game_state = GameData(crypto.public_key, crypto, 10, [1, 1, 2], [0.04, 0.80, 0.16], 3, 3, 1.0, {'tac_agent_0_pbk': 'tac_agent_0', 'tac_agent_1_pbk': 'tac_agent_1', 'tac_agent_2_pbk': 'tac_agent_2'}, {'tag_good_0_pbk': 'tag_good_0', 'tag_good_1_pbk': 'tag_good_1', 'tag_good_2_pbk': 'tag_good_2'})
+            transactions = [Transaction("transaction_id", True, "seller", 10.0, {"tac_good_0_pbk": 1}, crypto.public_key, crypto)]
 
             expected_msg = StateUpdate(crypto.public_key, crypto, game_state, transactions)
             actual_msg = Response.from_pb(expected_msg.serialize(), crypto.public_key, crypto)

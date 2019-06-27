@@ -2,7 +2,7 @@
 import argparse
 import json
 import os
-from typing import Optional, List
+from typing import Optional, Dict
 
 import numpy as np
 
@@ -27,7 +27,7 @@ class ControllerDashboard(Dashboard):
         super().__init__(visdom_addr, visdom_port, env_name)
         self.game_stats = game_stats
 
-        self.registered_agents = []  # type: List[str]
+        self.agent_pbk_to_name = {}  # type: Dict[str, str]
 
     def update(self):
         if not self._is_running():
@@ -67,7 +67,7 @@ class ControllerDashboard(Dashboard):
     def _update_registered_agents(self):
         window_name = "registered_agents"
         self.viz.properties([
-            {'type': 'string', 'name': '{}'.format(agent_name), 'value': ""} for agent_name in self.registered_agents
+            {'type': 'string', 'name': '{}'.format(agent_name), 'value': ""} for agent_name in self.agent_pbk_to_name.values()
         ], env=self.env_name, win=window_name, opts=dict(title="Registered Agents"))
 
     def _update_utility_params(self):
@@ -105,24 +105,24 @@ class ControllerDashboard(Dashboard):
                          ))
 
     def _update_plot_scores(self):
-        score_history = self.game_stats.score_history()
+        keys, score_history = self.game_stats.score_history()
 
         window_name = "score_history"
-        self.viz.line(X=np.arange(score_history.shape[0]), Y=score_history, env=self.env_name, win=window_name,
+        self.viz.line(X=keys, Y=score_history, env=self.env_name, win=window_name,
                       opts=dict(
-                          legend=self.game_stats.game.configuration.agent_names,
+                          legend=[self.game_stats.game.configuration.agent_pbk_to_name[agent_pbk] for agent_pbk in keys],
                           title="Scores",
                           xlabel="Transactions",
                           ylabel="Score")
                       )
 
     def _update_plot_balance_history(self):
-        balance_history = self.game_stats.balance_history()
+        keys, balance_history = self.game_stats.balance_history()
 
         window_name = "balance_history"
-        self.viz.line(X=np.arange(balance_history.shape[0]), Y=balance_history, env=self.env_name, win=window_name,
+        self.viz.line(X=keys, Y=balance_history, env=self.env_name, win=window_name,
                       opts=dict(
-                          legend=self.game_stats.game.configuration.agent_names,
+                          legend=[self.game_stats.game.configuration.agent_pbk_to_name[agent_pbk] for agent_pbk in keys],
                           title="Balance history",
                           xlabel="Transactions",
                           ylabel="Money")
@@ -134,7 +134,7 @@ class ControllerDashboard(Dashboard):
         window_name = "price_history"
         self.viz.line(X=np.arange(price_history.shape[0]), Y=price_history, env=self.env_name, win=window_name,
                       opts=dict(
-                          legend=self.game_stats.game.configuration.good_pbks,
+                          legend=[self.game_stats.game.configuration.agent_pbk_to_name[agent_pbk] for agent_pbk in keys],
                           title="Price history",
                           xlabel="Transactions",
                           ylabel="Price")
@@ -153,10 +153,10 @@ class ControllerDashboard(Dashboard):
                       )
 
     def _update_plot_eq_vs_current_score(self):
-        eq_vs_current_score = self.game_stats.eq_vs_current_score()
+        keys, eq_vs_current_score = self.game_stats.eq_vs_current_score()
 
         window_name = "eq_vs_current_score"
-        self.viz.line(X=np.arange(eq_vs_current_score.shape[0]), Y=eq_vs_current_score, env=self.env_name, win=window_name,
+        self.viz.line(X=keys, Y=eq_vs_current_score, env=self.env_name, win=window_name,
                       opts=dict(
                           legend=['eq_score', 'current_score'],
                           title="Equilibrium vs Current Score",
@@ -165,10 +165,10 @@ class ControllerDashboard(Dashboard):
                       )
 
     def _update_adjusted_score(self):
-        adjusted_score = self.game_stats.adjusted_score()
+        keys, adjusted_score = self.game_stats.adjusted_score()
 
         window_name = "adjusted_score"
-        self.viz.line(X=np.arange(adjusted_score.shape[0]), Y=adjusted_score, env=self.env_name, win=window_name,
+        self.viz.line(X=keys, Y=adjusted_score, env=self.env_name, win=window_name,
                       opts=dict(
                           legend=['adjusted_score'],
                           title="Adjusted Score",

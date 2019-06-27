@@ -89,6 +89,8 @@ services:
       - "${INACTIVITY_TIMEOUT}"
       - "--competition-timeout"
       - "${COMPETITION_TIMEOUT}"
+      - "--services-interval"
+      - "${SERVICES_INTERVAL}"
       - "--gui"
       - "--visdom-addr"
       - "172.28.1.2"

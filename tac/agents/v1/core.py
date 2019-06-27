@@ -234,7 +234,7 @@ class NegotiationAgent(OEFAgent):
         """
 
         # populate data structures about the started competition
-        self._game_configuration = GameConfiguration(game_data.nb_agents, game_data.nb_goods, game_data.tx_fee, game_data.agent_pbks, game_data.agent_names, game_data.good_pbks)
+        self._game_configuration = GameConfiguration(game_data.nb_agents, game_data.nb_goods, game_data.tx_fee, game_data.agent_pbk_to_name, game_data.good_pbk_to_name)
         self._initial_agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
         self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
         if self.is_world_modeling:
