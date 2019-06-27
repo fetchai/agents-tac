@@ -116,6 +116,16 @@ class AgentDashboard(Dashboard):
                           xlabel="Ticks",
                           ylabel="Avg Search Time"))
 
+    def _update_avg_search_result_counts(self, stats_manager: StatsManager, append: bool = True):
+
+        window_name = "{}_avg_search_result_counts".format(self.env_name)
+        self.viz.line(X=[self._update_nb_stats_manager], Y=[stats_manager.avg_search_result_counts()], update="append" if append else "replace",
+                      env=self.env_name, win=window_name,
+                      opts=dict(
+                          title="{}'s Avg Search Result Counts".format(repr(self.agent_name)),
+                          xlabel="Ticks",
+                          ylabel="Avg Search Result Counts"))
+
     def _update_negotiation_metrics_self(self, stats_manager: StatsManager, append: bool = True):
 
         window_name = "{}_negotiation_metrics_self".format(self.env_name)
@@ -153,5 +163,6 @@ class AgentDashboard(Dashboard):
 
         self._update_nb_stats_manager += 1
         self._update_avg_search_time(stats_manager, append=append)
+        self._update_avg_search_result_counts(stats_manager, append=append)
         self._update_negotiation_metrics_self(stats_manager, append=append)
         self._update_negotiation_metrics_other(stats_manager, append=append)

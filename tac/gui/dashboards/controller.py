@@ -134,7 +134,7 @@ class ControllerDashboard(Dashboard):
         window_name = "price_history"
         self.viz.line(X=np.arange(price_history.shape[0]), Y=price_history, env=self.env_name, win=window_name,
                       opts=dict(
-                          legend=[self.game_stats.game.configuration.agent_pbk_to_name[agent_pbk] for agent_pbk in keys],
+                          legend=list(self.game_stats.game.configuration.good_pbk_to_name.values()),
                           title="Price history",
                           xlabel="Transactions",
                           ylabel="Price")
