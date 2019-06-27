@@ -249,3 +249,6 @@ class Crypto(object):
         pbk_hash = self._hash_data(pbk)
         pbk_hex = pbk_hash.hex()
         return pbk_hex
+
+    def _pvk_obj_to_pem(self, pvk: object) -> bytes:
+        return pvk.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.TraditionalOpenSSL, serialization.NoEncryption())

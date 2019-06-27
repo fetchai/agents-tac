@@ -24,6 +24,20 @@ The following additional parameters can be used to tune the agent:
 - `--is-world-modeling`, `type=bool`, Whether the agent uses a workd model or not.   
 - `--services-interval`, `type=int`, The number of seconds to wait before doing another search.
 
+
+### Generate private key (optional)
+
+A private key for your agent is generated every time by the library. 
+If you want to use the same cryptographic key, you can follow these steps:
+
+- Generate a private key:
+      
+      python3 scripts/generate_private_key.py priv.pem
+      
+- Every time you run your agent, add the parameter `--private-key <pem-file>` to your command:
+
+      python3 templates/v2/basic.py --name basic1 --gui --private-key priv.pem
+
 ## Testing manually (not recommended)
 
 - First, start the oef:
