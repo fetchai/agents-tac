@@ -342,6 +342,10 @@ class GetStateUpdateHandler(RequestHandler):
         :return: an Error response if an error occurred, else None.
         """
         logger.debug("[{}]: Handling the 'get agent state' request: {}".format(self.controller_agent.name, request))
+        if not self.controller_agent.game_handler.is_game_running():
+            error_msg = "[{}]: GetStateUpdate request is not valid while the competition is not running.".format(self.controller_agent.name)
+            logger.error(error_msg)
+            return Error(request.public_key, self.controller_agent.crypto, ErrorCode.COMPETITION_NOT_RUNNING)
         if request.public_key not in self.controller_agent.game_handler.registered_agents:
             error_msg = "[{}]: Agent not registered: '{}'".format(self.controller_agent.name, request.public_key)
             logger.error(error_msg)
