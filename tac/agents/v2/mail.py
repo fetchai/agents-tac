@@ -29,7 +29,6 @@ from oef.messages import PROPOSE_TYPES, CFP_TYPES, CFP, Decline, Propose, Accept
 from oef.query import Query
 from oef.schema import Description
 from oef.utils import Context
-from tac.helpers.advanced import callback
 
 logger = logging.getLogger(__name__)
 
