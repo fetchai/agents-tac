@@ -155,7 +155,7 @@ class GameStats:
         else:
             plt.savefig(output_path)
 
-    def eq_vs_mean_price(self) -> np.ndarray:
+    def eq_vs_mean_price(self) -> Tuple[List[str], np.ndarray]:
         """
         Compute the mean price of each good and display it together with the equilibrium price.
 
@@ -179,11 +179,13 @@ class GameStats:
             temp_game.settle_transaction(tx)
             prices_by_transactions[idx + 1, :] = np.asarray(temp_game.get_prices(), dtype=np.float32)
 
-        result[1, :] = np.true_divide(prices_by_transactions.sum(0), (prices_by_transactions != 0).sum(0))
+        denominator = (prices_by_transactions != 0).sum(0)
+        result[1, :] = np.true_divide(prices_by_transactions.sum(0), denominator)
+        result[1, denominator == 0] = 0
 
         result = np.transpose(result)
 
-        return result
+        return self.game.configuration.good_names, result
 
     def eq_vs_current_score(self) -> Tuple[List[str], np.ndarray]:
         """
