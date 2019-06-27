@@ -51,6 +51,19 @@ def _make_str_int_pair(key: str, value: int) -> tac_pb2.StrIntPair:
     return pair
 
 
+def _make_str_str_pair(key: str, value: str) -> tac_pb2.StrStrPair:
+    """
+    Helper method to make a Protobuf StrStrPair.
+    :param key: the first element of the pair.
+    :param value: the second element of the pair.
+    :return: a StrStrPair protobuf object.
+    """
+    pair = tac_pb2.StrStrPair()
+    pair.first = key
+    pair.second = value
+    return pair
+
+
 class ErrorCode(Enum):
     GENERIC_ERROR = 0
     REQUEST_NOT_VALID = 1
@@ -438,7 +451,7 @@ class GameData(Response):
     """Class that holds the game configuration and the initialization of a TAC agent."""
 
     def __init__(self, public_key: str, crypto: Crypto, money: int, endowment: List[int], utility_params: List[float],
-                 nb_agents: int, nb_goods: int, tx_fee: float, agent_pbks: List[str], agent_names: List[str], good_pbks: List[str]):
+                 nb_agents: int, nb_goods: int, tx_fee: float, agent_pbk_to_name: Dict[str, str], good_pbk_to_name: Dict[str, str]):
         """
         Initialize a game data object.
         :param public_key: the destination
@@ -449,9 +462,8 @@ class GameData(Response):
         :param nb_agents: the number of agents.
         :param nb_goods: the number of goods.
         :param tx_fee: the transaction fee.
-        :param agent_pbks: the public keys of the agents.
-        :param agent_names: the names of the agents.
-        :param good_pbks: the public keys of the goods.
+        :param agent_pbk_to_name: the mapping from the public keys to the names of the agents.
+        :param good_pbk_to_name: the mapping from the public keys to the names of the goods.
         """
         assert len(endowment) == len(utility_params)
         super().__init__(public_key, crypto)
@@ -461,12 +473,14 @@ class GameData(Response):
         self.nb_agents = nb_agents
         self.nb_goods = nb_goods
         self.tx_fee = tx_fee
-        self.agent_pbks = agent_pbks
-        self.agent_names = agent_names
-        self.good_pbks = good_pbks
+        self.agent_pbk_to_name = agent_pbk_to_name
+        self.good_pbk_to_name = good_pbk_to_name
 
     @classmethod
     def from_pb(cls, obj: tac_pb2.TACController.GameData, public_key: str, crypto: Crypto) -> 'GameData':
+        agent_pbk_to_name = {pair.first: pair.second for pair in obj.agent_pbk_to_name}
+        good_pbk_to_name = {pair.first: pair.second for pair in obj.good_pbk_to_name}
+
         return GameData(public_key,
                         crypto,
                         obj.money,
@@ -475,9 +489,8 @@ class GameData(Response):
                         obj.nb_agents,
                         obj.nb_goods,
                         obj.tx_fee,
-                        obj.agent_pbks,
-                        obj.agent_names,
-                        obj.good_pbks)
+                        agent_pbk_to_name,
+                        good_pbk_to_name)
 
     def to_pb(self) -> tac_pb2.TACController.Message:
         msg = tac_pb2.TACController.GameData()
@@ -487,9 +500,10 @@ class GameData(Response):
         msg.nb_agents = self.nb_agents
         msg.nb_goods = self.nb_goods
         msg.tx_fee = self.tx_fee
-        msg.agent_pbks.extend(self.agent_pbks)
-        msg.agent_names.extend(self.agent_names)
-        msg.good_pbks.extend(self.good_pbks)
+        agent_pbk_to_name_pairs = [_make_str_str_pair(agent_pbk, agent_name) for agent_pbk, agent_name in self.agent_pbk_to_name.items()]
+        msg.agent_pbk_to_name.extend(agent_pbk_to_name_pairs)
+        good_pbk_to_name_pairs = [_make_str_str_pair(good_pbk, good_name) for good_pbk, good_name in self.good_pbk_to_name.items()]
+        msg.good_pbk_to_name.extend(good_pbk_to_name_pairs)
         envelope = tac_pb2.TACController.Message()
         envelope.game_data.CopyFrom(msg)
         return envelope
@@ -502,9 +516,8 @@ class GameData(Response):
             nb_agents=self.nb_agents,
             nb_goods=self.nb_goods,
             tx_fee=self.tx_fee,
-            agent_pbks=self.agent_pbks,
-            agent_names=self.agent_names,
-            good_pbks=self.good_pbks
+            agent_pbk_to_name=self.agent_pbk_to_name,
+            good_pbk_to_name=self.good_pbk_to_name
         )
 
     def __eq__(self, other):
@@ -515,9 +528,8 @@ class GameData(Response):
             self.nb_agents == other.nb_agents and \
             self.nb_goods == other.nb_goods and \
             self.tx_fee == other.tx_fee and \
-            self.agent_pbks == other.agent_pbks and \
-            self.agent_names == other.agent_names and \
-            self.good_pbks == other.good_pbks
+            self.agent_pbk_to_name == other.agent_pbk_to_name and \
+            self.good_pbk_to_name == other.good_pbk_to_name
 
 
 class TransactionConfirmation(Response):
@@ -557,9 +569,10 @@ class StateUpdate(Response):
         game_data.nb_agents = self.initial_state.nb_agents
         game_data.nb_goods = self.initial_state.nb_goods
         game_data.tx_fee = self.initial_state.tx_fee
-        game_data.agent_pbks.extend(self.initial_state.agent_pbks)
-        game_data.agent_names.extend(self.initial_state.agent_names)
-        game_data.good_pbks.extend(self.initial_state.good_pbks)
+        agent_pbk_to_name_pairs = [_make_str_str_pair(agent_pbk, agent_name) for agent_pbk, agent_name in self.initial_state.agent_pbk_to_name.items()]
+        game_data.agent_pbk_to_name.extend(agent_pbk_to_name_pairs)
+        good_pbk_to_name_pairs = [_make_str_str_pair(good_pbk, good_name) for good_pbk, good_name in self.initial_state.good_pbk_to_name.items()]
+        game_data.good_pbk_to_name.extend(good_pbk_to_name_pairs)
 
         msg.initial_state.CopyFrom(game_data)
 

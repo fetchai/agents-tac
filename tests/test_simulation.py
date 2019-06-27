@@ -110,10 +110,12 @@ class TestSimulation:
         game_initialization = finished_game.initialization
         game = Game(game_configuration, game_initialization)
 
-        current_score = np.asarray(game.get_scores())
+        scores_dict = game.get_scores()
+        current_score = np.asarray(list(scores_dict.values()))
         next_scores = None
         for tx in finished_game.transactions:
             game.settle_transaction(tx)
-            next_scores = np.asarray(game.get_scores())
+            scores_dict = game.get_scores()
+            next_scores = np.asarray(list(scores_dict.values()))
             assert not (next_scores < current_score).any()
             current_score = next_scores

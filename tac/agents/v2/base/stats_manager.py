@@ -53,6 +53,7 @@ class StatsManager(object):
 
         self._search_start_time = {}  # type: Dict[int, datetime.datetime]
         self._search_timedelta = {}  # type: Dict[int, datetime.timedelta]
+        self._search_result_counts = {}  # type: Dict[int, int]
 
         self._self_initiated_dialogue_stats = {EndState.SUCCESSFUL: 0,
                                                EndState.DECLINED_CFP: 0,
@@ -75,6 +76,8 @@ class StatsManager(object):
         """
         Adds dialogue endstate stats.
 
+        :param end_state: the end state of the dialogue
+        :param is_self_initiated: whether the dialogue is initiated by the agent or the opponent
         :return: None
         """
         if is_self_initiated:
@@ -86,41 +89,74 @@ class StatsManager(object):
         """
         Adds a search id and start time.
 
+        :param search_id: the search id
         :return: None
         """
         assert search_id not in self._search_start_time
         self._search_start_time[search_id] = datetime.datetime.now()
 
-    def search_end(self, search_id: int) -> None:
+    def search_end(self, search_id: int, nb_search_results: int) -> None:
         """
         Adds a search id and end time.
 
+        :param search_id: the search id
+        :param nb_search_results: the number of agents returned in the search result
         :return: None
         """
         assert search_id in self._search_start_time
         assert search_id not in self._search_timedelta
         self._search_timedelta[search_id] = (datetime.datetime.now() - self._search_start_time[search_id]).total_seconds() * 1000
+        self._search_result_counts[search_id] = nb_search_results
 
-    def avg_search_time(self) -> int:
+    def avg_search_time(self) -> float:
         """
         Avg the search timedeltas
 
         :return: avg search time in seconds
         """
-        timedeltas = [v for v in self._search_timedelta.values()]
+        timedeltas = list(self._search_timedelta.values())
         if len(timedeltas) == 0:
             result = 0
         else:
             result = sum(timedeltas) / len(timedeltas)
         return result
 
+    def avg_search_result_counts(self) -> float:
+        """
+        Avg the search result counts
+
+        :return: avg search result counts
+        """
+        counts = list(self._search_result_counts.values())
+        if len(counts) == 0:
+            result = 0
+        else:
+            result = sum(counts) / len(counts)
+        return result
+
     def negotiation_metrics_self(self) -> np.ndarray:
+        """
+        Get the negotiation metrics on self initiated dialogues.
+
+        :return: an array containing the metrics
+        """
         return self._negotiation_metrics(self.self_initiated_dialogue_stats)
 
     def negotiation_metrics_other(self) -> np.ndarray:
+        """
+        Get the negotiation metrics on other initiated dialogues.
+
+        :return: an array containing the metrics
+        """
         return self._negotiation_metrics(self.other_initiated_dialogue_stats)
 
     def _negotiation_metrics(self, dialogue_stats: Dict[EndState, int]) -> np.ndarray:
+        """
+        Get the negotiation metrics.
+
+        :param dialogue_stats: the dialogue statistics
+        :return: an array containing the metrics
+        """
         result = np.zeros((4), dtype=np.int)
         result[0] = dialogue_stats[EndState.SUCCESSFUL]
         result[1] = dialogue_stats[EndState.DECLINED_CFP]
