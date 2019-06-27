@@ -9,8 +9,10 @@ from tac.gui.dashboards.agent import AgentDashboard
 
 class BaselineAgent(ParticipantAgent):
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int, strategy: Strategy, services_interval: int = 10, pending_transaction_timeout: int = 30, dashboard: Optional[AgentDashboard] = None):
-        super().__init__(name, oef_addr, oef_port, strategy, services_interval, pending_transaction_timeout, dashboard)
+    def __init__(self, name: str, oef_addr: str, oef_port: int, strategy: Strategy, services_interval: int = 10,
+                 pending_transaction_timeout: int = 30, dashboard: Optional[AgentDashboard] = None,
+                 private_key_pem_path: Optional[str] = None):
+        super().__init__(name, oef_addr, oef_port, strategy, services_interval, pending_transaction_timeout, dashboard, private_key_pem_path)
 
 
 def _parse_arguments():
@@ -38,7 +40,7 @@ if __name__ == '__main__':
         dashboard = None
 
     strategy = BaselineStrategy(register_as=RegisterAs(args.register_as), search_for=SearchFor(args.search_for), is_world_modeling=args.is_world_modeling)
-    agent = BaselineAgent(args.name, args.oef_addr, args.oef_port, strategy, args.services_interval, args.pending_transaction_timeout, dashboard)
+    agent = BaselineAgent(args.name, args.oef_addr, args.oef_port, strategy, args.services_interval, args.pending_transaction_timeout, dashboard, args.private_key)
 
     try:
         agent.start()
