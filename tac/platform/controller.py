@@ -349,7 +349,7 @@ class GetStateUpdateHandler(RequestHandler):
         else:
             transactions = self.controller_agent.game_handler.confirmed_transaction_per_participant[request.public_key]  # type: List[Transaction]
             initial_game_data = self.controller_agent.game_handler.game_data_per_participant[request.public_key]  # type: GameData
-            return StateUpdate(request.public_key, initial_game_data, transactions)
+            return StateUpdate(request.public_key, self.controller_agent.crypto, initial_game_data, transactions)
 
 
 class ControllerDispatcher(object):

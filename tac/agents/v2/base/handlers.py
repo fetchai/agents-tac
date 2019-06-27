@@ -98,6 +98,8 @@ class ControllerHandler(ControllerActions, ControllerReactions):
                     self.on_start(response)
                 elif isinstance(response, Cancelled):
                     self.on_cancelled()
+                elif isinstance(response, StateUpdate):
+                    self.on_state_update(response)
             elif self.game_instance.game_phase == GamePhase.GAME:
                 if isinstance(response, TransactionConfirmation):
                     self.on_transaction_confirmed(response)
@@ -116,9 +118,9 @@ class OEFHandler(OEFActions, OEFReactions):
     Handles the message exchange with the OEF.
     """
 
-    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', name: str):
+    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', name: str, rejoin: bool = False):
         OEFActions.__init__(self, crypto, liveness, game_instance, out_box, name)
-        OEFReactions.__init__(self, crypto, liveness, game_instance, out_box, name)
+        OEFReactions.__init__(self, crypto, liveness, game_instance, out_box, name, rejoin)
 
     def handle_oef_message(self, msg: OEFMessage) -> None:
         """
