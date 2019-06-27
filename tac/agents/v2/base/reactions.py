@@ -112,11 +112,7 @@ class ControllerReactions(ControllerReactionInterface):
 
         :return: None
         """
-        self.game_instance.reset()
-        self.game_instance.init(state_update.initial_state, state_update.crypto.public_key)
-        self.game_instance._game_phase = GamePhase.GAME
-        for tx in state_update.transactions:
-            self.game_instance.agent_state.update(tx, state_update.initial_state.tx_fee)
+        self.game_instance.on_state_update(state_update, self.crypto.public_key)
 
         dashboard = self.game_instance.dashboard
         if dashboard is not None:

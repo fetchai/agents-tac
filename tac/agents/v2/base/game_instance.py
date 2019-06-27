@@ -32,7 +32,7 @@ from tac.agents.v2.base.stats_manager import StatsManager
 from tac.gui.dashboards.agent import AgentDashboard
 from tac.platform.game import AgentState, WorldState, GameConfiguration
 from tac.helpers.misc import build_query, get_goods_quantities_description
-from tac.platform.protocol import GameData
+from tac.platform.protocol import GameData, StateUpdate
 
 
 class GamePhase(Enum):
@@ -122,22 +122,16 @@ class GameInstance:
             opponent_pbks.remove(agent_pbk)
             self._world_state = WorldState(opponent_pbks, self.game_configuration.good_pbks, self.initial_agent_state)
 
-    def reset(self) -> None:
+    def on_state_update(self, state_update: StateUpdate, agent_pbk: str) -> None:
         """
-        Reset the game instance.
+        Update the game instance with a State Update from the controller.
 
         :return: None
         """
-        self.controller_pbk = None
-        self._search = Search()
-        self._dialogues = Dialogues()
-        self._game_phase = GamePhase.PRE_GAME
-        self._game_configuration = None
-        self._initial_agent_state = None
-        self._agent_state = None
-        self._world_state = None
-        self.goods_supplied_description = None
-        self.goods_demanded_description = None
+        self.init(state_update.initial_state, agent_pbk)
+        self._game_phase = GamePhase.GAME
+        for tx in state_update.transactions:
+            self.agent_state.update(tx, state_update.initial_state.tx_fee)
 
     @property
     def strategy(self) -> Strategy:
