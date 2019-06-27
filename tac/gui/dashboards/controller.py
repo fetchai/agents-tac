@@ -108,7 +108,7 @@ class ControllerDashboard(Dashboard):
         keys, score_history = self.game_stats.score_history()
 
         window_name = "score_history"
-        self.viz.line(X=keys, Y=score_history, env=self.env_name, win=window_name,
+        self.viz.line(X=np.arange(score_history.shape[0]), Y=score_history, env=self.env_name, win=window_name,
                       opts=dict(
                           legend=[self.game_stats.game.configuration.agent_pbk_to_name[agent_pbk] for agent_pbk in keys],
                           title="Scores",
@@ -120,7 +120,7 @@ class ControllerDashboard(Dashboard):
         keys, balance_history = self.game_stats.balance_history()
 
         window_name = "balance_history"
-        self.viz.line(X=keys, Y=balance_history, env=self.env_name, win=window_name,
+        self.viz.line(X=np.arange(balance_history.shape[0]), Y=balance_history, env=self.env_name, win=window_name,
                       opts=dict(
                           legend=[self.game_stats.game.configuration.agent_pbk_to_name[agent_pbk] for agent_pbk in keys],
                           title="Balance history",
@@ -156,7 +156,7 @@ class ControllerDashboard(Dashboard):
         keys, eq_vs_current_score = self.game_stats.eq_vs_current_score()
 
         window_name = "eq_vs_current_score"
-        self.viz.line(X=keys, Y=eq_vs_current_score, env=self.env_name, win=window_name,
+        self.viz.line(X=np.arange(eq_vs_current_score.shape[0]), Y=eq_vs_current_score, env=self.env_name, win=window_name,
                       opts=dict(
                           legend=['eq_score', 'current_score'],
                           title="Equilibrium vs Current Score",
@@ -168,7 +168,7 @@ class ControllerDashboard(Dashboard):
         keys, adjusted_score = self.game_stats.adjusted_score()
 
         window_name = "adjusted_score"
-        self.viz.line(X=keys, Y=adjusted_score, env=self.env_name, win=window_name,
+        self.viz.line(X=np.arange(adjusted_score.shape[0]), Y=adjusted_score, env=self.env_name, win=window_name,
                       opts=dict(
                           legend=['adjusted_score'],
                           title="Adjusted Score",

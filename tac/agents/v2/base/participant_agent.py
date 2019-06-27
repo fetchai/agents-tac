@@ -122,4 +122,3 @@ class ParticipantAgent(Agent):
         self.oef_handler.rejoin = rejoin
         super().start()
         self.oef_handler.rejoin = False
-

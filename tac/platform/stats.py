@@ -17,7 +17,7 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple, List
 
 import numpy as np
 import matplotlib
@@ -66,7 +66,7 @@ class GameStats:
 
         return result
 
-    def score_history(self) -> np.ndarray:
+    def score_history(self) -> Tuple[List[str], np.ndarray]:
         """
         Compute the history of the scores for every agent.
         To do so, we need to simulate the game again, by settling transactions one by one
@@ -96,7 +96,7 @@ class GameStats:
 
         return keys, result
 
-    def balance_history(self):
+    def balance_history(self) -> Tuple[List[str], np.ndarray]:
         nb_transactions = len(self.game.transactions)
         nb_agents = self.game.configuration.nb_agents
         result = np.zeros((nb_transactions + 1, nb_agents), dtype=np.int32)
@@ -117,7 +117,7 @@ class GameStats:
 
         return keys, result
 
-    def price_history(self):
+    def price_history(self) -> np.ndarray:
         nb_transactions = len(self.game.transactions)
         nb_goods = self.game.configuration.nb_goods
         result = np.zeros((nb_transactions + 1, nb_goods), dtype=np.float32)
@@ -140,12 +140,11 @@ class GameStats:
         :return: None
         """
 
-        history = self.score_history()
+        keys, history = self.score_history()
 
         plt.clf()
         plt.plot(history)
-        agent_pbks = self.game.configuration.agent_pbks
-        plt.legend(agent_pbks, loc="best")
+        plt.legend([self.game.configuration.agent_pbk_to_name[agent_pbk] for agent_pbk in keys], loc="best")
         plt.xlabel("Transactions")
         plt.ylabel("Score")
 
@@ -186,7 +185,7 @@ class GameStats:
 
         return result
 
-    def eq_vs_current_score(self) -> np.ndarray:
+    def eq_vs_current_score(self) -> Tuple[List[str], np.ndarray]:
         """
         Compute the equilibrium score of each agent and display it together with the current score.
 
@@ -226,7 +225,7 @@ class GameStats:
 
         return keys, result
 
-    def adjusted_score(self) -> np.ndarray:
+    def adjusted_score(self) -> Tuple[List[str], np.ndarray]:
         """
         Compute the adjusted score of each agent.
 

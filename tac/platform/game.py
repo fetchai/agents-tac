@@ -97,19 +97,19 @@ class GameConfiguration:
 
     @property
     def agent_pbks(self) -> List[str]:
-        return self._agent_pbk_to_name.keys()
+        return list(self._agent_pbk_to_name.keys())
 
     @property
     def agent_names(self):
-        return self._agent_pbk_to_name.values()
+        return list(self._agent_pbk_to_name.values())
 
     @property
     def good_pbks(self) -> List[str]:
-        return self._good_pbk_to_name.keys()
+        return list(self._good_pbk_to_name.keys())
 
     @property
     def good_names(self) -> List[str]:
-        return self._good_pbk_to_name.values()
+        return list(self._good_pbk_to_name.values())
 
     def _check_consistency(self):
         """
