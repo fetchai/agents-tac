@@ -118,8 +118,8 @@ class ParticipantAgent(Agent):
         super().stop()
         self.game_instance.lock_manager.stop()
 
-    def rejoin(self) -> None:
-        self.oef_handler.rejoin = True
+    def start(self, rejoin: bool = False) -> None:
+        self.oef_handler.rejoin = rejoin
         super().start()
         self.oef_handler.rejoin = False
 
