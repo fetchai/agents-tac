@@ -106,11 +106,12 @@ class ControllerDashboard(Dashboard):
 
     def _update_plot_scores(self):
         keys, score_history = self.game_stats.score_history()
+        agent_names = [self.game_stats.game.configuration.agent_pbk_to_name[agent_pbk] for agent_pbk in keys]
 
         window_name = "score_history"
         self.viz.line(X=np.arange(score_history.shape[0]), Y=score_history, env=self.env_name, win=window_name,
                       opts=dict(
-                          legend=[self.game_stats.game.configuration.agent_pbk_to_name[agent_pbk] for agent_pbk in keys],
+                          legend=agent_names,
                           title="Scores",
                           xlabel="Transactions",
                           ylabel="Score")
@@ -118,11 +119,12 @@ class ControllerDashboard(Dashboard):
 
     def _update_plot_balance_history(self):
         keys, balance_history = self.game_stats.balance_history()
+        agent_names = [self.game_stats.game.configuration.agent_pbk_to_name[agent_pbk] for agent_pbk in keys]
 
         window_name = "balance_history"
         self.viz.line(X=np.arange(balance_history.shape[0]), Y=balance_history, env=self.env_name, win=window_name,
                       opts=dict(
-                          legend=[self.game_stats.game.configuration.agent_pbk_to_name[agent_pbk] for agent_pbk in keys],
+                          legend=agent_names,
                           title="Balance history",
                           xlabel="Transactions",
                           ylabel="Money")
@@ -141,40 +143,43 @@ class ControllerDashboard(Dashboard):
                       )
 
     def _update_plot_eq_vs_mean_price(self):
-        eq_vs_mean_price = self.game_stats.eq_vs_mean_price()
+        good_names, eq_vs_mean_price = self.game_stats.eq_vs_mean_price()
 
         window_name = "eq_vs_mean_price"
-        self.viz.line(X=np.arange(eq_vs_mean_price.shape[0]), Y=eq_vs_mean_price, env=self.env_name, win=window_name,
-                      opts=dict(
-                          legend=['eq_price', 'mean_price'],
-                          title="Equilibrium vs Mean Prices",
-                          xlabel="Goods",
-                          ylabel="Price")
-                      )
+        self.viz.bar(X=eq_vs_mean_price, env=self.env_name, win=window_name,
+                     opts=dict(
+                         legend=['eq_price', 'mean_price'],
+                         title="Equilibrium vs Mean Prices",
+                         xlabel="Goods",
+                         ylabel="Price",
+                         rownames=good_names)
+                     )
 
     def _update_plot_eq_vs_current_score(self):
         keys, eq_vs_current_score = self.game_stats.eq_vs_current_score()
+        agent_names = [self.agent_pbk_to_name[agent_pbk] for agent_pbk in keys]
 
         window_name = "eq_vs_current_score"
-        self.viz.line(X=np.arange(eq_vs_current_score.shape[0]), Y=eq_vs_current_score, env=self.env_name, win=window_name,
-                      opts=dict(
-                          legend=['eq_score', 'current_score'],
-                          title="Equilibrium vs Current Score",
-                          xlabel="Agents",
-                          ylabel="Score")
-                      )
+        self.viz.bar(X=eq_vs_current_score, env=self.env_name, win=window_name,
+                     opts=dict(
+                         legend=['eq_score', 'current_score'],
+                         title="Equilibrium vs Current Score",
+                         xlabel="Agents",
+                         ylabel="Score",
+                         rownames=agent_names)
+                     )
 
     def _update_adjusted_score(self):
         keys, adjusted_score = self.game_stats.adjusted_score()
 
         window_name = "adjusted_score"
-        self.viz.line(X=np.arange(adjusted_score.shape[0]), Y=adjusted_score, env=self.env_name, win=window_name,
-                      opts=dict(
-                          legend=['adjusted_score'],
-                          title="Adjusted Score",
-                          xlabel="Agents",
-                          ylabel="Score")
-                      )
+        self.viz.bar(X=adjusted_score, env=self.env_name, win=window_name,
+                     opts=dict(
+                         title="Adjusted Score",
+                         xlabel="Agents",
+                         ylabel="Score",
+                         rownames=[self.agent_pbk_to_name[agent_pbk] for agent_pbk in keys])
+                     )
 
     def __enter__(self):
         self.start()
