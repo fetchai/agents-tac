@@ -30,8 +30,8 @@ def parse_arguments():
     parser.add_argument("--private-key", default=None, help="Path to a file containing a private key in PEM format.")
     parser.add_argument("--rejoin", action="store_true", default=False, help="Whether the agent is joining a running TAC.")
     parser.add_argument("--gui", action="store_true", help="Show the GUI.")
-    parser.add_argument("--visdom_addr", type=str, default="localhost", help="Show the GUI.")
-    parser.add_argument("--visdom_port", type=int, default=8097, help="Show the GUI.")
+    parser.add_argument("--visdom_addr", type=str, default="localhost", help="IP address to the Visdom server")
+    parser.add_argument("--visdom_port", type=int, default=8097, help="Port of the Visdom server")
 
     return parser.parse_args()
 
