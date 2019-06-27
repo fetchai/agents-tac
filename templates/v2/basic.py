@@ -43,6 +43,7 @@ def parse_arguments():
     parser.add_argument("--is-world-modeling", type=bool, default=False, help="Whether the agent uses a workd model or not.")
     parser.add_argument("--services-interval", type=int, default=10, help="The number of seconds to wait before doing another search.")
     parser.add_argument("--pending-transaction-timeout", type=int, default=30, help="The timeout in seconds to wait for pending transaction/negotiations.")
+    parser.add_argument("--private-key", default=None, help="Path to a file containing a private key in PEM format.")
     parser.add_argument("--gui", action="store_true", help="Show the GUI.")
     parser.add_argument("--visdom_addr", type=str, default="localhost", help="Show the GUI.")
     parser.add_argument("--visdom_port", type=int, default=8097, help="Show the GUI.")
@@ -60,7 +61,8 @@ def main():
 
     strategy = BaselineStrategy(register_as=RegisterAs(args.register_as), search_for=SearchFor(args.search_for), is_world_modeling=args.is_world_modeling)
     agent = BaselineAgent(name=args.name, oef_addr=args.oef_addr, oef_port=args.oef_port, strategy=strategy,
-                          services_interval=args.services_interval, pending_transaction_timeout=args.pending_transaction_timeout, dashboard=dashboard)
+                          services_interval=args.services_interval, pending_transaction_timeout=args.pending_transaction_timeout,
+                          dashboard=dashboard, private_key_pem_path=args.private_key)
 
     try:
         agent.start()
