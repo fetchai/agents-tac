@@ -37,12 +37,13 @@ logger = logging.getLogger(__name__)
 class LockManager(object):
     """Class to handle pending proposals/acceptances and locks."""
 
-    def __init__(self, agent_name: str, pending_transaction_timeout: int = 30):
+    def __init__(self, agent_name: str, pending_transaction_timeout: int = 30, task_timeout: float = 2.0):
         """
         Initialize a LockManager.
 
         :param baseline_agent: The baseline agent the manager refers to.
         :param pending_transaction_timeout: seconds to wait before a transaction/message can be removed from any pool.
+        :param task_timeout: seconds to sleep for the task
         """
         self._agent_name = agent_name
 
@@ -56,6 +57,7 @@ class LockManager(object):
         self.pending_transaction_timeout = pending_transaction_timeout
         self._cleanup_locks_task = None
         self._cleanup_locks_task_is_running = False
+        self._cleanup_locks_task_timeout = task_timeout
 
         # type: Deque[Tuple[datetime.datetime, Tuple[DIALOGUE_LABEL, MESSAGE_ID]]]
         self._last_update_for_pending_messages = deque()
@@ -72,7 +74,7 @@ class LockManager(object):
         If they have been there for too much time, remove them.
         """
         while self._cleanup_locks_task_is_running:
-            time.sleep(2.0)
+            time.sleep(self._cleanup_locks_task_timeout)
             self._cleanup_pending_messages()
             self._cleanup_pending_transactions()
 

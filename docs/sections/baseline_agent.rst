@@ -125,3 +125,9 @@ Trade can break down at various stages in the negotiation due to the :class:`~ta
 .. mermaid:: ../_static/diagrams/fipa_negotiation_3.mmd
     :align: center
     :caption: An unsuccessful FIPA negotiation between two agents breaking down after cfp.
+
+
+Agent Speed
+-----------
+
+There are two parameters of the :class:`~tac.agents.v2.base.participant_agent.ParticipantAgent` which affect the agent speed directly. First, the `in_box_timeout` parameter specifies the duration in (fractions of) seconds for which the :class:`~tac.agents.v2.mail.InBox` times out. Second, the `services_interval` parameter specifies the length of the interval at which the agent updates its services on the OEF and searches for services on the OEF. Lowering this parameter leads to more frequent updates and searches and therefore higher number of negotiations initiated by the agent.

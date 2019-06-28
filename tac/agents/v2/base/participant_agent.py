@@ -41,6 +41,7 @@ class ParticipantAgent(Agent):
     def __init__(self, name: str,
                  oef_addr: str,
                  oef_port: int,
+                 in_box_timeout: float,
                  strategy: Strategy,
                  services_interval: int = 10,
                  pending_transaction_timeout: int = 30,
@@ -51,6 +52,7 @@ class ParticipantAgent(Agent):
         :param name: the name of the agent.
         :param oef_addr: the TCP/IP address of the OEF node.
         :param oef_port: the TCP/IP port of the OEF node.
+        :param in_box_timeout: the timeout in seconds during which the in box sleeps.
         :param strategy: the strategy object that specify the behaviour during the competition.
         :param services_interval: the number of seconds between different searches.
         :param pending_transaction_timeout: the timeout for cleanup of pending negotiations and unconfirmed transactions.
@@ -59,7 +61,7 @@ class ParticipantAgent(Agent):
         """
         super().__init__(name, oef_addr, oef_port, private_key_pem_path)
         self.mail_box = FIPAMailBox(self.crypto.public_key, oef_addr, oef_port)
-        self.in_box = InBox(self.mail_box)
+        self.in_box = InBox(self.mail_box, in_box_timeout)
         self.out_box = OutBox(self.mail_box)
 
         self._is_competing = False  # type: bool

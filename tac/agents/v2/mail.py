@@ -92,12 +92,17 @@ class InBox(object):
     Temporarily stores messages for the agent.
     """
 
-    def __init__(self, mail_box: MailBox):
+    def __init__(self, mail_box: MailBox, timeout: float = 1.0):
         self._mail_box = mail_box
+        self._timeout = timeout
 
     @property
     def in_queue(self) -> Queue:
         return self._mail_box.in_queue
+
+    @property
+    def timeout(self) -> float:
+        return self._timeout
 
     def get_wait(self) -> AgentMessage:
         """
@@ -118,7 +123,7 @@ class InBox(object):
         """
         logger.debug("Checks for message from the in queue...")
         try:
-            msg = self.in_queue.get(block=True, timeout=1)
+            msg = self.in_queue.get(block=True, timeout=self.timeout)
             logger.debug("Incoming message type: type={}".format(type(msg)))
             return msg
         except Empty:

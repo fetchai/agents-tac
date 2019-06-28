@@ -9,7 +9,7 @@ from tac.gui.dashboards.agent import AgentDashboard
 
 class BaselineAgent(ParticipantAgent):
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int, strategy: Strategy, services_interval: int = 10,
+    def __init__(self, name: str, oef_addr: str, oef_port: int, in_box_timeout: int, strategy: Strategy, services_interval: int = 10,
                  pending_transaction_timeout: int = 30, dashboard: Optional[AgentDashboard] = None,
                  private_key_pem_path: Optional[str] = None):
         super().__init__(name, oef_addr, oef_port, strategy, services_interval, pending_transaction_timeout, dashboard, private_key_pem_path)
@@ -20,6 +20,7 @@ def _parse_arguments():
     parser.add_argument("--name", type=str, default="baseline_agent", help="Name of the agent.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=10000, help="TCP/IP port of the OEF Agent")
+    parser.add_argument("--in-box-timeout", type=float, default=1.0, help="The timeout in seconds during which the in box sleeps.")
     parser.add_argument("--register-as", choices=['seller', 'buyer', 'both'], default='both', help="The string indicates whether the baseline agent registers as seller, buyer or both on the oef.")
     parser.add_argument("--search-for", choices=['sellers', 'buyers', 'both'], default='both', help="The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.")
     parser.add_argument("--is-world-modeling", type=bool, default=False, help="Whether the agent uses a workd model or not.")
@@ -40,7 +41,7 @@ if __name__ == '__main__':
         dashboard = None
 
     strategy = BaselineStrategy(register_as=RegisterAs(args.register_as), search_for=SearchFor(args.search_for), is_world_modeling=args.is_world_modeling)
-    agent = BaselineAgent(args.name, args.oef_addr, args.oef_port, strategy, args.services_interval, args.pending_transaction_timeout, dashboard, args.private_key)
+    agent = BaselineAgent(args.name, args.oef_addr, args.oef_port, args.in_box_timeout, strategy, args.services_interval, args.pending_transaction_timeout, dashboard, args.private_key)
 
     try:
         agent.start()
