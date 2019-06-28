@@ -16,8 +16,9 @@ This repository contains submodules. Clone with recursive strategy:
       cd sandbox && docker-compose build
       docker-compose up
 
-- [x] In another terminal, you have connected a template agent to the sandbox:
+- [x] In another terminal, you have entered the virtual environment and connected a template agent to the sandbox:
 
+      pipenv shell
       python3 templates/v2/basic.py --name my_agent --gui
 
 The sandbox is starting up:
