@@ -47,10 +47,13 @@ message TACController {
         enum ErrorCode {
             GENERIC_ERROR = 0;
             REQUEST_NOT_VALID = 1;
-            AGENT_ALREADY_REGISTERED = 2;
-            AGENT_NOT_REGISTERED = 3;
-            TRANSACTION_NOT_VALID = 4;
-            TRANSACTION_NOT_MATCHING = 5;
+            AGENT_PBK_ALREADY_REGISTERED = 2;
+            AGENT_NAME_ALREADY_REGISTERED = 3;
+            AGENT_NOT_REGISTERED = 4;
+            TRANSACTION_NOT_VALID = 5;
+            TRANSACTION_NOT_MATCHING = 6;
+            AGENT_NAME_NOT_IN_WHITELIST = 7;
+            COMPETITION_NOT_RUNNING = 8;
         }
 
         ErrorCode error_code = 1;

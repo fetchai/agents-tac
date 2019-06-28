@@ -73,6 +73,7 @@ class ErrorCode(Enum):
     TRANSACTION_NOT_VALID = 5
     TRANSACTION_NOT_MATCHING = 6
     AGENT_NAME_NOT_IN_WHITELIST = 7
+    COMPETITION_NOT_RUNNING = 8
 
 
 _from_ec_to_msg = {
@@ -83,7 +84,8 @@ _from_ec_to_msg = {
     ErrorCode.AGENT_NOT_REGISTERED: "Agent not registered.",
     ErrorCode.TRANSACTION_NOT_VALID: "Error in checking transaction",
     ErrorCode.TRANSACTION_NOT_MATCHING: "The transaction request does not match with a previous transaction request with the same id.",
-    ErrorCode.AGENT_NAME_NOT_IN_WHITELIST: "Agent name not in whitelist."
+    ErrorCode.AGENT_NAME_NOT_IN_WHITELIST: "Agent name not in whitelist.",
+    ErrorCode.COMPETITION_NOT_RUNNING: "The competition is not running yet."
 }  # type: Dict[ErrorCode, str]
 
 
