@@ -41,15 +41,17 @@ class SearchTime(Enum):
 class StatsManager(object):
     """Class to handle agent stats."""
 
-    def __init__(self, dashboard):
+    def __init__(self, dashboard, task_timeout: float = 2.0):
         """
         Initialize a StatsManager.
 
         :param dashboard: The dashboard.
+        :param task_timeout: seconds to sleep for the task
         """
         self.dashboard = dashboard
         self._update_stats_task_is_running = False
         self._update_stats_task = None
+        self._update_stats_task_timeout = task_timeout
 
         self._search_start_time = {}  # type: Dict[int, datetime.datetime]
         self._search_timedelta = {}  # type: Dict[int, datetime.timedelta]
@@ -192,5 +194,5 @@ class StatsManager(object):
         :return: None
         """
         while self._update_stats_task_is_running:
-            time.sleep(3.0)
+            time.sleep(self._update_stats_task_timeout)
             self.dashboard.update_from_stats_manager(self, append=True)

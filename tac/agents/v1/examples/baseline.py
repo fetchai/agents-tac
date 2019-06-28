@@ -83,10 +83,13 @@ class BaselineAgent(NegotiationAgent):
     to their marginal utility and buying goods at a price plus fee equal or below their marginal utility.
     """
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int = 10000, register_as: RegisterAs = RegisterAs.BOTH, search_for: SearchFor = SearchFor.BOTH, is_world_modeling: bool = False, pending_transaction_timeout: int = 30, **kwargs):
+    def __init__(self, name: str, oef_addr: str, oef_port: int = 10000,
+                 register_as: RegisterAs = RegisterAs.BOTH, search_for: SearchFor = SearchFor.BOTH,
+                 is_world_modeling: bool = False, pending_transaction_timeout: int = 30, timeout: float = 0.5, **kwargs):
         super().__init__(name, oef_addr, oef_port, is_world_modeling, **kwargs)
         self._register_as = register_as
         self._search_for = search_for
+        self._timeout = timeout
 
         self.goods_supplied_description = None
         self.goods_demanded_description = None
@@ -143,9 +146,9 @@ class BaselineAgent(NegotiationAgent):
         if self.goods_supplied_description is not None:
             self.unregister_service(1, self.goods_supplied_description)
 
-        time.sleep(0.5)
+        time.sleep(self._timeout)
         self._register_services()
-        time.sleep(0.5)
+        time.sleep(self._timeout)
         self._search_services()
 
     def on_cancelled(self) -> None:

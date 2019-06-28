@@ -20,7 +20,7 @@ from tac.platform.controller import ControllerAgent, TACParameters
 def _init_baseline_agents(n: int, version: str, oef_addr: str, oef_port: int) -> Union[List[BaselineAgentV1], List[BaselineAgentV2]]:
     if version == "v1":
         return [BaselineAgentV1("baseline_{:02}".format(i), "127.0.0.1", 10000,
-                                search_for='both', register_as='both', pending_transaction_timeout=120,
+                                search_for=SearchFor.BOTH, register_as=RegisterAs.BOTH, pending_transaction_timeout=120,
                                 loop=asyncio.new_event_loop()) for i in range(n)]
     elif version == "v2":
         return [BaselineAgentV2("baseline_{:02}".format(i), "127.0.0.1", 10000,
