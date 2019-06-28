@@ -25,13 +25,13 @@ from oef.messages import CFP, Propose, Accept, Decline, Message as ByteMessage, 
 from oef.utils import Context
 
 from tac.agents.v2.agent import Liveness
-from tac.agents.v2.base.behaviours import FIPABehaviour
 from tac.agents.v2.base.dialogues import Dialogue
 from tac.agents.v2.base.helpers import dialogue_label_from_transaction_id
 from tac.agents.v2.base.game_instance import GameInstance, GamePhase
 from tac.agents.v2.base.stats_manager import EndState
 from tac.agents.v2.base.interfaces import ControllerReactionInterface, OEFSearchReactionInterface, \
     DialogueReactionInterface
+from tac.agents.v2.base.negotiation_behaviours import FIPABehaviour
 from tac.agents.v2.mail import OutBox, OutContainer
 from tac.helpers.crypto import Crypto
 from tac.helpers.misc import TAC_SUPPLY_DATAMODEL_NAME
@@ -292,7 +292,7 @@ class DialogueReactions(DialogueReactionInterface):
         self.out_box = out_box
         self.name = name
         self.dialogues = game_instance.dialogues
-        self.behaviour = FIPABehaviour(crypto, game_instance, name)
+        self.negotiation_behaviour = FIPABehaviour(crypto, game_instance, name)
 
     def on_new_dialogue(self, msg: AgentMessage) -> None:
         """
@@ -304,7 +304,7 @@ class DialogueReactions(DialogueReactionInterface):
         is_seller = msg.query.model.name == TAC_SUPPLY_DATAMODEL_NAME
         dialogue = self.dialogues.create_opponent_initiated(msg.destination, msg.dialogue_id, is_seller)
         logger.debug("[{}]: saving dialogue (as {}): dialogue_id={}".format(self.name, dialogue.role, dialogue.dialogue_label.dialogue_id))
-        results = self.handle(msg, dialogue)
+        results = self._handle(msg, dialogue)
         for result in results:
             self.out_box.out_queue.put(result)
 
@@ -317,7 +317,7 @@ class DialogueReactions(DialogueReactionInterface):
         """
         dialogue = self.dialogues.get_dialogue(msg, self.crypto.public_key)
 
-        results = self.handle(msg, dialogue)
+        results = self._handle(msg, dialogue)
         for result in results:
             self.out_box.out_queue.put(result)
 
@@ -332,7 +332,7 @@ class DialogueReactions(DialogueReactionInterface):
         result = ByteMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination, b'This message belongs to an unidentified dialogue.', Context())
         self.out_box.out_queue.put(result)
 
-    def handle(self, msg: AgentMessage, dialogue: Dialogue) -> List[AgentMessage]:
+    def _handle(self, msg: AgentMessage, dialogue: Dialogue) -> List[AgentMessage]:
         """
         Handles a message according to the defined behaviour.
 
@@ -343,15 +343,15 @@ class DialogueReactions(DialogueReactionInterface):
         dialogue.incoming_extend([msg])
         results = []
         if isinstance(msg, CFP):
-            result = self.behaviour.on_cfp(msg, dialogue)
+            result = self.negotiation_behaviour.on_cfp(msg, dialogue)
             results = [result]
         elif isinstance(msg, Propose):
-            result = self.behaviour.on_propose(msg, dialogue)
+            result = self.negotiation_behaviour.on_propose(msg, dialogue)
             results = [result]
         elif isinstance(msg, Accept):
-            results = self.behaviour.on_accept(msg, dialogue)
+            results = self.negotiation_behaviour.on_accept(msg, dialogue)
         elif isinstance(msg, Decline):
-            result = self.behaviour.on_decline(msg, dialogue)
+            result = self.negotiation_behaviour.on_decline(msg, dialogue)
             results = [result]
         dialogue.outgoing_extend(results)
         return results

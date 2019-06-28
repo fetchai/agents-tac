@@ -14,6 +14,7 @@ In the following sections, we will see how an agent can play the game and improv
 3. how a transaction can be submitted to the controller agent;
 4. how to negotiate with other trading agents.
 
+
 Game data
 ----------
 
@@ -28,15 +29,15 @@ More precisely, the :class:`~tac.platform.protocol.GameData` contains the follow
 - nb_agents (integer): the number of agents in the competition.
 - nb_goods (integer): the number of goods in the competition.
 - tx_fee (float): the transaction fee for every trade.
-- agent_pbks (list of strings): the public key of each agent.
-- agent_names (list of strings): the name of each agent.
-- good_pbks (list of strings): the public key of each good.
+- agent_pbk_to_name (dictionary[string, string]): mapping the public key of each agent to its name.
+- good_pbk_to_name (dictionary[string, string]): mapping the public key of each good to its name.
 
 .. note::
 
     An agent is not aware of:
         - the endowment of any other participant
         - the utility_params of any other participant
+
 
 Example
 ^^^^^^^
@@ -95,6 +96,7 @@ In the example:
 - ``agent_1`` score: :math:`200 + (80.0 \cdot f(1) + 20.0 \cdot f(2)) = 213.86`
 - ``agent_2`` score: :math:`100 + (30.0 \cdot f(4) + 70.0 \cdot f(1)) = 141.59`
 
+
 TAC Transaction
 ----------------
 
@@ -140,8 +142,6 @@ the transaction is *settled*, which implies:
 - The controller sends a :class:`~tac.platform.protocol.TransactionConfirmation` message to the buyer and the seller.
 
 
-.. uml:: ../_static/diagrams/
-
 Invalid transaction
 ^^^^^^^^^^^^^^^^^^^
 
@@ -152,6 +152,7 @@ A transaction is *valid* if:
 
 As soon as the controller agents receives an invalid transaction request, he will reply with
 a :class:`~tac.platform.protocol.Error` containing a message
+
 
 Negotiation with other agents
 ------------------------------

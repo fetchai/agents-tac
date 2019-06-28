@@ -24,6 +24,49 @@ The v2 architecture distinguishes between `actions` and `reactions`. Actions are
 We split both actions and reactions into three domains: :class:`~tac.agents.v2.base.actions.ControllerActions` and :class:`~tac.agents.v2.base.reactions.ControllerReactions`,  :class:`~tac.agents.v2.base.actions.OEFActions` and :class:`~tac.agents.v2.base.reactions.OEFReactions` and :class:`~tac.agents.v2.base.actions.DialogueActions` and :class:`~tac.agents.v2.base.reactions.DialogueReactions` related. Dialogues are agent to agent communications and maintained in :class:`~tac.agents.v2.base.dialogues.Dialogues`.
 
 
+Actions
+^^^^^^^
+
+The :class:`~tac.agents.v2.base.actions.ControllerActions` class includes the methods:
+
+- :meth:`~tac.agents.v2.base.actions.ControllerActions.request_state_update` to request the current agent state. This method is not utilised by :class:`~tac.agents.v2.base.participant_agent.ParticipantAgent`.
+
+The :class:`~tac.agents.v2.base.actions.OEFActions` class includes the methods:
+
+- :meth:`~tac.agents.v2.base.actions.OEFActions.search_for_tac` to search for the active :class:`~tac.platform.controller.ControllerAgent`;
+- :meth:`~tac.agents.v2.base.actions.OEFActions.update_services` to :meth:`~tac.agents.v2.base.actions.OEFActions.unregister_service` and :meth:`~tac.agents.v2.base.actions.OEFActions.register_service` on the OEF where the registration behaviour is specified via :class:`~tac.agents.v2.base.strategy.RegisterAs` in the :class:`~tac.agents.v2.base.strategy.Strategy`;
+- :meth:`~tac.agents.v2.base.actions.OEFActions.search_services` to search for services on the OEF where the search behaviour is specified via :class:`~tac.agents.v2.base.strategy.SearchFor` in the :class:`~tac.agents.v2.base.strategy.Strategy`.
+
+The :class:`~tac.agents.v2.base.participant_agent.ParticipantAgent` does not implement any methods in :class:`~tac.agents.v2.base.actions.DialogueActions`. This is because all dialogue related methods are reactions to events. In particular, the search for services (:meth:`~tac.agents.v2.base.actions.OEFActions.search_services`) initiates a chain of reactions leading to a dialogue.
+
+
+Reactions
+^^^^^^^^^
+
+The :class:`~tac.agents.v2.base.reactions.ControllerReactions` class includes the methods:
+
+- :meth:`~tac.agents.v2.base.reactions.ControllerReactions.on_start` which handles the 'start' event emitted by the controller;
+- :meth:`~tac.agents.v2.base.reactions.ControllerReactions.on_transaction_confirmed` which handles the 'on transaction confirmed' event emitted by the controller;
+- :meth:`~tac.agents.v2.base.reactions.ControllerReactions.on_state_update` which handles the 'on state update' event emitted by the controller;
+- :meth:`~tac.agents.v2.base.reactions.ControllerReactions.on_cancelled` which handles the cancellation of the competition from the TAC controller;
+- :meth:`~tac.agents.v2.base.reactions.ControllerReactions.on_tac_error` which handles the 'on tac error' event emitted by the controller;
+- :meth:`~tac.agents.v2.base.reactions.ControllerReactions.on_dialogue_error` which handles the 'dialogue error' event emitted by the controller.
+
+The :class:`~tac.agents.v2.base.reactions.OEFReactions` class includes the methods:
+
+- :meth:`~tac.agents.v2.base.reactions.OEFReactions.on_search_result` which handles the OEF search results;
+- :meth:`~tac.agents.v2.base.reactions.OEFReactions.on_oef_error` which handles the OEF error message;
+- :meth:`~tac.agents.v2.base.reactions.OEFReactions.on_dialogue_error` which handles the dialogue error message.
+
+The :class:`~tac.agents.v2.base.reactions.DialogueReactions` class includes the methods:
+
+- :meth:`~tac.agents.v2.base.reactions.DialogueReactions.on_new_dialogue` which handles reaction to a new dialogue;
+- :meth:`~tac.agents.v2.base.reactions.DialogueReactions.on_existing_dialogue` which handles reaction to an existing dialogue;
+- :meth:`~tac.agents.v2.base.reactions.DialogueReactions.on_unidentified_dialogue` which handles reaction to an unidentified dialogue.
+
+The message level handling of a negotiation dialogue is performed in :class:`~tac.agents.v2.base.negotiation_behaviours.FIPABehaviour`.
+
+
 Handlers
 --------
 
@@ -67,7 +110,7 @@ The :class:`~tac.agents.v2.base.participant_agent.ParticipantAgent` can search f
 Negotiation
 ------------
 
-The :class:`~tac.agents.v2.base.participant_agent.ParticipantAgent` implements the FIPA negotiation protocol. A FIPA negotiation starts with a call for proposal (:class:`~oef.messages.CFP`) which contains a :class:`~oef.query.Query` referencing the services which are demanded or supplied by the sending agent. The receiving agent then responds, if it implements the FIPA negotiation protocol, with a suitable proposal (:class:`~oef.messages.Propose`) which contains a list of :class:`~oef.schema.Description` objects (think individual proposals). The first agent responds to the proposal with either a :class:`~oef.messages.Decline` or an :class:`~oef.messages.Accept`. Assuming the agent accepts, it will also send the :class:`~tac.platform.protocol.Transaction` to the :class:`~tac.platform.controller.ControllerAgent`. Finally, the second agent can close the negotiation by responding with a matching :class:`~oef.messages.Accept` and a submission of the :class:`~tac.platform.protocol.Transaction` to the :class:`~tac.platform.controller.ControllerAgent`. The controller only settles a transaction if it receives matching transactions from each one of the two trading parties referenced in the transaction.
+The :class:`~tac.agents.v2.base.participant_agent.ParticipantAgent` implements the FIPA negotiation protocol in :class:`~tac.agents.v2.base.negotiation_behaviours.FIPABehaviour`. A FIPA negotiation starts with a call for proposal (:class:`~oef.messages.CFP`) which contains a :class:`~oef.query.Query` referencing the services which are demanded or supplied by the sending agent. The receiving agent then responds, if it implements the FIPA negotiation protocol, with a suitable proposal (:class:`~oef.messages.Propose`) which contains a list of :class:`~oef.schema.Description` objects (think individual proposals). The first agent responds to the proposal with either a :class:`~oef.messages.Decline` or an :class:`~oef.messages.Accept`. Assuming the agent accepts, it will also send the :class:`~tac.platform.protocol.Transaction` to the :class:`~tac.platform.controller.ControllerAgent`. Finally, the second agent can close the negotiation by responding with a matching :class:`~oef.messages.Accept` and a submission of the :class:`~tac.platform.protocol.Transaction` to the :class:`~tac.platform.controller.ControllerAgent`. The controller only settles a transaction if it receives matching transactions from each one of the two trading parties referenced in the transaction.
 
 .. mermaid:: ../_static/diagrams/fipa_negotiation_1.mmd
     :align: center
