@@ -1,4 +1,4 @@
-# tac-agents
+# agents-tac
 
 Competition and Agent Frameworks for the Trading Agents Competition
 
@@ -6,7 +6,7 @@ Competition and Agent Frameworks for the Trading Agents Competition
 
 This repository contains submodules. Clone with recursive strategy:
 
-	  git clone git@github.com:uvue-git/tac-agents.git --recursive && cd tac-agents
+	  git clone git@github.com:fetchai/agents-tac.git --recursive && cd agents-tac
 
 ## Quick Start
 
@@ -23,12 +23,12 @@ This repository contains submodules. Clone with recursive strategy:
 
 The sandbox is starting up:
 <p align="center">
-  <img src="https://github.com/uvue-git/tac-agents/blob/master/docs/sandbox.png?raw=true" alt="Sandbox" width="60%"/>
+  <img src="https://github.com/fetchai/agents-tac/blob/master/docs/sandbox.png?raw=true" alt="Sandbox" width="60%"/>
 </p>
 
 Once the controller has started the competition, connect the agent:
 <p align="center">
-  <img src="https://github.com/uvue-git/tac-agents/blob/master/docs/agent.png?raw=true" alt="Sandbox" width="60%"/>
+  <img src="https://github.com/fetchai/agents-tac/blob/master/docs/agent.png?raw=true" alt="Sandbox" width="60%"/>
 </p>
 
 The controller GUI at http://localhost:8097 provides real time insights:
