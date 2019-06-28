@@ -310,4 +310,3 @@ class GameInstance:
     def stop(self):
         self.lock_manager.stop()
         self.stats_manager.stop()
-        # self.dashboard.stop()
