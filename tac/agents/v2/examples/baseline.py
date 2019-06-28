@@ -9,10 +9,10 @@ from tac.gui.dashboards.agent import AgentDashboard
 
 class BaselineAgent(ParticipantAgent):
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int, in_box_timeout: int, strategy: Strategy, services_interval: int = 10,
+    def __init__(self, name: str, oef_addr: str, oef_port: int, strategy: Strategy, in_box_timeout: float = 1.0, services_interval: int = 10,
                  pending_transaction_timeout: int = 30, dashboard: Optional[AgentDashboard] = None,
                  private_key_pem_path: Optional[str] = None):
-        super().__init__(name, oef_addr, oef_port, strategy, services_interval, pending_transaction_timeout, dashboard, private_key_pem_path)
+        super().__init__(name, oef_addr, oef_port, strategy, in_box_timeout, services_interval, pending_transaction_timeout, dashboard, private_key_pem_path)
 
 
 def _parse_arguments():
@@ -41,7 +41,7 @@ if __name__ == '__main__':
         dashboard = None
 
     strategy = BaselineStrategy(register_as=RegisterAs(args.register_as), search_for=SearchFor(args.search_for), is_world_modeling=args.is_world_modeling)
-    agent = BaselineAgent(args.name, args.oef_addr, args.oef_port, args.in_box_timeout, strategy, args.services_interval, args.pending_transaction_timeout, dashboard, args.private_key)
+    agent = BaselineAgent(args.name, args.oef_addr, args.oef_port, strategy, args.in_box_timeout, args.services_interval, args.pending_transaction_timeout, dashboard, args.private_key)
 
     try:
         agent.start()
