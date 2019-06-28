@@ -306,3 +306,7 @@ class GameInstance:
         if proposals == []:
             proposals.append(candidate_proposals[0])  # TODO remove this
         return proposals
+
+    def stop(self):
+        self.lock_manager.stop()
+        self.stats_manager.stop()
