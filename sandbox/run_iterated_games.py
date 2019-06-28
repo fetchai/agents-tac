@@ -29,6 +29,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--nb_games", type=int, default=1, help="How many times the competition must be run.")
     parser.add_argument("--output_dir", type=str, default="TAC", help="The directory that will contain all the data for every game.")
     parser.add_argument("--seeds", nargs="+", type=int, default=[], help="The list of seeds to use for different games.")
+    parser.add_argument("--skip", action="store_true", help="Don't ask to user for continuation.")
+    parser.add_argument("--interval", type=int, default=5, help="The minimum number of minutes to wait for the next TAC."
+                                                                "E.g. if 5, and the time is 09:00, "
+                                                                "then the next competition will start at 09:05:00.")
     parser.add_argument("--config", type=str, default=None, help="The path for a config file (in JSON format). "
                                                                  "If None, use only command line arguments. "
                                                                  "The config file overrides the command line options.")
@@ -76,10 +80,9 @@ def run_sandbox(game_name: str, seed: int, output_data_dir: str) -> int:
     return return_code
 
 
-def wait_until_next_full_5_minutes():
+def wait_at_least_n_minutes(n: int):
     now = datetime.datetime.now()
-    minutes_to_wait = 5 - now.minute % 5
-    timedelta = datetime.timedelta(0, minutes_to_wait * 60 - now.second, - now.microsecond)
+    timedelta = datetime.timedelta(0, (n + 1) * 60 - now.second, - now.microsecond)
     start_time = now + timedelta
     seconds_to_sleep = (start_time - now).seconds
 
@@ -89,12 +92,14 @@ def wait_until_next_full_5_minutes():
     logging.info("... Done.")
 
 
-def run_games(game_names: List[str], seeds: List[int], output_data_dir: str = "data") -> List[str]:
+def run_games(game_names: List[str], seeds: List[int], output_data_dir: str = "data", interval: int = 5, skip: bool = False) -> List[str]:
     """
     Run a TAC for every game name in the input list.
     :param game_names: the name of the TAC competition to run.
     :param seeds: the list of random seeds
     :param output_data_dir: the output directory
+    :param interval: the number of minutes to wait between different TAC instances
+    :param skip: if True, the script skips asking the user for continuation.
     :return: the list of game names executed correctly (return code equal to 0)
     """
     assert len(game_names) == len(seeds)
@@ -102,11 +107,12 @@ def run_games(game_names: List[str], seeds: List[int], output_data_dir: str = "d
 
     for i, game_name in enumerate(game_names):
 
-        shall_continue: bool = ask_for_continuation(i)
-        if not shall_continue:
-            break
-        else:
-            wait_until_next_full_5_minutes()
+        if not skip:
+            shall_continue: bool = ask_for_continuation(i)
+            if not shall_continue:
+                break
+
+        wait_at_least_n_minutes(interval)
 
         logging.info("Start iteration {:02d}...".format(i + 1))
         return_code = run_sandbox(game_name, seeds[i], output_data_dir)
@@ -187,7 +193,7 @@ def main():
     shutil.rmtree(output_dir, ignore_errors=True)
 
     # do the job
-    correctly_executed_games: List[str] = run_games(game_names, seeds, output_data_dir=output_dir)
+    correctly_executed_games: List[str] = run_games(game_names, seeds, output_data_dir=output_dir, interval=args_dict["interval"], skip=args_dict["skip"])
 
     # process the output
     all_game_stats = collect_data(output_dir, correctly_executed_games)
