@@ -31,10 +31,10 @@ logger = logging.getLogger(__name__)
 
 def parse_arguments():
     parser = argparse.ArgumentParser("my_agent", description="Launch my agent.")
-    parser.add_argument("--public-key", default="my_agent", help="Public key of the agent.")
+    parser.add_argument("--name", default="my_baseline_agent", help="Name of the agent.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=10000, help="TCP/IP port of the OEF Agent")
-    parser.add_argument("--agent-gui", action="store_true", help="Show the GUI.")
+    parser.add_argument("--gui", action="store_true", help="Show the GUI.")
 
     return parser.parse_args()
 
@@ -44,15 +44,15 @@ class MyAgent(NegotiationAgent):
     My agent implementation.
     """
 
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000, service_registration_strategy: str = 'both', **kwargs):
-        super().__init__(public_key, oef_addr, oef_port, service_registration_strategy, **kwargs)
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000, **kwargs):
+        super().__init__(public_key, oef_addr, oef_port, **kwargs)
 
         raise NotImplementedError("Your agent must implement the interface defined in NegotiationAgent.")
 
 
 def main():
     args = parse_arguments()
-    agent = MyAgent(public_key=args.public_key, oef_addr=args.oef_addr, oef_port=args.oef_port)
+    agent = MyAgent(args.name, oef_addr=args.oef_addr, oef_port=args.oef_port)
 
     agent.connect()
     agent.search_for_tac()

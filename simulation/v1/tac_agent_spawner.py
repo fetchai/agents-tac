@@ -160,7 +160,7 @@ def initialize_baseline_agent(agent_name: str, oef_addr: str, oef_port: int, reg
     """
 
     # Notice: we create a new asyncio loop, so we can run it in an independent thread.
-    return BaselineAgent(agent_name, oef_addr, oef_port, loop=asyncio.new_event_loop(), register_as=register_as, search_for=search_for, is_world_modeling=is_world_modeling, pending_transaction_timeout=pending_transaction_timeout)
+    return BaselineAgent(agent_name, oef_addr, oef_port, loop=asyncio.new_event_loop(), register_as=RegisterAs(register_as), search_for=SearchFor(search_for), is_world_modeling=is_world_modeling, pending_transaction_timeout=pending_transaction_timeout)
 
 
 def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port: int, register_as: str, search_for: str, pending_transaction_timeout: int) -> List[BaselineAgent]:
@@ -228,7 +228,7 @@ def initialize_tac_parameters(arguments: argparse.Namespace) -> TACParameters:
     :param arguments: the argparse namespace
     :return: a TACParameters object
     """
-    whitelist = set(open(arguments.whitelist_file).read().splitlines(keepends=False)) if arguments.whitelist_file is not None else None
+    whitelist = set(open(arguments.whitelist_file).read().splitlines(keepends=False)) if arguments.whitelist_file else None
     start_datetime = dateutil.parser.parse(arguments.start_time)
     tac_parameters = TACParameters(min_nb_agents=arguments.nb_agents,
                                    money_endowment=arguments.money_endowment,
@@ -287,8 +287,8 @@ if __name__ == '__main__':
         baseline_agents = initialize_baseline_agents(nb_baseline_agents=arguments.nb_baseline_agents,
                                                      oef_addr=arguments.oef_addr,
                                                      oef_port=arguments.oef_port,
-                                                     register_as=RegisterAs(arguments.register_as),
-                                                     search_for=SearchFor(arguments.search_for),
+                                                     register_as=arguments.register_as,
+                                                     search_for=arguments.search_for,
                                                      pending_transaction_timeout=arguments.pending_transaction_timeout)
 
         tac_parameters = initialize_tac_parameters(arguments)
