@@ -8,6 +8,19 @@ This repository contains submodules. Clone with recursive strategy:
 
 	  git clone git@github.com:uvue-git/tac-agents.git --recursive && cd tac-agents
 
+## Quick Start
+
+  - [x] You have followed the steps under 'Dependencies' and 'Preliminaries' below
+  - [x] In one terminal, you have built the sandbox and then launched it:
+
+      cd sandbox && docker-compose build
+      docker-compose up
+
+- [x] In another terminal, you have connected a template agent to the sandbox:
+
+      python3 templates/v2/basic.py --name my_agent --gui
+
+
 ## Quick Links
 
 ### 📏 📏 📏 Specification 📏 📏 📏
