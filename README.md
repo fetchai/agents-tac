@@ -10,8 +10,8 @@ This repository contains submodules. Clone with recursive strategy:
 
 ## Quick Start
 
-  - [x] You have followed the steps under 'Dependencies' and 'Preliminaries' below
-  - [x] In one terminal, you have built the sandbox and then launched it:
+- [x] You have followed the steps under 'Dependencies' and 'Preliminaries' below
+- [x] In one terminal, you have built the sandbox and then launched it:
 
       cd sandbox && docker-compose build
       docker-compose up
@@ -20,7 +20,7 @@ This repository contains submodules. Clone with recursive strategy:
 
       python3 templates/v2/basic.py --name my_agent --gui
 
-![Sandbox Terminal](../master/docs/sandbox.png)<!-- .element width="50%" -->
+![Sandbox Terminal](../master/docs/sandbox.png =300x)<!-- .element width="50%" -->
 ![Agent Terminal](../master/docs/agent.png)
 ![Controller GUI](../master/docs/controller_gui.png)
 
