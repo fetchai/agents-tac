@@ -20,6 +20,9 @@ This repository contains submodules. Clone with recursive strategy:
 
       python3 templates/v2/basic.py --name my_agent --gui
 
+<p align="center">
+  <img src="https://github.com/uvue-git/tac-agents/blob/master/docs/sandbox.png?raw=true" alt="Sandbox" width="50%"/>
+</p>
 ![Sandbox Terminal](../master/docs/sandbox.png =300x)<!-- .element width="50%" -->
 ![Agent Terminal](../master/docs/agent.png)
 ![Controller GUI](../master/docs/controller_gui.png)
