@@ -5,6 +5,7 @@ Protocol for the Controller
 
 In this section we describe the protocol to use in order to interact with the controller agent.
 
+
 Introduction
 ------------
 
@@ -12,13 +13,14 @@ The messages are sent over the OEF
 `Message <https://fetchai.github.io/oef-sdk-python/user/communication-protocols.html#using-general-purpose-messages>`_,
 which is a general purpose message relay.
 
-It's up to the developer to set the ``msg_id`` and ``dialogue_id`` fields in the :func:`~oef.agents.Agent.send_message`
+It's up to the developer to set the ``msg_id`` and ``dialogue_id`` fields in the :meth:`~oef.agents.Agent.send_message`
 call. The controller agent will answer with the same ``dialogue_id`` (but a different ``msg_id``) and a target which references the ``msg_id`` of the agent's message.
 
 The type of messages in this protocol can be divided in two categories:
 
 - :class:`~tac.platform.protocol.Request`, from a TAC Agent to the Controller Agent;
 - :class:`~tac.platform.protocol.Response`, from the Controller Agent to a TAC Agent.
+
 
 Requests
 --------
@@ -27,6 +29,7 @@ Requests
 - :class:`~tac.platform.protocol.Unregister`
 - :class:`~tac.platform.protocol.Transaction`
 - :class:`~tac.platform.protocol.GetStateUpdate`
+
 
 Responses
 ---------
@@ -45,6 +48,7 @@ Error handling
 
 Errors and exception to the normal flow of execution may happen for many reasons. Here we list some and describe
 how to catch them.
+
 
 Handle Controller error
 ^^^^^^^^^^^^^^^^^^^^^^^^

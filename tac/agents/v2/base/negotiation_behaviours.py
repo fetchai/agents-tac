@@ -40,7 +40,7 @@ STARTING_MESSAGE_ID = 1
 
 class FIPABehaviour:
     """
-    Specifies FIPA behaviours
+    Specifies FIPA negotiation behaviours
     """
 
     def __init__(self, crypto: Crypto, game_instance: GameInstance, name: str):

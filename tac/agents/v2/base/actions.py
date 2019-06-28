@@ -26,6 +26,7 @@ from tac.agents.v2.base.interfaces import ControllerActionInterface, OEFSearchAc
 from tac.agents.v2.base.game_instance import GameInstance
 from tac.agents.v2.mail import OutBox, OutContainer
 from tac.helpers.crypto import Crypto
+from tac.platform.protocol import GetStateUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,8 @@ class ControllerActions(ControllerActionInterface):
 
         :return: None
         """
-        pass
+        msg = GetStateUpdate(self.crypto.public_key, self.crypto).serialize()
+        self.out_box.out_queue.put(OutContainer(message=msg, message_id=0, dialogue_id=0, destination=self.game_instance.controller_pbk))
 
 
 class OEFActions(OEFSearchActionInterface):

@@ -11,13 +11,6 @@ Subpackages
 Submodules
 ----------
 
-tac.gui.app module
-------------------
-
-.. automodule:: tac.gui.app
-   :members:
-   :undoc-members:
-   :show-inheritance:
 tac.gui.monitor module
 ----------------------
 

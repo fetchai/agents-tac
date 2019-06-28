@@ -24,6 +24,7 @@ In the following sections, we will explain:
 * how the trading phase will start;
 * how to handle errors (e.g. potential disconnection from the network)
 
+
 Setup of the controller agent
 ------------------------------
 
@@ -35,6 +36,7 @@ a special agent that manages the TAC. Specifically, the main tasks are:
 2. Generating the game data for each agent and triggering the start of the competition.
 3. Accepting/Rejecting valid/invalid transactions submitted by the trading agents.
 4. Providing agents with state updates (e.g. when the agent reconnects after a disconnection)
+
 
 Register as 'tac' service
 ---------------------------
@@ -52,6 +54,7 @@ registered participant
     :align: center
     :caption: The setup of the controller agent.
 
+
 How to register/unregister
 --------------------------
 
@@ -61,7 +64,6 @@ In order to complete a registration, a trading agent should do the following ste
 2. On the search result, send a :class:`~tac.platform.protocol.Register` message to the right TAC controller
 3. Waiting for the :class:`~tac.platform.protocol.GameData` message.
 
-
 .. note::
 
     All the communications toward the controller agent must be done
@@ -70,7 +72,7 @@ In order to complete a registration, a trading agent should do the following ste
     message should have in order to be understandable by the controller agent.
 
     E.g. for sending a :class:`~tac.platform.protocol.Register` message, you should first serialize the object by using
-    :func:`~tac.platform.protocol.Message.serialize`, and then send the byte-encoded message in a simple message.
+    :meth:`~tac.platform.protocol.Message.serialize`, and then send the byte-encoded message in a simple message.
 
 
 Search for controller agent
@@ -79,6 +81,7 @@ Search for controller agent
 .. mermaid:: ../_static/diagrams/search_controller.mmd
     :align: center
     :caption: TAC Agent search for controller agents.
+
 
 Register to TAC
 ^^^^^^^^^^^^^^^^
@@ -89,11 +92,9 @@ The message :class:`~tac.platform.protocol.Register` is an empty message. In ord
 the registration, the agent can unregister from the competition by sending the :class:`~tac.platform.protocol.Unregister`
 message.
 
-
 .. mermaid:: ../_static/diagrams/register_to_tac.mmd
     :align: center
     :caption: an agent registers to TAC.
-
 
 
 Start of the competition
@@ -110,15 +111,14 @@ The message :class:`~tac.platform.protocol.GameData` contains the following info
 - nb_agents (integer): the number of agents in the competition.
 - nb_goods (integer): the number of goods in the competition.
 - tx_fee (float): the transaction fee for every trade.
-- agent_pbks (list of strings): the public key of each agent.
-- agent_names (list of strings): the name of each agent.
-- good_pbks (list of strings): the public key of each good.
+- agent_pbk_to_name (dictionary[string, string]): mapping the public key of each agent to its name.
+- good_pbk_to_name (dictionary[string, string]): mapping the public key of each good to its name.
+
 
 Summary
 --------
 
 In the following, a transition diagram that sumarize the *registration phase*:
-
 
 .. mermaid:: ../_static/diagrams/registration.mmd
    :align: center
