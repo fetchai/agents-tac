@@ -23,6 +23,7 @@ cryptography = "*"
 base58 = "*"
 oef = "==0.4.0"
 sphinxcontrib-mermaid = "*"
+sphinxcontrib-apidoc = "*"
 sphinx = "*"
 nbsphinx = "*"
 
