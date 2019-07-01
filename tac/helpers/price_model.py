@@ -31,7 +31,7 @@ class PriceBandit(object):
         :param beta_b: the b parameter of the beta distribution
         """
         self.price = price
-        # we assume a uniform random prior
+        # default params imply a uniform random prior
         self.beta_a = beta_a
         self.beta_b = beta_b
 
