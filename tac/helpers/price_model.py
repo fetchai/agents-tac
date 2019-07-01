@@ -22,7 +22,7 @@ import numpy as np
 
 
 class PriceBandit(object):
-    def __init__(self, price: float):
+    def __init__(self, price: float, beta_a: float = 1.0, beta_b: float = 1.0):
         """
         Instantiate a price bandit object.
 
@@ -31,9 +31,9 @@ class PriceBandit(object):
         :param beta_b: the b parameter of the beta distribution
         """
         self.price = price
-        # we assume a uniform random prior
-        self.beta_a = 1
-        self.beta_b = 1
+        # default params imply a uniform random prior
+        self.beta_a = beta_a
+        self.beta_b = beta_b
 
     def sample(self) -> float:
         """

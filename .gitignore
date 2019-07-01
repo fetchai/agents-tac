@@ -129,3 +129,4 @@ sandbox/TAC
 sandbox/data
 
 *.pem
+!tests/data/priv.pem`
