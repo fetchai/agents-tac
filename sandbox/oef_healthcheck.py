@@ -19,7 +19,7 @@
 #
 # ------------------------------------------------------------------------------
 
-"""This script waits until the OEF is up and running"""
+"""This script waits until the OEF is up and running."""
 
 import argparse
 import asyncio

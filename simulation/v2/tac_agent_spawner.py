@@ -42,6 +42,7 @@ logger = logging.getLogger("tac")
 
 
 def parse_arguments():
+    """Arguments parsing."""
     parser = argparse.ArgumentParser("tac_agent_spawner")
     parser.add_argument("--nb-agents", type=int, default=10, help="(minimum) number of TAC agent to wait for the competition.")
     parser.add_argument("--nb-goods", type=int, default=10, help="Number of TAC agent to run.")
@@ -78,6 +79,7 @@ def parse_arguments():
 def _compute_competition_start_and_end_time(registration_timeout: int, competition_timeout: int) -> [datetime.datetime, datetime.datetime]:
     """
     Compute the start time of the competition.
+
     :param registration_timeout: seconds to wait for registration timeout.
     :param competition_timeout: seconds to wait for competition timeout.
     :return: list with the datetime of the start and end of the competition.
@@ -99,14 +101,15 @@ def initialize_controller_agent(name: str,
                                 gui: bool) -> ControllerAgent:
     """
     Initialize the controller agent.
+
     :param name: the name of the controller agent.
     :param oef_addr: the TCP/IP address of the OEF Node.
     :param oef_port: the TCP/IP port of the OEF Node.
     :param visdom_addr: TCP/IP address of the Visdom server.
     :param visdom_port: TCP/IP port of the Visdom server.
+    :param gui: whether or not the gui is selected.
     :return: the controller agent.
     """
-
     monitor = VisdomMonitor(visdom_addr=visdom_addr, visdom_port=visdom_port) if gui else NullMonitor()
     tac_controller = ControllerAgent(name=name, oef_addr=oef_addr, oef_port=oef_port, monitor=monitor)
 
@@ -118,7 +121,6 @@ def initialize_controller_agent(name: str,
 def _make_id(agent_id: int, is_world_modeling: bool, nb_agents: int) -> str:
     """
     Make the name for baseline agents from an integer identifier.
-    E.g. from '0' to 'tac_agent_00'.
 
     E.g.:
 
@@ -147,17 +149,18 @@ def _make_id(agent_id: int, is_world_modeling: bool, nb_agents: int) -> str:
 def initialize_baseline_agent(agent_name: str, oef_addr: str, oef_port: int, register_as: str, search_for: str, is_world_modeling: bool, services_interval: int, pending_transaction_timeout: int) -> BaselineAgent:
     """
     Initialize one baseline agent.
+
     :param agent_name: the name of the Baseline agent.
     :param oef_addr: IP address of the OEF Node.
     :param oef_port: TCP port of the OEF Node.
     :param register_as: the string indicates whether the baseline agent registers as seller, buyer or both on the oef.
     :param search_for: the string indicates whether the baseline agent searches for sellers, buyers or both on the oef.
     :param is_world_modeling: the boolean indicated whether the baseline agent models the world around her or not.
+    :param services_interval: the integer determining the interval in seconds at which services are updated and searched
     :param pending_transaction_timeout: seconds that baseline agents wait for transaction confirmations.
 
     :return: the baseline agent.
     """
-
     # Notice: we create a new asyncio loop, so we can run it in an independent thread.
     strategy = BaselineStrategy(register_as=RegisterAs(register_as), search_for=SearchFor(search_for), is_world_modeling=is_world_modeling)
     return BaselineAgent(agent_name, oef_addr, oef_port, strategy, services_interval=services_interval, pending_transaction_timeout=pending_transaction_timeout)
@@ -166,11 +169,13 @@ def initialize_baseline_agent(agent_name: str, oef_addr: str, oef_port: int, reg
 def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port: int, register_as: str, search_for: str, services_interval: int, pending_transaction_timeout: int) -> List[BaselineAgent]:
     """
     Initialize a list of baseline agents.
+
     :param nb_baseline_agents: number of agents to initialize.
     :param oef_addr: IP address of the OEF Node.
     :param oef_port: TCP port of the OEF Node.
     :param register_as: the string indicates whether the baseline agent registers as seller, buyer or both on the oef.
     :param search_for: the string indicates whether the baseline agent searches for sellers, buyers or both on the oef.
+    :param services_interval: the integer determining the interval in seconds at which services are updated and searched
     :param pending_transaction_timeout: seconds that baseline agents wait for transaction confirmations.
 
     :return: A list of baseline agents.
@@ -183,25 +188,40 @@ def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port:
 
 
 def run_baseline_agent(agent: BaselineAgent) -> None:
-    """Run a baseline agent."""
+    """
+    Run a baseline agent.
+
+    :param agent: an instance of the BaselineAgent
+    """
     agent.start()
 
 
 def run_controller(tac_controller: ControllerAgent, tac_parameters: TACParameters) -> None:
-    """Run a controller agent."""
+    """
+    Run a controller agent.
+
+    :param tac_controller: an instance of the ControllerAgent
+    :param tac_parameters: an instance of the TACParameters
+    """
     tac_controller.wait_and_start_competition(tac_parameters)
 
 
-def run_simulation(tac_controller: ControllerAgent, tac_parameters: TACParameters, baseline_agents: List[BaselineAgent]):
+def run_simulation(tac_controller: ControllerAgent, tac_parameters: TACParameters, baseline_agents: List[BaselineAgent]) -> None:
     """
-    Run the controller agent and all the baseline agents. More specifically:
+    Run the controller agent and all the baseline agents.
+
+    More specifically:
         - run a thread for every message processing loop (i.e. the one in `oef.core.OEFProxy.loop()`).
         - start the countdown for the start of the competition.
           See the method tac.agents.controller.ControllerAgent.timeout_competition()).
 
     Returns only when all the jobs are completed (e.g. the timeout job) or stopped (e.g. the processing loop).
-    """
 
+    :param tac_controller: an instance of the ControllerAgent
+    :param tac_parameters: an instance of the TACParameters
+    :param baseline_agents: a list of instances of BaselineAgent
+    :return: None
+    """
     # generate task for the controller
     controller_thread = Thread(target=run_controller, args=(tac_controller, tac_parameters))
 
@@ -223,6 +243,7 @@ def run_simulation(tac_controller: ControllerAgent, tac_parameters: TACParameter
 def initialize_tac_parameters(arguments: argparse.Namespace) -> TACParameters:
     """
     Initialize a TACParameters object.
+
     :param arguments: the argparse namespace
     :return: a TACParameters object
     """
@@ -246,7 +267,9 @@ def initialize_tac_parameters(arguments: argparse.Namespace) -> TACParameters:
 
 def _handling_end_of_simulation(tac_controller: 'ControllerAgent', arguments: argparse.Namespace) -> None:
     """
-    Handle the end of the simulation. In particular, If the controller has been initialized:
+    Handle the end of the simulation.
+
+    In particular, If the controller has been initialized:
     - save the simulation data
     - generate transition diagram, if enabled
     - plot data, if requested
