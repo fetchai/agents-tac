@@ -17,6 +17,9 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+
+"""A module containing miscellaneous methods and classes."""
+
 import datetime
 import logging
 import random
@@ -41,6 +44,7 @@ class TacError(Exception):
 def generate_transaction_id(agent_pbk: str, origin: str, dialogue_id: int, agent_is_seller: bool) -> str:
     """
     Generate a transaction id.
+
     :param agent_pbk: the pbk of the agent.
     :param origin: the public key of the message sender.
     :param dialogue_id: the dialogue id
@@ -53,9 +57,12 @@ def generate_transaction_id(agent_pbk: str, origin: str, dialogue_id: int, agent
     return transaction_id
 
 
-def determine_scaling_factor(money_endowment: int):
+def determine_scaling_factor(money_endowment: int) -> float:
     """
-    Computes the scaling factor based on the money amount.
+    Compute the scaling factor based on the money amount.
+
+    :param money_endowment: the endowment of money for the agent
+    :return: the scaling factor
     """
     scaling_factor = 10.0 ** (len(str(money_endowment)) - 1)
     return scaling_factor
@@ -63,7 +70,7 @@ def determine_scaling_factor(money_endowment: int):
 
 def generate_good_endowments(nb_goods: int, nb_agents: int, base_amount: int, uniform_lower_bound_factor: int, uniform_upper_bound_factor: int) -> List[List[int]]:
     """
-    Compute good endowments per agent. That is, a matrix of shape (nb_agents, nb_goods)
+    Compute good endowments per agent. That is, a matrix of shape (nb_agents, nb_goods).
 
     :param nb_goods: the number of goods.
     :param nb_agents: the number of agents.
@@ -101,6 +108,7 @@ def generate_utility_params(nb_agents: int, nb_goods: int, scaling_factor: float
 def _sample_utility_function_params(nb_goods: int, nb_agents: int, scaling_factor: float) -> List[List[float]]:
     """
     Sample utility function params for each agent.
+
     :param nb_goods: the number of goods
     :param nb_agents: the number of agents
     :param scaling_factor: a scaling factor for all the utility params generated.
@@ -128,6 +136,7 @@ def _sample_good_instances(nb_agents: int, nb_goods: int, base_amount: int,
                            uniform_lower_bound_factor: int, uniform_upper_bound_factor: int) -> List[int]:
     """
     Sample the number of instances for a good.
+
     :param nb_agents: the number of agents
     :param nb_goods: the number of goods
     :param base_amount: the base amount of instances per good
@@ -155,7 +164,7 @@ def generate_money_endowments(nb_agents: int, money_endowment: int) -> List[int]
 
 def generate_equilibrium_prices_and_holdings(endowments: List[List[int]], utility_function_params: List[List[float]], money_endowment: float, scaling_factor: float) -> (List[float], List[List[float]], List[float]):
     """
-    Computes the competitive equilibrium prices and allocation.
+    Compute the competitive equilibrium prices and allocation.
 
     :param endowments: endowments of the agents
     :param utility_function_params: utility function params of the agents (already scaled)
@@ -176,6 +185,7 @@ def generate_equilibrium_prices_and_holdings(endowments: List[List[int]], utilit
 def logarithmic_utility(utility_function_params: List[float], good_bundle: List[int]) -> float:
     """
     Compute agent's utility given her utility function params and a good bundle.
+
     :param utility_function_params: utility function params of the agent
     :param good_bundle: a bundle of goods with the quantity for each good
     :return: utility value
@@ -188,6 +198,7 @@ def logarithmic_utility(utility_function_params: List[float], good_bundle: List[
 def marginal_utility(utility_function_params: List[float], current_holdings: List[int], delta_holdings: List[int]) -> float:
     """
     Compute agent's utility given her utility function params and a good bundle.
+
     :param utility_function_params: utility function params of the agent
     :param current_holdings: a list of goods with the quantity for each good
     :param delta_holdings: a list of goods with the quantity for each good (can be positive or negative)
@@ -219,6 +230,7 @@ def build_datamodel(good_pbks: List[str], is_supply: bool) -> DataModel:
 def get_goods_quantities_description(good_pbks: List[str], good_quantities: List[int], is_supply: bool) -> Description:
     """
     Get the TAC description for supply or demand.
+
     That is, a description with the following structure:
     >>> description = {
     ...     "tac_good_0": 1,
@@ -255,7 +267,9 @@ def get_goods_quantities_description(good_pbks: List[str], good_quantities: List
 
 def build_query(good_pbks: Set[int], is_searching_for_sellers: bool) -> Query:
     """
-    Build the search query
+    Build buyer or seller search query.
+
+    Specifically, build the search query
         - to look for sellers if the agent is a buyer, or
         - to look for buyers if the agent is a seller.
 
@@ -283,7 +297,8 @@ def build_query(good_pbks: Set[int], is_searching_for_sellers: bool) -> Query:
 
 def from_iso_format(date_string: str) -> datetime.datetime:
     """
-    From string representation in ISO format to a datetime.datetime object
+    From string representation in ISO format to a datetime.datetime object.
+
     :param date_string: the string to parse.
     :return: the datetime object.
     """
@@ -293,6 +308,7 @@ def from_iso_format(date_string: str) -> datetime.datetime:
 def generate_good_pbk_to_name(nb_goods: int) -> Dict[str, str]:
     """
     Generate public keys for things.
+
     :param nb_goods: the number of things.
     :return: a dictionary mapping goods' public keys to names.
     """
@@ -301,14 +317,21 @@ def generate_good_pbk_to_name(nb_goods: int) -> Dict[str, str]:
     return {string_format.format(i) + '_pbk': string_format.format(i) for i in range(nb_goods)}
 
 
-def generate_html_table_from_dict(d: Dict[str, List[str]], title="") -> str:
+def generate_html_table_from_dict(dictionary: Dict[str, List[str]], title="") -> str:
+    """
+    Generate a html table from a dictionary.
+
+    :param dictionary: the dictionary
+    :param title: the title
+    :return: a html string
+    """
     style_tag = "<style>table, th, td{border: 1px solid black;padding:10px;}</style>"
     html_head = "<head>{}</head>".format(style_tag)
     title_tag = "<h2>{}</h2>".format(title) if title else ""
 
-    table_head = "<tr><th>{}</th></tr>".format("</th><th>".join(d.keys()))
+    table_head = "<tr><th>{}</th></tr>".format("</th><th>".join(dictionary.keys()))
     table_body = ""
-    for row in zip(*d.values()):
+    for row in zip(*dictionary.values()):
         table_row = "<tr><td>" + "</td><td>".join(row) + "</td></tr>"
         table_body += table_row
 
@@ -319,17 +342,20 @@ def generate_html_table_from_dict(d: Dict[str, List[str]], title="") -> str:
     return html_table
 
 
-def escape_html(s: str, quote=True) -> str:
+def escape_html(string: str, quote=True) -> str:
     """
     Replace special characters "&", "<" and ">" to HTML-safe sequences.
-    If the optional flag quote is true (the default), the quotation mark
+
+    :param string: the string
+    :param quote: If the optional flag quote is true (the default), the quotation mark
     characters, both double quote (") and single quote (') characters are also
     translated.
+    :return: the escaped string
     """
-    s = s.replace("&", "&amp;")  # Must be done first!
-    s = s.replace("<", "&lt;")
-    s = s.replace(">", "&gt;")
+    string = string.replace("&", "&amp;")  # Must be done first!
+    string = string.replace("<", "&lt;")
+    string = string.replace(">", "&gt;")
     if quote:
-        s = s.replace('"', "&quot;")
-        s = s.replace('\'', "&#x27;")
-    return s
+        string = string.replace('"', "&quot;")
+        string = string.replace('\'', "&#x27;")
+    return string
