@@ -17,18 +17,22 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+import logging
+import time
 from typing import Optional, Union
 
 from oef.messages import CFP, Decline, Propose, Accept, Message as SimpleMessage, \
     SearchResult, OEFErrorMessage, DialogueErrorMessage
 
 from tac.agents.v2.agent import Agent
-from tac.agents.v2.mail import FIPAMailBox, InBox, OutBox
 from tac.agents.v2.base.game_instance import GameInstance, GamePhase
-from tac.agents.v2.base.helpers import is_oef_message, is_controller_message
 from tac.agents.v2.base.handlers import DialogueHandler, ControllerHandler, OEFHandler
+from tac.agents.v2.base.helpers import is_oef_message, is_controller_message
 from tac.agents.v2.base.strategy import Strategy
+from tac.agents.v2.mail import FIPAMailBox, InBox, OutBox
 from tac.gui.dashboards.agent import AgentDashboard
+
+logger = logging.getLogger(__name__)
 
 OEFMessage = Union[SearchResult, OEFErrorMessage, DialogueErrorMessage]
 ControllerMessage = SimpleMessage
@@ -127,6 +131,17 @@ class ParticipantAgent(Agent):
         self.game_instance.stop()
 
     def start(self, rejoin: bool = False) -> None:
-        self.oef_handler.rejoin = rejoin
-        super().start()
-        self.oef_handler.rejoin = False
+        try:
+            self.oef_handler.rejoin = rejoin
+            super().start()
+            self.oef_handler.rejoin = False
+            return
+        except Exception as e:
+            logger.exception(e)
+            logger.debug("Stopping the agent...")
+            self.stop()
+
+        # here only if an error occurred
+        logger.debug("Trying to rejoin in 5 seconds...")
+        time.sleep(5.0)
+        self.start(rejoin=True)

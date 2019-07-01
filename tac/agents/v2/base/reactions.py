@@ -92,6 +92,11 @@ class ControllerReactions(ControllerReactionInterface):
         :return: None
         """
         logger.debug("[{}]: Received transaction confirmation from the controller: transaction_id={}".format(self.name, tx_confirmation.transaction_id))
+        if tx_confirmation.transaction_id not in self.game_instance.lock_manager.locks:
+            logger.debug("[{}]: transaction not found - ask the controller an update of the state.".format(self.name))
+            self._request_state_update()
+            return
+
         transaction = self.game_instance.lock_manager.pop_lock(tx_confirmation.transaction_id)
         self.game_instance.agent_state.update(transaction, self.game_instance.game_configuration.tx_fee)
         dialogue_label = dialogue_label_from_transaction_id(self.crypto.public_key, tx_confirmation.transaction_id)
@@ -152,6 +157,15 @@ class ControllerReactions(ControllerReactionInterface):
             self.liveness._is_stopped = True
         elif error.error_code == ErrorCode.REQUEST_NOT_VALID or error.error_code == ErrorCode.GENERIC_ERROR:
             logger.warning("[{}]: Check last request sent and investigate!".format(self.name))
+
+    def _request_state_update(self) -> None:
+        """
+        Request current agent state from TAC Controller.
+
+        :return: None
+        """
+        msg = GetStateUpdate(self.crypto.public_key, self.crypto).serialize()
+        self.out_box.out_queue.put(OutContainer(message=msg, message_id=0, dialogue_id=0, destination=self.game_instance.controller_pbk))
 
 
 class OEFReactions(OEFSearchReactionInterface):

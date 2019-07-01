@@ -176,6 +176,7 @@ class LockManager(object):
         :param dialogue: the dialogue associated with the proposal
         :param proposal_id: the message id of the proposal
         :param transaction: the transaction
+        :raise AssertionError: if the pending proposal is already present.
         :return: None
         """
         assert dialogue.dialogue_label not in self.pending_tx_proposals and proposal_id not in self.pending_tx_proposals[dialogue.dialogue_label]
@@ -188,6 +189,7 @@ class LockManager(object):
 
         :param dialogue: the dialogue associated with the proposal
         :param proposal_id: the message id of the proposal
+        :raise AssertionError: if the pending proposal is not present.
         :return: the transaction
         """
         assert dialogue.dialogue_label in self.pending_tx_proposals and proposal_id in self.pending_tx_proposals[dialogue.dialogue_label]
@@ -201,6 +203,7 @@ class LockManager(object):
         :param dialogue: the dialogue associated with the proposal
         :param proposal_id: the message id of the proposal
         :param transaction: the transaction
+        :raise AssertionError: if the pending acceptance is already present.
         :return: None
         """
         assert dialogue.dialogue_label not in self.pending_tx_acceptances and proposal_id not in self.pending_tx_acceptances[dialogue.dialogue_label]
@@ -213,6 +216,7 @@ class LockManager(object):
 
         :param dialogue: the dialogue associated with the proposal
         :param proposal_id: the message id of the proposal
+        :raise AssertionError: if the pending acceptance is not present.
         :return: the transaction
         """
         assert dialogue.dialogue_label in self.pending_tx_acceptances and proposal_id in self.pending_tx_acceptances[dialogue.dialogue_label]
@@ -225,6 +229,7 @@ class LockManager(object):
 
         :param transaction: the transaction
         :param as_seller: whether the agent is a seller or not
+        :raise AssertionError: if the transaction is already present.
         :return: None
         """
         transaction_id = transaction.transaction_id
@@ -241,6 +246,7 @@ class LockManager(object):
         Remove a lock (in the form of a transaction).
 
         :param transaction_id: the transaction id
+        :raise AssertionError: if the transaction with the given transaction id has not been found.
         :return: the transaction
         """
         assert transaction_id in self.locks
