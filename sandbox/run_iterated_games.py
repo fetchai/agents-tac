@@ -168,7 +168,7 @@ def collect_data(datadir: str, experiment_names: List[str]) -> List[GameStats]:
 
     :param datadir: path to the directory where the data of the experiments are saved.
     :param experiment_names: the names of the experiments
-    :return: a list of games
+    :return: a list of statistics about games
     """
     result = []
     for experiment_name in experiment_names:
