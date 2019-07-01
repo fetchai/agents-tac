@@ -35,7 +35,6 @@ from tac.agents.v2.base.strategy import RegisterAs, SearchFor
 from tac.agents.v2.examples.baseline import BaselineAgent
 from tac.agents.v2.examples.strategy import BaselineStrategy
 from tac.gui.monitor import VisdomMonitor, NullMonitor
-from tac.helpers.plantuml import plantuml_gen
 from tac.platform.controller import ControllerAgent, TACParameters
 from tac.platform.stats import GameStats
 
