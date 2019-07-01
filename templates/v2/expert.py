@@ -47,10 +47,10 @@ class MyAgent(Agent):
     My agent implementation.
     """
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int, in_box_timeout: float, private_key_pem_path: Optional[str] = None):
+    def __init__(self, name: str, oef_addr: str, oef_port: int, in_box_timeout: float = 1.0, private_key_pem_path: Optional[str] = None):
         super().__init__(name, oef_addr, oef_port, private_key_pem_path)
         self.mail_box = FIPAMailBox(self.crypto.public_key, oef_addr, oef_port)
-        self.in_box = InBox(self.mail_box, self.in_box_timeout)
+        self.in_box = InBox(self.mail_box, in_box_timeout)
         self.out_box = OutBox(self.mail_box)
 
         raise NotImplementedError("Your agent must implement the interface defined in Agent.")
