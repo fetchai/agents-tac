@@ -62,7 +62,7 @@ def parse_arguments():
     parser.add_argument("--pending-transaction-timeout", default=120, type=int, help="The amount of time (in seconds) the baseline agents wait until the transaction confirmation.")
     parser.add_argument("--register-as", choices=['seller', 'buyer', 'both'], default='both', help="The string indicates whether the baseline agent registers as seller, buyer or both on the oef.")
     parser.add_argument("--search-for", choices=['sellers', 'buyers', 'both'], default='both', help="The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.")
-    parser.add_argument("--uml", default=True, help="Plot uml file")
+    parser.add_argument("--gui", action="store_true", help="Enable the GUI.")
     parser.add_argument("--data-output-dir", default="data", help="The output directory for the simulation data.")
     parser.add_argument("--experiment-id", default=None, help="The experiment ID.")
     parser.add_argument("--visdom-addr", default="localhost", help="TCP/IP address of the Visdom server")
