@@ -39,7 +39,8 @@ def parse_arguments():
     parser.add_argument("--name", default="my_baseline_agent", help="Name of the agent.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=10000, help="TCP/IP port of the OEF Agent")
-    parser.add_argument("--in-box-timeout", type=float, default=1.0, help="The timeout in seconds during which the in box sleeps.")
+    parser.add_argument("--agent-timeout", type=float, default=1.0, help="The time in (fractions of) seconds to time out an agent between act and react.")
+    parser.add_argument("--max-reactions", type=int, default=100, help="The maximum number of reactions (messages processed) per call to react.")
     parser.add_argument("--register-as", choices=['seller', 'buyer', 'both'], default='both', help="The string indicates whether the baseline agent registers as seller, buyer or both on the oef.")
     parser.add_argument("--search-for", choices=['sellers', 'buyers', 'both'], default='both', help="The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.")
     parser.add_argument("--is-world-modeling", type=bool, default=False, help="Whether the agent uses a workd model or not.")
@@ -64,8 +65,8 @@ def main():
         dashboard = None
 
     strategy = BaselineStrategy(register_as=RegisterAs(args.register_as), search_for=SearchFor(args.search_for), is_world_modeling=args.is_world_modeling)
-    agent = BaselineAgent(name=args.name, oef_addr=args.oef_addr, oef_port=args.oef_port, in_box_timeout=args.in_box_timeout, strategy=strategy,
-                          services_interval=args.services_interval, pending_transaction_timeout=args.pending_transaction_timeout,
+    agent = BaselineAgent(name=args.name, oef_addr=args.oef_addr, oef_port=args.oef_port, agent_timeout=args.agent_timeout, strategy=strategy,
+                          max_reactions=args.max_reactions, services_interval=args.services_interval, pending_transaction_timeout=args.pending_transaction_timeout,
                           dashboard=dashboard, private_key_pem_path=args.private_key)
 
     try:

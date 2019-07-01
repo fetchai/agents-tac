@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 # ------------------------------------------------------------------------------
 #
 #   Copyright 2018-2019 Fetch.AI Limited
@@ -76,21 +75,21 @@ def parse_arguments():
     return arguments
 
 
-def _compute_competition_start_and_end_time(registration_timeout: int, competition_timeout: int) -> [datetime.datetime, datetime.datetime]:
-    """
-    Compute the start time of the competition.
+# def _compute_competition_start_and_end_time(registration_timeout: int, competition_timeout: int) -> [datetime.datetime, datetime.datetime]:
+#     """
+#     Compute the start time of the competition.
 
-    :param registration_timeout: seconds to wait for registration timeout.
-    :param competition_timeout: seconds to wait for competition timeout.
-    :return: list with the datetime of the start and end of the competition.
-    """
-    delta_now_to_start = datetime.timedelta(0, registration_timeout)
-    delta_start_to_end = datetime.timedelta(0, competition_timeout)
-    now = datetime.datetime.now()
+#     :param registration_timeout: seconds to wait for registration timeout.
+#     :param competition_timeout: seconds to wait for competition timeout.
+#     :return: list with the datetime of the start and end of the competition.
+#     """
+#     delta_now_to_start = datetime.timedelta(0, registration_timeout)
+#     delta_start_to_end = datetime.timedelta(0, competition_timeout)
+#     now = datetime.datetime.now()
 
-    start_time = now + delta_now_to_start
-    end_time = start_time + delta_start_to_end
-    return start_time, end_time
+#     start_time = now + delta_now_to_start
+#     end_time = start_time + delta_start_to_end
+#     return start_time, end_time
 
 
 def initialize_controller_agent(name: str,
