@@ -17,6 +17,9 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+
+"""Module wrapping the public and private key cryptography."""
+
 from typing import Optional
 
 import base58
@@ -43,11 +46,10 @@ CHOSEN_PBK_LENGTH = 160
 
 
 class Crypto(object):
+    """Class wrapping the public and private key cryptography."""
 
     def __init__(self, private_key_pem_path: Optional[str] = None):
-        """
-        Instantiate a crypto object.
-        """
+        """Instantiate a crypto object."""
         self._chosen_ec = ec.SECP384R1()
         self._chosen_hash = hashes.SHA256()
         self._private_key = self._generate_pk() if private_key_pem_path is None else self._load_pem_private_key_from_path(private_key_pem_path)
@@ -61,21 +63,25 @@ class Crypto(object):
     @property
     def public_key(self) -> str:
         """
-        Returns a 219 character public key in base58 format
+        Return a 219 character public key in base58 format.
+
+        :return: a public key string in base58 format
         """
         return self._public_key_b58
 
     @property
     def public_key_pem(self) -> bytes:
         """
-        Returns a PEM encoded public key in base64 format. It consists of an algorithm identifier and the public key as a bit string.
+        Return a PEM encoded public key in base64 format. It consists of an algorithm identifier and the public key as a bit string.
+
+        :return: a public key bytes string
         """
         return self._public_key_pem
 
     @property
     def fingerprint(self) -> str:
         """
-        Returns a 64 character fingerprint of the public key in hexadecimal format (32 bytes).
+        Return a 64 character fingerprint of the public key in hexadecimal format (32 bytes).
 
         :return: the fingerprint
         """
@@ -83,9 +89,9 @@ class Crypto(object):
 
     def _generate_pk(self) -> object:
         """
-        Generates a private key.
+        Generate a private key object.
 
-        :return: private key
+        :return: private key object
         """
         private_key = ec.generate_private_key(self._chosen_ec, default_backend())
         return private_key
@@ -107,16 +113,16 @@ class Crypto(object):
 
     def _compute_pbk(self) -> object:
         """
-        Derives the public key from the private key.
+        Derive the public key from the private key.
 
-        :return: public key
+        :return: public key object
         """
         public_key = self._private_key.public_key()
         return public_key
 
     def _pbk_obj_to_pem(self, pbk: object) -> bytes:
         """
-        Serializes the public key from object to bytes.
+        Serialize the public key from object to bytes.
 
         :param pbk: the public key as an object
 
@@ -127,7 +133,7 @@ class Crypto(object):
 
     def _pbk_pem_to_b64(self, pbk: bytes) -> bytes:
         """
-        Converts the public key from pem bytes string format to standard bytes string format.
+        Convert the public key from pem bytes string format to standard bytes string format.
 
         :param pbk: the public key as a bytes string (PEM base64)
 
@@ -138,7 +144,7 @@ class Crypto(object):
 
     def _pbk_b64_to_b58(self, pbk: bytes) -> str:
         """
-        Converts the public key from base64 to base58 string.
+        Convert the public key from base64 to base58 string.
 
         :param pbk: the public key as a bytes string (base64)
 
@@ -149,7 +155,7 @@ class Crypto(object):
 
     def _pbk_obj_to_b58(self, pbk: object) -> str:
         """
-        Converts the public key from object to string.
+        Convert the public key from object to string.
 
         :param pbk: the public key as an object
 
@@ -162,7 +168,7 @@ class Crypto(object):
 
     def _pbk_b58_to_b64(self, pbk: str) -> bytes:
         """
-        Converts the public key from base58 string to base64 bytes string.
+        Convert the public key from base58 string to base64 bytes string.
 
         :param pbk: the public key in base58
 
@@ -173,7 +179,7 @@ class Crypto(object):
 
     def _pbk_b64_to_pem(self, pbk: bytes) -> bytes:
         """
-        Converts the public key from standard bytes string format to pem bytes string format.
+        Convert the public key from standard bytes string format to pem bytes string format.
 
         :param pbk: the public key as a bytes string (base64)
 
@@ -187,7 +193,7 @@ class Crypto(object):
 
     def _pbk_b58_to_obj(self, pbk: str) -> object:
         """
-        Converts the public key from string (base58) to object.
+        Convert the public key from string (base58) to object.
 
         :param pbk: the public key as a string (base58)
 
@@ -211,7 +217,7 @@ class Crypto(object):
 
     def is_confirmed_integrity(self, data: bytes, signature: bytes, signer_pbk: str) -> bool:
         """
-        Confirrms the integrity of the data with respect to its signature.
+        Confirrm the integrity of the data with respect to its signature.
 
         :param data: the data to be confirmed
         :param signature: the signature associated with the data
@@ -230,7 +236,7 @@ class Crypto(object):
 
     def _hash_data(self, data: bytes) -> bytes:
         """
-        Hashes data.
+        Hash data.
 
         :param data: the data to be hashed
         :return: digest of the data
@@ -242,7 +248,7 @@ class Crypto(object):
 
     def _pbk_b64_to_hex(self, pbk: bytes) -> str:
         """
-        Hashes the public key to obtain a fingerprint.
+        Hash the public key to obtain a fingerprint.
 
         :return: the fingerprint in hex format
         """

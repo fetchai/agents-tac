@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+
+"""Module containing the agent dashboard and related classes."""
+
 import inspect
 import os
 from typing import Optional
@@ -19,8 +22,10 @@ DEFAULT_ENV_NAME = "tac_simulation_env_main"
 
 
 class TransactionTable(object):
+    """Class maintaining a html table of transactions."""
 
     def __init__(self):
+        """Instantiate a TransactionTable."""
         self.tx_table = dict()
         self.tx_table["#"] = []
         self.tx_table["Role"] = []
@@ -28,7 +33,14 @@ class TransactionTable(object):
         self.tx_table["Amount"] = []
         self.tx_table["Goods Exchanged"] = []
 
-    def add_transaction(self, tx: Transaction, agent_name: Optional[str] = None):
+    def add_transaction(self, tx: Transaction, agent_name: Optional[str] = None) -> None:
+        """
+        Add a transaction to the table.
+
+        :param tx: the Transaction object
+        :param agent_name: the name of the agent
+        :return: None
+        """
         self.tx_table["#"].append(str(len(self.tx_table["#"])))
         self.tx_table["Role"].append("Buyer" if tx.buyer else "Seller")
         self.tx_table["Counterparty"].append(agent_name if agent_name is not None else tx.counterparty[:5] + "..." + tx.counterparty[-5:])
@@ -38,7 +50,8 @@ class TransactionTable(object):
                                                           filter(lambda x: x[1] > 0,
                                                                  tx.quantities_by_good_pbk.items()))))
 
-    def to_html(self):
+    def to_html(self) -> str:
+        """Convert the table to html."""
         srcdoc = generate_html_table_from_dict(self.tx_table, title="Transactions")
         html_code = '<iframe srcdoc="{encoded_html}" style="{style}" />'.format(
             encoded_html=escape_html(srcdoc),
@@ -49,6 +62,7 @@ class TransactionTable(object):
 class AgentDashboard(Dashboard):
     """
     Class to manage a Visdom dashboard for the participant agent.
+
     It assumes that a Visdom server is running at the address and port provided in input
     (default: http://localhost:8097)
     """
@@ -57,6 +71,7 @@ class AgentDashboard(Dashboard):
                  visdom_addr: str = "localhost",
                  visdom_port: int = 8097,
                  env_name: Optional[str] = None):
+        """Instantiate an AgentDashboard."""
         super().__init__(visdom_addr, visdom_port, env_name)
 
         self.agent_name = agent_name
@@ -67,14 +82,23 @@ class AgentDashboard(Dashboard):
         self._transaction_window = None
 
     def init(self):
+        """Re-initiate the AgntDashboard."""
         self.viz.delete_env(self.env_name)
         self._transaction_window = self.viz.text(self._transaction_table.to_html(), env=self.env_name)
 
-    def add_transaction(self, new_tx: Transaction, agent_name: Optional[str] = None):
+    def add_transaction(self, new_tx: Transaction, agent_name: Optional[str] = None) -> None:
+        """
+        Add a transaction to the transaction table.
+
+        :param new_tx: a new transaction
+        :param agent_name: the agent name
+        :return: None
+        """
         self._transaction_table.add_transaction(new_tx, agent_name=agent_name)
         self.viz.text(self._transaction_table.to_html(), win=self._transaction_window, env=self.env_name)
 
-    def _update_holdings(self, agent_state: AgentState):
+    def _update_holdings(self, agent_state: AgentState) -> None:
+
         scaled_holdings = agent_state.current_holdings / np.sum(agent_state.current_holdings)
         scaled_utility_params = agent_state.utility_params / np.sum(agent_state.utility_params)
 
@@ -86,7 +110,7 @@ class AgentDashboard(Dashboard):
                              rownames=["Utilities", "Holdings"],
                              xlabel="Goods"))
 
-    def _update_score(self, agent_state: AgentState, append: bool = True):
+    def _update_score(self, agent_state: AgentState, append: bool = True) -> None:
 
         window_name = "{}_score_history".format(self.env_name)
         self.viz.line(X=[self._update_nb_agent_state], Y=[agent_state.get_score()], update="append" if append else "replace",
@@ -96,7 +120,7 @@ class AgentDashboard(Dashboard):
                           xlabel="Transactions",
                           ylabel="Score"))
 
-    def _update_balance(self, agent_state: AgentState, append: bool = True):
+    def _update_balance(self, agent_state: AgentState, append: bool = True) -> None:
 
         window_name = "{}_balance_history".format(self.env_name)
         self.viz.line(X=[self._update_nb_agent_state], Y=[agent_state.balance], env=self.env_name, win=window_name,
@@ -106,7 +130,7 @@ class AgentDashboard(Dashboard):
                           xlabel="Transactions",
                           ylabel="Score"))
 
-    def _update_avg_search_time(self, stats_manager: StatsManager, append: bool = True):
+    def _update_avg_search_time(self, stats_manager: StatsManager, append: bool = True) -> None:
 
         window_name = "{}_avg_search_time".format(self.env_name)
         self.viz.line(X=[self._update_nb_stats_manager], Y=[stats_manager.avg_search_time()], update="append" if append else "replace",
@@ -116,7 +140,7 @@ class AgentDashboard(Dashboard):
                           xlabel="Ticks",
                           ylabel="Avg Search Time"))
 
-    def _update_avg_search_result_counts(self, stats_manager: StatsManager, append: bool = True):
+    def _update_avg_search_result_counts(self, stats_manager: StatsManager, append: bool = True) -> None:
 
         window_name = "{}_avg_search_result_counts".format(self.env_name)
         self.viz.line(X=[self._update_nb_stats_manager], Y=[stats_manager.avg_search_result_counts()], update="append" if append else "replace",
@@ -126,7 +150,7 @@ class AgentDashboard(Dashboard):
                           xlabel="Ticks",
                           ylabel="Avg Search Result Counts"))
 
-    def _update_negotiation_metrics_self(self, stats_manager: StatsManager, append: bool = True):
+    def _update_negotiation_metrics_self(self, stats_manager: StatsManager, append: bool = True) -> None:
 
         window_name = "{}_negotiation_metrics_self".format(self.env_name)
         self.viz.line(X=[self._update_nb_stats_manager], Y=[stats_manager.negotiation_metrics_self()], update="append" if append else "replace",
@@ -137,7 +161,7 @@ class AgentDashboard(Dashboard):
                           xlabel="Ticks",
                           ylabel="Count"))
 
-    def _update_negotiation_metrics_other(self, stats_manager: StatsManager, append: bool = True):
+    def _update_negotiation_metrics_other(self, stats_manager: StatsManager, append: bool = True) -> None:
 
         window_name = "{}_negotiation_metrics_other".format(self.env_name)
         self.viz.line(X=[self._update_nb_stats_manager], Y=[stats_manager.negotiation_metrics_other()], update="append" if append else "replace",
@@ -148,7 +172,8 @@ class AgentDashboard(Dashboard):
                           xlabel="Ticks",
                           ylabel="Count"))
 
-    def update_from_agent_state(self, agent_state: AgentState, append: bool = True):
+    def update_from_agent_state(self, agent_state: AgentState, append: bool = True) -> None:
+        """Update the dashboard from the agent state."""
         if not self._is_running():
             raise Exception("Dashboard not running, update not allowed.")
 
@@ -157,7 +182,8 @@ class AgentDashboard(Dashboard):
         self._update_score(agent_state, append=append)
         self._update_balance(agent_state, append=append)
 
-    def update_from_stats_manager(self, stats_manager: StatsManager, append: bool = True):
+    def update_from_stats_manager(self, stats_manager: StatsManager, append: bool = True) -> None:
+        """Update the dashboard from the stats manager."""
         if not self._is_running():
             raise Exception("Dashboard not running, update not allowed.")
 

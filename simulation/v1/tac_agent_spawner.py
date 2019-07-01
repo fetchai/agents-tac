@@ -34,7 +34,6 @@ import math
 
 from tac.agents.v1.examples.baseline import BaselineAgent, RegisterAs, SearchFor
 from tac.gui.monitor import VisdomMonitor, NullMonitor
-from tac.helpers.plantuml import plantuml_gen
 from tac.platform.controller import ControllerAgent, TACParameters
 from tac.platform.stats import GameStats
 
@@ -42,6 +41,7 @@ logger = logging.getLogger("tac")
 
 
 def parse_arguments():
+    """Arguments parsing."""
     parser = argparse.ArgumentParser("tac_agent_spawner")
     parser.add_argument("--nb-agents", type=int, default=10, help="(minimum) number of TAC agent to wait for the competition.")
     parser.add_argument("--nb-goods", type=int, default=10, help="Number of TAC agent to run.")
@@ -60,10 +60,8 @@ def parse_arguments():
     parser.add_argument("--pending-transaction-timeout", default=120, type=int, help="The amount of time (in seconds) the baseline agents wait until the transaction confirmation.")
     parser.add_argument("--register-as", choices=['seller', 'buyer', 'both'], default='both', help="The string indicates whether the baseline agent registers as seller, buyer or both on the oef.")
     parser.add_argument("--search-for", choices=['sellers', 'buyers', 'both'], default='both', help="The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.")
-    parser.add_argument("--uml", default=True, help="Plot uml file")
     parser.add_argument("--data-output-dir", default="data", help="The output directory for the simulation data.")
     parser.add_argument("--experiment-id", default=None, help="The experiment ID.")
-    parser.add_argument("--plot", default=True, type=bool, help="Plot sequence of transactions and the changes in scores.")
     parser.add_argument("--gui", action="store_true", help="Enable the GUI.")
     parser.add_argument("--visdom-addr", default="localhost", help="TCP/IP address of the Visdom server")
     parser.add_argument("--visdom-port", default=8097, help="TCP/IP port of the Visdom server")
@@ -79,6 +77,7 @@ def parse_arguments():
 def _compute_competition_start_and_end_time(registration_timeout: int, competition_timeout: int) -> [datetime.datetime, datetime.datetime]:
     """
     Compute the start time of the competition.
+
     :param registration_timeout: seconds to wait for registration timeout.
     :param competition_timeout: seconds to wait for competition timeout.
     :return: list with the datetime of the start and end of the competition.
@@ -100,6 +99,7 @@ def initialize_controller_agent(name: str,
                                 gui: bool) -> ControllerAgent:
     """
     Initialize the controller agent.
+
     :param name: the name of the controller agent.
     :param oef_addr: the TCP/IP address of the OEF Node.
     :param oef_port: the TCP/IP port of the OEF Node.
@@ -107,7 +107,6 @@ def initialize_controller_agent(name: str,
     :param visdom_port: TCP/IP port of the Visdom server.
     :return: the controller agent.
     """
-
     monitor = VisdomMonitor(visdom_addr=visdom_addr, visdom_port=visdom_port) if gui else NullMonitor()
     tac_controller = ControllerAgent(name=name, oef_addr=oef_addr, oef_port=oef_port, monitor=monitor)
 
@@ -119,7 +118,6 @@ def initialize_controller_agent(name: str,
 def _make_id(agent_id: int, is_world_modeling: bool, nb_agents: int) -> str:
     """
     Make the name for baseline agents from an integer identifier.
-    E.g. from '0' to 'tac_agent_00'.
 
     E.g.:
 
@@ -148,6 +146,7 @@ def _make_id(agent_id: int, is_world_modeling: bool, nb_agents: int) -> str:
 def initialize_baseline_agent(agent_name: str, oef_addr: str, oef_port: int, register_as: str, search_for: str, is_world_modeling: bool, pending_transaction_timeout: int) -> BaselineAgent:
     """
     Initialize one baseline agent.
+
     :param agent_name: the name of the Baseline agent.
     :param oef_addr: IP address of the OEF Node.
     :param oef_port: TCP port of the OEF Node.
@@ -158,7 +157,6 @@ def initialize_baseline_agent(agent_name: str, oef_addr: str, oef_port: int, reg
 
     :return: the baseline agent.
     """
-
     # Notice: we create a new asyncio loop, so we can run it in an independent thread.
     return BaselineAgent(agent_name, oef_addr, oef_port, loop=asyncio.new_event_loop(), register_as=RegisterAs(register_as), search_for=SearchFor(search_for), is_world_modeling=is_world_modeling, pending_transaction_timeout=pending_transaction_timeout)
 
@@ -166,6 +164,7 @@ def initialize_baseline_agent(agent_name: str, oef_addr: str, oef_port: int, reg
 def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port: int, register_as: str, search_for: str, pending_transaction_timeout: int) -> List[BaselineAgent]:
     """
     Initialize a list of baseline agents.
+
     :param nb_baseline_agents: number of agents to initialize.
     :param oef_addr: IP address of the OEF Node.
     :param oef_port: TCP port of the OEF Node.
@@ -183,27 +182,44 @@ def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port:
 
 
 def run_baseline_agent(agent: BaselineAgent) -> None:
-    """Run a baseline agent."""
+    """
+    Run a baseline agent.
+
+    :param agent: an instance of BaselineAgent
+    :return: None
+    """
     agent.connect()
     agent.search_for_tac()
     agent.run()
 
 
 def run_controller(tac_controller: ControllerAgent, tac_parameters: TACParameters) -> None:
-    """Run a controller agent."""
+    """
+    Run a controller agent.
+
+    :param tac_controller: an instance of the ControllerAgent
+    :param tac_parameters: an instance of the TACParameters
+    :return: None
+    """
     tac_controller.wait_and_start_competition(tac_parameters)
 
 
-def run_simulation(tac_controller: ControllerAgent, tac_parameters: TACParameters, baseline_agents: List[BaselineAgent]):
+def run_simulation(tac_controller: ControllerAgent, tac_parameters: TACParameters, baseline_agents: List[BaselineAgent]) -> None:
     """
-    Run the controller agent and all the baseline agents. More specifically:
+    Run the controller agent and all the baseline agents.
+
+    More specifically:
         - run a thread for every message processing loop (i.e. the one in `oef.core.OEFProxy.loop()`).
         - start the countdown for the start of the competition.
           See the method tac.agents.controller.ControllerAgent.timeout_competition()).
 
     Returns only when all the jobs are completed (e.g. the timeout job) or stopped (e.g. the processing loop).
-    """
 
+    :param tac_controller: an instance of the ControllerAgent
+    :param tac_parameters: an instance of the TACParameters
+    :param baseline_agents: a list of instances of BaselineAgent
+    :return: None
+    """
     # generate task for the controller
     controller_thread = Thread(target=run_controller, args=(tac_controller, tac_parameters))
 
@@ -225,6 +241,7 @@ def run_simulation(tac_controller: ControllerAgent, tac_parameters: TACParameter
 def initialize_tac_parameters(arguments: argparse.Namespace) -> TACParameters:
     """
     Initialize a TACParameters object.
+
     :param arguments: the argparse namespace
     :return: a TACParameters object
     """
@@ -248,12 +265,15 @@ def initialize_tac_parameters(arguments: argparse.Namespace) -> TACParameters:
 
 def _handling_end_of_simulation(tac_controller: 'ControllerAgent', arguments: argparse.Namespace) -> None:
     """
-    Handle the end of the simulation. In particular, If the controller has been initialized:
+    Handle the end of the simulation.
+
+    In particular, If the controller has been initialized:
     - save the simulation data
     - generate transition diagram, if enabled
     - plot data, if requested
 
     :param tac_controller: the controller agent of TAC.
+    :param arguments: the arguments
     :return: None
     """
     if tac_controller is not None and tac_controller.game_handler is not None:
@@ -262,11 +282,8 @@ def _handling_end_of_simulation(tac_controller: 'ControllerAgent', arguments: ar
         experiment_name = arguments.experiment_id if arguments.experiment_id is not None else str(
             datetime.datetime.now()).replace(" ", "_")
         tac_controller.dump(arguments.data_output_dir, experiment_name)
-        if arguments.uml:
-            logger.debug("Generating transition diagram...")
-            plantuml_gen.dump(arguments.data_output_dir, experiment_name)
-        if arguments.plot and tac_controller.game_handler.is_game_running():
-            logger.debug("Plotting data...")
+        if tac_controller.game_handler.is_game_running():
+            logger.debug("Saving data...")
             game_stats = GameStats(tac_controller.game_handler.current_game)
             game_stats.dump(arguments.data_output_dir, experiment_name)
 
