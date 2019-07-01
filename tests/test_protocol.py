@@ -1,3 +1,24 @@
+# -*- coding: utf-8 -*-
+# ------------------------------------------------------------------------------
+#
+#   Copyright 2018-2019 Fetch.AI Limited
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+# ------------------------------------------------------------------------------
+
+"""This module contains the tests of the protocol module."""
+
 import pytest
 
 from tac.platform.protocol import Register, Unregister, Transaction, Registered, Unregistered, TransactionConfirmation, Error, \
@@ -6,8 +27,10 @@ from tac.helpers.crypto import Crypto
 
 
 class TestRequest:
+    """Class to test the Request classes."""
 
     class TestRegister:
+        """Class to test the Register class."""
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
@@ -18,6 +41,7 @@ class TestRequest:
             assert expected_msg == actual_msg
 
     class TestUnregister:
+        """Class to test the Unregister class."""
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
@@ -28,6 +52,7 @@ class TestRequest:
             assert expected_msg == actual_msg
 
     class TestTransaction:
+        """Class to test the Transaction class."""
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
@@ -39,6 +64,7 @@ class TestRequest:
             assert expected_msg == actual_msg
 
     class TestGetStateUpdate:
+        """Class to test the GetStateUpdate class."""
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
@@ -50,8 +76,10 @@ class TestRequest:
 
 
 class TestResponse:
+    """Class to test the Response classes."""
 
     class TestRegistered:
+        """Class to test the Registered class."""
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
@@ -62,6 +90,7 @@ class TestResponse:
             assert expected_msg == actual_msg
 
     class TestUnregistered:
+        """Class to test the Unregistered class."""
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
@@ -72,6 +101,7 @@ class TestResponse:
             assert expected_msg == actual_msg
 
     class TestCancelled:
+        """Class to test the Cancelled class."""
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
@@ -82,6 +112,7 @@ class TestResponse:
             assert expected_msg == actual_msg
 
     class TestError:
+        """Class to test the Error class."""
 
         @pytest.mark.parametrize("error_code", list(ErrorCode))
         def test_serialization_deserialization(self, error_code):
@@ -93,6 +124,7 @@ class TestResponse:
             assert expected_msg == actual_msg
 
     class TestGameData:
+        """Class to test the GameData class."""
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
@@ -103,6 +135,7 @@ class TestResponse:
             assert expected_msg == actual_msg
 
     class TestTransactionConfirmation:
+        """Class to test the TransactionConfirmation class."""
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""
@@ -113,6 +146,7 @@ class TestResponse:
             assert expected_msg == actual_msg
 
     class TestStateUpdate:
+        """Class to test the StateUpdate class."""
 
         def test_serialization_deserialization(self):
             """Test that serialization and deserialization gives the same result."""

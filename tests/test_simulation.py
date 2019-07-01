@@ -1,4 +1,24 @@
 # -*- coding: utf-8 -*-
+# ------------------------------------------------------------------------------
+#
+#   Copyright 2018-2019 Fetch.AI Limited
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+# ------------------------------------------------------------------------------
+
+"""This module contains the tests of the simulation."""
+
 import asyncio
 import datetime
 from threading import Thread
@@ -18,6 +38,7 @@ from tac.platform.controller import ControllerAgent, TACParameters
 
 
 def _init_baseline_agents(n: int, version: str, oef_addr: str, oef_port: int) -> Union[List[BaselineAgentV1], List[BaselineAgentV2]]:
+    """Baseline agents initialization."""
     if version == "v1":
         return [BaselineAgentV1("baseline_{:02}".format(i), "127.0.0.1", 10000,
                                 search_for=SearchFor.BOTH, register_as=RegisterAs.BOTH, pending_transaction_timeout=120,
@@ -42,10 +63,12 @@ def _run_baseline_agent(agent: Union[BaselineAgentV1, BaselineAgentV2], version:
 
 @pytest.fixture(params=["v1", "v2"])
 def baseline_version(request):
+    """Version setting."""
     return request.param
 
 
 class TestSimulation:
+    """Class to test the simulation."""
 
     @pytest.fixture(autouse=True)
     def _start_oef_node(self, network_node):
@@ -53,6 +76,7 @@ class TestSimulation:
 
     @classmethod
     def setup_class(cls):
+        """Class setup."""
         cls.tac_controller = ControllerAgent(loop=asyncio.new_event_loop())
         cls.tac_controller.connect()
         cls.tac_controller.register()
@@ -91,9 +115,7 @@ class TestSimulation:
             pytest.fail("Got exception: {}".format(e))
 
     def test_nb_settled_transaction_greater_than_zero(self):
-        """
-        Test that at least one transaction has been confirmed.
-        """
+        """Test that at least one transaction has been confirmed."""
         assert len(self.tac_controller.game_handler.current_game.transactions) > 0
 
     def test_game_took_place(self):
@@ -101,10 +123,7 @@ class TestSimulation:
         assert self.tac_controller.game_handler.current_game is not None
 
     def test_baseline_agent_score_does_not_decrease(self):
-        """
-        Test that all the baseline agent scores do not decrease after each transaction.
-        """
-
+        """Test that all the baseline agent scores do not decrease after each transaction."""
         finished_game = self.tac_controller.game_handler.current_game
         game_configuration = finished_game.configuration
         game_initialization = finished_game.initialization
