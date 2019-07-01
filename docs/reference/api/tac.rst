@@ -7,7 +7,6 @@ Subpackages
 .. toctree::
 
    tac.agents
-   tac.experimental
    tac.gui
    tac.helpers
    tac.platform

@@ -51,6 +51,7 @@ DEFAULT_PRICE = 0.0
 
 
 class GameConfiguration:
+    """Class containing the game configuration of a TAC instance."""
 
     def __init__(self,
                  nb_agents: int,
@@ -59,14 +60,14 @@ class GameConfiguration:
                  agent_pbk_to_name: Dict[str, str],
                  good_pbk_to_name: Dict[str, str]):
         """
-        Configuration of a game.
+        Instantiate a game configuration.
+
         :param nb_agents: the number of agents.
         :param nb_goods: the number of goods.
         :param tx_fee: the fee for a transaction.
         :param agent_pbk_to_name: a dictionary mapping agent public keys to agent names (as strings).
         :param good_pbk_to_name: a dictionary mapping good public keys to good names (as strings).
         """
-
         self._nb_agents = nb_agents
         self._nb_goods = nb_goods
         self._tx_fee = tx_fee
@@ -77,43 +78,53 @@ class GameConfiguration:
 
     @property
     def nb_agents(self) -> int:
+        """Agent number of a TAC instance."""
         return self._nb_agents
 
     @property
     def nb_goods(self) -> int:
+        """Good number of a TAC instance."""
         return self._nb_goods
 
     @property
     def tx_fee(self) -> float:
+        """Transaction fee for the TAC instance."""
         return self._tx_fee
 
     @property
     def agent_pbk_to_name(self) -> Dict[str, str]:
+        """Map agent public keys to names."""
         return self._agent_pbk_to_name
 
     @property
     def good_pbk_to_name(self) -> Dict[str, str]:
+        """Map good public keys to names."""
         return self._good_pbk_to_name
 
     @property
     def agent_pbks(self) -> List[str]:
+        """List of agent public keys."""
         return list(self._agent_pbk_to_name.keys())
 
     @property
     def agent_names(self):
+        """List of agent names."""
         return list(self._agent_pbk_to_name.values())
 
     @property
     def good_pbks(self) -> List[str]:
+        """List of good public keys."""
         return list(self._good_pbk_to_name.keys())
 
     @property
     def good_names(self) -> List[str]:
+        """List of good names."""
         return list(self._good_pbk_to_name.values())
 
     def _check_consistency(self):
         """
         Check the consistency of the game configuration.
+
         :return: None
         :raises: AssertionError: if some constraint is not satisfied.
         """
@@ -148,6 +159,7 @@ class GameConfiguration:
         return obj
 
     def __eq__(self, other):
+        """Compare equality of two objects."""
         return isinstance(other, GameConfiguration) and \
             self.nb_agents == other.nb_agents and \
             self.nb_goods == other.nb_goods and \
@@ -157,6 +169,7 @@ class GameConfiguration:
 
 
 class GameInitialization:
+    """Class containing the game initialization of a TAC instance."""
 
     def __init__(self,
                  initial_money_amounts: List[int],
@@ -166,7 +179,8 @@ class GameInitialization:
                  eq_good_holdings: List[List[float]],
                  eq_money_holdings: List[float]):
         """
-        Initialization of a game.
+        Instantiate a game initialization.
+
         :param initial_money_amounts: the initial amount of money of every agent.
         :param endowments: the endowments of the agents. A matrix where the first index is the agent id
                             and the second index is the good id. A generic element e_ij at row i and column j is
@@ -180,7 +194,6 @@ class GameInitialization:
                             a float that denotes the (divisible) amount of good j for agent i.
         :param eq_money_holdings: the competitive equilibrium money holdings of the agents. A list.
         """
-
         self._initial_money_amounts = initial_money_amounts
         self._endowments = endowments
         self._utility_params = utility_params
@@ -192,35 +205,41 @@ class GameInitialization:
 
     @property
     def initial_money_amounts(self) -> List[int]:
+        """List of the initial amount of money of every agent."""
         return self._initial_money_amounts
 
     @property
     def endowments(self) -> List[Endowment]:
+        """Endowments of the agents."""
         return self._endowments
 
     @property
     def utility_params(self) -> List[UtilityParams]:
+        """The utility parameter list of the agents."""
         return self._utility_params
 
     @property
     def eq_prices(self) -> List[float]:
+        """Theoretical equilibrium prices (a benchmark)."""
         return self._eq_prices
 
     @property
     def eq_good_holdings(self) -> List[List[float]]:
+        """Theoretical equilibrium good holdings (a benchmark)."""
         return self._eq_good_holdings
 
     @property
     def eq_money_holdings(self) -> List[float]:
+        """Theoretical equilibrium money holdings (a benchmark)."""
         return self._eq_money_holdings
 
     def _check_consistency(self):
         """
         Check the consistency of the game configuration.
+
         :return: None
         :raises: AssertionError: if some constraint is not satisfied.
         """
-
         assert all(money >= 0 for money in self.initial_money_amounts), "Money must be non-negative."
         assert all(e > 0 for row in self.endowments for e in row), "Endowments must be strictly positive."
         assert all(e > 0 for row in self.utility_params for e in row), "UtilityParams must be strictly positive."
@@ -258,6 +277,7 @@ class GameInitialization:
         return obj
 
     def __eq__(self, other):
+        """Compare equality of two objects."""
         return isinstance(other, GameInitialization) and \
             self.initial_money_amounts == other.initial_money_amounts and \
             self.endowments == other.endowments and \
@@ -269,6 +289,8 @@ class GameInitialization:
 
 class Game:
     """
+    Class representing a game instance of TAC.
+
     >>> nb_agents = 3
     >>> nb_goods = 3
     >>> tx_fee = 1.0
@@ -314,6 +336,7 @@ class Game:
     def __init__(self, configuration: GameConfiguration, initialization: GameInitialization):
         """
         Initialize a game.
+
         :param configuration: the game configuration.
         :param initialization: the game initialization.
         """
@@ -348,14 +371,17 @@ class Game:
 
     @property
     def initialization(self) -> GameInitialization:
+        """Game initialization."""
         return self._initialization
 
     @property
     def configuration(self) -> GameConfiguration:
+        """Game configuration."""
         return self._configuration
 
     @property
     def initial_agent_states(self) -> Dict[str, 'AgentState']:
+        """Initial state of each agent."""
         return self._initial_agent_states
 
     @staticmethod
@@ -370,6 +396,7 @@ class Game:
                       good_pbk_to_name: Dict[str, str]) -> 'Game':
         """
         Generate a game, the endowments and the utilites.
+
         :param nb_agents: the number of agents.
         :param nb_goods: the number of goods.
         :param tx_fee: the fee to pay per transaction.
@@ -403,6 +430,7 @@ class Game:
     def get_agent_state_from_agent_pbk(self, agent_pbk: str) -> 'AgentState':
         """
         Get agent state from agent pbk.
+
         :param agent_pbk: the agent's pbk.
         :return: the agent state of the agent.
         """
@@ -411,11 +439,11 @@ class Game:
     def is_transaction_valid(self, tx: 'GameTransaction') -> bool:
         """
         Check whether the transaction is valid given the state of the game.
+
         :param tx: the game transaction.
         :return: True if the transaction is valid, False otherwise.
         :raises: AssertionError: if the data in the transaction are not allowed (e.g. negative amount).
         """
-
         # check if the buyer has enough balance to pay the transaction.
         share_of_tx_fee = round(self.configuration.tx_fee / 2.0, 2)
         if self.agent_states[tx.buyer_pbk].balance < tx.amount + share_of_tx_fee:
@@ -513,6 +541,7 @@ class Game:
     def get_holdings_matrix(self) -> List[Endowment]:
         """
         Get the holdings matrix of shape (nb_agents, nb_goods).
+
         :return: the holdings matrix.
         """
         result = list(map(lambda state: state.current_holdings, self.agent_states.values()))
@@ -582,9 +611,7 @@ class Game:
         return result
 
     def get_equilibrium_summary(self) -> str:
-        """
-        Get equilibrium summary.
-        """
+        """Get equilibrium summary."""
         result = "Equilibrium prices: \n"
         for good_pbk, eq_price in zip(self.configuration.good_pbks, self.initialization.eq_prices):
             result = result + good_pbk + " " + str(eq_price) + "\n"
@@ -599,6 +626,7 @@ class Game:
         return result
 
     def to_dict(self) -> Dict[str, Any]:
+        """From object to dictionary."""
         return {
             "configuration": self.configuration.to_dict(),
             "initialization": self.initialization.to_dict(),
@@ -607,6 +635,7 @@ class Game:
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> 'Game':
+        """Get class instance from dictionary."""
         configuration = GameConfiguration.from_dict(d["configuration"])
         initialization = GameInitialization.from_dict(d["initialization"])
 
@@ -618,6 +647,7 @@ class Game:
         return game
 
     def __eq__(self, other):
+        """Compare equality of two instances from class."""
         return isinstance(other, Game) and \
             self.configuration == other.configuration and \
             self.transactions == other.transactions
@@ -642,16 +672,19 @@ class AgentState:
 
     @property
     def current_holdings(self):
+        """Current holding of each good."""
         return copy.copy(self._current_holdings)
 
     @property
     def utility_params(self) -> UtilityParams:
+        """Utility parameter for each good."""
         return copy.copy(self._utility_params)
 
     # TODO: potentially move the next three methods out as separate utilities; separate state (data) from member functions
     def get_score(self) -> float:
         """
         Compute the score of the current state.
+
         The score is computed as the sum of all the utilities for the good holdings
         with positive quantity plus the money left.
         :return: the score.
@@ -663,7 +696,8 @@ class AgentState:
 
     def get_score_diff_from_transaction(self, tx: Transaction, tx_fee: float) -> float:
         """
-        Simulate a transaction and get the resulting score (taking into account the fee)
+        Simulate a transaction and get the resulting score (taking into account the fee).
+
         :param tx: a transaction object.
         :return: the score.
         """
@@ -674,11 +708,12 @@ class AgentState:
 
     def check_transaction_is_consistent(self, tx: Transaction, tx_fee: float) -> bool:
         """
-        Check if the transaction is consistent.  E.g. check that the agent state has enough money if it is a buyer
+        Check if the transaction is consistent.
+
+        E.g. check that the agent state has enough money if it is a buyer
         or enough holdings if it is a seller.
         :return: True if the transaction is legal wrt the current state, false otherwise.
         """
-
         share_of_tx_fee = round(tx_fee / 2.0, 2)
         if tx.buyer:
             # check if we have the money.
@@ -694,10 +729,10 @@ class AgentState:
     def apply(self, transactions: List[Transaction], tx_fee: float) -> 'AgentState':
         """
         Apply a list of transactions to the current state.
+
         :param transactions: the sequence of transaction.
         :return: the final state.
         """
-
         new_state = copy.copy(self)
         for tx in transactions:
             new_state.update(tx, tx_fee)
@@ -707,7 +742,9 @@ class AgentState:
     def update(self, tx: Transaction, tx_fee: float) -> None:
         """
         Update the agent state from a transaction request.
+
         :param tx: the transaction request message.
+        :param tx_fee: the transaction fee.
         :return: None
         """
         share_of_tx_fee = round(tx_fee / 2.0, 2)
@@ -723,9 +760,11 @@ class AgentState:
             self._current_holdings[good_id] += quantity_delta
 
     def __copy__(self):
+        """Copy the object."""
         return AgentState(self.balance, self.current_holdings, self.utility_params)
 
     def __str__(self):
+        """From object to string."""
         return "AgentState{}".format(pprint.pformat({
             "money": self.balance,
             "utility_params": self.utility_params,
@@ -733,6 +772,7 @@ class AgentState:
         }))
 
     def __eq__(self, other) -> bool:
+        """Compare equality of two instances of the class."""
         return isinstance(other, AgentState) and \
             self.balance == other.balance and \
             self.utility_params == other.utility_params and \
@@ -742,19 +782,21 @@ class AgentState:
 class GoodState:
     """Represent the state of a good during the game."""
 
-    def __init__(self, price: float):
+    def __init__(self, price: float) -> None:
         """
         Instantiate an agent state object.
 
         :param price: price of the good in this state.
+        :return: None
         """
         self.price = price
 
         self._check_consistency()
 
-    def _check_consistency(self):
+    def _check_consistency(self) -> None:
         """
         Check the consistency of the good state.
+
         :return: None
         :raises: AssertionError: if some constraint is not satisfied.
         """
@@ -766,13 +808,14 @@ class WorldState:
 
     def __init__(self, opponent_pbks: List[str],
                  good_pbks: List[str],
-                 initial_agent_state: AgentState):
+                 initial_agent_state: AgentState) -> None:
         """
         Instantiate an agent state object.
 
         :param opponent_pbks: the public keys of the opponents
         :param good_pbks: the public keys of the goods
         :param agent_state: the initial state of the agent
+        :return: None
         """
         self.opponent_states = dict(
             (agent_pbk,
@@ -788,27 +831,30 @@ class WorldState:
                 GoodPriceModel())
             for good_pbk in good_pbks)
 
-    def update_on_cfp(self, query):
-        """
-        Update the world state when a new cfp is received.
-        """
+    def update_on_cfp(self, query) -> None:
+        """Update the world state when a new cfp is received."""
         pass
 
-    def update_on_proposal(self, proposal):
-        """
-        Update the world state when a new proposal is received.
-        """
+    def update_on_proposal(self, proposal) -> None:
+        """Update the world state when a new proposal is received."""
         pass
 
-    def update_on_decline(self, transaction: Transaction):
+    def update_on_decline(self, transaction: Transaction) -> None:
         """
         Update the world state when a transaction is rejected.
+
+        :param transaction: the transaction
+        :return: None
         """
         self._from_transaction_update_price(transaction, is_accepted=False)
 
-    def _from_transaction_update_price(self, transaction: Transaction, is_accepted: bool):
+    def _from_transaction_update_price(self, transaction: Transaction, is_accepted: bool) -> None:
         """
         Update the good price model based on a transaction.
+
+        :param transaction: the transaction
+        :param is_accepted: whether the transaction is accepted or not
+        :return: None
         """
         good_pbks = []
         for good_pbk, quantity in transaction.quantities_by_good_pbk.items():
@@ -819,9 +865,12 @@ class WorldState:
         for good_pbk in list(set(good_pbks)):
             self._update_price(good_pbk, price, is_accepted=is_accepted)
 
-    def update_on_accept(self, transaction: Transaction):
+    def update_on_accept(self, transaction: Transaction) -> None:
         """
         Update the world state when a proposal is accepted.
+
+        :param transaction: the transaction
+        :return: None
         """
         self._from_transaction_update_price(transaction, is_accepted=True)
 
@@ -875,7 +924,7 @@ class WorldState:
 
     def _update_price(self, good_pbk: str, price: float, is_accepted: bool) -> None:
         """
-        Updates the price for the good based on an outcome
+        Updates the price for the good based on an outcome.
 
         :param good_pbk: the pbk of the good
         :param price: the price to which the outcome relates
@@ -888,7 +937,7 @@ class WorldState:
 
 
 class GameTransaction:
-    """Represent a transaction between agents"""
+    """Represent a transaction between agents."""
 
     def __init__(self, buyer_pbk: str, seller_pbk: str, amount: int, quantities_by_good_pbk: Dict[str, int],
                  timestamp: Optional[datetime.datetime] = None):
@@ -909,19 +958,20 @@ class GameTransaction:
 
         self._check_consistency()
 
-    def _check_consistency(self):
+    def _check_consistency(self) -> None:
         """
         Check the consistency of the transaction parameters.
+
         :return: None
         :raises AssertionError if some constraint is not satisfied.
         """
-
         assert self.buyer_pbk != self.seller_pbk
         assert self.amount >= 0
         assert len(self.quantities_by_good_pbk.keys()) == len(set(self.quantities_by_good_pbk.keys()))
         assert all(quantity >= 0 for quantity in self.quantities_by_good_pbk.values())
 
     def to_dict(self) -> Dict[str, Any]:
+        """From object to dictionary."""
         return {
             "buyer_pbk": self.buyer_pbk,
             "seller_pbk": self.seller_pbk,
@@ -933,7 +983,8 @@ class GameTransaction:
     @classmethod
     def from_request_to_game_tx(cls, transaction: Transaction) -> 'GameTransaction':
         """
-        From a transaction request message to a game transaction
+        From a transaction request message to a game transaction.
+
         :param transaction: the request message for a transaction.
         :return: the game transaction.
         """
@@ -951,6 +1002,7 @@ class GameTransaction:
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> 'GameTransaction':
+        """Return a class instance from a dictionary."""
         return cls(
             buyer_pbk=d["buyer_pbk"],
             seller_pbk=d["seller_pbk"],
@@ -960,6 +1012,7 @@ class GameTransaction:
         )
 
     def __eq__(self, other) -> bool:
+        """Compare equality of two instances from class."""
         return isinstance(other, GameTransaction) and \
             self.buyer_pbk == other.buyer_pbk and \
             self.seller_pbk == other.seller_pbk and \

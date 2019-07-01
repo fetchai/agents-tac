@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 def parse_arguments():
+    """Arguments parsing."""
     parser = argparse.ArgumentParser("baseline_agent", description="Launch my agent.")
     parser.add_argument("--name", default="my_baseline_agent", help="Name of the agent.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
@@ -40,6 +41,7 @@ def parse_arguments():
 
 
 def main():
+    """Run the script."""
     args = parse_arguments()
     agent = BaselineAgent(name=args.name, oef_addr=args.oef_addr, oef_port=args.oef_port)
 

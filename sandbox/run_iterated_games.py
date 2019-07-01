@@ -1,6 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# ------------------------------------------------------------------------------
+#
+#   Copyright 2018-2019 Fetch.AI Limited
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+# ------------------------------------------------------------------------------
+
+"""A script to run several games in a row."""
+
 import argparse
 import datetime
 import inspect
@@ -24,6 +44,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 def parse_args() -> argparse.Namespace:
+    """Argument parsing."""
     parser = argparse.ArgumentParser("run_iterated_games",
                                      description="Run the sandbox multiple times and collect scores for every run.")
     parser.add_argument("--nb_games", type=int, default=1, help="How many times the competition must be run.")
@@ -43,16 +64,20 @@ def parse_args() -> argparse.Namespace:
 
 def build_tac_env_variables(tournament_id: str, experiment_id: str, seed: int) -> str:
     """
-    Return a sequence of
-    'VARIABLE_1=VALUE_1 VARIABLE_2=VALUE_2 ...'
-    """
+    Return a sequence of 'VARIABLE_1=VALUE_1 VARIABLE_2=VALUE_2 ...'.
 
+    :param tournament_id: the id of the tournament
+    :param experiment_id: the id of the experiment
+    :param seed: the seed for the random module
+    :return: a string encapsulating the params
+    """
     return "DATA_OUTPUT_DIR={} EXPERIMENT_ID={} SEED={}".format(tournament_id, experiment_id, seed)
 
 
 def ask_for_continuation(iteration: int) -> bool:
     """
     Ask the user if we can proceed to execute the sandbox.
+
     :param iteration: the iteration number.
     :return: True if the user decided to continue the execution, False otherwise.
     """
@@ -69,6 +94,10 @@ def ask_for_continuation(iteration: int) -> bool:
 def run_sandbox(game_name: str, seed: int, output_data_dir: str) -> int:
     """
     Run an instance of the sandbox.
+
+    :param game_name: the name of the game
+    :param seed: the seed for the random module
+    :param output_data_dir: the name of the directory for the output data
     :return: the return code for the execution of Docker Compose.
     """
     cmd = "docker-compose up --abort-on-container-exit"
@@ -81,6 +110,12 @@ def run_sandbox(game_name: str, seed: int, output_data_dir: str) -> int:
 
 
 def wait_at_least_n_minutes(n: int):
+    """
+    Wait for n minutes.
+
+    :param n: the number of minutes to wait
+    :return: None
+    """
     now = datetime.datetime.now()
     timedelta = datetime.timedelta(0, (n + 1) * 60 - now.second, - now.microsecond)
     start_time = now + timedelta
@@ -95,6 +130,7 @@ def wait_at_least_n_minutes(n: int):
 def run_games(game_names: List[str], seeds: List[int], output_data_dir: str = "data", interval: int = 5, skip: bool = False) -> List[str]:
     """
     Run a TAC for every game name in the input list.
+
     :param game_names: the name of the TAC competition to run.
     :param seeds: the list of random seeds
     :param output_data_dir: the output directory
@@ -129,9 +165,10 @@ def run_games(game_names: List[str], seeds: List[int], output_data_dir: str = "d
 def collect_data(datadir: str, experiment_names: List[str]) -> List[GameStats]:
     """
     Collect data of every experiment.
+
     :param datadir: path to the directory where the data of the experiments are saved.
     :param experiment_names: the names of the experiments
-    :return:
+    :return: a list of statistics about games
     """
     result = []
     for experiment_name in experiment_names:
@@ -145,6 +182,7 @@ def collect_data(datadir: str, experiment_names: List[str]) -> List[GameStats]:
 def compute_aggregate_scores(all_game_stats: List[GameStats]) -> Dict[str, float]:
     """
     Compute the sum of all scores for every agents.
+
     :param all_game_stats: the GameStats object for every instance of TAC.
     :return: a dictionary "agent_name" -> "final score"
     """
@@ -158,6 +196,11 @@ def compute_aggregate_scores(all_game_stats: List[GameStats]) -> Dict[str, float
 
 
 def print_aggregate_scores(scores_by_name: Dict[str, float]):
+    """
+    Print the aggregate scores.
+
+    :param scores_by_name: a dictionary mapping the names to scores.
+    """
     if len(scores_by_name) == 0:
         print("No scores.")
     else:
@@ -177,6 +220,7 @@ def _process_seeds(arguments: Dict[str, Any]) -> List[int]:
 
 
 def main():
+    """Run the script."""
     arguments = parse_args()
 
     # process input
