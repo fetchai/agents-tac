@@ -18,10 +18,14 @@
 #
 # ------------------------------------------------------------------------------
 
+"""A module containing a simple price model."""
+
 import numpy as np
 
 
 class PriceBandit(object):
+    """A class for a multi-armed bandit model of price."""
+
     def __init__(self, price: float, beta_a: float = 1.0, beta_b: float = 1.0):
         """
         Instantiate a price bandit object.
@@ -37,7 +41,7 @@ class PriceBandit(object):
 
     def sample(self) -> float:
         """
-        Sample from the bandit
+        Sample from the bandit.
 
         :return: the sampled value
         """
@@ -45,19 +49,20 @@ class PriceBandit(object):
 
     def update(self, outcome: bool) -> None:
         """
-        Update the bandit
+        Update the bandit.
 
         :param outcome: the outcome used for updating
+        :return: None
         """
         self.beta_a += outcome
         self.beta_b += 1 - outcome
 
 
 class GoodPriceModel(object):
+    """A class for a price model of a good."""
+
     def __init__(self):
-        """
-        Instantiate a good price model.
-        """
+        """Instantiate a good price model."""
         self.price_bandits = dict(
             (price, PriceBandit(price))
             for price in [i / 10 for i in range(201)])
@@ -75,7 +80,7 @@ class GoodPriceModel(object):
 
     def get_price_expectation(self, constraint: float, is_seller: bool) -> float:
         """
-        Get best price (given a constraint)
+        Get best price (given a constraint).
 
         :param constraint: the constraint on the price
         :param is_seller: indicating whether the agent is a buyer or seller

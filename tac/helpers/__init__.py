@@ -17,3 +17,5 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+
+"""The helpers module contains the helpers of the TAC package."""

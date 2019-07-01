@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+
+"""Module containing the controller dashboard and related classes."""
+
 import argparse
 import json
 import os
@@ -16,6 +19,7 @@ DEFAULT_ENV_NAME = "tac_simulation_env_main"
 class ControllerDashboard(Dashboard):
     """
     Class to manage a Visdom dashboard for the controller agent.
+
     It assumes that a Visdom server is running at the address and port provided in input
     (default: http://localhost:8097)
     """
@@ -24,12 +28,14 @@ class ControllerDashboard(Dashboard):
                  visdom_addr: str = "localhost",
                  visdom_port: int = 8097,
                  env_name: Optional[str] = "tac_controller"):
+        """Instantiate a ControllerDashboard."""
         super().__init__(visdom_addr, visdom_port, env_name)
         self.game_stats = game_stats
 
         self.agent_pbk_to_name = {}  # type: Dict[str, str]
 
     def update(self):
+        """Update the dashboard."""
         if not self._is_running():
             raise Exception("Dashboard not running, update not allowed.")
 
@@ -47,7 +53,14 @@ class ControllerDashboard(Dashboard):
             self._update_adjusted_score()
 
     @staticmethod
-    def from_datadir(datadir: str, env_name: str):
+    def from_datadir(datadir: str, env_name: str) -> 'ControllerDashboard':
+        """
+        Return a ControllerDashboard from a data directory.
+
+        :param datadir: the data directory
+        :param env_name: the environment name
+        :return: controller dashboard
+        """
         game_data_json_filepath = os.path.join(datadir, "game.json")
         print("Loading data from {}".format(game_data_json_filepath))
         game_data = json.load(open(game_data_json_filepath))
@@ -182,14 +195,17 @@ class ControllerDashboard(Dashboard):
                      )
 
     def __enter__(self):
+        """Enter the dashboard."""
         self.start()
         self.update()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit the dashboard."""
         self.stop()
 
 
 def parse_args():
+    """Parse the arguments."""
     parser = argparse.ArgumentParser("dashboard", description="Data Visualization for the simulation outcome")
     parser.add_argument("--datadir", type=str, required=True, help="The path to the simulation data folder.")
     parser.add_argument("--env_name", type=str, default=None, help="The name of the environment to create.")
