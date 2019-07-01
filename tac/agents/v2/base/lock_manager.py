@@ -37,6 +37,13 @@ MESSAGE_ID = int
 TRANSACTION_ID = str
 
 
+class TransactionNotFoundError(Exception):
+    """Class for errors about transactions not found by the lock manager."""
+
+    def __init__(self, transaction_id: str):
+        super().__init__("Transaction with id {} has not been found.".format(transaction_id))
+
+
 class LockManager(object):
     """Class to handle pending proposals/acceptances and locks."""
 
@@ -176,6 +183,7 @@ class LockManager(object):
         :param dialogue: the dialogue associated with the proposal
         :param proposal_id: the message id of the proposal
         :param transaction: the transaction
+        :raise AssertionError: if the pending proposal is already present.
         :return: None
         """
         assert dialogue.dialogue_label not in self.pending_tx_proposals and proposal_id not in self.pending_tx_proposals[dialogue.dialogue_label]
@@ -188,6 +196,7 @@ class LockManager(object):
 
         :param dialogue: the dialogue associated with the proposal
         :param proposal_id: the message id of the proposal
+        :raise AssertionError: if the pending proposal is not present.
         :return: the transaction
         """
         assert dialogue.dialogue_label in self.pending_tx_proposals and proposal_id in self.pending_tx_proposals[dialogue.dialogue_label]
@@ -201,6 +210,7 @@ class LockManager(object):
         :param dialogue: the dialogue associated with the proposal
         :param proposal_id: the message id of the proposal
         :param transaction: the transaction
+        :raise AssertionError: if the pending acceptance is already present.
         :return: None
         """
         assert dialogue.dialogue_label not in self.pending_tx_acceptances and proposal_id not in self.pending_tx_acceptances[dialogue.dialogue_label]
@@ -213,6 +223,7 @@ class LockManager(object):
 
         :param dialogue: the dialogue associated with the proposal
         :param proposal_id: the message id of the proposal
+        :raise AssertionError: if the pending acceptance is not present.
         :return: the transaction
         """
         assert dialogue.dialogue_label in self.pending_tx_acceptances and proposal_id in self.pending_tx_acceptances[dialogue.dialogue_label]
@@ -225,6 +236,7 @@ class LockManager(object):
 
         :param transaction: the transaction
         :param as_seller: whether the agent is a seller or not
+        :raise AssertionError: if the transaction is already present.
         :return: None
         """
         transaction_id = transaction.transaction_id
@@ -241,9 +253,12 @@ class LockManager(object):
         Remove a lock (in the form of a transaction).
 
         :param transaction_id: the transaction id
+        :raise TransactionNotFoundError: if the transaction with the given transaction id has not been found.
         :return: the transaction
         """
-        assert transaction_id in self.locks
+        if transaction_id not in self.locks:
+            raise TransactionNotFoundError(transaction_id)
+
         transaction = self.locks.pop(transaction_id)
         self.locks_as_buyer.pop(transaction_id, None)
         self.locks_as_seller.pop(transaction_id, None)

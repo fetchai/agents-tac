@@ -66,7 +66,7 @@ class DialogueLabel:
         else:
             return False
 
-    def __hash__(self) -> str:
+    def __hash__(self) -> int:
         return hash((self.dialogue_id, self.dialogue_opponent_pbk, self.dialogue_starter_pbk))
 
 
