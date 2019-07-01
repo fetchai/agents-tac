@@ -65,8 +65,6 @@ def parse_arguments():
     parser.add_argument("--uml", default=True, help="Plot uml file")
     parser.add_argument("--data-output-dir", default="data", help="The output directory for the simulation data.")
     parser.add_argument("--experiment-id", default=None, help="The experiment ID.")
-    parser.add_argument("--plot", default=True, type=bool, help="Plot sequence of transactions and the changes in scores.")
-    parser.add_argument("--gui", action="store_true", help="Enable the GUI.")
     parser.add_argument("--visdom-addr", default="localhost", help="TCP/IP address of the Visdom server")
     parser.add_argument("--visdom-port", default=8097, help="TCP/IP port of the Visdom server")
     parser.add_argument("--seed", default=42, help="The random seed of the simulation.")
@@ -263,10 +261,7 @@ def _handling_end_of_simulation(tac_controller: 'ControllerAgent', arguments: ar
         experiment_name = arguments.experiment_id if arguments.experiment_id is not None else str(
             datetime.datetime.now()).replace(" ", "_")
         tac_controller.dump(arguments.data_output_dir, experiment_name)
-        if arguments.uml:
-            logger.debug("Generating transition diagram...")
-            plantuml_gen.dump(arguments.data_output_dir, experiment_name)
-        if arguments.plot and tac_controller.game_handler.is_game_running():
+        if tac_controller.game_handler.is_game_running():
             logger.debug("Plotting data...")
             game_stats = GameStats(tac_controller.game_handler.current_game)
             game_stats.dump(arguments.data_output_dir, experiment_name)
