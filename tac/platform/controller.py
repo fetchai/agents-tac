@@ -19,7 +19,9 @@
 #
 # ------------------------------------------------------------------------------
 
-"""This module contains the classes that implements the Controller agent behaviour.
+"""
+This module contains the classes that implements the Controller agent behaviour.
+
 The methods are split in three classes:
 - ControllerAgent: extends OEFAgent, receives messages and sends them to the ControllerHandler.
 - ControllerHandler: dispatches the handling of the message to the right handler.
@@ -59,6 +61,7 @@ else:
 
 
 class TACParameters(object):
+    """This class contains the parameters for the TAC."""
 
     def __init__(self, min_nb_agents: int = 5,
                  money_endowment: int = 200,
@@ -73,7 +76,8 @@ class TACParameters(object):
                  inactivity_timeout: int = 10,
                  whitelist: Optional[Set[str]] = None):
         """
-        Initialize parameters for TAC
+        Initialize parameters for TAC.
+
         :param min_nb_agents: the number of agents to wait for the registration.
         :param money_endowment: The money amount every agent receives.
         :param nb_goods: the number of goods in the competition.
@@ -104,6 +108,7 @@ class TACParameters(object):
     def _check_values(self) -> None:
         """
         Check constructor parameters.
+
         :raises ValueError: if some parameter has not the right value.
         """
         if self._start_time is None:

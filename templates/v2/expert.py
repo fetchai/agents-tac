@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 def parse_arguments():
+    """Arguments parsing."""
     parser = argparse.ArgumentParser("my_agent", description="Launch my agent.")
     parser.add_argument("--name", default="my_agent", help="Name of the agent")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
@@ -43,11 +44,10 @@ def parse_arguments():
 
 
 class MyAgent(Agent):
-    """
-    My agent implementation.
-    """
+    """My agent implementation."""
 
     def __init__(self, name: str, oef_addr: str, oef_port: int, in_box_timeout: float, private_key_pem_path: Optional[str] = None):
+        """Agent initialization."""
         super().__init__(name, oef_addr, oef_port, private_key_pem_path)
         self.mail_box = FIPAMailBox(self.crypto.public_key, oef_addr, oef_port)
         self.in_box = InBox(self.mail_box, self.in_box_timeout)
@@ -57,6 +57,7 @@ class MyAgent(Agent):
 
 
 def main():
+    """Run the script."""
     args = parse_arguments()
 
     agent = MyAgent(name=args.name, oef_addr=args.oef_addr, oef_port=args.oef_port, in_box_timeout=args.in_box_timeout, private_key_pem_path=args.private_key)

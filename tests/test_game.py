@@ -1,10 +1,31 @@
 # -*- coding: utf-8 -*-
+# ------------------------------------------------------------------------------
+#
+#   Copyright 2018-2019 Fetch.AI Limited
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+# ------------------------------------------------------------------------------
+
+"""This module contains the tests of the game module."""
+
 import pytest
 
 from tac.platform.game import GameConfiguration, GameInitialization, Game, GameTransaction, AgentState, GoodState
 
 
 class TestGameConfiguration:
+    """Class to test the game configuration class."""
 
     def test_not_enough_agents_raises_exception(self):
         """Test that if we try to instantiate a game_configuration with not enough agents, we raise an AssertionError."""
@@ -125,6 +146,7 @@ class TestGameConfiguration:
 
 
 class TestGameIntitialization:
+    """Class to test the game initialization class."""
 
     def test_negative_money_raises_exception(self):
         """Test that if we try to instantiate a game with a negative amount of money, we raise an AssertionError."""
@@ -293,10 +315,10 @@ class TestGameIntitialization:
 
 
 class TestGame:
+    """Class to test the game class."""
 
     def test_transaction_invalid_if_buyer_does_not_have_enough_money(self):
         """Test that a transaction is invalid if the buyer does not have enough money."""
-
         nb_agents = 3
         nb_goods = 3
         tx_fee = 1.0
@@ -351,7 +373,6 @@ class TestGame:
 
     def test_transaction_invalid_if_seller_does_not_have_enough_quantities(self):
         """Test that a transaction is invalid if the seller does not have enough quantities."""
-
         nb_agents = 3
         nb_goods = 3
         tx_fee = 1.0
@@ -404,7 +425,6 @@ class TestGame:
 
     def test_generate_game(self):
         """Test the game generation algorithm."""
-
         nb_agents = 3
         nb_goods = 3
         money_endowment = 20
@@ -421,7 +441,6 @@ class TestGame:
 
     def test_get_game_data_from_agent_label(self):
         """Test that the getter of game states by agent label works as expected."""
-
         nb_agents = 3
         nb_goods = 3
         tx_fee = 1.0
@@ -475,7 +494,6 @@ class TestGame:
 
     def test_to_dict(self):
         """Test that conversion into dict works as expected."""
-
         nb_agents = 3
         nb_goods = 3
         tx_fee = 1.0
@@ -590,6 +608,7 @@ class TestGame:
 
 
 class TestGoodState:
+    """Class to test the good state class."""
 
     def test_negative_price_raises_exception(self):
         """Test that if we try to instantiate a good_state with a negative price, we raise an AssertionError."""

@@ -36,6 +36,7 @@ logger = logging.getLogger(__name__)
 
 
 def parse_arguments():
+    """Arguments parsing."""
     parser = argparse.ArgumentParser("my_agent", description="Launch my agent.")
     parser.add_argument("--name", default="my_agent", help="Name of the agent")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
@@ -56,16 +57,15 @@ def parse_arguments():
 
 
 class MyStrategy(Strategy):
-    """
-    My strategy implementation.
-    """
+    """My strategy implementation."""
 
     def __init__(self, register_as: RegisterAs = RegisterAs.BOTH, search_for: SearchFor = SearchFor.BOTH, is_world_modeling: bool = False):
+        """Strategy initialization."""
         super().__init__(register_as, search_for, is_world_modeling)
 
     def supplied_good_quantities(self, current_holdings: List[int]) -> List[int]:
         """
-        Generates list of quantities which are supplied.
+        To generate a list of quantities which are supplied.
 
         :param current_holdings: a list of current good holdings
         :return: a list of quantities
@@ -74,7 +74,7 @@ class MyStrategy(Strategy):
 
     def supplied_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
         """
-        Generates set of good pbks which are supplied.
+        To generate a set of good pbks which are supplied.
 
         :param good_pbks: a list of good pbks
         :param current_holdings: a list of current good holdings
@@ -84,7 +84,7 @@ class MyStrategy(Strategy):
 
     def demanded_good_quantities(self, current_holdings: List[int]) -> List[int]:
         """
-        Generates list of quantities which are demanded.
+        To generate a list of quantities which are demanded.
 
         :param current_holdings: a list of current good holdings
         :return: a list of quantities
@@ -93,7 +93,7 @@ class MyStrategy(Strategy):
 
     def demanded_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
         """
-        Generates set of good pbks which are demanded.
+        To generate a set of good pbks which are demanded.
 
         :param good_pbks: a list of good pbks
         :param current_holdings: a list of current good holdings
@@ -103,7 +103,7 @@ class MyStrategy(Strategy):
 
     def get_proposals(self, good_pbks: List[str], current_holdings: List[int], utility_params: List[int], tx_fee: float, is_seller: bool, world_state: WorldState) -> List[Description]:
         """
-        Generates proposals from the seller/buyer.
+        To generate a proposals from the seller/buyer.
 
         :param good_pbks: a list of good pbks
         :param current_holdings: a list of current good holdings
@@ -117,6 +117,7 @@ class MyStrategy(Strategy):
 
 
 def main():
+    """Run the script."""
     args = parse_arguments()
 
     if args.gui:
