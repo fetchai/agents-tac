@@ -19,6 +19,7 @@
 # ------------------------------------------------------------------------------
 
 """Module wrapping the public and private key cryptography."""
+
 from typing import Optional
 
 import base58
