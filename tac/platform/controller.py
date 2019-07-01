@@ -118,98 +118,124 @@ class TACParameters(object):
 
     @property
     def min_nb_agents(self) -> int:
+        """Minimum number of agents required for a TAC instance."""
         return self._min_nb_agents
 
     @property
     def money_endowment(self):
+        """Money endowment per agent for a TAC instance."""
         return self._money_endowment
 
     @property
     def nb_goods(self):
+        """Good number for a TAC instance."""
         return self._nb_goods
 
     @property
     def tx_fee(self):
+        """Transaction fee for a TAC instance."""
         return self._tx_fee
 
     @property
     def base_good_endowment(self):
+        """Minimum endowment of each agent for each good."""
         return self._base_good_endowment
 
     @property
     def lower_bound_factor(self):
+        """Lower bound of a uniform distribution."""
         return self._lower_bound_factor
 
     @property
     def upper_bound_factor(self):
+        """Upper bound of a uniform distribution."""
         return self._upper_bound_factor
 
     @property
     def start_time(self) -> datetime.datetime:
+        """TAC start time."""
         return self._start_time
 
     @property
     def end_time(self) -> datetime.datetime:
+        """TAC end time."""
         return self._start_time + self.registration_timedelta + self.competition_timedelta
 
     @property
     def registration_timeout(self):
+        """Timeout of registration."""
         return self._registration_timeout
 
     @property
     def competition_timeout(self):
+        """Timeout of competition."""
         return self._competition_timeout
 
     @property
     def inactivity_timeout(self):
+        """Timeout of agent inactivity from controller perspective (no received transactions)."""
         return self._inactivity_timeout
 
     @property
     def registration_timedelta(self) -> datetime.timedelta:
+        """Time delta of the registration timeout."""
         return datetime.timedelta(0, self._registration_timeout)
 
     @property
     def competition_timedelta(self) -> datetime.timedelta:
+        """Time delta of the competition timeout."""
         return datetime.timedelta(0, self._competition_timeout)
 
     @property
     def inactivity_timedelta(self) -> datetime.timedelta:
+        """Time delta of the inactivity timeout."""
         return datetime.timedelta(0, self._inactivity_timeout)
 
     @property
     def whitelist(self) -> Set[str]:
+        """Whitelist of agent public keys allowed into the TAC instance."""
         return self._whitelist
 
 
 class RequestHandler(ABC):
+    """Abstract class for a request handler."""
 
-    def __init__(self, controller_agent: 'ControllerAgent'):
+    def __init__(self, controller_agent: 'ControllerAgent') -> None:
+        """
+        Instantiate a request handler.
+
+        :param controller_agent: the controller agent instance
+        :return: None
+        """
         self.controller_agent = controller_agent
 
     def __call__(self, request: Request) -> Response:
+        """Call the handler."""
         return self.handle(request)
 
     @abstractmethod
     def handle(self, request: Request) -> Optional[Response]:
         """
-        Handle a request from an OEF agent. It returns
+        Handle a request from an OEF agent.
+
         :param request: the request message.
         :return: a response, or None.
         """
 
 
 class RegisterHandler(RequestHandler):
+    """Class for a register handler."""
 
     def handle(self, request: Register) -> Optional[Response]:
         """
         Handle a register message.
+
         If the public key is already registered, answer with an error message.
         If this is the n_th registration request, where n is equal to nb_agents, then start the competition.
 
         :param request: the register request.
         :return: an Error response if an error occurred, else None.
         """
-
         whitelist = self.controller_agent.game_handler.tac_parameters.whitelist
         if whitelist is not None and request.agent_name not in whitelist:
             error_msg = "[{}]: Agent name not in whitelist: '{}'".format(self.controller_agent.name, request.agent_name)
@@ -239,10 +265,12 @@ class RegisterHandler(RequestHandler):
 
 
 class UnregisterHandler(RequestHandler):
+    """Class for a unregister handler."""
 
     def handle(self, request: Unregister) -> Optional[Response]:
         """
         Handle a unregister message.
+
         If the public key is not registered, answer with an error message.
 
         :param request: the register request.
@@ -260,14 +288,17 @@ class UnregisterHandler(RequestHandler):
 
 
 class TransactionHandler(RequestHandler):
+    """Class for a transaction handler."""
 
-    def __init__(self, controller_agent: 'ControllerAgent'):
+    def __init__(self, controller_agent: 'ControllerAgent') -> None:
+        """Instantiate a TransactionHandler."""
         super().__init__(controller_agent)
         self._pending_transaction_requests = {}  # type: Dict[str, Transaction]
 
     def handle(self, request: Transaction) -> Optional[Response]:
         """
         Handle a transaction request message.
+
         If the transaction is invalid (e.g. because the state of the game are not consistent), reply with an error.
 
         :param request: the transaction request.
@@ -299,9 +330,12 @@ class TransactionHandler(RequestHandler):
 
     def _handle_valid_transaction(self, request: Transaction) -> None:
         """
-        Handle a valid transaction. That is:
+        Handle a valid transaction.
+
+        That is:
         - update the game state
         - send a transaction confirmation both to the buyer and the seller.
+
         :param request: the transaction request.
         :return: None
         """
@@ -337,10 +371,12 @@ class TransactionHandler(RequestHandler):
 
 
 class GetStateUpdateHandler(RequestHandler):
+    """Class for a state update handler."""
 
     def handle(self, request: GetStateUpdate) -> Optional[Response]:
         """
         Handle a 'get agent state' request.
+
         If the public key is not registered, answer with an error message.
 
         :param request: the 'get agent state' request.
@@ -382,6 +418,7 @@ class ControllerDispatcher(object):
     def register_handler(self, request_type: Type[Request], request_handler: RequestHandler) -> None:
         """
         Register a handler for a type of request.
+
         :param request_type: the type of request to handle.
         :param request_handler: the handler associated with the type specified.
         :return: None
@@ -389,7 +426,9 @@ class ControllerDispatcher(object):
         self.handlers[request_type] = request_handler
 
     def process_request(self, msg: bytes, public_key: str) -> Response:
-        """Handle a simple message coming from an agent.
+        """
+        Handle a simple message coming from an agent.
+
         :param msg: the Protobuf message.
         :param public_key: the agent's public key that sent the request.
         :return: the Response object
@@ -402,6 +441,7 @@ class ControllerDispatcher(object):
     def dispatch(self, request: Request) -> Response:
         """
         Dispatch the request to the right handler.
+
         If no handler is found for the provided type of request, return an "invalid request" error.
         If something bad happen, return a "generic" error.
 
@@ -420,7 +460,8 @@ class ControllerDispatcher(object):
 
     def decode(self, msg: bytes, public_key: str) -> Request:
         """
-        From bytes to a Request message
+        From bytes to a Request message.
+
         :param msg: the serialized message.
         :param public_key: the public key of the sender agent.
         :return: the deserialized Request
@@ -430,13 +471,15 @@ class ControllerDispatcher(object):
 
 
 class GameHandler:
-    """
-    A class to manage a TAC instance.
-    """
+    """A class to manage a TAC instance."""
 
-    def __init__(self, controller_agent: 'ControllerAgent', tac_parameters: TACParameters):
+    def __init__(self, controller_agent: 'ControllerAgent', tac_parameters: TACParameters) -> None:
         """
+        Instantiate a GameHandler.
+
         :param controller_agent: the controller agent the handler is associated with.
+        :param tac_parameters: the tac parameters
+        :return: None
         """
         self.controller_agent = controller_agent
         self.tac_parameters = tac_parameters
@@ -461,13 +504,13 @@ class GameHandler:
     def is_game_running(self) -> bool:
         """
         Check if an instance of a game is already set up.
+
         :return: Return True if there is a game running, False otherwise.
         """
         return self.current_game is not None
 
     def _start_competition(self):
-        """Create a game and send the game setting to every registered agent.
-        Moreover, start the inactivity timeout checker."""
+        """Create a game and send the game setting to every registered agent, and start the inactivity timeout checker."""
         # assert that there is no competition running.
         assert not self.is_game_running()
         self.current_game = self._create_game()
@@ -510,7 +553,8 @@ class GameHandler:
 
     def _send_game_data_to_agents(self) -> None:
         """
-        Send the data of every agent about the game (e.g. endowments, preferences, scores)
+        Send the data of every agent about the game (e.g. endowments, preferences, scores).
+
         Assuming that the agent labels are public keys of the OEF Agents.
 
         :return: None.
@@ -536,7 +580,8 @@ class GameHandler:
             self.controller_agent.send_message(0, 1, public_key, game_data_response.serialize())
 
     def handle_registration_phase(self) -> bool:
-        """Wait until the registration time expires. Then, if there are enough agents, start the competition.
+        """
+        Wait until the registration time expires. Then, if there are enough agents, start the competition.
 
         :return True if the competition has been successfully started. False otherwise.
         """
@@ -562,11 +607,13 @@ class GameHandler:
             return False
 
     def notify_tac_cancelled(self):
+        """Notify agents that the TAC is cancelled."""
         for agent_pbk in self.registered_agents:
             self.controller_agent.send_message(0, 0, agent_pbk, Cancelled(agent_pbk, self.controller_agent.crypto).serialize())
 
 
 class ControllerAgent(OEFAgent):
+    """Class for a controller agent."""
 
     CONTROLLER_DATAMODEL = DataModel("tac", [
         AttributeSchema("version", int, True, "Version number of the TAC Controller Agent."),
@@ -580,6 +627,7 @@ class ControllerAgent(OEFAgent):
                  **kwargs):
         """
         Initialize a Controller Agent for TAC.
+
         :param name: The name of the OEF Agent.
         :param oef_addr: the OEF address.
         :param oef_port: the OEF listening port.
@@ -608,6 +656,7 @@ class ControllerAgent(OEFAgent):
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
         """
         Handle a simple message.
+
         The TAC Controller expects that 'content' is a Protobuf serialization of a tac.messages.Request object.
         The request is dispatched to the right request handler (using the ControllerHandler).
         The handler returns an optional response, that is sent back to the sender.
@@ -629,6 +678,7 @@ class ControllerAgent(OEFAgent):
     def register(self):
         """
         Register on the OEF as a TAC controller agent.
+
         :return: None.
         """
         desc = Description({"version": 1}, data_model=self.CONTROLLER_DATAMODEL)
@@ -657,10 +707,10 @@ class ControllerAgent(OEFAgent):
 
     def terminate(self) -> None:
         """
-        Terminate the controller agent
+        Terminate the controller agent.
+
         :return: None
         """
-
         if self._is_running:
             logger.debug("[{}]: Terminating the controller...".format(self.name))
             self._is_running = False
@@ -673,6 +723,7 @@ class ControllerAgent(OEFAgent):
     def check_inactivity_timeout(self, rate: Optional[float] = 2.0) -> None:
         """
         Check periodically if the timeout for inactivity or competition expired.
+
         :param: rate: at which rate (in seconds) the frequency of the check.
         :return: None
         """
@@ -694,11 +745,13 @@ class ControllerAgent(OEFAgent):
                 return
 
     def update_last_activity(self):
+        """Update the last activity tracker."""
         self.last_activity = datetime.datetime.now()
 
     def start_competition(self, tac_parameters: TACParameters):
         """
         Start a Trading Agent Competition.
+
         :param tac_parameters: the parameter of the competition.
         :return:
         """
@@ -716,8 +769,8 @@ class ControllerAgent(OEFAgent):
 
     def wait_and_start_competition(self, tac_parameters: TACParameters, rate: float = 0.5) -> None:
         """
-        Wait until the current time is greater than the start time.
-        Then, start the TAC.
+        Wait until the current time is greater than the start time, then, start the TAC.
+
         :param tac_parameters: the parameters for TAC.
         :param rate: at which rate the start time should be checked.
         :return: None
@@ -757,6 +810,7 @@ def _parse_arguments():
 
 
 def main():
+    """Run the script."""
     agent = None
     arguments = _parse_arguments()
 
