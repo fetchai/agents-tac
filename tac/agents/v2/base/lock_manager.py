@@ -37,13 +37,6 @@ MESSAGE_ID = int
 TRANSACTION_ID = str
 
 
-class TransactionNotFoundError(Exception):
-    """Class for errors about transactions not found by the lock manager."""
-
-    def __init__(self, transaction_id: str):
-        super().__init__("Transaction with id {} has not been found.".format(transaction_id))
-
-
 class LockManager(object):
     """Class to handle pending proposals/acceptances and locks."""
 
@@ -253,12 +246,10 @@ class LockManager(object):
         Remove a lock (in the form of a transaction).
 
         :param transaction_id: the transaction id
-        :raise TransactionNotFoundError: if the transaction with the given transaction id has not been found.
+        :raise AssertionError: if the transaction with the given transaction id has not been found.
         :return: the transaction
         """
-        if transaction_id not in self.locks:
-            raise TransactionNotFoundError(transaction_id)
-
+        assert transaction_id in self.locks
         transaction = self.locks.pop(transaction_id)
         self.locks_as_buyer.pop(transaction_id, None)
         self.locks_as_seller.pop(transaction_id, None)

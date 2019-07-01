@@ -28,7 +28,6 @@ from tac.agents.v2.agent import Liveness
 from tac.agents.v2.base.dialogues import Dialogue
 from tac.agents.v2.base.helpers import dialogue_label_from_transaction_id
 from tac.agents.v2.base.game_instance import GameInstance, GamePhase
-from tac.agents.v2.base.lock_manager import TransactionNotFoundError
 from tac.agents.v2.base.stats_manager import EndState
 from tac.agents.v2.base.interfaces import ControllerReactionInterface, OEFSearchReactionInterface, \
     DialogueReactionInterface
