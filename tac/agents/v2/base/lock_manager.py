@@ -17,6 +17,9 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+
+"""This module contains a class to manage locked agent states."""
+
 import datetime
 import logging
 import time
@@ -40,13 +43,15 @@ TRANSACTION_ID = str
 class LockManager(object):
     """Class to handle pending proposals/acceptances and locks."""
 
-    def __init__(self, agent_name: str, pending_transaction_timeout: int = 30, task_timeout: float = 2.0):
+    def __init__(self, agent_name: str, pending_transaction_timeout: int = 30, task_timeout: float = 2.0) -> None:
         """
         Initialize a LockManager.
 
         :param agent_name: The name of the agent the manager refers to.
         :param pending_transaction_timeout: seconds to wait before a transaction/message can be removed from any pool.
         :param task_timeout: seconds to sleep for the task
+
+        :return: None
         """
         self.agent_name = agent_name
 
@@ -68,6 +73,7 @@ class LockManager(object):
     def cleanup_locks_job(self) -> None:
         """
         Periodically check for transactions in one of the pending pools.
+
         If they have been there for too much time, remove them.
 
         :return: None
@@ -79,8 +85,7 @@ class LockManager(object):
 
     def _cleanup_pending_messages(self) -> None:
         """
-        Remove all the pending messages (i.e. either proposals or acceptances)
-        that have been stored for an amount of time longer than the timeout.
+        Remove all the pending messages (i.e. either proposals or acceptances) that have been stored for an amount of time longer than the timeout.
 
         :return: None
         """
@@ -115,8 +120,7 @@ class LockManager(object):
 
     def _cleanup_pending_transactions(self) -> None:
         """
-        Remove all the pending messages (i.e. either proposals or acceptances)
-        that have been stored for an amount of time longer than the timeout.
+        Remove all the pending messages (i.e. either proposals or acceptances) that have been stored for an amount of time longer than the timeout.
 
         :return: None
         """
@@ -152,6 +156,7 @@ class LockManager(object):
         Register a transaction with a creation datetime.
 
         :param transaction_id: the transaction id
+
         :return: None
         """
         now = datetime.datetime.now()
@@ -163,6 +168,7 @@ class LockManager(object):
 
         :param dialogue: the dialogue
         :param msg_id: the message id
+
         :return: None
         """
         now = datetime.datetime.now()
@@ -177,6 +183,7 @@ class LockManager(object):
         :param proposal_id: the message id of the proposal
         :param transaction: the transaction
         :raise AssertionError: if the pending proposal is already present.
+
         :return: None
         """
         assert dialogue.dialogue_label not in self.pending_tx_proposals and proposal_id not in self.pending_tx_proposals[dialogue.dialogue_label]
@@ -190,6 +197,7 @@ class LockManager(object):
         :param dialogue: the dialogue associated with the proposal
         :param proposal_id: the message id of the proposal
         :raise AssertionError: if the pending proposal is not present.
+
         :return: the transaction
         """
         assert dialogue.dialogue_label in self.pending_tx_proposals and proposal_id in self.pending_tx_proposals[dialogue.dialogue_label]
@@ -204,6 +212,7 @@ class LockManager(object):
         :param proposal_id: the message id of the proposal
         :param transaction: the transaction
         :raise AssertionError: if the pending acceptance is already present.
+
         :return: None
         """
         assert dialogue.dialogue_label not in self.pending_tx_acceptances and proposal_id not in self.pending_tx_acceptances[dialogue.dialogue_label]
@@ -217,6 +226,7 @@ class LockManager(object):
         :param dialogue: the dialogue associated with the proposal
         :param proposal_id: the message id of the proposal
         :raise AssertionError: if the pending acceptance is not present.
+
         :return: the transaction
         """
         assert dialogue.dialogue_label in self.pending_tx_acceptances and proposal_id in self.pending_tx_acceptances[dialogue.dialogue_label]
@@ -230,6 +240,7 @@ class LockManager(object):
         :param transaction: the transaction
         :param as_seller: whether the agent is a seller or not
         :raise AssertionError: if the transaction is already present.
+
         :return: None
         """
         transaction_id = transaction.transaction_id
@@ -247,6 +258,7 @@ class LockManager(object):
 
         :param transaction_id: the transaction id
         :raise AssertionError: if the transaction with the given transaction id has not been found.
+
         :return: the transaction
         """
         assert transaction_id in self.locks

@@ -17,6 +17,15 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+
+"""
+This module contains the classes required for dialogue management.
+
+- DialogueLabel: The dialogue label class acts as an identifier for dialogues.
+- Dialogue: The dialogue class maintains state of a dialogue and manages it.
+- Dialogues: The dialogues class keeps track of all dialogues.
+"""
+
 import logging
 from typing import List, Any, Dict, Union
 
@@ -34,15 +43,17 @@ logger = logging.getLogger(__name__)
 
 
 class DialogueLabel:
-    """Identifier for dialogues."""
+    """The dialogue label class acts as an identifier for dialogues."""
 
-    def __init__(self, dialogue_id: int, dialogue_opponent_pbk: str, dialogue_starter_pbk: str):
+    def __init__(self, dialogue_id: int, dialogue_opponent_pbk: str, dialogue_starter_pbk: str) -> None:
         """
         Initialize a dialogue label.
 
         :param dialogue_id: the id of the dialogue.
         :param dialogue_opponent_pbk: the pbk of the agent with which the dialogue is kept.
         :param dialogue_starter_pbk: the pbk of the agent which started the dialogue.
+
+        :return: None
         """
         self._dialogue_id = dialogue_id
         self._dialogue_opponent_pbk = dialogue_opponent_pbk
@@ -50,35 +61,42 @@ class DialogueLabel:
 
     @property
     def dialogue_id(self) -> int:
+        """Get the dialogue id."""
         return self._dialogue_id
 
     @property
     def dialogue_opponent_pbk(self) -> str:
+        """Get the public key of the dialogue opponent."""
         return self._dialogue_opponent_pbk
 
     @property
     def dialogue_starter_pbk(self) -> str:
+        """Get the public key of the dialogue starter."""
         return self._dialogue_starter_pbk
 
     def __eq__(self, other) -> bool:
+        """Check for equality between two DialogueLabel objects."""
         if type(other) == DialogueLabel:
             return self._dialogue_id == other.dialogue_id and self._dialogue_starter_pbk == other.dialogue_starter_pbk and self._dialogue_opponent_pbk == other.dialogue_opponent_pbk
         else:
             return False
 
     def __hash__(self) -> int:
+        """Turn object into hash."""
         return hash((self.dialogue_id, self.dialogue_opponent_pbk, self.dialogue_starter_pbk))
 
 
 class Dialogue:
-    """The dialogue maintains state of a dialogue and manages it."""
+    """The dialogue class maintains state of a dialogue and manages it."""
 
-    def __init__(self, dialogue_label: DialogueLabel, is_seller: bool):
+    def __init__(self, dialogue_label: DialogueLabel, is_seller: bool) -> None:
         """
         Initialize a dialogue label.
 
         :param dialogue_label: the identifier of the dialogue
         :param is_seller: indicates whether the agent associated with the dialogue is a seller or buyer
+
+        :return: None
         """
         self._dialogue_label = dialogue_label
         self._is_seller = is_seller
@@ -90,23 +108,27 @@ class Dialogue:
 
     @property
     def dialogue_label(self) -> DialogueLabel:
+        """Get the dialogue lable."""
         return self._dialogue_label
 
     @property
     def is_seller(self) -> bool:
+        """Check whether the agent acts as the seller in this dialogue."""
         return self._is_seller
 
     @property
     def is_self_initiated(self) -> bool:
+        """Check whether the agent initiated the dialogue."""
         return self._is_self_initiated
 
     @property
     def role(self) -> str:
+        """Get role of agent in dialogue."""
         return self._role
 
     def outgoing_extend(self, messages: List[AgentMessage]) -> None:
         """
-        Extends the list of messages which keeps track of outgoing messages.
+        Extend the list of messages which keeps track of outgoing messages.
 
         :param messages: a list of messages to be added
         :return: None
@@ -119,7 +141,7 @@ class Dialogue:
 
     def incoming_extend(self, messages: List[AgentMessage]) -> None:
         """
-        Extends the list of messages which keeps track of incoming messages.
+        Extend the list of messages which keeps track of incoming messages.
 
         :param messages: a list of messages to be added
         :return: None
@@ -128,7 +150,7 @@ class Dialogue:
 
     def is_expecting_propose(self) -> bool:
         """
-        Checks whether the dialogue is expecting a propose.
+        Check whether the dialogue is expecting a propose.
 
         :return: True if yes, False otherwise.
         """
@@ -138,7 +160,7 @@ class Dialogue:
 
     def is_expecting_initial_accept(self) -> bool:
         """
-        Checks whether the dialogue is expecting an initial accept.
+        Check whether the dialogue is expecting an initial accept.
 
         :return: True if yes, False otherwise.
         """
@@ -148,7 +170,7 @@ class Dialogue:
 
     def is_expecting_matching_accept(self) -> bool:
         """
-        Checks whether the dialogue is expecting a matching accept.
+        Check whether the dialogue is expecting a matching accept.
 
         :return: True if yes, False otherwise.
         """
@@ -158,7 +180,7 @@ class Dialogue:
 
     def is_expecting_cfp_decline(self) -> bool:
         """
-        Checks whether the dialogue is expecting an decline following a cfp.
+        Check whether the dialogue is expecting an decline following a cfp.
 
         :return: True if yes, False otherwise.
         """
@@ -168,7 +190,7 @@ class Dialogue:
 
     def is_expecting_propose_decline(self) -> bool:
         """
-        Checks whether the dialogue is expecting an decline following a propose.
+        Check whether the dialogue is expecting an decline following a propose.
 
         :return: True if yes, False otherwise.
         """
@@ -178,7 +200,7 @@ class Dialogue:
 
     def is_expecting_accept_decline(self) -> bool:
         """
-        Checks whether the dialogue is expecting an decline following an accept.
+        Check whether the dialogue is expecting an decline following an accept.
 
         :return: True if yes, False otherwise.
         """
@@ -188,10 +210,14 @@ class Dialogue:
 
 
 class Dialogues:
-    """This class keeps track of all dialogues"""
+    """The dialogues class keeps track of all dialogues."""
 
-    def __init__(self):
-        """Initialize dialogues."""
+    def __init__(self) -> None:
+        """
+        Initialize dialogues.
+
+        :return: None
+        """
         self._dialogues = {}  # type: Dict[DialogueLabel, Dialogue]
         self._dialogues_as_seller = {}  # type: Dict[DialogueLabel, Dialogue]
         self._dialogues_as_buyer = {}  # type: Dict[DialogueLabel, Dialogue]
@@ -199,33 +225,39 @@ class Dialogues:
 
     @property
     def dialogues(self) -> Dict[DialogueLabel, Dialogue]:
+        """Get dictionary of dialogues in which the agent is engaged in."""
         return self._dialogues
 
     @property
     def dialogues_as_seller(self) -> Dict[DialogueLabel, Dialogue]:
+        """Get dictionary of dialogues in which the agent acts as a seller."""
         return self._dialogues_as_seller
 
     @property
     def dialogues_as_buyer(self) -> Dict[DialogueLabel, Dialogue]:
+        """Get dictionary of dialogues in which the agent acts as a buyer."""
         return self._dialogues_as_buyer
 
     def is_permitted_for_new_dialogue(self, msg: AgentMessage, known_pbks: List[str]) -> bool:
         """
-        Checks whether an agent message is a CFP and from a known public key.
+        Check whether an agent message is a CFP and from a known public key.
 
         :param msg: the agent message
         :param known_pbks: the list of known public keys
-        :return: a boolean
+
+        :return: a boolean indicating whether the message is permitted for a new dialogue
         """
         result = isinstance(msg, CFP) and (msg.destination in known_pbks)
         return result
 
     def is_belonging_to_registered_dialogue(self, msg: AgentMessage, agent_pbk: str) -> bool:
         """
-        Checks whether an agent message is part of a registered dialogue.
+        Check whether an agent message is part of a registered dialogue.
 
         :param msg: the agent message
         :param agent_pbk: the public key of the agent
+
+        :return: boolean indicating whether the message belongs to a registered dialogue
         """
         self_initiated_dialogue_label = DialogueLabel(msg.dialogue_id, msg.destination, agent_pbk)
         other_initiated_dialogue_label = DialogueLabel(msg.dialogue_id, msg.destination, msg.destination)
@@ -254,10 +286,12 @@ class Dialogues:
 
     def get_dialogue(self, msg: AgentMessage, agent_pbk: str) -> Dialogue:
         """
-        Retrieves dialogue.
+        Retrieve dialogue.
 
         :param msg: the agent message
         :param agent_pbk: the public key of the agent
+
+        :return: the dialogue
         """
         self_initiated_dialogue_label = DialogueLabel(msg.dialogue_id, msg.destination, agent_pbk)
         other_initiated_dialogue_label = DialogueLabel(msg.dialogue_id, msg.destination, msg.destination)
@@ -285,7 +319,7 @@ class Dialogues:
 
     def _next_dialogue_id(self) -> int:
         """
-        Increments the id and returns it.
+        Increment the id and returns it.
 
         :return: the next id
         """
@@ -314,7 +348,7 @@ class Dialogues:
         :param dialogue_id: the id of the dialogue
         :param is_seller: boolean indicating the agent role
 
-        :return: the created dialogue.
+        :return: the created dialogue
         """
         dialogue_starter_pbk = dialogue_opponent_pbk
         dialogue_label = DialogueLabel(dialogue_id, dialogue_opponent_pbk, dialogue_starter_pbk)
@@ -328,7 +362,7 @@ class Dialogues:
         :param dialogue_label: the dialogue label
         :param is_seller: boolean indicating the agent role
 
-        :return: the created dialogue.
+        :return: the created dialogue
         """
         assert dialogue_label not in self.dialogues
         dialogue = Dialogue(dialogue_label, is_seller)

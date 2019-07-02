@@ -17,6 +17,9 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+
+"""This module contains a class to handle statistics on the TAC."""
+
 import datetime
 import time
 from enum import Enum
@@ -27,26 +30,25 @@ import numpy as np
 
 
 class EndState(Enum):
+    """This class defines the end states of a dialogue."""
+
     SUCCESSFUL = 0
     DECLINED_CFP = 1
     DECLINED_PROPOSE = 2
     DECLINED_ACCEPT = 3
 
 
-class SearchTime(Enum):
-    START = 0
-    END = 1
-
-
 class StatsManager(object):
-    """Class to handle agent stats."""
+    """Class to handle statistics on the game."""
 
-    def __init__(self, dashboard, task_timeout: float = 2.0):
+    def __init__(self, dashboard, task_timeout: float = 2.0) -> None:
         """
         Initialize a StatsManager.
 
         :param dashboard: The dashboard.
         :param task_timeout: seconds to sleep for the task
+
+        :return: None
         """
         self.dashboard = dashboard
         self._update_stats_task_is_running = False
@@ -68,18 +70,21 @@ class StatsManager(object):
 
     @property
     def self_initiated_dialogue_stats(self) -> Dict[EndState, int]:
+        """Get the stats dictionary on self initiated dialogues."""
         return self._self_initiated_dialogue_stats
 
     @property
     def other_initiated_dialogue_stats(self) -> Dict[EndState, int]:
+        """Get the stats dictionary on other initiated dialogues."""
         return self._other_initiated_dialogue_stats
 
     def add_dialogue_endstate(self, end_state: EndState, is_self_initiated: bool) -> None:
         """
-        Adds dialogue endstate stats.
+        Add dialogue endstate stats.
 
         :param end_state: the end state of the dialogue
         :param is_self_initiated: whether the dialogue is initiated by the agent or the opponent
+
         :return: None
         """
         if is_self_initiated:
@@ -89,9 +94,10 @@ class StatsManager(object):
 
     def search_start(self, search_id: int) -> None:
         """
-        Adds a search id and start time.
+        Add a search id and start time.
 
         :param search_id: the search id
+
         :return: None
         """
         assert search_id not in self._search_start_time
@@ -99,10 +105,11 @@ class StatsManager(object):
 
     def search_end(self, search_id: int, nb_search_results: int) -> None:
         """
-        Adds a search id and end time.
+        Add end time for a search id.
 
         :param search_id: the search id
         :param nb_search_results: the number of agents returned in the search result
+
         :return: None
         """
         assert search_id in self._search_start_time
@@ -112,7 +119,7 @@ class StatsManager(object):
 
     def avg_search_time(self) -> float:
         """
-        Avg the search timedeltas
+        Average the search timedeltas.
 
         :return: avg search time in seconds
         """
@@ -125,7 +132,7 @@ class StatsManager(object):
 
     def avg_search_result_counts(self) -> float:
         """
-        Avg the search result counts
+        Average the search result counts.
 
         :return: avg search result counts
         """
@@ -157,6 +164,7 @@ class StatsManager(object):
         Get the negotiation metrics.
 
         :param dialogue_stats: the dialogue statistics
+
         :return: an array containing the metrics
         """
         result = np.zeros((4), dtype=np.int)
@@ -189,7 +197,7 @@ class StatsManager(object):
 
     def update_stats_job(self) -> None:
         """
-        Periodically update the dashboard
+        Periodically update the dashboard.
 
         :return: None
         """
