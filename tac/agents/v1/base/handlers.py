@@ -60,7 +60,7 @@ class DialogueHandler(DialogueActions, DialogueReactions):
         :param liveness: the liveness module
         :param game_instance: the game instance
         :param out_box: the outbox
-        :param agent_agent_name: the agent agent_name
+        :param agent_name: the agent name
         """
         DialogueActions.__init__(self, crypto, liveness, game_instance, out_box, agent_name)
         DialogueReactions.__init__(self, crypto, liveness, game_instance, out_box, agent_name)
@@ -95,7 +95,7 @@ class ControllerHandler(ControllerActions, ControllerReactions):
         :param liveness: the liveness module
         :param game_instance: the game instance
         :param out_box: the outbox
-        :param agent_agent_name: the agent agent_name
+        :param agent_name: the agent name
         """
         ControllerActions.__init__(self, crypto, liveness, game_instance, out_box, agent_name)
         ControllerReactions.__init__(self, crypto, liveness, game_instance, out_box, agent_name)
@@ -149,7 +149,7 @@ class OEFHandler(OEFActions, OEFReactions):
         :param liveness: the liveness module
         :param game_instance: the game instance
         :param out_box: the outbox
-        :param agent_agent_name: the agent agent_name
+        :param agent_name: the agent name
         :param rejoin: boolean indicating whether the agent will rejoin the TAC if losing connection
         """
         OEFActions.__init__(self, crypto, liveness, game_instance, out_box, agent_name)
