@@ -201,7 +201,7 @@ def run_controller(tac_controller: ControllerAgent, tac_parameters: TACParameter
     :param tac_parameters: an instance of the TACParameters
     :return: None
     """
-    tac_controller.wait_and_start_competition(tac_parameters)
+    tac_controller.wait_and_handle_competition(tac_parameters)
 
 
 def run_simulation(tac_controller: ControllerAgent, tac_parameters: TACParameters, baseline_agents: List[BaselineAgent]) -> None:
