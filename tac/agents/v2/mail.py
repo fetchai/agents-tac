@@ -149,6 +149,7 @@ class InBox(object):
         result = self.get_some_wait(False)
         return result
 
+
 class OutBox(object):
     """
     Temporarily stores and sends messages to the OEF and other agents.
