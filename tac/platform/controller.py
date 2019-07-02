@@ -811,6 +811,7 @@ def _parse_arguments():
     parser.add_argument("--data-output-dir", default="data", help="The output directory for the simulation data.")
     parser.add_argument("--experiment-id", default=None, help="The experiment ID.")
     parser.add_argument("--seed", default=42, help="The random seed for the generation of the game parameters.")
+    parser.add_argument("--version", default=1, help="The version of the controller.")
 
     return parser.parse_args()
 
@@ -838,6 +839,7 @@ def main(
         data_output_dir: str = "data",
         experiment_id: Optional[str] = None,
         seed: int = 42,
+        version: int = 1,
         **kwargs
 ):
     """Run the controller script."""
@@ -856,7 +858,8 @@ def main(
         agent = ControllerAgent(name=name,
                                 oef_addr=oef_addr,
                                 oef_port=oef_port,
-                                monitor=monitor)
+                                monitor=monitor,
+                                version=version)
 
         whitelist = set(open(whitelist_file).read().splitlines(keepends=False)) if whitelist_file else None
         tac_parameters = TACParameters(
