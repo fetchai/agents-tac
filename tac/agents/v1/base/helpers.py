@@ -24,7 +24,7 @@ from typing import Union
 
 from oef.messages import Message as SimpleMessage, SearchResult, OEFErrorMessage, DialogueErrorMessage
 
-from tac.agents.v2.base.dialogues import DialogueLabel
+from tac.agents.v1.base.dialogues import DialogueLabel
 from tac.helpers.crypto import Crypto
 from tac.platform.protocol import Response
 

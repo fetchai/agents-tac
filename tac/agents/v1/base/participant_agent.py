@@ -27,12 +27,12 @@ from typing import Optional, Union
 from oef.messages import CFP, Decline, Propose, Accept, Message as SimpleMessage, \
     SearchResult, OEFErrorMessage, DialogueErrorMessage
 
-from tac.agents.v2.agent import Agent
-from tac.agents.v2.base.game_instance import GameInstance, GamePhase
-from tac.agents.v2.base.handlers import DialogueHandler, ControllerHandler, OEFHandler
-from tac.agents.v2.base.helpers import is_oef_message, is_controller_message
-from tac.agents.v2.base.strategy import Strategy
-from tac.agents.v2.mail import FIPAMailBox, InBox, OutBox
+from tac.agents.v1.agent import Agent
+from tac.agents.v1.base.game_instance import GameInstance, GamePhase
+from tac.agents.v1.base.handlers import DialogueHandler, ControllerHandler, OEFHandler
+from tac.agents.v1.base.helpers import is_oef_message, is_controller_message
+from tac.agents.v1.base.strategy import Strategy
+from tac.agents.v1.mail import FIPAMailBox, InBox, OutBox
 from tac.gui.dashboards.agent import AgentDashboard
 
 logger = logging.getLogger(__name__)

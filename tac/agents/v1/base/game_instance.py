@@ -28,10 +28,10 @@ from oef.messages import CFP_TYPES
 from oef.query import Query
 from oef.schema import Description
 
-from tac.agents.v2.base.dialogues import Dialogues
-from tac.agents.v2.base.lock_manager import LockManager
-from tac.agents.v2.base.strategy import Strategy
-from tac.agents.v2.base.stats_manager import StatsManager
+from tac.agents.v1.base.dialogues import Dialogues
+from tac.agents.v1.base.lock_manager import LockManager
+from tac.agents.v1.base.strategy import Strategy
+from tac.agents.v1.base.stats_manager import StatsManager
 from tac.gui.dashboards.agent import AgentDashboard
 from tac.platform.game import AgentState, WorldState, GameConfiguration
 from tac.helpers.misc import build_query, get_goods_quantities_description

@@ -28,11 +28,11 @@ from typing import Union, List
 from oef.messages import CFP, Decline, Propose, Accept
 from oef.utils import Context
 
-from tac.agents.v2.base.game_instance import GameInstance
-from tac.agents.v2.base.dialogues import Dialogue
-from tac.agents.v2.mail import OutContainer
-from tac.agents.v2.base.helpers import generate_transaction_id
-from tac.agents.v2.base.stats_manager import EndState
+from tac.agents.v1.base.game_instance import GameInstance
+from tac.agents.v1.base.dialogues import Dialogue
+from tac.agents.v1.mail import OutContainer
+from tac.agents.v1.base.helpers import generate_transaction_id
+from tac.agents.v1.base.stats_manager import EndState
 from tac.helpers.crypto import Crypto
 from tac.platform.protocol import Transaction
 

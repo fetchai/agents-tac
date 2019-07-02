@@ -11,6 +11,7 @@ tac.platform.controller module
    :members:
    :undoc-members:
    :show-inheritance:
+
 tac.platform.game module
 ------------------------
 
@@ -18,6 +19,7 @@ tac.platform.game module
    :members:
    :undoc-members:
    :show-inheritance:
+
 tac.platform.protocol module
 ----------------------------
 
@@ -25,6 +27,7 @@ tac.platform.protocol module
    :members:
    :undoc-members:
    :show-inheritance:
+
 tac.platform.stats module
 -------------------------
 

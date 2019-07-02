@@ -26,7 +26,7 @@ import time
 from abc import abstractmethod
 from typing import Optional
 
-from tac.agents.v2.mail import MailBox, InBox, OutBox
+from tac.agents.v1.mail import MailBox, InBox, OutBox
 from tac.helpers.crypto import Crypto
 
 logger = logging.getLogger(__name__)

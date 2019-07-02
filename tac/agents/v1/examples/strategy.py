@@ -24,7 +24,7 @@ from typing import List, Set
 
 from oef.schema import Description
 
-from tac.agents.v2.base.strategy import RegisterAs, SearchFor, Strategy
+from tac.agents.v1.base.strategy import RegisterAs, SearchFor, Strategy
 from tac.helpers.misc import get_goods_quantities_description, marginal_utility
 from tac.platform.game import WorldState
 
