@@ -35,6 +35,7 @@ import json
 import logging
 import os
 import pprint
+import random
 import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
@@ -519,13 +520,9 @@ class GameHandler:
             self.controller_agent.monitor.set_gamestats(GameStats(self.current_game))
             self.controller_agent.monitor.update()
         except Exception as e:
-            logger.error(str(e))
+            logger.exception(e)
 
         self._send_game_data_to_agents()
-
-        # start the inactivity timeout.
-        self._timeout_checker_task = Thread(target=self.controller_agent.check_inactivity_timeout)
-        self._timeout_checker_task.start()
 
         # log messages
         logger.debug("[{}]: Started competition:\n{}".format(self.controller_agent.name, self.current_game.get_holdings_summary()))
@@ -695,7 +692,7 @@ class ControllerAgent(OEFAgent):
         """
         experiment_dir = directory + "/" + experiment_name
 
-        if not self.game_handler.is_game_running():
+        if self.game_handler is None or not self.game_handler.is_game_running():
             logger.warning("[{}]: Game not present. Using empty dictionary.".format(self.name))
             game_dict = {}
         else:
@@ -748,7 +745,7 @@ class ControllerAgent(OEFAgent):
         """Update the last activity tracker."""
         self.last_activity = datetime.datetime.now()
 
-    def start_competition(self, tac_parameters: TACParameters):
+    def handle_competition(self, tac_parameters: TACParameters):
         """
         Start a Trading Agent Competition.
 
@@ -765,14 +762,19 @@ class ControllerAgent(OEFAgent):
 
         self.game_handler = GameHandler(self, tac_parameters)
         self._message_processing_task.start()
-        self.game_handler.handle_registration_phase()
 
-    def wait_and_start_competition(self, tac_parameters: TACParameters, rate: float = 0.5) -> None:
+        if self.game_handler.handle_registration_phase():
+            # start the inactivity timeout.
+            self._timeout_checker_task = Thread(target=self.check_inactivity_timeout)
+            self._timeout_checker_task.run()
+        else:
+            self.terminate()
+
+    def wait_and_handle_competition(self, tac_parameters: TACParameters) -> None:
         """
         Wait until the current time is greater than the start time, then, start the TAC.
 
         :param tac_parameters: the parameters for TAC.
-        :param rate: at which rate the start time should be checked.
         :return: None
         """
         now = datetime.datetime.now()
@@ -782,7 +784,7 @@ class ControllerAgent(OEFAgent):
 
         seconds_to_wait = (tac_parameters.start_time - now).total_seconds()
         time.sleep(0.5 if seconds_to_wait < 0 else seconds_to_wait)
-        self.start_competition(tac_parameters)
+        self.handle_competition(tac_parameters)
 
 
 def _parse_arguments():
@@ -791,12 +793,12 @@ def _parse_arguments():
     parser.add_argument("--nb-agents", default=5, type=int, help="Number of goods")
     parser.add_argument("--nb-goods", default=5, type=int, help="Number of goods")
     parser.add_argument("--money-endowment", type=int, default=200, help="Initial amount of money.")
-    parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
-    parser.add_argument("--oef-port", default=10000, help="TCP/IP port of the OEF Agent")
     parser.add_argument("--base-good-endowment", default=2, type=int, help="The base amount of per good instances every agent receives.")
     parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
     parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
     parser.add_argument("--tx-fee", default=1.0, type=float, help="Number of goods")
+    parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
+    parser.add_argument("--oef-port", default=10000, help="TCP/IP port of the OEF Agent")
     parser.add_argument("--start-time", default=str(datetime.datetime.now() + datetime.timedelta(0, 10)), type=str, help="The start time for the competition (in UTC format).")
     parser.add_argument("--registration-timeout", default=10, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
     parser.add_argument("--inactivity-timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
@@ -806,6 +808,10 @@ def _parse_arguments():
     parser.add_argument("--gui", action="store_true", help="Show the GUI.")
     parser.add_argument("--visdom-addr", default="localhost", help="TCP/IP address of the Visdom server.")
     parser.add_argument("--visdom-port", default=8097, help="TCP/IP port of the Visdom server.")
+    parser.add_argument("--data-output-dir", default="data", help="The output directory for the simulation data.")
+    parser.add_argument("--experiment-id", default=None, help="The experiment ID.")
+    parser.add_argument("--seed", default=42, help="The random seed for the generation of the game parameters.")
+
     return parser.parse_args()
 
 
@@ -813,6 +819,7 @@ def main():
     """Run the script."""
     agent = None
     arguments = _parse_arguments()
+    random.seed(arguments.seed)
 
     if arguments.verbose:
         logger.setLevel(logging.DEBUG)
@@ -846,11 +853,18 @@ def main():
 
         agent.connect()
         agent.register()
-        agent.wait_and_start_competition(tac_parameters)
+        agent.wait_and_handle_competition(tac_parameters)
 
+    except Exception as e:
+        logger.exception(e)
     finally:
         if agent is not None:
             agent.terminate()
+            experiment_name = arguments.experiment_id if arguments.experiment_id is not None else str(datetime.datetime.now()).replace(" ", "_")
+            agent.dump(arguments.data_output_dir, experiment_name)
+            if agent.game_handler is not None and agent.game_handler.is_game_running():
+                game_stats = GameStats(agent.game_handler.current_game)
+                game_stats.dump(arguments.data_output_dir, experiment_name)
 
 
 if __name__ == '__main__':
