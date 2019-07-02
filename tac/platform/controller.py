@@ -794,8 +794,8 @@ def _parse_arguments():
     parser.add_argument("--nb-goods", default=5, type=int, help="Number of goods")
     parser.add_argument("--money-endowment", type=int, default=200, help="Initial amount of money.")
     parser.add_argument("--base-good-endowment", default=2, type=int, help="The base amount of per good instances every agent receives.")
-    parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
-    parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
+    parser.add_argument("--lower-bound-factor", default=0, type=int, help="The lower bound factor of a uniform distribution.")
+    parser.add_argument("--upper-bound-factor", default=0, type=int, help="The upper bound factor of a uniform distribution.")
     parser.add_argument("--tx-fee", default=1.0, type=float, help="Number of goods")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=10000, help="TCP/IP port of the OEF Agent")
@@ -815,39 +815,62 @@ def _parse_arguments():
     return parser.parse_args()
 
 
-def main():
-    """Run the script."""
-    agent = None
-    arguments = _parse_arguments()
-    random.seed(arguments.seed)
+def main(
+        name: str = "controller",
+        nb_agents: int = 5,
+        nb_goods: int = 5,
+        money_endowment: int = 200,
+        base_good_endowment: int = 2,
+        lower_bound_factor: int = 0,
+        upper_bound_factor: int = 0,
+        tx_fee: float = 1.0,
+        oef_addr: str = "127.0.0.1",
+        oef_port: int = 10000,
+        start_time: str = str(datetime.datetime.now() + datetime.timedelta(0, 10)),
+        registration_timeout: int = 10,
+        inactivity_timeout: int = 60,
+        competition_timeout: int = 240,
+        whitelist_file: Optional[str] = None,
+        verbose: bool = False,
+        gui: bool = False,
+        visdom_addr: str = "localhost",
+        visdom_port: int = 8097,
+        data_output_dir: str = "data",
+        experiment_id: Optional[str] = None,
+        seed: int = 42,
+        **kwargs
+):
+    """Run the controller script."""
+    agent = None  # type: Optional[ControllerAgent]
+    random.seed(seed)
 
-    if arguments.verbose:
+    if verbose:
         logger.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
 
-    monitor = VisdomMonitor(visdom_addr=arguments.visdom_addr, visdom_port=arguments.visdom_port) if arguments.gui else NullMonitor()
+    monitor = VisdomMonitor(visdom_addr=visdom_addr, visdom_port=visdom_port) if gui else NullMonitor()
 
     try:
 
-        agent = ControllerAgent(name=arguments.name,
-                                oef_addr=arguments.oef_addr,
-                                oef_port=arguments.oef_port,
+        agent = ControllerAgent(name=name,
+                                oef_addr=oef_addr,
+                                oef_port=oef_port,
                                 monitor=monitor)
 
-        whitelist = set(open(arguments.whitelist_file).read().splitlines(keepends=False)) if arguments.whitelist_file else None
+        whitelist = set(open(whitelist_file).read().splitlines(keepends=False)) if whitelist_file else None
         tac_parameters = TACParameters(
-            min_nb_agents=arguments.nb_agents,
-            money_endowment=arguments.money_endowment,
-            nb_goods=arguments.nb_goods,
-            tx_fee=arguments.tx_fee,
-            base_good_endowment=arguments.base_good_endowment,
-            lower_bound_factor=arguments.lower_bound_factor,
-            upper_bound_factor=arguments.upper_bound_factor,
-            start_time=dateutil.parser.parse(arguments.start_time),
-            registration_timeout=arguments.registration_timeout,
-            competition_timeout=arguments.competition_timeout,
-            inactivity_timeout=arguments.inactivity_timeout,
+            min_nb_agents=nb_agents,
+            money_endowment=money_endowment,
+            nb_goods=nb_goods,
+            tx_fee=tx_fee,
+            base_good_endowment=base_good_endowment,
+            lower_bound_factor=lower_bound_factor,
+            upper_bound_factor=upper_bound_factor,
+            start_time=dateutil.parser.parse(start_time),
+            registration_timeout=registration_timeout,
+            competition_timeout=competition_timeout,
+            inactivity_timeout=inactivity_timeout,
             whitelist=whitelist
         )
 
@@ -860,12 +883,13 @@ def main():
     finally:
         if agent is not None:
             agent.terminate()
-            experiment_name = arguments.experiment_id if arguments.experiment_id is not None else str(datetime.datetime.now()).replace(" ", "_")
-            agent.dump(arguments.data_output_dir, experiment_name)
+            experiment_name = experiment_id if experiment_id is not None else str(datetime.datetime.now()).replace(" ", "_")
+            agent.dump(data_output_dir, experiment_name)
             if agent.game_handler is not None and agent.game_handler.is_game_running():
                 game_stats = GameStats(agent.game_handler.current_game)
-                game_stats.dump(arguments.data_output_dir, experiment_name)
+                game_stats.dump(data_output_dir, experiment_name)
 
 
 if __name__ == '__main__':
-    main()
+    arguments = _parse_arguments()
+    main(**arguments.__dict__)
