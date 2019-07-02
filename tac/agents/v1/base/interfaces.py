@@ -17,6 +17,9 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+
+"""This module defines the interfaces which a TAC compatible agent must implement."""
+
 from abc import abstractmethod
 from typing import Union
 
@@ -28,16 +31,15 @@ AgentMessage = Union[SimpleMessage, CFP, Propose, Accept, Decline]
 
 
 class ControllerReactionInterface:
-    """
-    This interface contains the methods to react to events from the ControllerAgent.
-    """
+    """This interface contains the methods to react to events from the ControllerAgent."""
 
     @abstractmethod
     def on_dialogue_error(self, dialogue_error_msg: DialogueErrorMessage) -> None:
         """
-        Handles dialogue error event emitted by the controller.
+        Handle dialogue error event emitted by the controller.
 
         :param dialogue_error_msg: the dialogue error message
+
         :return: None
         """
 
@@ -47,6 +49,7 @@ class ControllerReactionInterface:
         On start of the competition, do the setup.
 
         :param game_data: the data for the started game.
+
         :return: None
         """
 
@@ -88,9 +91,7 @@ class ControllerReactionInterface:
 
 
 class ControllerActionInterface:
-    """
-    This interface contains the methods to interact with the ControllerAgent.
-    """
+    """This interface contains the methods to interact with the ControllerAgent."""
 
     @abstractmethod
     def request_state_update(self) -> None:
@@ -102,9 +103,7 @@ class ControllerActionInterface:
 
 
 class OEFSearchReactionInterface:
-    """
-    This interface contains the methods to react to events from the OEF.
-    """
+    """This interface contains the methods to react to events from the OEF."""
 
     @abstractmethod
     def on_search_result(self, search_result: SearchResult) -> None:
@@ -112,6 +111,7 @@ class OEFSearchReactionInterface:
         Handle search results.
 
         :param search_result: the search result
+
         :return: None
         """
 
@@ -121,23 +121,23 @@ class OEFSearchReactionInterface:
         Handle an OEF error message.
 
         :param oef_error: the oef error
+
         :return: None
         """
 
     @abstractmethod
     def on_dialogue_error(self, dialogue_error: DialogueErrorMessage) -> None:
         """
-        Handler a dialogue error message
+        Handle a dialogue error message.
 
         :param dialogue_error_msg: the dialogue error message
+
         :return: None
         """
 
 
 class OEFSearchActionInterface:
-    """
-    This interface contains the methods to interact with the OEF.
-    """
+    """This interface contains the methods to interact with the OEF."""
 
     @abstractmethod
     def search_for_tac(self) -> None:
@@ -150,7 +150,7 @@ class OEFSearchActionInterface:
     @abstractmethod
     def update_services(self) -> None:
         """
-        Update services on OEF Service Directory
+        Update services on OEF Service Directory.
 
         :return: None
         """
@@ -181,17 +181,19 @@ class OEFSearchActionInterface:
 
 
 class DialogueReactionInterface:
-    """
-    This interface contains the methods to react to events from other agents.
-    """
+    """This interface contains the methods to react to events from other agents."""
 
     @abstractmethod
     def on_new_dialogue(self, msg: AgentMessage) -> None:
-        """Given a new message, create a Dialogue object that specifies:
+        """
+        React to a message for a new dialogue.
+
+        Given a new message, create a Dialogue object that specifies:
         - the protocol rules that messages must follow;
         - how the agent behaves in this dialogue.
 
         :param msg: the agent message
+
         :return: None
         """
 
@@ -201,6 +203,7 @@ class DialogueReactionInterface:
         React to a message of an existing dialogue.
 
         :param msg: the agent message
+
         :return: None
         """
 
@@ -210,11 +213,10 @@ class DialogueReactionInterface:
         React to a message of an unidentified dialogue.
 
         :param msg: the agent message
+
         :return: None
         """
 
 
 class DialogueActionInterface:
-    """
-    This interface contains the methods to interact with other agents.
-    """
+    """This interface contains the methods to interact with other agents."""

@@ -19,7 +19,7 @@ This repository contains submodules. Clone with recursive strategy:
 - [x] In another terminal, you have entered the virtual environment and connected a template agent to the sandbox:
 
       pipenv shell
-      python3 templates/v2/basic.py --name my_agent --gui
+      python3 templates/v1/basic.py --name my_agent --gui
 
 The sandbox is starting up:
 <p align="center">

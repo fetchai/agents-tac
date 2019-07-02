@@ -17,3 +17,5 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+
+"""Contains the TAC agents package."""

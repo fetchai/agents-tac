@@ -17,34 +17,53 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+
+"""This module contains the implementation of a template agent."""
+
 import logging
+import time
 
 from abc import abstractmethod
 from typing import Optional
 
-from tac.agents.v2.mail import MailBox, InBox, OutBox
+from tac.agents.v1.mail import MailBox, InBox, OutBox
 from tac.helpers.crypto import Crypto
 
 logger = logging.getLogger(__name__)
 
 
 class Liveness:
-    """
-    Determines the liveness of the agent.
-    """
+    """Determines the liveness of the agent."""
+
     def __init__(self):
+        """Instantiate the liveness."""
         self._is_stopped = True
 
     @property
     def is_stopped(self) -> bool:
+        """Check whether the liveness is stopped."""
         return self._is_stopped
 
 
 class Agent:
-    def __init__(self, name: str, oef_addr: str, oef_port: int = 10000, private_key_pem_path: Optional[str] = None):
+    """This class implements a template agent."""
+
+    def __init__(self, name: str, oef_addr: str, oef_port: int = 10000, private_key_pem_path: Optional[str] = None, timeout: Optional[float] = 1.0) -> None:
+        """
+        Instantiate the agent.
+
+        :param name: the name of the agent
+        :param oef_addr: TCP/IP address of the OEF Agent
+        :param oef_port: TCP/IP port of the OEF Agent
+        :param private_key_pem_path: the path to the private key of the agent.
+        :param timeout: the time in (fractions of) seconds to time out an agent between act and react
+
+        :return: None
+        """
         self._name = name
         self._crypto = Crypto(private_key_pem_path=private_key_pem_path)
         self._liveness = Liveness()
+        self._timeout = timeout
 
         self.mail_box = None  # type: Optional[MailBox]
         self.in_box = None  # type: Optional[InBox]
@@ -52,19 +71,22 @@ class Agent:
 
     @property
     def name(self) -> str:
+        """Get the agent name."""
         return self._name
 
     @property
     def crypto(self) -> Crypto:
+        """Get the crypto."""
         return self._crypto
 
     @property
     def liveness(self) -> Liveness:
+        """Get the liveness."""
         return self._liveness
 
     def start(self) -> None:
         """
-        Starts the mailbox.
+        Start the agent.
 
         :return: None
         """
@@ -74,11 +96,14 @@ class Agent:
 
     def run_main_loop(self) -> None:
         """
-        Runs the main loop of the agent
+        Run the main loop of the agent.
+
+        :return: None
         """
         logger.debug("[{}]: Start processing messages...".format(self.name))
         while not self.liveness.is_stopped:
             self.act()
+            time.sleep(self._timeout)
             self.react()
 
         self.stop()
@@ -86,7 +111,7 @@ class Agent:
 
     def stop(self) -> None:
         """
-        Stops the mailbox.
+        Stop the agent.
 
         :return: None
         """
@@ -97,7 +122,7 @@ class Agent:
     @abstractmethod
     def act(self) -> None:
         """
-        Performs actions.
+        Perform actions.
 
         :return: None
         """
@@ -105,7 +130,7 @@ class Agent:
     @abstractmethod
     def react(self) -> None:
         """
-        Reacts to incoming events.
+        React to incoming events.
 
         :return: None
         """

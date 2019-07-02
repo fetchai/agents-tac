@@ -22,46 +22,37 @@
 import asyncio
 import datetime
 from threading import Thread
-from typing import Union, List
+from typing import List
 
 import numpy as np
 import pytest
 
-from tac.agents.v2.base.strategy import SearchFor, RegisterAs
-from tac.agents.v2.examples.strategy import BaselineStrategy
+from tac.agents.v1.base.strategy import SearchFor, RegisterAs
+from tac.agents.v1.examples.strategy import BaselineStrategy
 from tac.platform.game import Game
 
 from tac.agents.v1.examples.baseline import BaselineAgent as BaselineAgentV1
-from tac.agents.v2.examples.baseline import BaselineAgent as BaselineAgentV2
 
 from tac.platform.controller import ControllerAgent, TACParameters
 
 
-def _init_baseline_agents(n: int, version: str, oef_addr: str, oef_port: int) -> Union[List[BaselineAgentV1], List[BaselineAgentV2]]:
+def _init_baseline_agents(n: int, version: str, oef_addr: str, oef_port: int) -> List[BaselineAgentV1]:
     """Baseline agents initialization."""
     if version == "v1":
         return [BaselineAgentV1("baseline_{:02}".format(i), "127.0.0.1", 10000,
-                                search_for=SearchFor.BOTH, register_as=RegisterAs.BOTH, pending_transaction_timeout=120,
-                                loop=asyncio.new_event_loop()) for i in range(n)]
-    elif version == "v2":
-        return [BaselineAgentV2("baseline_{:02}".format(i), "127.0.0.1", 10000,
                                 BaselineStrategy(search_for=SearchFor.BOTH, register_as=RegisterAs.BOTH),
                                 pending_transaction_timeout=120) for i in range(n)]
 
 
-def _run_baseline_agent(agent: Union[BaselineAgentV1, BaselineAgentV2], version: str) -> None:
+def _run_baseline_agent(agent: BaselineAgentV1, version: str) -> None:
     """Run a baseline agent. The version."""
     if version == "v1":
-        agent.connect()
-        agent.search_for_tac()
-        agent.run()
-    elif version == "v2":
         agent.start()
     else:
-        pytest.fail("Baseline agent version not recognized: {} (must be either 'v1' or 'v2')")
+        pytest.fail("Baseline agent version not recognized: {} (must be 'v1')")
 
 
-@pytest.fixture(params=["v1", "v2"])
+@pytest.fixture(params=["v1"])
 def baseline_version(request):
     """Version setting."""
     return request.param
@@ -81,7 +72,7 @@ class TestSimulation:
         cls.tac_controller.connect()
         cls.tac_controller.register()
 
-        cls.baseline_agents = _init_baseline_agents(5, "v2", "127.0.0.1", 10000)
+        cls.baseline_agents = _init_baseline_agents(5, "v1", "127.0.0.1", 10000)
 
         cls.tac_parameters = TACParameters(min_nb_agents=5,
                                            money_endowment=200,
@@ -98,9 +89,9 @@ class TestSimulation:
         # run the simulation
         try:
             # generate task for the controller
-            controller_thread = Thread(target=cls.tac_controller.start_competition, args=(cls.tac_parameters, ))
+            controller_thread = Thread(target=cls.tac_controller.handle_competition, args=(cls.tac_parameters,))
 
-            baseline_threads = [Thread(target=_run_baseline_agent, args=[baseline_agent, "v2"])
+            baseline_threads = [Thread(target=_run_baseline_agent, args=[baseline_agent, "v1"])
                                 for baseline_agent in cls.baseline_agents]
 
             # launch all thread.

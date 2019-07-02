@@ -17,14 +17,23 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+
+"""
+This module contains the classes which define the actions of an agent.
+
+- ControllerActions: The ControllerActions class defines the actions of an agent towards the ControllerAgent.
+- OEFActions: The OEFActions class defines the actions of an agent towards the OEF.
+- DialogueActions: The DialogueActions class defines the actions of an agent in the context of a Dialogue.
+"""
+
 import logging
 
 from oef.query import Query, Constraint, GtEq
 
-from tac.agents.v2.agent import Liveness
-from tac.agents.v2.base.interfaces import ControllerActionInterface, OEFSearchActionInterface, DialogueActionInterface
-from tac.agents.v2.base.game_instance import GameInstance
-from tac.agents.v2.mail import OutBox, OutContainer
+from tac.agents.v1.agent import Liveness
+from tac.agents.v1.base.interfaces import ControllerActionInterface, OEFSearchActionInterface, DialogueActionInterface
+from tac.agents.v1.base.game_instance import GameInstance
+from tac.agents.v1.mail import OutBox, OutContainer
 from tac.helpers.crypto import Crypto
 from tac.platform.protocol import GetStateUpdate
 
@@ -32,13 +41,25 @@ logger = logging.getLogger(__name__)
 
 
 class ControllerActions(ControllerActionInterface):
+    """The ControllerActions class defines the actions of an agent towards the ControllerAgent."""
 
-    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', name: str):
+    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', agent_name: str) -> None:
+        """
+        Instantiate the ControllerActions.
+
+        :param crypto: the crypto module
+        :param liveness: the liveness module
+        :param game_instance: the game instance
+        :param out_box: the outbox of the agent
+        :param agent_name: the agent name
+
+        :return: None
+        """
         self.crypto = crypto
         self.liveness = liveness
         self.game_instance = game_instance
         self.out_box = out_box
-        self.name = name
+        self.agent_name = agent_name
 
     def request_state_update(self) -> None:
         """
@@ -51,13 +72,25 @@ class ControllerActions(ControllerActionInterface):
 
 
 class OEFActions(OEFSearchActionInterface):
+    """The OEFActions class defines the actions of an agent towards the OEF."""
 
-    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', name: str):
+    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', agent_name: str) -> None:
+        """
+        Instantiate the OEFActions.
+
+        :param crypto: the crypto module
+        :param liveness: the liveness module
+        :param game_instance: the game instance
+        :param out_box: the outbox of the agent
+        :param agent_name: the agent name
+
+        :return: None
+        """
         self.crypto = crypto
         self.liveness = liveness
         self.game_instance = game_instance
         self.out_box = out_box
-        self.name = name
+        self.agent_name = agent_name
 
     def search_for_tac(self) -> None:
         """
@@ -76,7 +109,7 @@ class OEFActions(OEFSearchActionInterface):
 
     def update_services(self) -> None:
         """
-        Update services on OEF Service Directory
+        Update services on OEF Service Directory.
 
         :return: None
         """
@@ -96,7 +129,9 @@ class OEFActions(OEFSearchActionInterface):
 
     def register_service(self) -> None:
         """
-        Register to the OEF Service Directory
+        Register to the OEF Service Directory.
+
+        In particular, register
             - as a seller, listing the goods supplied, or
             - as a buyer, listing the goods demanded, or
             - as both.
@@ -104,19 +139,21 @@ class OEFActions(OEFSearchActionInterface):
         :return: None
         """
         if self.game_instance.strategy.is_registering_as_seller:
-            logger.debug("[{}]: Updating service directory as seller with goods supplied.".format(self.name))
+            logger.debug("[{}]: Updating service directory as seller with goods supplied.".format(self.agent_name))
             goods_supplied_description = self.game_instance.get_service_description(is_supply=True)
             self.game_instance.goods_supplied_description = goods_supplied_description
             self.out_box.out_queue.put(OutContainer(service_description=goods_supplied_description, message_id=1))
         if self.game_instance.strategy.is_registering_as_buyer:
-            logger.debug("[{}]: Updating service directory as buyer with goods demanded.".format(self.name))
+            logger.debug("[{}]: Updating service directory as buyer with goods demanded.".format(self.agent_name))
             goods_demanded_description = self.game_instance.get_service_description(is_supply=False)
             self.game_instance.goods_demanded_description = goods_demanded_description
             self.out_box.out_queue.put(OutContainer(service_description=goods_demanded_description, message_id=1))
 
     def search_services(self) -> None:
         """
-        Search on OEF Service Directory
+        Search on OEF Service Directory.
+
+        In particular, search
             - for sellers and their supply, or
             - for buyers and their demand, or
             - for both.
@@ -126,10 +163,10 @@ class OEFActions(OEFSearchActionInterface):
         if self.game_instance.strategy.is_searching_for_sellers:
             query = self.game_instance.build_services_query(is_searching_for_sellers=True)
             if query is None:
-                logger.warning("[{}]: Not searching the OEF for sellers because the agent demands no goods.".format(self.name))
+                logger.warning("[{}]: Not searching the OEF for sellers because the agent demands no goods.".format(self.agent_name))
                 return None
             else:
-                logger.debug("[{}]: Searching for sellers which match the demand of the agent.".format(self.name))
+                logger.debug("[{}]: Searching for sellers which match the demand of the agent.".format(self.agent_name))
                 search_id = self.game_instance.search.get_next_id()
                 self.game_instance.search.ids_for_sellers.add(search_id)
                 self.out_box.out_queue.put(OutContainer(query=query, search_id=search_id))
@@ -137,10 +174,10 @@ class OEFActions(OEFSearchActionInterface):
         if self.game_instance.strategy.is_searching_for_buyers:
             query = self.game_instance.build_services_query(is_searching_for_sellers=False)
             if query is None:
-                logger.warning("[{}]: Not searching the OEF for buyers because the agent supplies no goods.".format(self.name))
+                logger.warning("[{}]: Not searching the OEF for buyers because the agent supplies no goods.".format(self.agent_name))
                 return None
             else:
-                logger.debug("[{}]: Searching for buyers which match the supply of the agent.".format(self.name))
+                logger.debug("[{}]: Searching for buyers which match the supply of the agent.".format(self.agent_name))
                 search_id = self.game_instance.search.get_next_id()
                 self.game_instance.search.ids_for_buyers.add(search_id)
                 self.out_box.out_queue.put(OutContainer(query=query, search_id=search_id))
@@ -148,14 +185,23 @@ class OEFActions(OEFSearchActionInterface):
 
 
 class DialogueActions(DialogueActionInterface):
-    """
-    Implements a basic dialogue interface.
-    """
+    """The DialogueActions class defines the actions of an agent in the context of a Dialogue."""
 
-    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: OutBox, name: str):
+    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: OutBox, agent_name: str) -> None:
+        """
+        Instantiate the DialogueActions.
+
+        :param crypto: the crypto module
+        :param liveness: the liveness module
+        :param game_instance: the game instance
+        :param out_box: the outbox of the agent
+        :param agent_name: the agent name
+
+        :return: None
+        """
         self.crypto = crypto
         self.liveness = liveness
         self.game_instance = game_instance
         self.out_box = out_box
-        self.name = name
+        self.agent_name = agent_name
         self.dialogues = game_instance.dialogues

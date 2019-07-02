@@ -7,7 +7,6 @@ Subpackages
 .. toctree::
 
    tac.agents.v1
-   tac.agents.v2
 
 Module contents
 ---------------

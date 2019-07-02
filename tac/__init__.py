@@ -18,6 +18,7 @@
 #
 # ------------------------------------------------------------------------------
 
+"""Contains the TAC package."""
 
 from tac.__version__ import __title__, __description__, __url__, __version__
 from tac.__version__ import __build__, __author__, __license__, __copyright__

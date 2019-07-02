@@ -17,23 +17,36 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+
+"""This module contains a baseline implementation of the abstract strategy class defining an agent's strategy for the TAC."""
+
 from typing import List, Set
 
 from oef.schema import Description
 
-from tac.agents.v2.base.strategy import RegisterAs, SearchFor, Strategy
+from tac.agents.v1.base.strategy import RegisterAs, SearchFor, Strategy
 from tac.helpers.misc import get_goods_quantities_description, marginal_utility
 from tac.platform.game import WorldState
 
 
 class BaselineStrategy(Strategy):
+    """This class defines a baseline strategy for the agent."""
 
-    def __init__(self, register_as: RegisterAs = RegisterAs.BOTH, search_for: SearchFor = SearchFor.BOTH, is_world_modeling: bool = False):
+    def __init__(self, register_as: RegisterAs = RegisterAs.BOTH, search_for: SearchFor = SearchFor.BOTH, is_world_modeling: bool = False) -> None:
+        """
+        Initialize the strategy of the agent.
+
+        :param register_as: determines whether the agent registers as seller, buyer or both
+        :param search_for: determines whether the agent searches for sellers, buyers or both
+        :param is_world_modeling: determines whether the agent has a model of the world
+
+        :return: None
+        """
         super().__init__(register_as, search_for, is_world_modeling)
 
     def supplied_good_quantities(self, current_holdings: List[int]) -> List[int]:
         """
-        Generates list of quantities which are supplied.
+        Generate a list of quantities which are supplied.
 
         :param current_holdings: a list of current good holdings
         :return: a list of quantities
@@ -42,42 +55,46 @@ class BaselineStrategy(Strategy):
 
     def supplied_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
         """
-        Generates set of good public keys which are supplied.
+        Generate a set of good public keys which are supplied.
 
         :param good_pbks: a list of good public keys
         :param current_holdings: a list of current good holdings
+
         :return: a set of public keys
         """
         return {good_pbk for good_pbk, quantity in zip(good_pbks, current_holdings) if quantity > 1}
 
     def demanded_good_quantities(self, current_holdings: List[int]) -> List[int]:
         """
-        Generates list of quantities which are demanded.
+        Generate a list of quantities which are demanded.
 
         :param current_holdings: a list of current good holdings
+
         :return: a list of quantities
         """
         return [1 for _ in current_holdings]
 
     def demanded_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
         """
-        Generates set of good public keys which are demanded.
+        Generate a set of good public keys which are demanded.
 
         :param good_pbks: a list of good public keys
         :param current_holdings: a list of current good holdings
+
         :return: a set of public keys
         """
         return {good_pbk for good_pbk, quantity in zip(good_pbks, current_holdings)}
 
     def get_proposals(self, good_pbks: List[str], current_holdings: List[int], utility_params: List[int], tx_fee: float, is_seller: bool, world_state: WorldState) -> List[Description]:
         """
-        Generates proposals from the seller/buyer.
+        Generate a proposals from the seller/buyer.
 
         :param good_pbks: a list of good public keys
         :param current_holdings: a list of current good holdings
         :param utility_params: a list of utility params
         :param tx_fee: the transaction fee
         :param is_seller: Boolean indicating the role of the agent
+        :param world_state: the world state module
 
         :return: a list of proposals in Description form
         """

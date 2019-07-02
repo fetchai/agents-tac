@@ -19,6 +19,7 @@
 # ------------------------------------------------------------------------------
 
 """Schemas for the protocol to communicate with the controller."""
+
 import copy
 import logging
 import pprint
@@ -40,9 +41,11 @@ logger = logging.getLogger(__name__)
 
 def _make_str_int_pair(key: str, value: int) -> tac_pb2.StrIntPair:
     """
-    Helper method to make a Protobuf StrIntPair.
+    Make a Protobuf StrIntPair.
+
     :param key: the first element of the pair.
     :param value: the second element of the pair.
+
     :return: a StrIntPair protobuf object.
     """
     pair = tac_pb2.StrIntPair()
@@ -53,9 +56,11 @@ def _make_str_int_pair(key: str, value: int) -> tac_pb2.StrIntPair:
 
 def _make_str_str_pair(key: str, value: str) -> tac_pb2.StrStrPair:
     """
-    Helper method to make a Protobuf StrStrPair.
+    Make a Protobuf StrStrPair.
+
     :param key: the first element of the pair.
     :param value: the second element of the pair.
+
     :return: a StrStrPair protobuf object.
     """
     pair = tac_pb2.StrStrPair()
@@ -65,6 +70,8 @@ def _make_str_str_pair(key: str, value: str) -> tac_pb2.StrStrPair:
 
 
 class ErrorCode(Enum):
+    """This class defines the error codes."""
+
     GENERIC_ERROR = 0
     REQUEST_NOT_VALID = 1
     AGENT_PBK_ALREADY_REGISTERED = 2
@@ -92,10 +99,14 @@ _from_ec_to_msg = {
 class Message(ABC):
     """Abstract class representing a message between TAC agents and TAC controller."""
 
-    def __init__(self, public_key: str, crypto: Crypto):
+    def __init__(self, public_key: str, crypto: Crypto) -> None:
         """
+        Instantiate the message.
+
         :param public_key: The public key of the TAC agent
         :param crypto: the Crypto object
+
+        :return: None
         """
         self.public_key = public_key
         self.crypto = crypto
@@ -103,11 +114,11 @@ class Message(ABC):
     @classmethod
     @abstractmethod
     def from_pb(cls, obj, public_key: str):
-        """From Protobuf to :class:`~tac.protocol.Message` object"""
+        """From Protobuf to :class:`~tac.protocol.Message` object."""
 
     @abstractmethod
     def to_pb(self):
-        """From :class:`~tac.protocol.Message` to Protobuf object"""
+        """From :class:`~tac.protocol.Message` to Protobuf object."""
 
     def serialize_message_part(self) -> bytes:
         """Serialize the message."""
@@ -119,7 +130,8 @@ class Message(ABC):
 
     def serialize(self) -> bytes:
         """
-        Serialize the message
+        Serialize the message.
+
         :return: the signature bytes object
         """
         result = tac_pb2.TACAgent.SignedMessage()
@@ -128,26 +140,29 @@ class Message(ABC):
         return result.SerializeToString()
 
     def _build_str(self, **kwargs) -> str:
+        """Buil a string."""
         return type(self).__name__ + "({})".format(pprint.pformat(kwargs))
 
     def __str__(self):
+        """Return as string."""
         return self._build_str()
 
 
 class Request(Message, ABC):
-    """Message from client to controller"""
+    """Message from client to controller."""
 
     @classmethod
     def from_pb(cls, obj, public_key: str, crypto: Crypto) -> 'Request':
         """
         Parse a string of bytes associated to a request message to the TAC controller.
+
         :param obj: the string of bytes to be parsed.
         :param public_key: the public key of the request sender.
         :param crypto: the Crypto object
-        :return: a :class:`~tac.protocol.Response` object.
         :raises TacError: if the string of bytes cannot be parsed as a Response from the TAC Controller.
-        """
 
+        :return: a :class:`~tac.protocol.Response` object.
+        """
         signed_msg = tac_pb2.TACAgent.SignedMessage()
         signed_msg.ParseFromString(obj)
 
@@ -169,27 +184,32 @@ class Request(Message, ABC):
             raise ValueError("Bad signature. Do not trust!")
 
     def to_pb(self):
+        """Convert to protobuf."""
         raise NotImplementedError
 
     def __eq__(self, other):
+        """Compare equality of two instances."""
         return type(self) == type(other)
 
 
 class Register(Request):
     """Message to register an agent to the competition."""
 
-    def __init__(self, public_key: str, crypto: Crypto, agent_name: str):
+    def __init__(self, public_key: str, crypto: Crypto, agent_name: str) -> None:
         """
-        A registration message.
+        Instantiate registration message.
 
         :param public_key: the public key of the agent
         :param agent_name: the name of the agent
         :param crypto: the Crypto object
+
+        :return: None
         """
         super().__init__(public_key, crypto)
         self.agent_name = agent_name
 
     def to_pb(self) -> tac_pb2.TACAgent.Message:
+        """Convert to protobuf."""
         msg = tac_pb2.TACAgent.Register()
         msg.agent_name = self.agent_name
         envelope = tac_pb2.TACAgent.Message()
@@ -198,6 +218,7 @@ class Register(Request):
 
     @classmethod
     def from_pb(cls, obj: tac_pb2.TACAgent.Register, public_key: str, crypto: Crypto) -> 'Register':
+        """Read from protobuf."""
         return Register(public_key, crypto, obj.agent_name)
 
 
@@ -205,6 +226,7 @@ class Unregister(Request):
     """Message to unregister an agent from the competition."""
 
     def to_pb(self) -> tac_pb2.TACAgent.Message:
+        """Convert to protobuf."""
         msg = tac_pb2.TACAgent.Unregister()
         envelope = tac_pb2.TACAgent.Message()
         envelope.unregister.CopyFrom(msg)
@@ -212,18 +234,22 @@ class Unregister(Request):
 
 
 class Transaction(Request):
+    """Transaction message for an agent to submit to the controller."""
 
     def __init__(self, transaction_id: str, buyer: bool, counterparty: str,
-                 amount: float, quantities_by_good_pbk: Dict[str, int], sender: str, crypto: Crypto):
+                 amount: float, quantities_by_good_pbk: Dict[str, int], sender: str, crypto: Crypto) -> None:
         """
-        A transaction request.
+        Instantiate transaction request.
 
         :param transaction_id: the id of the transaction.
         :param buyer: whether the transaction request is sent by a buyer.
-        :param sender: the sender of the transaction request.
         :param counterparty: the counterparty of the transaction.
         :param amount: the amount of money involved.
         :param quantities_by_good_pbk: a map from good pbk to the quantity of that good involved in the transaction.
+        :param sender: the sender of the transaction request.
+        :param crypto: the crypto module.
+
+        :return: None
         """
         super().__init__(sender, crypto)
         self.transaction_id = transaction_id
@@ -234,9 +260,11 @@ class Transaction(Request):
 
     @property
     def sender(self):
+        """Get the sender public key."""
         return self.public_key
 
     def to_pb(self) -> tac_pb2.TACAgent.Message:
+        """Convert to protobuf."""
         msg = tac_pb2.TACAgent.Transaction()
         msg.transaction_id = self.transaction_id
         msg.buyer = self.buyer
@@ -252,6 +280,15 @@ class Transaction(Request):
 
     @classmethod
     def from_pb(cls, obj: tac_pb2.TACAgent.Transaction, public_key: str, crypto: Crypto) -> 'Transaction':
+        """
+        Read from protobuf.
+
+        :param obj: the protobuf object
+        :param public_key: the opponent's public key
+        :param crypto: the crypto module
+
+        :return: the transaction
+        """
         quantities_per_good_pbk = {pair.first: pair.second for pair in obj.quantities}
 
         return Transaction(obj.transaction_id,
@@ -306,6 +343,7 @@ class Transaction(Request):
         return result
 
     def __str__(self):
+        """Return as string."""
         return self._build_str(
             transaction_id=self.transaction_id,
             buyer=self.buyer,
@@ -315,6 +353,7 @@ class Transaction(Request):
         )
 
     def __eq__(self, other):
+        """Compare equality of two instances."""
         if type(self) != type(other):
             return False
         return self.transaction_id == other.transaction_id and \
@@ -328,6 +367,7 @@ class GetStateUpdate(Request):
     """Message to request an agent state update from the controller."""
 
     def to_pb(self) -> tac_pb2.TACAgent.Message:
+        """Convert to protobuf."""
         msg = tac_pb2.TACAgent.GetStateUpdate()
         envelope = tac_pb2.TACAgent.Message()
         envelope.get_state_update.CopyFrom(msg)
@@ -335,18 +375,20 @@ class GetStateUpdate(Request):
 
 
 class Response(Message):
-    """Message from controller to clients"""
+    """Message from controller to clients."""
 
     @classmethod
     def from_pb(cls, obj, public_key: str, crypto: Crypto) -> 'Response':
         """
         Parse a string of bytes associated to a response message from the TAC controller.
+
         :param obj: the string of bytes to be parsed.
         :param public_key: the public key of the recipient.
-        :return: a :class:`~tac.protocol.Response` object.
+        :param crypto: the crypto module
         :raises TacError: if the string of bytes cannot be parsed as a Response from the TAC Controller.
-        """
 
+        :return: a :class:`~tac.protocol.Response` object.
+        """
         try:
             signed_msg = tac_pb2.TACAgent.SignedMessage()
             signed_msg.ParseFromString(obj)
@@ -378,9 +420,11 @@ class Response(Message):
             raise TacError("Error in decoding the message.")
 
     def to_pb(self) -> tac_pb2.TACController.Message:
+        """Convert to protobuf."""
         raise NotImplementedError
 
     def __eq__(self, other):
+        """Compare equality of two instances."""
         return type(self) == type(other)
 
 
@@ -388,6 +432,7 @@ class Registered(Response):
     """This response from the TAC Controller means that the agent has been registered to the TAC."""
 
     def to_pb(self) -> tac_pb2.TACController.Message:
+        """Convert to protobuf."""
         msg = tac_pb2.TACController.Registered()
         envelope = tac_pb2.TACController.Message()
         envelope.registered.CopyFrom(msg)
@@ -398,6 +443,7 @@ class Unregistered(Response):
     """This response from the TAC Controller means that the agent has been unregistered from the TAC."""
 
     def to_pb(self) -> tac_pb2.TACController.Message:
+        """Convert to protobuf."""
         msg = tac_pb2.TACController.Unregistered()
         envelope = tac_pb2.TACController.Message()
         envelope.unregistered.CopyFrom(msg)
@@ -408,6 +454,7 @@ class Cancelled(Response):
     """This response means that the competition to which the agent was registered has been cancelled."""
 
     def to_pb(self) -> tac_pb2.TACController.Message:
+        """Convert to protobuf."""
         msg = tac_pb2.TACController.Cancelled()
         envelope = tac_pb2.TACController.Message()
         envelope.cancelled.CopyFrom(msg)
@@ -421,12 +468,24 @@ class Error(Response):
                  error_code: ErrorCode,
                  error_msg: Optional[str] = None,
                  details: Optional[Dict[str, Any]] = None):
+        """
+        Instantiate error.
+
+        :param public_key: the destination
+        :param crypto: the crypto module.
+        :param error_code: the error code
+        :param error_msg: the error message
+        :param details: the error details
+
+        :return: None
+        """
         super().__init__(public_key, crypto)
         self.error_code = error_code
         self.error_msg = _from_ec_to_msg[error_code] if error_msg is None else error_msg
         self.details = details if details is not None else {}
 
     def to_pb(self) -> tac_pb2.TACController.Message:
+        """Convert to protobuf."""
         msg = tac_pb2.TACController.Error()
         msg.error_code = self.error_code.value
         msg.error_msg = self.error_msg
@@ -437,15 +496,26 @@ class Error(Response):
 
     @classmethod
     def from_pb(cls, obj, public_key: str, crypto: Crypto) -> 'Error':
+        """
+        Read from protobuf.
+
+        :param obj: the protobuf object
+        :param public_key: the opponent's public key
+        :param crypto: the crypto module
+
+        :return: the error
+        """
         error_code = ErrorCode(obj.error_code)
         error_msg = obj.error_msg
         details = dict(obj.details.items())
         return Error(public_key, crypto, error_code, error_msg, details)
 
     def __str__(self):
+        """Convert to string."""
         return self._build_str(error_msg=self.error_msg)
 
     def __eq__(self, other):
+        """Compare equality of two instances."""
         return super().__eq__(other) and self.error_msg == other.error_msg
 
 
@@ -453,11 +523,12 @@ class GameData(Response):
     """Class that holds the game configuration and the initialization of a TAC agent."""
 
     def __init__(self, public_key: str, crypto: Crypto, money: int, endowment: List[int], utility_params: List[float],
-                 nb_agents: int, nb_goods: int, tx_fee: float, agent_pbk_to_name: Dict[str, str], good_pbk_to_name: Dict[str, str]):
+                 nb_agents: int, nb_goods: int, tx_fee: float, agent_pbk_to_name: Dict[str, str], good_pbk_to_name: Dict[str, str]) -> None:
         """
         Initialize a game data object.
+
         :param public_key: the destination
-        :param th
+        :param crypto: the crypto module.
         :param money: the money amount.
         :param endowment: the endowment for every good.
         :param utility_params: the utility params for every good.
@@ -466,6 +537,8 @@ class GameData(Response):
         :param tx_fee: the transaction fee.
         :param agent_pbk_to_name: the mapping from the public keys to the names of the agents.
         :param good_pbk_to_name: the mapping from the public keys to the names of the goods.
+
+        :return: None
         """
         assert len(endowment) == len(utility_params)
         super().__init__(public_key, crypto)
@@ -480,6 +553,7 @@ class GameData(Response):
 
     @classmethod
     def from_pb(cls, obj: tac_pb2.TACController.GameData, public_key: str, crypto: Crypto) -> 'GameData':
+        """Read from protobuf."""
         agent_pbk_to_name = {pair.first: pair.second for pair in obj.agent_pbk_to_name}
         good_pbk_to_name = {pair.first: pair.second for pair in obj.good_pbk_to_name}
 
@@ -495,6 +569,7 @@ class GameData(Response):
                         good_pbk_to_name)
 
     def to_pb(self) -> tac_pb2.TACController.Message:
+        """Convert to protobuf."""
         msg = tac_pb2.TACController.GameData()
         msg.money = self.money
         msg.endowment.extend(self.endowment)
@@ -511,6 +586,7 @@ class GameData(Response):
         return envelope
 
     def __str__(self):
+        """Convert to string."""
         return self._build_str(
             money=self.money,
             endowment=self.endowment,
@@ -523,6 +599,7 @@ class GameData(Response):
         )
 
     def __eq__(self, other):
+        """Compare equality of two instances."""
         return type(self) == type(other) and \
             self.money == other.money and \
             self.endowment == other.endowment and \
@@ -535,12 +612,23 @@ class GameData(Response):
 
 
 class TransactionConfirmation(Response):
+    """Class that holds the transaction confirmation sent from the controller to the agent."""
 
     def __init__(self, public_key: str, crypto: Crypto, transaction_id: str):
+        """
+        Instantiate the transaction confirmation.
+
+        :param public_key: the public key of the opponent
+        :param crypto: the crypto module
+        :param transaction_id: the transaction id
+
+        :return: None
+        """
         super().__init__(public_key, crypto)
         self.transaction_id = transaction_id
 
     def to_pb(self) -> tac_pb2.TACController.Message:
+        """Convert to protobuf."""
         msg = tac_pb2.TACController.TransactionConfirmation()
         msg.transaction_id = self.transaction_id
         envelope = tac_pb2.TACController.Message()
@@ -548,20 +636,33 @@ class TransactionConfirmation(Response):
         return envelope
 
     def __str__(self):
+        """Convert to string."""
         return self._build_str(transaction_id=self.transaction_id)
 
 
 class StateUpdate(Response):
+    """Class that holds the state update sent from the controller to the agent."""
 
     def __init__(self, public_key: str,
                  crypto: Crypto,
                  initial_state: GameData,
-                 transactions: List[Transaction]):
+                 transactions: List[Transaction]) -> None:
+        """
+        Instantiate the state update.
+
+        :param public_key: the public key of the opponent
+        :param crypto: the crypto module
+        :param initial_state: the initial state
+        :param transactions: a list of transactions
+
+        :return: None
+        """
         super().__init__(public_key, crypto)
         self.initial_state = initial_state
         self.transactions = transactions
 
     def to_pb(self) -> tac_pb2.TACController.Message:
+        """Convert to protobuf."""
         msg = tac_pb2.TACController.StateUpdate()
 
         game_data = tac_pb2.TACController.GameData()
@@ -600,6 +701,15 @@ class StateUpdate(Response):
 
     @classmethod
     def from_pb(cls, obj, public_key: str, crypto: Crypto) -> 'StateUpdate':
+        """
+        Read from protobuf.
+
+        :param obj: the protobuf object
+        :param public_key: the opponent's public key
+        :param crypto: the crypto module
+
+        :return: the state update
+        """
         initial_state = GameData.from_pb(obj.initial_state, public_key, crypto)
         transactions = [Transaction.from_pb(tx_obj, public_key, crypto) for tx_obj in obj.txs]
 
@@ -609,9 +719,11 @@ class StateUpdate(Response):
                            transactions)
 
     def __str__(self):
+        """Convert to string."""
         return self._build_str(public_key=self.public_key)
 
     def __eq__(self, other):
+        """Compare equality of two instances."""
         return type(self) == type(other) and \
             self.public_key == other.public_key and \
             self.crypto == other.crypto and \
