@@ -364,7 +364,7 @@ class DialogueReactions(DialogueReactionInterface):
 
         :return: None
         """
-        is_seller = msg.query.model.agent_name == TAC_SUPPLY_DATAMODEL_NAME
+        is_seller = msg.query.model.name == TAC_SUPPLY_DATAMODEL_NAME
         dialogue = self.dialogues.create_opponent_initiated(msg.destination, msg.dialogue_id, is_seller)
         logger.debug("[{}]: saving dialogue (as {}): dialogue_id={}".format(self.agent_name, dialogue.role, dialogue.dialogue_label.dialogue_id))
         results = self._handle(msg, dialogue)
