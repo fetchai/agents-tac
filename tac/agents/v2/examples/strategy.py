@@ -33,7 +33,7 @@ class BaselineStrategy(Strategy):
 
     def supplied_good_quantities(self, current_holdings: List[int]) -> List[int]:
         """
-        Generates list of quantities which are supplied.
+        Generate a list of quantities which are supplied.
 
         :param current_holdings: a list of current good holdings
         :return: a list of quantities
@@ -42,26 +42,28 @@ class BaselineStrategy(Strategy):
 
     def supplied_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
         """
-        Generates set of good public keys which are supplied.
+        Generate a set of good public keys which are supplied.
 
         :param good_pbks: a list of good public keys
         :param current_holdings: a list of current good holdings
+
         :return: a set of public keys
         """
         return {good_pbk for good_pbk, quantity in zip(good_pbks, current_holdings) if quantity > 1}
 
     def demanded_good_quantities(self, current_holdings: List[int]) -> List[int]:
         """
-        Generates list of quantities which are demanded.
+        Generate a list of quantities which are demanded.
 
         :param current_holdings: a list of current good holdings
+
         :return: a list of quantities
         """
         return [1 for _ in current_holdings]
 
     def demanded_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
         """
-        Generates set of good public keys which are demanded.
+        Generate a set of good public keys which are demanded.
 
         :param good_pbks: a list of good public keys
         :param current_holdings: a list of current good holdings
@@ -71,7 +73,7 @@ class BaselineStrategy(Strategy):
 
     def get_proposals(self, good_pbks: List[str], current_holdings: List[int], utility_params: List[int], tx_fee: float, is_seller: bool, world_state: WorldState) -> List[Description]:
         """
-        Generates proposals from the seller/buyer.
+        Generate a proposals from the seller/buyer.
 
         :param good_pbks: a list of good public keys
         :param current_holdings: a list of current good holdings

@@ -17,6 +17,9 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+
+"""This module contains a base implementation of an agent for TAC."""
+
 import logging
 import time
 from typing import Optional, Union
@@ -41,6 +44,7 @@ Message = Union[OEFMessage, ControllerMessage, AgentMessage]
 
 
 class ParticipantAgent(Agent):
+    """The participant agent class implements a base agent for TAC."""
 
     def __init__(self, name: str,
                  oef_addr: str,
@@ -54,6 +58,7 @@ class ParticipantAgent(Agent):
                  private_key_pem_path: Optional[str] = None):
         """
         Initialize a participant agent.
+
         :param name: the name of the agent.
         :param oef_addr: the TCP/IP address of the OEF node.
         :param oef_port: the TCP/IP port of the OEF node.
@@ -80,15 +85,17 @@ class ParticipantAgent(Agent):
 
     @property
     def game_instance(self) -> GameInstance:
+        """Get the game instance."""
         return self._game_instance
 
     @property
     def is_competing(self) -> bool:
+        """Check if the agent is competing."""
         return self._is_competing
 
     def act(self) -> None:
         """
-        Performs actions.
+        Perform the agent's actions.
 
         :return: None
         """
@@ -105,7 +112,7 @@ class ParticipantAgent(Agent):
 
     def react(self) -> None:
         """
-        Reacts to incoming events.
+        React to incoming events.
 
         :return: None
         """
@@ -127,10 +134,20 @@ class ParticipantAgent(Agent):
         self.out_box.send_nowait()
 
     def stop(self) -> None:
+        """
+        Stop the agent.
+
+        :return: None
+        """
         super().stop()
         self.game_instance.stop()
 
     def start(self, rejoin: bool = False) -> None:
+        """
+        Start the agent.
+
+        :return: None
+        """
         try:
             self.oef_handler.rejoin = rejoin
             super().start()

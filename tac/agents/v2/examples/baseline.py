@@ -19,6 +19,8 @@
 #
 # ------------------------------------------------------------------------------
 
+"""This module contains a baseline agent implementation for TAC."""
+
 import argparse
 from typing import Optional
 
@@ -29,10 +31,27 @@ from tac.gui.dashboards.agent import AgentDashboard
 
 
 class BaselineAgent(ParticipantAgent):
+    """A baseline agent implementation for TAC."""
 
     def __init__(self, name: str, oef_addr: str, oef_port: int, strategy: Strategy, agent_timeout: float = 1.0, max_reactions: int = 100, services_interval: int = 10,
                  pending_transaction_timeout: int = 30, dashboard: Optional[AgentDashboard] = None,
-                 private_key_pem_path: Optional[str] = None):
+                 private_key_pem_path: Optional[str] = None) -> None:
+        """
+        Instantiate the agent.
+
+        :param name: the name of the agent
+        :param oef_addr: TCP/IP address of the OEF Agent
+        :param oef_port: TCP/IP port of the OEF Agent
+        :param strategy: the strategy of the agent
+        :param agent_timeout: the time in (fractions of) seconds to time out an agent between act and react.
+        :param max_reactions: the maximum number of reactions (messages processed) per call to react.
+        :param services_interval: the number of seconds to wait before updating services (doing another search, registering services).
+        :param pending_transaction_timeout: the timeout in seconds to wait for pending transaction/negotiations.
+        :param dashbord: the dashboard of the agent
+        :param private_key_pem_path: the path to the private key of the agent.
+
+        :return: None
+        """
         super().__init__(name, oef_addr, oef_port, strategy, agent_timeout, max_reactions, services_interval, pending_transaction_timeout, dashboard, private_key_pem_path)
 
 

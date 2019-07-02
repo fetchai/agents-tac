@@ -17,6 +17,9 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+
+"""This class manages the state and some services related to the TAC for an agent."""
+
 import datetime
 from enum import Enum
 from typing import List, Optional, Set
@@ -36,6 +39,8 @@ from tac.platform.protocol import GameData, StateUpdate
 
 
 class GamePhase(Enum):
+    """This class defines the TAC game stages."""
+
     PRE_GAME = 'pre_game'
     GAME_SETUP = 'game_setup'
     GAME = 'game'
@@ -43,9 +48,10 @@ class GamePhase(Enum):
 
 
 class Search:
-    """Deals with the search state"""
+    """This class deals with the search state."""
 
     def __init__(self):
+        """Instantiate the search class."""
         self._id = 0
         self.ids_for_tac = set()  # type: Set[int]
         self.ids_for_sellers = set()  # type: Set[int]
@@ -53,11 +59,12 @@ class Search:
 
     @property
     def id(self) -> int:
+        """Get the search id."""
         return self._id
 
     def get_next_id(self) -> int:
         """
-        Generates the next search id and stores it.
+        Generate the next search id and stores it.
 
         :return: a search id
         """
@@ -66,15 +73,24 @@ class Search:
 
 
 class GameInstance:
-    """
-    The GameInstance maintains state of the game from the agent's perspective.
-    """
+    """The GameInstance maintains state of the game from the agent's perspective."""
 
     def __init__(self, agent_name: str,
                  strategy: Strategy,
                  services_interval: int = 10,
                  pending_transaction_timeout: int = 10,
-                 dashboard: Optional[AgentDashboard] = None):
+                 dashboard: Optional[AgentDashboard] = None) -> None:
+        """
+        Instantiate a game instance.
+
+        :param agent_name: the name of the agent.
+        :param strategy: the strategy of the agent.
+        :param services_interval: the interval at which services are updated.
+        :param pending_transaction_timeout: the timeout after which transactions are removed from the lock manager.
+        :param dashboard: the agent dashboard.
+
+        :return: None
+        """
         self.agent_name = agent_name
         self.controller_pbk = None  # type: Optional[str]
 
@@ -111,6 +127,9 @@ class GameInstance:
         """
         Populate data structures with the game data.
 
+        :param game_data: the game instance data
+        :param agent_pbk: the public key of the agent
+
         :return: None
         """
         self._game_configuration = GameConfiguration(game_data.nb_agents, game_data.nb_goods, game_data.tx_fee,
@@ -126,6 +145,9 @@ class GameInstance:
         """
         Update the game instance with a State Update from the controller.
 
+        :param state_update: the state update
+        :param agent_pbk: the public key of the agent
+
         :return: None
         """
         self.init(state_update.initial_state, agent_pbk)
@@ -135,51 +157,62 @@ class GameInstance:
 
     @property
     def strategy(self) -> Strategy:
+        """Get the strategy."""
         return self._strategy
 
     @property
     def search(self) -> Search:
+        """Get the search."""
         return self._search
 
     @property
     def dialogues(self) -> Dialogues:
+        """Get the dialogues."""
         return self._dialogues
 
     @property
     def game_phase(self) -> GamePhase:
+        """Get the game phase."""
         return self._game_phase
 
     @property
     def game_configuration(self) -> GameConfiguration:
+        """Get the game configuration."""
         return self._game_configuration
 
     @property
     def initial_agent_state(self) -> AgentState:
+        """Get the initial agent state."""
         return self._initial_agent_state
 
     @property
     def agent_state(self) -> AgentState:
+        """Get the agent state."""
         return self._agent_state
 
     @property
     def world_state(self) -> WorldState:
+        """Get the world state."""
         return self._world_state
 
     @property
     def services_interval(self) -> datetime.timedelta:
+        """Get the services interval."""
         return self._services_interval
 
     @property
     def last_update_time(self) -> datetime.datetime:
+        """Get the last services update time."""
         return self._last_update_time
 
     @property
     def last_search_time(self) -> datetime.datetime:
+        """Get the last services search time."""
         return self._last_search_time
 
     def is_time_to_update_services(self) -> bool:
         """
-        Checks if the agent should update the service directory.
+        Check if the agent should update the service directory.
 
         :return: bool indicating the action
         """
@@ -191,7 +224,7 @@ class GameInstance:
 
     def is_time_to_search_services(self) -> bool:
         """
-        Checks if the agent should search the service directory.
+        Check if the agent should search the service directory.
 
         :return: bool indicating the action
         """
@@ -203,15 +236,12 @@ class GameInstance:
 
     def get_service_description(self, is_supply: bool) -> Description:
         """
-        Get the description of
-            - the supplied goods (as a seller), or
-            - the demanded goods (as a buyer).
+        Get the description of the supplied goods (as a seller), or the demanded goods (as a buyer).
 
         :param is_supply: Boolean indicating whether it is supply or demand.
 
         :return: the description (to advertise on the Service Directory).
         """
-
         desc = get_goods_quantities_description(self.game_configuration.good_pbks,
                                                 self.get_goods_quantities(is_supply),
                                                 is_supply=is_supply)
@@ -219,7 +249,9 @@ class GameInstance:
 
     def build_services_query(self, is_searching_for_sellers: bool) -> Optional[Query]:
         """
-        Build the query to look for agents
+        Build a query to search for services.
+
+        In particular, build the query to look for agents
             - which supply the agent's demanded goods (i.e. sellers), or
             - which demand the agent's supplied goods (i.e. buyers).
 
@@ -234,7 +266,9 @@ class GameInstance:
 
     def get_goods_description(self, is_supply: bool) -> Description:
         """
-        Get the description of
+        Get the goods description.
+
+        In particular, get the description of
             - the supplied goods (as a seller), or
             - the demanded goods (as a buyer).
 
@@ -242,7 +276,6 @@ class GameInstance:
 
         :return: the description (to advertise on the Service Directory).
         """
-
         desc = get_goods_quantities_description(self.game_configuration.good_pbks,
                                                 self.get_goods_quantities(is_supply),
                                                 is_supply=is_supply)
@@ -250,7 +283,7 @@ class GameInstance:
 
     def get_goods_pbks(self, is_supply: bool) -> Set[str]:
         """
-        Wraps the function which determines supplied and demanded good public keys.
+        Wrap the function which determines supplied and demanded good public keys.
 
         :param is_supply: Boolean indicating whether it is referencing the supplied or demanded public keys.
 
@@ -262,7 +295,7 @@ class GameInstance:
 
     def get_goods_quantities(self, is_supply: bool) -> List[int]:
         """
-        Wraps the function which determines supplied and demanded good quantities.
+        Wrap the function which determines supplied and demanded good quantities.
 
         :param is_supply: Boolean indicating whether it is referencing the supplied or demanded quantities.
 
@@ -272,10 +305,11 @@ class GameInstance:
         quantities = self.strategy.supplied_good_quantities(state_after_locks.current_holdings) if is_supply else self.strategy.demanded_good_quantities(state_after_locks.current_holdings)
         return quantities
 
-    def state_after_locks(self, is_seller: bool):
+    def state_after_locks(self, is_seller: bool) -> AgentState:
         """
-        Apply all the locks to the current state of the agent. That is, assuming all
-        the locked transactions will be successful.
+        Apply all the locks to the current state of the agent.
+
+        This assumes, that all the locked transactions will be successful.
 
         :param is_seller: Boolean indicating the role of the agent.
 
@@ -288,7 +322,7 @@ class GameInstance:
 
     def get_proposals(self, query: CFP_TYPES, is_seller: bool) -> List[Description]:
         """
-        Wraps the function which generates proposals from a seller or buyer.
+        Wrap the function which generates proposals from a seller or buyer.
 
         If there are locks as seller, it applies them.
 
@@ -308,5 +342,6 @@ class GameInstance:
         return proposals
 
     def stop(self):
+        """Stop the services attached to the game instance."""
         self.lock_manager.stop()
         self.stats_manager.stop()

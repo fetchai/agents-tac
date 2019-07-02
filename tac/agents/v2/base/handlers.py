@@ -17,6 +17,15 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+
+"""
+This module contains the message handler classes.
+
+- DialogueHandler: Handle the dialogue with another agent.
+- ControllerHandler: Handle the message exchange with the controller.
+- OEFHandler: Handle the message exchange with the OEF.
+"""
+
 import logging
 from typing import Any, Union
 
@@ -41,19 +50,28 @@ Message = Union[OEFMessage, ControllerMessage, AgentMessage]
 
 
 class DialogueHandler(DialogueActions, DialogueReactions):
-    """
-    Handles the dialogue with another agent.
-    """
+    """Handle the dialogue with another agent."""
 
-    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: OutBox, name: str):
-        DialogueActions.__init__(self, crypto, liveness, game_instance, out_box, name)
-        DialogueReactions.__init__(self, crypto, liveness, game_instance, out_box, name)
+    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: OutBox, agent_name: str):
+        """
+        Instantiate the DialogueHandler.
+
+        :param crypto: the crypto module
+        :param liveness: the liveness module
+        :param game_instance: the game instance
+        :param out_box: the outbox
+        :param agent_agent_name: the agent agent_name
+        """
+        DialogueActions.__init__(self, crypto, liveness, game_instance, out_box, agent_name)
+        DialogueReactions.__init__(self, crypto, liveness, game_instance, out_box, agent_name)
 
     def handle_dialogue_message(self, msg: AgentMessage) -> None:
         """
-        Handles messages from the other agents.
+        Handle messages from the other agents.
 
         The agents expect a response.
+
+        :param msg: the agent message
 
         :return: None
         """
@@ -67,24 +85,33 @@ class DialogueHandler(DialogueActions, DialogueReactions):
 
 
 class ControllerHandler(ControllerActions, ControllerReactions):
-    """
-    Handles the message exchange with the controller.
-    """
+    """Handle the message exchange with the controller."""
 
-    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', name: str):
-        ControllerActions.__init__(self, crypto, liveness, game_instance, out_box, name)
-        ControllerReactions.__init__(self, crypto, liveness, game_instance, out_box, name)
+    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', agent_name: str):
+        """
+        Instantiate the ControllerHandler.
+
+        :param crypto: the crypto module
+        :param liveness: the liveness module
+        :param game_instance: the game instance
+        :param out_box: the outbox
+        :param agent_agent_name: the agent agent_name
+        """
+        ControllerActions.__init__(self, crypto, liveness, game_instance, out_box, agent_name)
+        ControllerReactions.__init__(self, crypto, liveness, game_instance, out_box, agent_name)
 
     def handle_controller_message(self, msg: ControllerMessage) -> None:
         """
-        Handles messages from the controller.
+        Handle messages from the controller.
 
         The controller does not expect a response for any of these messages.
+
+        :param msg: the controller message
 
         :return: None
         """
         response = Response.from_pb(msg.msg, msg.destination, self.crypto)  # TODO this is already created once above!
-        logger.debug("[{}]: Handling controller response. type={}".format(self.name, type(response)))
+        logger.debug("[{}]: Handling controller response. type={}".format(self.agent_name, type(response)))
         try:
             if msg.destination != self.game_instance.controller_pbk:
                 raise ValueError("The sender of the message is not the controller agent we registered with.")
@@ -112,23 +139,33 @@ class ControllerHandler(ControllerActions, ControllerReactions):
 
 
 class OEFHandler(OEFActions, OEFReactions):
-    """
-    Handles the message exchange with the OEF.
-    """
+    """Handle the message exchange with the OEF."""
 
-    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', name: str, rejoin: bool = False):
-        OEFActions.__init__(self, crypto, liveness, game_instance, out_box, name)
-        OEFReactions.__init__(self, crypto, liveness, game_instance, out_box, name, rejoin)
+    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', agent_name: str, rejoin: bool = False):
+        """
+        Instantiate the OEFHandler.
+
+        :param crypto: the crypto module
+        :param liveness: the liveness module
+        :param game_instance: the game instance
+        :param out_box: the outbox
+        :param agent_agent_name: the agent agent_name
+        :param rejoin: boolean indicating whether the agent will rejoin the TAC if losing connection
+        """
+        OEFActions.__init__(self, crypto, liveness, game_instance, out_box, agent_name)
+        OEFReactions.__init__(self, crypto, liveness, game_instance, out_box, agent_name, rejoin)
 
     def handle_oef_message(self, msg: OEFMessage) -> None:
         """
-        Handles messages from the oef.
+        Handle messages from the oef.
 
         The oef does not expect a response for any of these messages.
 
+        :param msg: the OEF message
+
         :return: None
         """
-        logger.debug("[{}]: Handling OEF message. type={}".format(self.name, type(msg)))
+        logger.debug("[{}]: Handling OEF message. type={}".format(self.agent_name, type(msg)))
         if isinstance(msg, SearchResult):
             self.on_search_result(msg)
         elif isinstance(msg, OEFErrorMessage):
@@ -136,4 +173,4 @@ class OEFHandler(OEFActions, OEFReactions):
         elif isinstance(msg, DialogueErrorMessage):
             self.on_dialogue_error(msg)
         else:
-            logger.warning("[{}]: OEF Message type not recognized.".format(self.name))
+            logger.warning("[{}]: OEF Message type not recognized.".format(self.agent_name))

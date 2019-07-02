@@ -17,6 +17,9 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+
+"""This module contains a class which implements the FIPA protocol for the TAC."""
+
 import logging
 import pprint
 import random
@@ -39,40 +42,51 @@ STARTING_MESSAGE_ID = 1
 
 
 class FIPABehaviour:
-    """
-    Specifies FIPA negotiation behaviours
-    """
+    """Specifies FIPA negotiation behaviours."""
 
-    def __init__(self, crypto: Crypto, game_instance: GameInstance, name: str):
+    def __init__(self, crypto: Crypto, game_instance: GameInstance, agent_name: str) -> None:
+        """
+        Instantiate the FIPABehaviour.
+
+        :param crypto: the crypto module
+        :param game_instance: the game instance
+        :param agent_name: the agent_name of the agent
+
+        :return: None
+        """
         self._crypto = crypto
         self._game_instance = game_instance
-        self._name = name
+        self._agent_name = agent_name
 
     @property
     def game_instance(self) -> GameInstance:
+        """Get the game instance."""
         return self._game_instance
 
     @property
     def crypto(self) -> Crypto:
+        """Get the crypto."""
         return self._crypto
 
     @property
-    def name(self) -> str:
-        return self._name
+    def agent_name(self) -> str:
+        """Get the agent name."""
+        return self._agent_name
 
     def on_cfp(self, cfp: CFP, dialogue: Dialogue) -> Union[Propose, Decline]:
         """
-        Handles cfp.
+        Handle a CFP.
 
         :param cfp: the CFP
         :param dialogue: the dialogue
-        :return: None
+
+        :return: a Propose or a Decline
         """
         goods_description = self.game_instance.get_service_description(is_supply=dialogue.is_seller)
         new_msg_id = cfp.msg_id + 1
         if not cfp.query.check(goods_description):
-            logger.debug("[{}]: Current holdings do not satisfy CFP query.".format(self.name))
-            logger.debug("[{}]: sending to {} a Decline{}".format(self.name, cfp.destination,
+            logger.debug("[{}]: Current holdings do not satisfy CFP query.".format(self.agent_name))
+            logger.debug("[{}]: sending to {} a Decline{}".format(self.agent_name, cfp.destination,
                                                                   pprint.pformat({
                                                                       "msg_id": new_msg_id,
                                                                       "dialogue_id": cfp.dialogue_id,
@@ -84,7 +98,7 @@ class FIPABehaviour:
         else:
             proposals = [random.choice(self.game_instance.get_proposals(cfp.query, dialogue.is_seller))]
             self.game_instance.lock_manager.store_proposals(proposals, new_msg_id, dialogue, cfp.destination, dialogue.is_seller, self.crypto)
-            logger.debug("[{}]: sending to {} a Propose{}".format(self.name, cfp.destination,
+            logger.debug("[{}]: sending to {} a Propose{}".format(self.agent_name, cfp.destination,
                                                                   pprint.pformat({
                                                                       "msg_id": new_msg_id,
                                                                       "dialogue_id": cfp.dialogue_id,
@@ -97,14 +111,14 @@ class FIPABehaviour:
 
     def on_propose(self, propose: Propose, dialogue: Dialogue) -> Union[Accept, Decline]:
         """
-        Handles propose.
+        Handle a Propose.
 
         :param propose: the Propose
         :param dialogue: the dialogue
-        :return: None
-        """
 
-        logger.debug("[{}]: on propose as {}.".format(self.name, dialogue.role))
+        :return: an Accept or a Decline
+        """
+        logger.debug("[{}]: on propose as {}.".format(self.agent_name, dialogue.role))
         proposal = propose.proposals[0]
         transaction_id = generate_transaction_id(self.crypto.public_key, propose.destination, dialogue.dialogue_label, dialogue.is_seller)
         transaction = Transaction.from_proposal(proposal,
@@ -115,19 +129,21 @@ class FIPABehaviour:
                                                 crypto=self.crypto)
         new_msg_id = propose.msg_id + 1
         if self._is_profitable_transaction(transaction, dialogue):
-            logger.debug("[{}]: Accepting propose (as {}).".format(self.name, dialogue.role))
+            logger.debug("[{}]: Accepting propose (as {}).".format(self.agent_name, dialogue.role))
             self.game_instance.lock_manager.add_lock(transaction, as_seller=dialogue.is_seller)
             self.game_instance.lock_manager.add_pending_acceptances(dialogue, new_msg_id, transaction)
             result = Accept(new_msg_id, propose.dialogue_id, propose.destination, propose.msg_id, Context())
         else:
-            logger.debug("[{}]: Declining propose (as {})".format(self.name, dialogue.role))
+            logger.debug("[{}]: Declining propose (as {})".format(self.agent_name, dialogue.role))
             result = Decline(new_msg_id, propose.dialogue_id, propose.destination, propose.msg_id, Context())
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_PROPOSE, dialogue.is_self_initiated)
         return result
 
     def _is_profitable_transaction(self, transaction: Transaction, dialogue: Dialogue) -> bool:
         """
-        Is a profitable transaction?
+        Check if a transaction is profitable.
+
+        Is it a profitable transaction?
         - apply all the locks for role.
         - check if the transaction is consistent with the locks (enough money/holdings)
         - check that we gain score.
@@ -137,24 +153,23 @@ class FIPABehaviour:
 
         :return: True if the transaction is good (as stated above), False otherwise.
         """
-
         state_after_locks = self.game_instance.state_after_locks(dialogue.is_seller)
 
         if not state_after_locks.check_transaction_is_consistent(transaction, self.game_instance.game_configuration.tx_fee):
-            logger.debug("[{}]: the proposed transaction is not consistent with the state after locks.".format(self.name))
+            logger.debug("[{}]: the proposed transaction is not consistent with the state after locks.".format(self.agent_name))
             return False
         proposal_delta_score = state_after_locks.get_score_diff_from_transaction(transaction, self.game_instance.game_configuration.tx_fee)
 
         result = self.game_instance.strategy.is_acceptable_proposal(proposal_delta_score)
         logger.debug("[{}]: is good proposal for {}? {}: tx_id={}, "
                      "delta_score={}, amount={}"
-                     .format(self.name, dialogue.role, result, transaction.transaction_id,
+                     .format(self.agent_name, dialogue.role, result, transaction.transaction_id,
                              proposal_delta_score, transaction.amount))
         return result
 
     def on_decline(self, decline: Decline, dialogue: Dialogue) -> None:
         """
-        On Decline handler.
+        Handle a Decline.
 
         :param decline: the decline
         :param dialogue: the dialogue
@@ -162,7 +177,7 @@ class FIPABehaviour:
         :return: None
         """
         logger.debug("[{}]: on_decline: msg_id={}, dialogue_id={}, origin={}, target={}"
-                     .format(self.name, decline.msg_id, decline.dialogue_id, decline.destination, decline.target))
+                     .format(self.agent_name, decline.msg_id, decline.dialogue_id, decline.destination, decline.target))
 
         if self.game_instance.strategy.is_world_modeling:
             if dialogue.dialogue_label in self.game_instance.lock_manager.pending_tx_proposals and \
@@ -185,15 +200,15 @@ class FIPABehaviour:
 
     def on_accept(self, accept: Accept, dialogue: Dialogue) -> Union[List[Decline], List[Union[OutContainer, Accept]], List[OutContainer]]:
         """
-        On Accept dispatcher.
+        Handle an Accept.
 
         :param accept: the accept
         :param dialogue: the dialogue
 
-        :return: None
+        :return: a Deline or an Accept and a Transaction (in OutContainer) or a Transaction (in OutContainer)
         """
         logger.debug("[{}]: on_accept: msg_id={}, dialogue_id={}, origin={}, target={}"
-                     .format(self.name, accept.msg_id, accept.dialogue_id, accept.destination, accept.target))
+                     .format(self.agent_name, accept.msg_id, accept.dialogue_id, accept.destination, accept.target))
 
         if dialogue.dialogue_label in self.game_instance.lock_manager.pending_tx_acceptances \
                 and accept.target in self.game_instance.lock_manager.pending_tx_acceptances[dialogue.dialogue_label]:
@@ -204,12 +219,12 @@ class FIPABehaviour:
 
     def _on_initial_accept(self, accept: Accept, dialogue: Dialogue) -> Union[List[Decline], List[Union[OutContainer, Accept]]]:
         """
-        Initial Accept handler.
+        Handle an initial Accept.
 
         :param accept: the accept
         :param dialogue: the dialogue
 
-        :return: None
+        :return: a Deline or an Accept and a Transaction (in OutContainer
         """
         transaction = self.game_instance.lock_manager.pop_pending_proposal(dialogue, accept.target)
         new_msg_id = accept.msg_id + 1
@@ -217,26 +232,26 @@ class FIPABehaviour:
         if self._is_profitable_transaction(transaction, dialogue):
             if self.game_instance.strategy.is_world_modeling:
                 self.game_instance.world_state.update_on_accept(transaction)
-            logger.debug("[{}]: Locking the current state (as {}).".format(self.name, dialogue.role))
+            logger.debug("[{}]: Locking the current state (as {}).".format(self.agent_name, dialogue.role))
             self.game_instance.lock_manager.add_lock(transaction, as_seller=dialogue.is_seller)
             results.append(OutContainer(message=transaction.serialize(), message_id=STARTING_MESSAGE_ID, dialogue_id=accept.dialogue_id, destination=self.game_instance.controller_pbk))
             results.append(Accept(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id, Context()))
         else:
-            logger.debug("[{}]: Decline the accept (as {}).".format(self.name, dialogue.role))
+            logger.debug("[{}]: Decline the accept (as {}).".format(self.agent_name, dialogue.role))
             results.append(Decline(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id, Context()))
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_ACCEPT, dialogue.is_self_initiated)
         return results
 
     def _on_match_accept(self, accept: Accept, dialogue: Dialogue) -> List[OutContainer]:
         """
-        Match accept handler.
+        Handle a matching Accept.
 
         :param accept: the accept
         :param dialogue: the dialogue
 
-        :return: None
+        :return: a Transaction
         """
-        logger.debug("[{}]: on match accept".format(self.name))
+        logger.debug("[{}]: on match accept".format(self.agent_name))
         results = []
         transaction = self.game_instance.lock_manager.pop_pending_acceptances(dialogue, accept.target)
         results.append(OutContainer(message=transaction.serialize(), message_id=STARTING_MESSAGE_ID, dialogue_id=accept.dialogue_id, destination=self.game_instance.controller_pbk))
