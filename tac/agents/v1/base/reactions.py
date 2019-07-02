@@ -33,15 +33,15 @@ from oef.messages import CFP, Propose, Accept, Decline, Message as ByteMessage, 
     DialogueErrorMessage
 from oef.utils import Context
 
-from tac.agents.v2.agent import Liveness
-from tac.agents.v2.base.dialogues import Dialogue
-from tac.agents.v2.base.helpers import dialogue_label_from_transaction_id
-from tac.agents.v2.base.game_instance import GameInstance, GamePhase
-from tac.agents.v2.base.stats_manager import EndState
-from tac.agents.v2.base.interfaces import ControllerReactionInterface, OEFSearchReactionInterface, \
+from tac.agents.v1.agent import Liveness
+from tac.agents.v1.base.dialogues import Dialogue
+from tac.agents.v1.base.helpers import dialogue_label_from_transaction_id
+from tac.agents.v1.base.game_instance import GameInstance, GamePhase
+from tac.agents.v1.base.stats_manager import EndState
+from tac.agents.v1.base.interfaces import ControllerReactionInterface, OEFSearchReactionInterface, \
     DialogueReactionInterface
-from tac.agents.v2.base.negotiation_behaviours import FIPABehaviour
-from tac.agents.v2.mail import OutBox, OutContainer
+from tac.agents.v1.base.negotiation_behaviours import FIPABehaviour
+from tac.agents.v1.mail import OutBox, OutContainer
 from tac.helpers.crypto import Crypto
 from tac.helpers.misc import TAC_SUPPLY_DATAMODEL_NAME
 from tac.platform.protocol import Error, ErrorCode, GameData, TransactionConfirmation, StateUpdate, Register, \
@@ -364,7 +364,7 @@ class DialogueReactions(DialogueReactionInterface):
 
         :return: None
         """
-        is_seller = msg.query.model.agent_name == TAC_SUPPLY_DATAMODEL_NAME
+        is_seller = msg.query.model.name == TAC_SUPPLY_DATAMODEL_NAME
         dialogue = self.dialogues.create_opponent_initiated(msg.destination, msg.dialogue_id, is_seller)
         logger.debug("[{}]: saving dialogue (as {}): dialogue_id={}".format(self.agent_name, dialogue.role, dialogue.dialogue_label.dialogue_id))
         results = self._handle(msg, dialogue)

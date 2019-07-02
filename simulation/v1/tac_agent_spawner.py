@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 # ------------------------------------------------------------------------------
 #
 #   Copyright 2018-2019 Fetch.AI Limited
@@ -21,7 +20,6 @@
 
 """Spawn several TAC agents."""
 import argparse
-import asyncio
 import datetime
 import logging
 import pprint
@@ -32,7 +30,9 @@ from typing import List
 import dateutil
 import math
 
-from tac.agents.v1.examples.baseline import BaselineAgent, RegisterAs, SearchFor
+from tac.agents.v1.base.strategy import RegisterAs, SearchFor
+from tac.agents.v1.examples.baseline import BaselineAgent
+from tac.agents.v1.examples.strategy import BaselineStrategy
 from tac.gui.monitor import VisdomMonitor, NullMonitor
 from tac.platform.controller import ControllerAgent, TACParameters
 from tac.platform.stats import GameStats
@@ -47,9 +47,9 @@ def parse_arguments():
     parser.add_argument("--nb-goods", type=int, default=10, help="Number of TAC agent to run.")
     parser.add_argument("--money-endowment", type=int, default=200, help="Initial amount of money.")
     parser.add_argument("--base-good-endowment", default=2, type=int, help="The base amount of per good instances every agent receives.")
-    parser.add_argument("--lower-bound-factor", default=1, type=int, help="The lower bound factor of a uniform distribution.")
-    parser.add_argument("--upper-bound-factor", default=1, type=int, help="The upper bound factor of a uniform distribution.")
-    parser.add_argument("--tx-fee", default=1, type=int, help="The transaction fee.")
+    parser.add_argument("--lower-bound-factor", default=0, type=int, help="The lower bound factor of a uniform distribution.")
+    parser.add_argument("--upper-bound-factor", default=0, type=int, help="The upper bound factor of a uniform distribution.")
+    parser.add_argument("--tx-fee", default=0.1, type=float, help="The transaction fee.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=10000, help="TCP/IP port of the OEF Agent")
     parser.add_argument("--nb-baseline-agents", type=int, default=10, help="Number of baseline agent to run. Defaults to the number of agents of the competition.")
@@ -57,16 +57,17 @@ def parse_arguments():
     parser.add_argument("--registration-timeout", default=10, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
     parser.add_argument("--inactivity-timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
     parser.add_argument("--competition-timeout", default=240, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
+    parser.add_argument("--services-interval", default=5, type=int, help="The amount of time (in seconds) the baseline agents wait until it updates services again.")
     parser.add_argument("--pending-transaction-timeout", default=120, type=int, help="The amount of time (in seconds) the baseline agents wait until the transaction confirmation.")
     parser.add_argument("--register-as", choices=['seller', 'buyer', 'both'], default='both', help="The string indicates whether the baseline agent registers as seller, buyer or both on the oef.")
     parser.add_argument("--search-for", choices=['sellers', 'buyers', 'both'], default='both', help="The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.")
+    parser.add_argument("--gui", action="store_true", help="Enable the GUI.")
     parser.add_argument("--data-output-dir", default="data", help="The output directory for the simulation data.")
     parser.add_argument("--experiment-id", default=None, help="The experiment ID.")
-    parser.add_argument("--gui", action="store_true", help="Enable the GUI.")
     parser.add_argument("--visdom-addr", default="localhost", help="TCP/IP address of the Visdom server")
     parser.add_argument("--visdom-port", default=8097, help="TCP/IP port of the Visdom server")
     parser.add_argument("--seed", default=42, help="The random seed of the simulation.")
-    parser.add_argument("--whitelist-file", default=None, type=str, help="The file that contains the list of agent names to be whitelisted.")
+    parser.add_argument("--whitelist-file", nargs="?", default=None, type=str, help="The file that contains the list of agent names to be whitelisted.")
 
     arguments = parser.parse_args()
     logger.debug("Arguments: {}".format(pprint.pformat(arguments.__dict__)))
@@ -74,21 +75,21 @@ def parse_arguments():
     return arguments
 
 
-def _compute_competition_start_and_end_time(registration_timeout: int, competition_timeout: int) -> [datetime.datetime, datetime.datetime]:
-    """
-    Compute the start time of the competition.
+# def _compute_competition_start_and_end_time(registration_timeout: int, competition_timeout: int) -> [datetime.datetime, datetime.datetime]:
+#     """
+#     Compute the start time of the competition.
 
-    :param registration_timeout: seconds to wait for registration timeout.
-    :param competition_timeout: seconds to wait for competition timeout.
-    :return: list with the datetime of the start and end of the competition.
-    """
-    delta_now_to_start = datetime.timedelta(0, registration_timeout)
-    delta_start_to_end = datetime.timedelta(0, competition_timeout)
-    now = datetime.datetime.now()
+#     :param registration_timeout: seconds to wait for registration timeout.
+#     :param competition_timeout: seconds to wait for competition timeout.
+#     :return: list with the datetime of the start and end of the competition.
+#     """
+#     delta_now_to_start = datetime.timedelta(0, registration_timeout)
+#     delta_start_to_end = datetime.timedelta(0, competition_timeout)
+#     now = datetime.datetime.now()
 
-    start_time = now + delta_now_to_start
-    end_time = start_time + delta_start_to_end
-    return start_time, end_time
+#     start_time = now + delta_now_to_start
+#     end_time = start_time + delta_start_to_end
+#     return start_time, end_time
 
 
 def initialize_controller_agent(name: str,
@@ -105,6 +106,7 @@ def initialize_controller_agent(name: str,
     :param oef_port: the TCP/IP port of the OEF Node.
     :param visdom_addr: TCP/IP address of the Visdom server.
     :param visdom_port: TCP/IP port of the Visdom server.
+    :param gui: whether or not the gui is selected.
     :return: the controller agent.
     """
     monitor = VisdomMonitor(visdom_addr=visdom_addr, visdom_port=visdom_port) if gui else NullMonitor()
@@ -143,7 +145,7 @@ def _make_id(agent_id: int, is_world_modeling: bool, nb_agents: int) -> str:
     return result
 
 
-def initialize_baseline_agent(agent_name: str, oef_addr: str, oef_port: int, register_as: str, search_for: str, is_world_modeling: bool, pending_transaction_timeout: int) -> BaselineAgent:
+def initialize_baseline_agent(agent_name: str, oef_addr: str, oef_port: int, register_as: str, search_for: str, is_world_modeling: bool, services_interval: int, pending_transaction_timeout: int) -> BaselineAgent:
     """
     Initialize one baseline agent.
 
@@ -153,15 +155,17 @@ def initialize_baseline_agent(agent_name: str, oef_addr: str, oef_port: int, reg
     :param register_as: the string indicates whether the baseline agent registers as seller, buyer or both on the oef.
     :param search_for: the string indicates whether the baseline agent searches for sellers, buyers or both on the oef.
     :param is_world_modeling: the boolean indicated whether the baseline agent models the world around her or not.
+    :param services_interval: the integer determining the interval in seconds at which services are updated and searched
     :param pending_transaction_timeout: seconds that baseline agents wait for transaction confirmations.
 
     :return: the baseline agent.
     """
     # Notice: we create a new asyncio loop, so we can run it in an independent thread.
-    return BaselineAgent(agent_name, oef_addr, oef_port, loop=asyncio.new_event_loop(), register_as=RegisterAs(register_as), search_for=SearchFor(search_for), is_world_modeling=is_world_modeling, pending_transaction_timeout=pending_transaction_timeout)
+    strategy = BaselineStrategy(register_as=RegisterAs(register_as), search_for=SearchFor(search_for), is_world_modeling=is_world_modeling)
+    return BaselineAgent(agent_name, oef_addr, oef_port, strategy, services_interval=services_interval, pending_transaction_timeout=pending_transaction_timeout)
 
 
-def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port: int, register_as: str, search_for: str, pending_transaction_timeout: int) -> List[BaselineAgent]:
+def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port: int, register_as: str, search_for: str, services_interval: int, pending_transaction_timeout: int) -> List[BaselineAgent]:
     """
     Initialize a list of baseline agents.
 
@@ -170,13 +174,14 @@ def initialize_baseline_agents(nb_baseline_agents: int, oef_addr: str, oef_port:
     :param oef_port: TCP port of the OEF Node.
     :param register_as: the string indicates whether the baseline agent registers as seller, buyer or both on the oef.
     :param search_for: the string indicates whether the baseline agent searches for sellers, buyers or both on the oef.
+    :param services_interval: the integer determining the interval in seconds at which services are updated and searched
     :param pending_transaction_timeout: seconds that baseline agents wait for transaction confirmations.
 
     :return: A list of baseline agents.
     """
     fraction_world_modeling = 0.1
     nb_baseline_agents_world_modeling = round(nb_baseline_agents * fraction_world_modeling)
-    baseline_agents = [initialize_baseline_agent(_make_id(i, i < nb_baseline_agents_world_modeling, nb_baseline_agents), oef_addr, oef_port, register_as, search_for, i < nb_baseline_agents_world_modeling, pending_transaction_timeout)
+    baseline_agents = [initialize_baseline_agent(_make_id(i, i < nb_baseline_agents_world_modeling, nb_baseline_agents), oef_addr, oef_port, register_as, search_for, i < nb_baseline_agents_world_modeling, services_interval, pending_transaction_timeout)
                        for i in range(nb_baseline_agents)]
     return baseline_agents
 
@@ -185,12 +190,9 @@ def run_baseline_agent(agent: BaselineAgent) -> None:
     """
     Run a baseline agent.
 
-    :param agent: an instance of BaselineAgent
-    :return: None
+    :param agent: an instance of the BaselineAgent
     """
-    agent.connect()
-    agent.search_for_tac()
-    agent.run()
+    agent.start()
 
 
 def run_controller(tac_controller: ControllerAgent, tac_parameters: TACParameters) -> None:
@@ -199,7 +201,6 @@ def run_controller(tac_controller: ControllerAgent, tac_parameters: TACParameter
 
     :param tac_controller: an instance of the ControllerAgent
     :param tac_parameters: an instance of the TACParameters
-    :return: None
     """
     tac_controller.wait_and_handle_competition(tac_parameters)
 
@@ -273,7 +274,6 @@ def _handling_end_of_simulation(tac_controller: 'ControllerAgent', arguments: ar
     - plot data, if requested
 
     :param tac_controller: the controller agent of TAC.
-    :param arguments: the arguments
     :return: None
     """
     if tac_controller is not None and tac_controller.game_handler is not None:
@@ -283,7 +283,7 @@ def _handling_end_of_simulation(tac_controller: 'ControllerAgent', arguments: ar
             datetime.datetime.now()).replace(" ", "_")
         tac_controller.dump(arguments.data_output_dir, experiment_name)
         if tac_controller.game_handler.is_game_running():
-            logger.debug("Saving data...")
+            logger.debug("Plotting data...")
             game_stats = GameStats(tac_controller.game_handler.current_game)
             game_stats.dump(arguments.data_output_dir, experiment_name)
 
@@ -306,6 +306,7 @@ if __name__ == '__main__':
                                                      oef_port=arguments.oef_port,
                                                      register_as=arguments.register_as,
                                                      search_for=arguments.search_for,
+                                                     services_interval=arguments.services_interval,
                                                      pending_transaction_timeout=arguments.pending_transaction_timeout)
 
         tac_parameters = initialize_tac_parameters(arguments)

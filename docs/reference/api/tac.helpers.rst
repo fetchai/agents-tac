@@ -4,13 +4,6 @@ tac.helpers package
 Submodules
 ----------
 
-tac.helpers.advanced module
----------------------------
-
-.. automodule:: tac.helpers.advanced
-   :members:
-   :undoc-members:
-   :show-inheritance:
 tac.helpers.crypto module
 -------------------------
 
@@ -18,6 +11,7 @@ tac.helpers.crypto module
    :members:
    :undoc-members:
    :show-inheritance:
+
 tac.helpers.misc module
 -----------------------
 
@@ -25,13 +19,7 @@ tac.helpers.misc module
    :members:
    :undoc-members:
    :show-inheritance:
-tac.helpers.plantuml module
----------------------------
 
-.. automodule:: tac.helpers.plantuml
-   :members:
-   :undoc-members:
-   :show-inheritance:
 tac.helpers.price\_model module
 -------------------------------
 

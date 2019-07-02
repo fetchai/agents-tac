@@ -14,7 +14,7 @@ Check out the [package documentation](../../master/docs) to learn more about the
 To test your agent run it against baseline agents in the sandbox. Follow the steps 1.-3. in sandbox readme, then start your own agent:
 
 ```
-python3 templates/v2/basic.py --name basic1 --gui
+python3 templates/v1/basic.py --name basic1 --gui
 ```
 
 The following additional parameters can be used to tune the agent:
@@ -36,7 +36,7 @@ If you want to use the same cryptographic key, you can follow these steps:
       
 - Every time you run your agent, add the parameter `--private-key <pem-file>` to your command:
 
-      python3 templates/v2/basic.py --name basic1 --gui --private-key private_key.pem
+      python3 templates/v1/basic.py --name basic1 --gui --private-key private_key.pem
 
 ## Testing manually (not recommended)
 
@@ -55,10 +55,10 @@ python3 -m visdom.server
 python3 tac/platform/controller.py --verbose --registration-timeout 20 --nb-agents 2 --tx-fee 0.0 --gui
 ```
 ```
-python3 templates/v2/basic.py --name basic0 --gui
+python3 templates/v1/basic.py --name basic0 --gui
 ```
 ```
-python3 templates/v2/basic.py --name basic1 --gui
+python3 templates/v1/basic.py --name basic1 --gui
 ```
 
 The following parameters can be used to tune the agent:

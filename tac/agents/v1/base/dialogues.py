@@ -31,7 +31,7 @@ from typing import List, Any, Dict, Union
 
 from oef.messages import CFP, Decline, Propose, Accept, Message as ByteMessage, \
     SearchResult, OEFErrorMessage, DialogueErrorMessage
-from tac.agents.v2.mail import OutContainer
+from tac.agents.v1.mail import OutContainer
 
 Action = Any
 OEFMessage = Union[SearchResult, OEFErrorMessage, DialogueErrorMessage]

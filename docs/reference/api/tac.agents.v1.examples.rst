@@ -12,6 +12,14 @@ tac.agents.v1.examples.baseline module
    :undoc-members:
    :show-inheritance:
 
+tac.agents.v1.examples.strategy module
+--------------------------------------
+
+.. automodule:: tac.agents.v1.examples.strategy
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 
 Module contents
 ---------------

@@ -347,9 +347,8 @@ def escape_html(string: str, quote=True) -> str:
     Replace special characters "&", "<" and ">" to HTML-safe sequences.
 
     :param string: the string
-    :param quote: If the optional flag quote is true (the default), the quotation mark
-    characters, both double quote (") and single quote (') characters are also
-    translated.
+    :param quote: If the optional flag quote is true (the default), the quotation mark characters, both double quote (") and single quote (') characters are also translated.
+
     :return: the escaped string
     """
     string = string.replace("&", "&amp;")  # Must be done first!

@@ -30,10 +30,10 @@ import logging
 
 from oef.query import Query, Constraint, GtEq
 
-from tac.agents.v2.agent import Liveness
-from tac.agents.v2.base.interfaces import ControllerActionInterface, OEFSearchActionInterface, DialogueActionInterface
-from tac.agents.v2.base.game_instance import GameInstance
-from tac.agents.v2.mail import OutBox, OutContainer
+from tac.agents.v1.agent import Liveness
+from tac.agents.v1.base.interfaces import ControllerActionInterface, OEFSearchActionInterface, DialogueActionInterface
+from tac.agents.v1.base.game_instance import GameInstance
+from tac.agents.v1.mail import OutBox, OutContainer
 from tac.helpers.crypto import Crypto
 from tac.platform.protocol import GetStateUpdate
 

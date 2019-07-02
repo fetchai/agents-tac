@@ -11,6 +11,7 @@ tac.gui.dashboards.agent module
    :members:
    :undoc-members:
    :show-inheritance:
+
 tac.gui.dashboards.base module
 ------------------------------
 
@@ -18,6 +19,7 @@ tac.gui.dashboards.base module
    :members:
    :undoc-members:
    :show-inheritance:
+
 tac.gui.dashboards.controller module
 ------------------------------------
 
