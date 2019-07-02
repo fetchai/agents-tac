@@ -205,32 +205,32 @@ class GameInitialization:
 
     @property
     def initial_money_amounts(self) -> List[int]:
-        """List of the initial amount of money of every agent."""
+        """Get list of the initial amount of money of every agent."""
         return self._initial_money_amounts
 
     @property
     def endowments(self) -> List[Endowment]:
-        """Endowments of the agents."""
+        """Get endowments of the agents."""
         return self._endowments
 
     @property
     def utility_params(self) -> List[UtilityParams]:
-        """The utility parameter list of the agents."""
+        """Get utility parameter list of the agents."""
         return self._utility_params
 
     @property
     def eq_prices(self) -> List[float]:
-        """Theoretical equilibrium prices (a benchmark)."""
+        """Get theoretical equilibrium prices (a benchmark)."""
         return self._eq_prices
 
     @property
     def eq_good_holdings(self) -> List[List[float]]:
-        """Theoretical equilibrium good holdings (a benchmark)."""
+        """Get theoretical equilibrium good holdings (a benchmark)."""
         return self._eq_good_holdings
 
     @property
     def eq_money_holdings(self) -> List[float]:
-        """Theoretical equilibrium money holdings (a benchmark)."""
+        """Get theoretical equilibrium money holdings (a benchmark)."""
         return self._eq_money_holdings
 
     def _check_consistency(self):
@@ -371,17 +371,17 @@ class Game:
 
     @property
     def initialization(self) -> GameInitialization:
-        """Game initialization."""
+        """Get game initialization."""
         return self._initialization
 
     @property
     def configuration(self) -> GameConfiguration:
-        """Game configuration."""
+        """Get game configuration."""
         return self._configuration
 
     @property
     def initial_agent_states(self) -> Dict[str, 'AgentState']:
-        """Initial state of each agent."""
+        """Get initial state of each agent."""
         return self._initial_agent_states
 
     @staticmethod
@@ -672,12 +672,12 @@ class AgentState:
 
     @property
     def current_holdings(self):
-        """Current holding of each good."""
+        """Get current holding of each good."""
         return copy.copy(self._current_holdings)
 
     @property
     def utility_params(self) -> UtilityParams:
-        """Utility parameter for each good."""
+        """Get utility parameter for each good."""
         return copy.copy(self._utility_params)
 
     # TODO: potentially move the next three methods out as separate utilities; separate state (data) from member functions
@@ -876,7 +876,7 @@ class WorldState:
 
     def _expected_initial_money_amount(self, initial_money_amount: float) -> float:
         """
-        Expectation of the initial_money_amount of an opponent.
+        Compute expectation of the initial_money_amount of an opponent.
 
         :param initial_money_amount: the initial amount of money of the agent.
         :return: the expected initial money amount of the opponent
@@ -887,7 +887,7 @@ class WorldState:
 
     def _expected_good_endowments(self, good_endowment: Endowment) -> Endowment:
         """
-        Expectation of the good endowment of an opponent.
+        Compute expectation of the good endowment of an opponent.
 
         :param good_endowment: the good_endowment of the agent.
         :return: the expected good endowment of the opponent
@@ -898,7 +898,7 @@ class WorldState:
 
     def _expected_utility_params(self, utility_params: UtilityParams) -> UtilityParams:
         """
-        Expectation of the utility params of an opponent.
+        Compute expectation of the utility params of an opponent.
 
         :param utility_params: the utility_params of the agent.
         :return: the expected utility params of the opponent
@@ -909,7 +909,7 @@ class WorldState:
 
     def expected_price(self, good_pbk: str, marginal_utility: float, is_seller: bool, share_of_tx_fee: float) -> float:
         """
-        Expectation of the price for the good given a constraint.
+        Compute expectation of the price for the good given a constraint.
 
         :param good_pbk: the pbk of the good
         :param marginal_utility: the marginal_utility from the good
@@ -924,7 +924,7 @@ class WorldState:
 
     def _update_price(self, good_pbk: str, price: float, is_accepted: bool) -> None:
         """
-        Updates the price for the good based on an outcome.
+        Update the price for the good based on an outcome.
 
         :param good_pbk: the pbk of the good
         :param price: the price to which the outcome relates
