@@ -98,7 +98,7 @@ class TestSimulation:
         # run the simulation
         try:
             # generate task for the controller
-            controller_thread = Thread(target=cls.tac_controller.start_competition, args=(cls.tac_parameters, ))
+            controller_thread = Thread(target=cls.tac_controller.handle_competition, args=(cls.tac_parameters,))
 
             baseline_threads = [Thread(target=_run_baseline_agent, args=[baseline_agent, "v2"])
                                 for baseline_agent in cls.baseline_agents]
