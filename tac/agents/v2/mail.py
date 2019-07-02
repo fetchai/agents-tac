@@ -104,6 +104,15 @@ class InBox(object):
     def timeout(self) -> float:
         return self._timeout
 
+    def is_in_queue_empty(self) -> bool:
+        """
+        Checks for a message on the in queue.
+
+        :return: boolean indicating whether there is a message or not
+        """
+        result = self.in_queue.empty()
+        return result
+
     def get_wait(self) -> AgentMessage:
         """
         Waits for a message on the in queue and gets it. Blocking.
@@ -115,20 +124,30 @@ class InBox(object):
         logger.debug("Incoming message type: type={}".format(type(msg)))
         return msg
 
-    def get_some_wait(self) -> Optional[AgentMessage]:
+    def get_some_wait(self, block: bool = True, timeout: Optional[float] = None) -> Optional[AgentMessage]:
         """
         Checks for a message on the in queue for some time and gets it.
 
+        :param block: if true makes it blocking
+        :param timeout: times out the block after timeout seconds
         :return: the message object
         """
         logger.debug("Checks for message from the in queue...")
         try:
-            msg = self.in_queue.get(block=True, timeout=self.timeout)
+            msg = self.in_queue.get(block=block, timeout=timeout)
             logger.debug("Incoming message type: type={}".format(type(msg)))
             return msg
         except Empty:
             return None
 
+    def get_no_wait(self) -> Optional[AgentMessage]:
+        """
+        Checks for a message on the in queue for no time.
+
+        :return: the message object
+        """
+        result = self.get_some_wait(False)
+        return result
 
 class OutBox(object):
     """

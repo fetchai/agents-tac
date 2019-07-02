@@ -18,6 +18,7 @@
 #
 # ------------------------------------------------------------------------------
 import logging
+import time
 
 from abc import abstractmethod
 from typing import Optional
@@ -41,10 +42,11 @@ class Liveness:
 
 
 class Agent:
-    def __init__(self, name: str, oef_addr: str, oef_port: int = 10000, private_key_pem_path: Optional[str] = None):
+    def __init__(self, name: str, oef_addr: str, oef_port: int = 10000, private_key_pem_path: Optional[str] = None, timeout: Optional[float] = 1.0):
         self._name = name
         self._crypto = Crypto(private_key_pem_path=private_key_pem_path)
         self._liveness = Liveness()
+        self._timeout = timeout
 
         self.mail_box = None  # type: Optional[MailBox]
         self.in_box = None  # type: Optional[InBox]
@@ -79,6 +81,7 @@ class Agent:
         logger.debug("[{}]: Start processing messages...".format(self.name))
         while not self.liveness.is_stopped:
             self.act()
+            time.sleep(self._timeout)
             self.react()
 
         self.stop()
