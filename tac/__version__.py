@@ -18,6 +18,8 @@
 #
 # ------------------------------------------------------------------------------
 
+"""Specifies the version of the platform package."""
+
 __title__ = 'tac'
 __description__ = 'Trading Agent Competition agents'
 __url__ = 'https://github.com/uvue-git/tac-agents.git'
