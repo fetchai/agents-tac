@@ -41,6 +41,9 @@ Message = Union[OEFMessage, ControllerMessage, AgentMessage]
 
 logger = logging.getLogger(__name__)
 
+STARTING_MESSAGE_ID = 1
+STARTING_MESSAGE_TARGET = 0
+
 
 class DialogueLabel:
     """The dialogue label class acts as an identifier for dialogues."""
@@ -240,14 +243,19 @@ class Dialogues:
 
     def is_permitted_for_new_dialogue(self, msg: AgentMessage, known_pbks: List[str]) -> bool:
         """
-        Check whether an agent message is a CFP and from a known public key.
+        Check whether an agent message is permitted for a new dialogue.
+
+        That is, the message has to
+        - be a CFP,
+        - have the correct msg id and message target, and
+        - be from a known public key.
 
         :param msg: the agent message
         :param known_pbks: the list of known public keys
 
         :return: a boolean indicating whether the message is permitted for a new dialogue
         """
-        result = isinstance(msg, CFP) and (msg.destination in known_pbks)
+        result = isinstance(msg, CFP) and msg.msg_id == STARTING_MESSAGE_ID and msg.target == STARTING_MESSAGE_TARGET and (msg.destination in known_pbks)
         return result
 
     def is_belonging_to_registered_dialogue(self, msg: AgentMessage, agent_pbk: str) -> bool:
