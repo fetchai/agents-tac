@@ -87,7 +87,7 @@ class GameInstance:
 
         :param agent_name: the name of the agent.
         :param strategy: the strategy of the agent.
-        :param mail_starts: the mail stats of the mailbox.
+        :param mail_stats: the mail stats of the mailbox.
         :param services_interval: the interval at which services are updated.
         :param pending_transaction_timeout: the timeout after which transactions are removed from the lock manager.
         :param dashboard: the agent dashboard.
