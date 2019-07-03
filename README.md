@@ -72,7 +72,6 @@ The [competition sandbox](../master/sandbox) provides the code to build the dock
 
 ## Dependencies
 
-- The project requires the [Google Protocol Buffers](https://developers.google.com/protocol-buffers/) compiler. A guide on how to install it is found [here](https://fetchai.github.io/oef-sdk-python/user/install.html#protobuf-compiler).
 - All python specific dependencies are specified in the Pipfile (and installed via the commands specified in 'Preliminaries').
 - The package requires that you install [Docker](https://www.docker.com/) and the sanbox requires that you in addition install [Docker Compose](https://docs.docker.com/compose/).
 - The project requires oef-search-pluto which can be pulled here:
@@ -91,15 +90,18 @@ The [competition sandbox](../master/sandbox) provides the code to build the dock
 
 ## Contribute
 
+The following dependency is only relevant if you intend to contribute to the repository:
+- the project uses [Google Protocol Buffers](https://developers.google.com/protocol-buffers/) compiler for message serialization. A guide on how to install it is found [here](https://fetchai.github.io/oef-sdk-python/user/install.html#protobuf-compiler).
+
 The following steps are only relevant if you intend to contribute to the repository. They are not required for agent development.
 
 - Install development dependencies:
 
 	  pipenv install --dev
 
-- After each change to the codebase re-install package:
+- Install package in (development mode):
 
-      python3 setup.py install
+	  pip3 install -e .
 
 - After changes to the protobuf schema run:
 
@@ -107,23 +109,19 @@ The following steps are only relevant if you intend to contribute to the reposit
 
 - To run tests (ensure no oef docker containers are running):
 
-      tox -e py37
+	  tox -e py37
 
 - To run linters:
 
-      tox -e flake8
+	  tox -e flake8
 
 - We recommend you use the tested OEF build:
 
-```
-python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config.json
-```
+	  python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config.json
 
 - To start OEF latest build (the latest build might not be compatible with the current repo):
 
-```
-python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config_latest.json
-``` 
+	  python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config_latest.json
 
 ## Resources
 
