@@ -26,6 +26,8 @@ import math
 import multiprocessing
 import pprint
 import random
+import signal
+import time
 from typing import Optional, List
 
 import tac
@@ -71,23 +73,6 @@ def parse_arguments():
     return arguments
 
 
-# def _compute_competition_start_and_end_time(registration_timeout: int, competition_timeout: int) -> [datetime.datetime, datetime.datetime]:
-#     """
-#     Compute the start time of the competition.
-
-#     :param registration_timeout: seconds to wait for registration timeout.
-#     :param competition_timeout: seconds to wait for competition timeout.
-#     :return: list with the datetime of the start and end of the competition.
-#     """
-#     delta_now_to_start = datetime.timedelta(0, registration_timeout)
-#     delta_start_to_end = datetime.timedelta(0, competition_timeout)
-#     now = datetime.datetime.now()
-
-#     start_time = now + delta_now_to_start
-#     end_time = start_time + delta_start_to_end
-#     return start_time, end_time
-
-
 def _make_id(agent_id: int, is_world_modeling: bool, nb_agents: int) -> str:
     """
     Make the name for baseline agents from an integer identifier.
@@ -116,40 +101,8 @@ def _make_id(agent_id: int, is_world_modeling: bool, nb_agents: int) -> str:
     return result
 
 
-def run_baseline_agent(**kwargs) -> None:
-    """
-    Run a baseline agent.
-    """
-    tac.agents.v2.examples.baseline.main(**kwargs)
-
-
-if __name__ == '__main__':
-    arguments = parse_arguments()
-    random.seed(arguments.seed)
-
-    controller_process = None  # type: Optional[multiprocessing.Process]
-    baseline_processes = []  # type: List[multiprocessing.Process]
-    try:
-
-        fraction_world_modeling = 0.1
-        nb_baseline_agents_world_modeling = round(arguments.nb_baseline_agents * fraction_world_modeling)
-        baseline_processes = [
-            multiprocessing.Process(
-                target=run_baseline_agent,
-                kwargs=dict(
-                    name=_make_id(i, i < nb_baseline_agents_world_modeling, arguments.nb_agents),
-                    oef_addr=arguments.oef_addr,
-                    oef_port=arguments.oef_port,
-                    register_as=arguments.register_as,
-                    search_for=arguments.search_for,
-                    is_world_modeling=i < nb_baseline_agents_world_modeling,
-                    services_interval=arguments.services_interval,
-                    pending_transaction_timeout=arguments.pending_transaction_timeout,
-                    gui=arguments.gui,
-                    visdom_addr=arguments.visdom_addr,
-                    visdom_port=arguments.visdom_port)) for i in range(arguments.nb_agents)]
-
-        controller_process = multiprocessing.Process(target=tac.platform.controller.main, kwargs=dict(
+def spawn_controller_agent(arguments):
+    result = multiprocessing.Process(target=tac.platform.controller.main, kwargs=dict(
             name="tac_controller",
             nb_agents=arguments.nb_agents,
             nb_goods=arguments.nb_goods,
@@ -174,22 +127,70 @@ if __name__ == '__main__':
             seed=arguments.seed,
             version=1,
         ))
+    result.start()
+    return result
 
-        all_processes = [controller_process] + baseline_processes
-        for p in all_processes:
-            p.start()
 
-        for p in all_processes:
-            p.join()
+def run_baseline_agent(**kwargs) -> None:
+    """
+    Run a baseline agent.
+    """
+    # give the time to the controller to connect to the OEF
+    time.sleep(5.0)
+    tac.agents.v2.examples.baseline.main(**kwargs)
+
+
+def spawn_baseline_agents(arguments) -> List[multiprocessing.Process]:
+    fraction_world_modeling = 0.1
+    nb_baseline_agents_world_modeling = round(arguments.nb_baseline_agents * fraction_world_modeling)
+
+    threads = [multiprocessing.Process(target=run_baseline_agent, kwargs=dict(
+            name=_make_id(i, i < nb_baseline_agents_world_modeling, arguments.nb_agents),
+            oef_addr=arguments.oef_addr,
+            oef_port=arguments.oef_port,
+            register_as=arguments.register_as,
+            search_for=arguments.search_for,
+            is_world_modeling=i < nb_baseline_agents_world_modeling,
+            services_interval=arguments.services_interval,
+            pending_transaction_timeout=arguments.pending_transaction_timeout,
+            gui=arguments.gui,
+            visdom_addr=arguments.visdom_addr,
+            visdom_port=arguments.visdom_port)) for i in range(arguments.nb_agents)]
+
+    def signal_handler(sig, frame):
+        """This is a signal handler that does nothing - used to filter the SIGINT from the parent process."""
+
+    original_sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
+    signal.signal(signal.SIGINT, signal_handler)
+    for t in threads:
+        t.start()
+    signal.signal(signal.SIGINT, original_sigint_handler)
+    return threads
+
+
+if __name__ == '__main__':
+    arguments = parse_arguments()
+    random.seed(arguments.seed)
+
+    controller_thread = None  # type: Optional[multiprocessing.Process]
+    baseline_threads = []  # type: List[multiprocessing.Process]
+
+    try:
+
+        controller_thread = spawn_controller_agent(arguments)
+        baseline_threads = spawn_baseline_agents(arguments)
+        controller_thread.join()
 
     except KeyboardInterrupt:
         logger.debug("Simulation interrupted...")
-
-        if controller_process is not None:
-            controller_process.terminate()
-        for p in baseline_processes:
-            p.join()
-
     except Exception:
         logger.exception("Unexpected exception.")
         exit(-1)
+    finally:
+        if controller_thread is not None:
+            controller_thread.join(timeout=5)
+            controller_thread.terminate()
+
+        for t in baseline_threads:
+            t.join(timeout=5)
+            t.terminate()
