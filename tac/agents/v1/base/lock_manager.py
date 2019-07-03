@@ -67,7 +67,6 @@ class LockManager(object):
         self._cleanup_locks_task_is_running = False
         self._cleanup_locks_task_timeout = task_timeout
 
-        self._last_update_for_pending_messages = deque()  # type: Deque[Tuple[datetime.datetime, Tuple[DialogueLabel, MESSAGE_ID]]]
         self._last_update_for_transactions = deque()  # type: Deque[Tuple[datetime.datetime, TRANSACTION_ID]]
 
     def cleanup_locks_job(self) -> None:
@@ -80,43 +79,7 @@ class LockManager(object):
         """
         while self._cleanup_locks_task_is_running:
             time.sleep(self._cleanup_locks_task_timeout)
-            self._cleanup_pending_messages()
             self._cleanup_pending_transactions()
-
-    def _cleanup_pending_messages(self) -> None:
-        """
-        Remove all the pending messages (i.e. either proposals or acceptances) that have been stored for an amount of time longer than the timeout.
-
-        :return: None
-        """
-        timeout = datetime.timedelta(0, self.pending_transaction_timeout)
-        queue = self._last_update_for_pending_messages
-
-        if len(queue) == 0:
-            return
-
-        next_date, next_item = self._last_update_for_pending_messages[0]
-
-        while datetime.datetime.now() - next_date > timeout:
-            # remove the element from the queue
-            queue.popleft()
-
-            # extract dialogue label and message id
-            dialogue_label, message_id = next_item
-            logger.debug("[{}]: Removing message {}, {}".format(self.agent_name, dialogue_label, message_id))
-
-            # remove (safely) the associated pending proposal (if present)
-            self.pending_tx_proposals.get(dialogue_label, {}).pop(message_id, None)
-            self.pending_tx_proposals.pop(dialogue_label, None)
-
-            # remove (safely) the associated pending acceptance (if present)
-            self.pending_tx_acceptances.get(dialogue_label, {}).pop(message_id, None)
-            self.pending_tx_acceptances.pop(dialogue_label, None)
-
-            # check the next pending message, if present
-            if len(queue) == 0:
-                break
-            next_date, next_item = queue[0]
 
     def _cleanup_pending_transactions(self) -> None:
         """
@@ -162,19 +125,6 @@ class LockManager(object):
         now = datetime.datetime.now()
         self._last_update_for_transactions.append((now, transaction_id))
 
-    def _register_message_with_time(self, dialogue: Dialogue, msg_id: int) -> None:
-        """
-        Register a message with a creation datetime.
-
-        :param dialogue: the dialogue
-        :param msg_id: the message id
-
-        :return: None
-        """
-        now = datetime.datetime.now()
-        message_id = (dialogue.dialogue_label, msg_id)
-        self._last_update_for_pending_messages.append((now, message_id))
-
     def add_pending_proposal(self, dialogue: Dialogue, proposal_id: int, transaction: Transaction) -> None:
         """
         Add a proposal (in the form of a transaction) to the pending list.
@@ -188,7 +138,6 @@ class LockManager(object):
         """
         assert dialogue.dialogue_label not in self.pending_tx_proposals and proposal_id not in self.pending_tx_proposals[dialogue.dialogue_label]
         self.pending_tx_proposals[dialogue.dialogue_label][proposal_id] = transaction
-        self._register_message_with_time(dialogue, proposal_id)
 
     def pop_pending_proposal(self, dialogue: Dialogue, proposal_id: int) -> Transaction:
         """
@@ -204,7 +153,7 @@ class LockManager(object):
         transaction = self.pending_tx_proposals[dialogue.dialogue_label].pop(proposal_id)
         return transaction
 
-    def add_pending_acceptances(self, dialogue: Dialogue, proposal_id: int, transaction: Transaction) -> None:
+    def add_pending_initial_acceptance(self, dialogue: Dialogue, proposal_id: int, transaction: Transaction) -> None:
         """
         Add an acceptance (in the form of a transaction) to the pending list.
 
@@ -217,9 +166,8 @@ class LockManager(object):
         """
         assert dialogue.dialogue_label not in self.pending_tx_acceptances and proposal_id not in self.pending_tx_acceptances[dialogue.dialogue_label]
         self.pending_tx_acceptances[dialogue.dialogue_label][proposal_id] = transaction
-        self._register_message_with_time(dialogue, proposal_id)
 
-    def pop_pending_acceptances(self, dialogue: Dialogue, proposal_id: int) -> Transaction:
+    def pop_pending_initial_acceptance(self, dialogue: Dialogue, proposal_id: int) -> Transaction:
         """
         Remove an acceptance (in the form of a transaction) from the pending list.
 

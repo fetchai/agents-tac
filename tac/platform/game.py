@@ -839,9 +839,9 @@ class WorldState:
         """Update the world state when a new proposal is received."""
         pass
 
-    def update_on_decline(self, transaction: Transaction) -> None:
+    def update_on_declined_propose(self, transaction: Transaction) -> None:
         """
-        Update the world state when a transaction is rejected.
+        Update the world state when a transaction (propose) is rejected.
 
         :param transaction: the transaction
         :return: None
@@ -865,7 +865,7 @@ class WorldState:
         for good_pbk in list(set(good_pbks)):
             self._update_price(good_pbk, price, is_accepted=is_accepted)
 
-    def update_on_accept(self, transaction: Transaction) -> None:
+    def update_on_initial_accept(self, transaction: Transaction) -> None:
         """
         Update the world state when a proposal is accepted.
 
