@@ -38,7 +38,7 @@ def parse_arguments():
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=10000, help="TCP/IP port of the OEF Agent")
     parser.add_argument("--agent-timeout", type=float, default=1.0, help="The time in (fractions of) seconds to time out an agent between act and react.")
-    parser.add_argument("--private-key", default=None, help="Path to a file containing a private key in PEM format.")
+    parser.add_argument("--private-key-pem", default=None, help="Path to a file containing a private key in PEM format.")
 
     return parser.parse_args()
 
@@ -60,7 +60,7 @@ def main():
     """Run the script."""
     args = parse_arguments()
 
-    agent = MyAgent(name=args.name, oef_addr=args.oef_addr, oef_port=args.oef_port, agent_timeout=args.agent_timeout, private_key_pem_path=args.private_key)
+    agent = MyAgent(name=args.name, oef_addr=args.oef_addr, oef_port=args.oef_port, agent_timeout=args.agent_timeout, private_key_pem_path=args.private_key_pem)
 
     try:
         agent.start()

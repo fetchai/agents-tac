@@ -883,6 +883,8 @@ def main(
 
     except Exception as e:
         logger.exception(e)
+    except KeyboardInterrupt:
+        logger.debug("Controller interrupted...")
     finally:
         if agent is not None:
             agent.terminate()
