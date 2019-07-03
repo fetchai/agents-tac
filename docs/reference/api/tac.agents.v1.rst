@@ -12,10 +12,18 @@ Subpackages
 Submodules
 ----------
 
-tac.agents.v1.core module
+tac.agents.v1.agent module
+--------------------------
+
+.. automodule:: tac.agents.v1.agent
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+tac.agents.v1.mail module
 -------------------------
 
-.. automodule:: tac.agents.v1.core
+.. automodule:: tac.agents.v1.mail
    :members:
    :undoc-members:
    :show-inheritance:

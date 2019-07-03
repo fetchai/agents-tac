@@ -17,3 +17,5 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+
+"""This module contains baseline implementations of agents and strategies for TAC."""

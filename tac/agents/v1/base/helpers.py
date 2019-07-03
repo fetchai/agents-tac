@@ -17,11 +17,14 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+
+"""This module contains helper methods for base agent implementations."""
+
 from typing import Union
 
 from oef.messages import Message as SimpleMessage, SearchResult, OEFErrorMessage, DialogueErrorMessage
 
-from tac.agents.v2.base.dialogues import DialogueLabel
+from tac.agents.v1.base.dialogues import DialogueLabel
 from tac.helpers.crypto import Crypto
 from tac.platform.protocol import Response
 
@@ -31,7 +34,7 @@ Message = Union[OEFMessage]
 
 def is_oef_message(msg: Message) -> bool:
     """
-    Checks whether a message is from the oef.
+    Check whether a message is from the oef.
 
     :param msg: the message
     :return: boolean indicating whether or not the message is from the oef
@@ -42,7 +45,7 @@ def is_oef_message(msg: Message) -> bool:
 
 def is_controller_message(msg: Message, crypto: Crypto) -> bool:
     """
-    Checks whether a message is from the controller.
+    Check whether a message is from the controller.
 
     :param msg: the message
     :param crypto: the crypto of the agent
@@ -65,6 +68,7 @@ def is_controller_message(msg: Message, crypto: Crypto) -> bool:
 def generate_transaction_id(agent_pbk: str, opponent_pbk: str, dialogue_label: DialogueLabel, agent_is_seller: bool) -> str:
     """
     Make a transaction id.
+
     :param agent_pbk: the pbk of the agent.
     :param opponent_pbk: the public key of the opponent.
     :param dialogue_label: the dialogue label
@@ -80,7 +84,8 @@ def generate_transaction_id(agent_pbk: str, opponent_pbk: str, dialogue_label: D
 
 def dialogue_label_from_transaction_id(agent_pbk: str, transaction_id: str) -> DialogueLabel:
     """
-    Recover dialogue label from transaction id
+    Recover dialogue label from transaction id.
+
     :param agent_pbk: the pbk of the agent.
     :param transaction_id: the transaction id
     :return: a dialogue label

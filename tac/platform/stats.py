@@ -17,6 +17,9 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+
+"""This module contains a class to query statistics about a game."""
+
 from typing import Any, Dict, Optional, Tuple, List
 
 import numpy as np
@@ -30,15 +33,21 @@ matplotlib.use('agg')
 
 
 class GameStats:
-    """
-    A class to query statistics about a game.
-    """
+    """A class to query statistics about a game."""
 
-    def __init__(self, game: Optional[Game]):
+    def __init__(self, game: Optional[Game]) -> None:
+        """
+        Instantiate game stats.
+
+        :param game: the game
+
+        :return: None
+        """
         self.game = game  # type: Optional[Game]
 
     @classmethod
     def from_json(cls, d: Dict[str, Any]):
+        """Read from json."""
         game = Game.from_dict(d)
         return GameStats(game)
 
@@ -69,13 +78,13 @@ class GameStats:
     def score_history(self) -> Tuple[List[str], np.ndarray]:
         """
         Compute the history of the scores for every agent.
+
         To do so, we need to simulate the game again, by settling transactions one by one
         and get the scores after every transaction.
 
         :return: a matrix of shape (nb_transactions + 1, nb_agents), where every row i contains the scores
                  after transaction i (i=0 is a row with the initial scores.)
         """
-
         nb_transactions = len(self.game.transactions)
         nb_agents = self.game.configuration.nb_agents
         result = np.zeros((nb_transactions + 1, nb_agents))
@@ -97,6 +106,7 @@ class GameStats:
         return keys, result
 
     def balance_history(self) -> Tuple[List[str], np.ndarray]:
+        """Get the balance history."""
         nb_transactions = len(self.game.transactions)
         nb_agents = self.game.configuration.nb_agents
         result = np.zeros((nb_transactions + 1, nb_agents), dtype=np.int32)
@@ -118,6 +128,7 @@ class GameStats:
         return keys, result
 
     def price_history(self) -> np.ndarray:
+        """Get the price history."""
         nb_transactions = len(self.game.transactions)
         nb_goods = self.game.configuration.nb_goods
         result = np.zeros((nb_transactions + 1, nb_goods), dtype=np.float32)
@@ -136,10 +147,11 @@ class GameStats:
     def plot_score_history(self, output_path: Optional[str] = None) -> None:
         """
         Plot the history of the scores, for every agent, by transaction.
+
         :param output_path: an optional output path where to save the figure generated.
+
         :return: None
         """
-
         keys, history = self.score_history()
 
         plt.clf()
@@ -278,6 +290,7 @@ class GameStats:
 
         :param directory: the directory where experiments details are listed.
         :param experiment_name: the name of the folder where the data about experiment will be saved.
+
         :return: None.
         """
         experiment_dir = directory + "/" + experiment_name

@@ -35,7 +35,6 @@ class TestController:
 
     def test_competition_stops_too_few_registered_agents(self, network_node):
         """Test that if the controller agent does not receive enough registrations, it stops."""
-
         controller_agent = ControllerAgent(version=1)
         controller_agent.connect()
 

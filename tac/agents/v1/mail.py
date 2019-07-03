@@ -17,11 +17,22 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
-import logging
+
+"""
+This module contains the classes required for message management.
+
+- MailStats: The MailStats class tracks statistics on messages processed by MailBox.
+- MailBox: The MailBox enqueues incoming messages, searches and errors from the OEF and sends outgoing messages to the OEF.
+- InBox: Temporarily stores messages for the agent.
+- OutBox: Temporarily stores and sends messages to the OEF and other agents.
+"""
+
 import asyncio
+import datetime
+import logging
 from queue import Queue, Empty
 from threading import Thread
-from typing import List, Optional, Any, Union
+from typing import List, Optional, Any, Union, Dict
 
 from oef.agents import OEFAgent
 from oef.messages import PROPOSE_TYPES, CFP_TYPES, CFP, Decline, Propose, Accept, Message as ByteMessage, \
@@ -39,36 +50,125 @@ AgentMessage = Union[ByteMessage, CFP, Propose, Accept, Decline]
 Message = Union[OEFMessage, ControllerMessage, AgentMessage]
 
 
-class MailBox(OEFAgent):
-    """
-    The MailBox enqueues incoming messages, searches and errors from the OEF and sends outgoing messages to the OEF.
-    """
+class MailStats(object):
+    """The MailStats class tracks statistics on messages processed by MailBox."""
 
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000):
+    def __init__(self) -> None:
+        """
+        Instantiate mail stats.
+
+        :return: None
+        """
+        self._search_start_time = {}  # type: Dict[int, datetime.datetime]
+        self._search_timedelta = {}  # type: Dict[int, datetime.timedelta]
+        self._search_result_counts = {}  # type: Dict[int, int]
+
+    def search_start(self, search_id: int) -> None:
+        """
+        Add a search id and start time.
+
+        :param search_id: the search id
+
+        :return: None
+        """
+        assert search_id not in self._search_start_time
+        self._search_start_time[search_id] = datetime.datetime.now()
+
+    def search_end(self, search_id: int, nb_search_results: int) -> None:
+        """
+        Add end time for a search id.
+
+        :param search_id: the search id
+        :param nb_search_results: the number of agents returned in the search result
+
+        :return: None
+        """
+        assert search_id in self._search_start_time
+        assert search_id not in self._search_timedelta
+        self._search_timedelta[search_id] = (datetime.datetime.now() - self._search_start_time[search_id]).total_seconds() * 1000
+        self._search_result_counts[search_id] = nb_search_results
+
+
+class MailBox(OEFAgent):
+    """The MailBox enqueues incoming messages, searches and errors from the OEF and sends outgoing messages to the OEF."""
+
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000) -> None:
+        """
+        Instantiate the mailbox.
+
+        :param public_key: the public key of the agent
+        :param oef_addr: TCP/IP address of the OEF Agent
+        :param oef_port: TCP/IP port of the OEF Agent
+
+        :return: None
+        """
         super().__init__(public_key, oef_addr, oef_port, loop=asyncio.new_event_loop())
         self.connect()
         self.in_queue = Queue()
         self.out_queue = Queue()
         self._mail_box_thread = None  # type: Optional[Thread]
+        self._mail_stats = MailStats()
+
+    @property
+    def mail_stats(self) -> MailStats:
+        """Get the mail stats."""
+        return self._mail_stats
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
+        """
+        Handle a message.
+
+        :param msg_id: the message id
+        :param dialogue_id: the dialogue id
+        :param origin: the public key of the sending agent
+        :param content: the message body
+
+        :return: None
+        """
         self.in_queue.put(ByteMessage(msg_id, dialogue_id, origin, content, Context()))
 
     def on_search_result(self, search_id: int, agents: List[str]) -> None:
+        """
+        Handle a search result.
+
+        :param search_id: the search id
+        :param agents: the list of agents returned by the search
+
+        :return: None
+        """
+        self.mail_stats.search_end(search_id, len(agents))
         self.in_queue.put(SearchResult(search_id, agents))
 
     def on_oef_error(self, answer_id: int, operation: OEFErrorOperation) -> None:
+        """
+        Handle an oef error.
+
+        :param answer_id: the answer id
+        :param operation: the oef operation
+
+        :return: None
+        """
         self.in_queue.put(OEFErrorMessage(answer_id, operation))
 
     def on_dialogue_error(self, answer_id: int, dialogue_id: int, origin: str) -> None:
+        """
+        Handle a dialogue error.
+
+        :param answer_id: the answer id
+        :param dialogue_id: the dialogue id
+        :param origin: the public key of the sending agent
+
+        :return: None
+        """
         self.in_queue.put(DialogueErrorMessage(answer_id, dialogue_id, origin))
 
     def is_running(self) -> bool:
+        """Check whether the mailbox is running."""
         return self._mail_box_thread is None
 
     def start(self) -> None:
         """
-        Starts the mailbox.
+        Start the mailbox.
 
         :return: None
         """
@@ -77,7 +177,7 @@ class MailBox(OEFAgent):
 
     def stop(self) -> None:
         """
-        Stops the mailbox.
+        Stop the mailbox.
 
         :return: None
         """
@@ -88,25 +188,33 @@ class MailBox(OEFAgent):
 
 
 class InBox(object):
-    """
-    Temporarily stores messages for the agent.
-    """
+    """Temporarily stores messages for the agent."""
 
-    def __init__(self, mail_box: MailBox, timeout: float = 1.0):
+    def __init__(self, mail_box: MailBox, timeout: float = 1.0) -> None:
+        """
+        Instantiate the inbox.
+
+        :param mail_box: the mailbox
+        :param timeout: the (fraction of) seconds for which the inbox times out
+
+        :return: None
+        """
         self._mail_box = mail_box
         self._timeout = timeout
 
     @property
     def in_queue(self) -> Queue:
+        """Get the in_queue."""
         return self._mail_box.in_queue
 
     @property
     def timeout(self) -> float:
+        """Get the timeout."""
         return self._timeout
 
     def is_in_queue_empty(self) -> bool:
         """
-        Checks for a message on the in queue.
+        Check for a message on the in queue.
 
         :return: boolean indicating whether there is a message or not
         """
@@ -115,7 +223,7 @@ class InBox(object):
 
     def get_wait(self) -> AgentMessage:
         """
-        Waits for a message on the in queue and gets it. Blocking.
+        Wait for a message on the in queue and get it. Blocking.
 
         :return: the message object
         """
@@ -126,10 +234,11 @@ class InBox(object):
 
     def get_some_wait(self, block: bool = True, timeout: Optional[float] = None) -> Optional[AgentMessage]:
         """
-        Checks for a message on the in queue for some time and gets it.
+        Check for a message on the in queue for some time and get it.
 
         :param block: if true makes it blocking
         :param timeout: times out the block after timeout seconds
+
         :return: the message object
         """
         logger.debug("Checks for message from the in queue...")
@@ -142,7 +251,7 @@ class InBox(object):
 
     def get_no_wait(self) -> Optional[AgentMessage]:
         """
-        Checks for a message on the in queue for no time.
+        Check for a message on the in queue and wait for no time.
 
         :return: the message object
         """
@@ -151,24 +260,31 @@ class InBox(object):
 
 
 class OutBox(object):
-    """
-    Temporarily stores and sends messages to the OEF and other agents.
-    """
+    """Temporarily stores and sends messages to the OEF and other agents."""
 
-    def __init__(self, mail_box: MailBox):
+    def __init__(self, mail_box: MailBox) -> None:
+        """
+        Instantiate the outbox.
+
+        :param mail_box: the mail box
+
+        :return: None
+        """
         self._mail_box = mail_box
 
     @property
     def out_queue(self) -> Queue:
+        """Get the out queue."""
         return self._mail_box.out_queue
 
     @property
     def mail_box(self) -> MailBox:
+        """Get the mail box."""
         return self._mail_box
 
     def send_nowait(self) -> None:
         """
-        Checks whether the out queue contains a message or search query and sends it in that case. Non-blocking.
+        Check whether the out queue contains a message or search query and sends it in that case. Non-blocking.
 
         :return: None
         """
@@ -186,6 +302,7 @@ class OutBox(object):
                 self.mail_box.unregister_service(out.message_id, out.service_description)
             elif isinstance(out, OutContainer) and out.query is not None:
                 logger.debug("Outgoing query: search_id={}".format(out.search_id))
+                self.mail_box.mail_stats.search_start(out.search_id)
                 self.mail_box.search_services(out.search_id, out.query)
             elif isinstance(out, CFP):
                 logger.debug("Outgoing cfp: msg_id={}, dialogue_id={}, origin={}, target={}, query={}".format(out.msg_id, out.dialogue_id, out.destination, out.target, out.query))
@@ -207,30 +324,77 @@ class OutBox(object):
 
 
 class FIPAMailBox(MailBox):
-    """
-    The FIPAMailBox enqueues additionally FIPA specific messages.
-    """
+    """The FIPAMailBox enqueues additionally FIPA specific messages."""
 
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000):
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000) -> None:
+        """
+        Instantiate the FIPAMailBox.
+
+        :param public_key: the public key of the agent
+        :param oef_addr: TCP/IP address of the OEF Agent
+        :param oef_port: TCP/IP port of the OEF Agent
+
+        :return: None
+        """
         super().__init__(public_key, oef_addr, oef_port)
 
     def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES) -> None:
+        """
+        Handle a CFP.
+
+        :param msg_id: the message id
+        :param dialogue_id: the dialogue id
+        :param origin: the public key of the sending agent
+        :param target: the message id targetted by this message
+        :param query: the query
+
+        :return: None
+        """
         self.in_queue.put(CFP(msg_id, dialogue_id, origin, target, query, Context()))
 
     def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES) -> None:
+        """
+        Handle a Propose.
+
+        :param msg_id: the message id
+        :param dialogue_id: the dialogue id
+        :param origin: the public key of the sending agent
+        :param target: the message id targetted by this message
+        :param proposals: the proposals
+
+        :return: None
+        """
         self.in_queue.put(Propose(msg_id, dialogue_id, origin, target, proposals, Context()))
 
     def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
+        """
+        Handle an Accept.
+
+        :param msg_id: the message id
+        :param dialogue_id: the dialogue id
+        :param origin: the public key of the sending agent
+        :param target: the message id targetted by this message
+
+        :return: None
+        """
         self.in_queue.put(Accept(msg_id, dialogue_id, origin, target, Context()))
 
     def on_decline(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
+        """
+        Handle a Decline.
+
+        :param msg_id: the message id
+        :param dialogue_id: the dialogue id
+        :param origin: the public key of the sending agent
+        :param target: the message id targetted by this message
+
+        :return: None
+        """
         self.in_queue.put(Decline(msg_id, dialogue_id, origin, target, Context()))
 
 
 class OutContainer:
-    """
-    The OutContainer is a container to keep a message or search in whilst on the out queue.
-    """
+    """The OutContainer is a container to keep a message or search in whilst on the out queue."""
 
     def __init__(self, message: Optional[bytes] = None,
                  message_id: Optional[int] = None,
@@ -239,7 +403,21 @@ class OutContainer:
                  query: Optional[Query] = None,
                  search_id: Optional[int] = None,
                  service_description: Optional[Description] = None,
-                 is_unregister: Optional[bool] = False):
+                 is_unregister: Optional[bool] = False) -> None:
+        """
+        Instantiate the out cointainer.
+
+        :param message: the message body
+        :param message_id: the message id
+        :param dialogue_id: the dialogue id
+        :param destination: the public key of the message recipient
+        :param query: the query
+        :param search_id: the search id
+        :param service_description: the service description
+        :param is_unregister: boolean indicating whether this is an unregistration.
+
+        :return: None
+        """
         self.message = message
         self.message_id = message_id
         self.dialogue_id = dialogue_id

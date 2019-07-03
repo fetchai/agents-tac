@@ -17,3 +17,5 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+
+"""This module contains the modules of a base implementation of an agent for TAC."""

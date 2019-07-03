@@ -17,6 +17,9 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+
+"""This module contains a base implementation of an agent for TAC."""
+
 import logging
 import time
 from typing import Optional, Union
@@ -24,12 +27,12 @@ from typing import Optional, Union
 from oef.messages import CFP, Decline, Propose, Accept, Message as SimpleMessage, \
     SearchResult, OEFErrorMessage, DialogueErrorMessage
 
-from tac.agents.v2.agent import Agent
-from tac.agents.v2.base.game_instance import GameInstance, GamePhase
-from tac.agents.v2.base.handlers import DialogueHandler, ControllerHandler, OEFHandler
-from tac.agents.v2.base.helpers import is_oef_message, is_controller_message
-from tac.agents.v2.base.strategy import Strategy
-from tac.agents.v2.mail import FIPAMailBox, InBox, OutBox
+from tac.agents.v1.agent import Agent
+from tac.agents.v1.base.game_instance import GameInstance, GamePhase
+from tac.agents.v1.base.handlers import DialogueHandler, ControllerHandler, OEFHandler
+from tac.agents.v1.base.helpers import is_oef_message, is_controller_message
+from tac.agents.v1.base.strategy import Strategy
+from tac.agents.v1.mail import FIPAMailBox, InBox, OutBox
 from tac.gui.dashboards.agent import AgentDashboard
 
 logger = logging.getLogger(__name__)
@@ -41,6 +44,7 @@ Message = Union[OEFMessage, ControllerMessage, AgentMessage]
 
 
 class ParticipantAgent(Agent):
+    """The participant agent class implements a base agent for TAC."""
 
     def __init__(self, name: str,
                  oef_addr: str,
@@ -54,6 +58,7 @@ class ParticipantAgent(Agent):
                  private_key_pem: Optional[str] = None):
         """
         Initialize a participant agent.
+
         :param name: the name of the agent.
         :param oef_addr: the TCP/IP address of the OEF node.
         :param oef_port: the TCP/IP port of the OEF node.
@@ -71,7 +76,7 @@ class ParticipantAgent(Agent):
         self.out_box = OutBox(self.mail_box)
 
         self._is_competing = False  # type: bool
-        self._game_instance = GameInstance(name, strategy, services_interval, pending_transaction_timeout, dashboard)  # type: Optional[GameInstance]
+        self._game_instance = GameInstance(name, strategy, self.mail_box.mail_stats, services_interval, pending_transaction_timeout, dashboard)  # type: Optional[GameInstance]
         self.max_reactions = max_reactions
 
         self.controller_handler = ControllerHandler(self.crypto, self.liveness, self.game_instance, self.out_box, self.name)
@@ -80,15 +85,17 @@ class ParticipantAgent(Agent):
 
     @property
     def game_instance(self) -> GameInstance:
+        """Get the game instance."""
         return self._game_instance
 
     @property
     def is_competing(self) -> bool:
+        """Check if the agent is competing."""
         return self._is_competing
 
     def act(self) -> None:
         """
-        Performs actions.
+        Perform the agent's actions.
 
         :return: None
         """
@@ -105,7 +112,7 @@ class ParticipantAgent(Agent):
 
     def react(self) -> None:
         """
-        Reacts to incoming events.
+        React to incoming events.
 
         :return: None
         """
@@ -127,10 +134,20 @@ class ParticipantAgent(Agent):
         self.out_box.send_nowait()
 
     def stop(self) -> None:
+        """
+        Stop the agent.
+
+        :return: None
+        """
         super().stop()
         self.game_instance.stop()
 
     def start(self, rejoin: bool = False) -> None:
+        """
+        Start the agent.
+
+        :return: None
+        """
         try:
             self.oef_handler.rejoin = rejoin
             super().start()
