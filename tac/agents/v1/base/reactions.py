@@ -27,10 +27,12 @@ This module contains the classes which define the reactions of an agent.
 """
 
 import logging
+import time
 from typing import List, Union
 
 from oef.messages import CFP, Propose, Accept, Decline, Message as ByteMessage, SearchResult, OEFErrorMessage, \
     DialogueErrorMessage
+from oef.query import Query, Constraint, GtEq
 from oef.utils import Context
 
 from tac.agents.v1.agent import Liveness
@@ -246,7 +248,7 @@ class OEFReactions(OEFSearchReactionInterface):
         """
         Handle a dialogue error message.
 
-        :param dialogue_error_msg: the dialogue error message
+        :param dialogue_error: the dialogue error message
 
         :return: None
         """
@@ -262,10 +264,11 @@ class OEFReactions(OEFSearchReactionInterface):
         :return: None
         """
         if len(agent_pbks) == 0:
-            logger.debug("[{}]: Couldn't find the TAC controller.".format(self.agent_name))
-            self.liveness._is_stopped = True
+            logger.debug("[{}]: Couldn't find the TAC controller. Retrying...".format(self.agent_name))
+            time.sleep(3.0)
+            self._search_for_tac()
         elif len(agent_pbks) > 1:
-            logger.debug("[{}]: Found more than one TAC controller.".format(self.agent_name))
+            logger.error("[{}]: Found more than one TAC controller. Stopping...".format(self.agent_name))
             self.liveness._is_stopped = True
         elif self.rejoin:
             logger.debug("[{}]: Found the TAC controller. Rejoining...".format(self.agent_name))
@@ -331,6 +334,19 @@ class OEFReactions(OEFSearchReactionInterface):
         msg = GetStateUpdate(self.crypto.public_key, self.crypto).serialize()
         self.out_box.out_queue.put(OutContainer(message=msg, message_id=0, dialogue_id=0, destination=controller_pbk))
 
+    def _search_for_tac(self) -> None:
+        """
+        Search for active TAC Controller.
+
+        We assume that the controller is registered as a service with the 'tac' data model
+        and with an attribute version = 1.
+
+        :return: None
+        """
+        query = Query([Constraint("version", GtEq(1))])
+        search_id = self.game_instance.search.get_next_id()
+        self.game_instance.search.ids_for_tac.add(search_id)
+        self.out_box.out_queue.put(OutContainer(query=query, search_id=search_id))
 
 class DialogueReactions(DialogueReactionInterface):
     """The DialogueReactions class defines the reactions of an agent in the context of a Dialogue."""
