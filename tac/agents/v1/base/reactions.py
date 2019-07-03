@@ -417,6 +417,6 @@ class DialogueReactions(DialogueReactionInterface):
             results = self.negotiation_behaviour.on_accept(msg, dialogue)
         elif isinstance(msg, Decline):
             result = self.negotiation_behaviour.on_decline(msg, dialogue)
-            results = [result]
+            results = []
         dialogue.outgoing_extend(results)
         return results
