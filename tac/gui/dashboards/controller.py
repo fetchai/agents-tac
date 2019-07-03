@@ -66,7 +66,7 @@ class ControllerDashboard(Dashboard):
         game_data = json.load(open(game_data_json_filepath))
         game = Game.from_dict(game_data)
         game_stats = GameStats(game)
-        return ControllerDashboard(game_stats, env_name)
+        return ControllerDashboard(game_stats, env_name=env_name)
 
     def _update_info(self):
         window_name = "configuration_details"
@@ -170,7 +170,7 @@ class ControllerDashboard(Dashboard):
 
     def _update_plot_eq_vs_current_score(self):
         keys, eq_vs_current_score = self.game_stats.eq_vs_current_score()
-        agent_names = [self.agent_pbk_to_name[agent_pbk] for agent_pbk in keys]
+        agent_names = [self.game_stats.game.configuration.agent_pbk_to_name[agent_pbk] for agent_pbk in keys]
 
         window_name = "eq_vs_current_score"
         self.viz.bar(X=eq_vs_current_score, env=self.env_name, win=window_name,
@@ -191,7 +191,7 @@ class ControllerDashboard(Dashboard):
                          title="Adjusted Score",
                          xlabel="Agents",
                          ylabel="Score",
-                         rownames=[self.agent_pbk_to_name[agent_pbk] for agent_pbk in keys])
+                         rownames=[self.game_stats.game.configuration.agent_pbk_to_name[agent_pbk] for agent_pbk in keys])
                      )
 
     def __enter__(self):
@@ -221,6 +221,7 @@ if __name__ == '__main__':
     d = ControllerDashboard.from_datadir(arguments.datadir, arguments.env_name)
 
     d.start()
+    d.update()
     while True:
         try:
             input()

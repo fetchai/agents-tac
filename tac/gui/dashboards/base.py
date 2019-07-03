@@ -42,7 +42,7 @@ class Dashboard(object):
 
 def start_visdom_server() -> subprocess.Popen:
     """Start the visdom server."""
-    visdom_server_args = ["python", "-m", "visdom.server", "-env_path", os.path.join(CUR_DIR, ".visdom_env")]
+    visdom_server_args = ["python", "-m", "visdom.server", "-env_path", os.path.join(CUR_DIR, "..", ".visdom_env")]
     print(" ".join(visdom_server_args))
     prog = subprocess.Popen(visdom_server_args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     time.sleep(1.0)
