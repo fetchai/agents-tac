@@ -101,9 +101,9 @@ The following steps are only relevant if you intend to contribute to the reposit
 
 	  pipenv install --dev
 
-- After each change to the codebase re-install package:
+- Install package in (development mode):
 
-      python3 setup.py install
+	  pip3 install -e .
 
 - After changes to the protobuf schema run:
 
@@ -111,23 +111,19 @@ The following steps are only relevant if you intend to contribute to the reposit
 
 - To run tests (ensure no oef docker containers are running):
 
-      tox -e py37
+	  tox -e py37
 
 - To run linters:
 
-      tox -e flake8
+	  tox -e flake8
 
 - We recommend you use the tested OEF build:
 
-```
-python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config.json
-```
+	  python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config.json
 
 - To start OEF latest build (the latest build might not be compatible with the current repo):
 
-```
-python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config_latest.json
-``` 
+	  python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config_latest.json
 
 ## Resources
 
