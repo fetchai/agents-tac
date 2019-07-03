@@ -72,7 +72,6 @@ The [competition sandbox](../master/sandbox) provides the code to build the dock
 
 ## Dependencies
 
-- The project requires the [Google Protocol Buffers](https://developers.google.com/protocol-buffers/) compiler. A guide on how to install it is found [here](https://fetchai.github.io/oef-sdk-python/user/install.html#protobuf-compiler).
 - All python specific dependencies are specified in the Pipfile (and installed via the commands specified in 'Preliminaries').
 - The package requires that you install [Docker](https://www.docker.com/) and the sanbox requires that you in addition install [Docker Compose](https://docs.docker.com/compose/).
 - The project requires oef-search-pluto which can be pulled here:
@@ -90,6 +89,9 @@ The [competition sandbox](../master/sandbox) provides the code to build the dock
       python3 setup.py install
 
 ## Contribute
+
+The following dependency is only relevant if you intend to contribute to the repository:
+- the project uses [Google Protocol Buffers](https://developers.google.com/protocol-buffers/) compiler for message serialization. A guide on how to install it is found [here](https://fetchai.github.io/oef-sdk-python/user/install.html#protobuf-compiler).
 
 The following steps are only relevant if you intend to contribute to the repository. They are not required for agent development.
 
