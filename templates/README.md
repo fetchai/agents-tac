@@ -36,7 +36,7 @@ If you want to use the same cryptographic key, you can follow these steps:
       
 - Every time you run your agent, add the parameter `--private-key-pem <pem-file>` to your command:
 
-      python3 templates/v2/basic.py --name basic1 --gui --private-key-pem private_key.pem
+      python3 templates/v1/basic.py --name basic1 --gui --private-key-pem private_key.pem
 
 ## Testing manually (not recommended)
 

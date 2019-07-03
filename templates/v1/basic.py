@@ -24,16 +24,17 @@
 import argparse
 import logging
 
-import tac
-from tac.agents.v1.base.strategy import RegisterAs
+from tac.agents.v1.base.strategy import RegisterAs, SearchFor
 from tac.agents.v1.examples.baseline import BaselineAgent
+from tac.agents.v1.examples.strategy import BaselineStrategy
+from tac.gui.dashboards.agent import AgentDashboard
 
 logger = logging.getLogger(__name__)
 
 
 def parse_arguments():
     """Arguments parsing."""
-    parser = argparse.ArgumentParser("basic-agent", description="Launch my agent.")
+    parser = argparse.ArgumentParser("my_agent", description="Launch my agent.")
     parser.add_argument("--name", default="my_baseline_agent", help="Name of the agent.")
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=10000, help="TCP/IP port of the OEF Agent")
@@ -44,7 +45,7 @@ def parse_arguments():
     parser.add_argument("--is-world-modeling", type=bool, default=False, help="Whether the agent uses a workd model or not.")
     parser.add_argument("--services-interval", type=int, default=10, help="The number of seconds to wait before doing another search.")
     parser.add_argument("--pending-transaction-timeout", type=int, default=30, help="The timeout in seconds to wait for pending transaction/negotiations.")
-    parser.add_argument("--private-key-pem", type=str, default=None, help="Path to a file containing a private key in PEM format.")
+    parser.add_argument("--private-key-pem", default=None, help="Path to a file containing a private key in PEM format.")
     parser.add_argument("--rejoin", action="store_true", default=False, help="Whether the agent is joining a running TAC.")
     parser.add_argument("--gui", action="store_true", help="Show the GUI.")
     parser.add_argument("--visdom_addr", type=str, default="localhost", help="IP address to the Visdom server")
@@ -53,6 +54,25 @@ def parse_arguments():
     return parser.parse_args()
 
 
-if __name__ == '__main__':
+def main():
+    """Run the script."""
     args = parse_arguments()
-    tac.agents.v1.examples.baseline.main(**args.__dict__)
+
+    if args.gui:
+        dashboard = AgentDashboard(agent_name=args.name, env_name=args.name)
+    else:
+        dashboard = None
+
+    strategy = BaselineStrategy(register_as=RegisterAs(args.register_as), search_for=SearchFor(args.search_for), is_world_modeling=args.is_world_modeling)
+    agent = BaselineAgent(name=args.name, oef_addr=args.oef_addr, oef_port=args.oef_port, agent_timeout=args.agent_timeout, strategy=strategy,
+                          max_reactions=args.max_reactions, services_interval=args.services_interval, pending_transaction_timeout=args.pending_transaction_timeout,
+                          dashboard=dashboard, private_key_pem=args.private_key_pem)
+
+    try:
+        agent.start(rejoin=args.rejoin)
+    finally:
+        agent.stop()
+
+
+if __name__ == '__main__':
+    main()
