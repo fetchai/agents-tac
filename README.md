@@ -34,15 +34,17 @@ Once the controller has started the competition, connect the agent:
 The controller GUI at http://localhost:8097 provides real time insights:
 ![Controller GUI](../master/docs/controller_gui.png)
 
+- [x] You have had a look at the documentation and are developing your first agent.
+
 ## Quick Links
-
-### 📏 📏 📏 Specification 📏 📏 📏
-
-The [framework specification](../master/docs/Trading_Agent_Competition____Specification.pdf) introduces the agent and competition frameworks and discusses the project vision and components.
 
 ### 📜 📜 📜 Documentation 📜 📜 📜
 
-The [package documentation](../master/docs) introduces the key components of the agent and competition frameworks and helps agent developers getting started.
+The [package documentation](../master/docs) introduces the key components of the agent and competition frameworks and helps agent developers getting started. _This is **required** reading material if you want to build your own agent._
+
+### 📏 📏 📏 Specification 📏 📏 📏
+
+The [framework specification](../master/docs/Trading_Agent_Competition____Specification.pdf) introduces the agent and competition frameworks and discusses the project vision and components. _This is complementary reading material._
 
 ### 🤖 🤖 🤖 Simulation 🤖 🤖 🤖
 
