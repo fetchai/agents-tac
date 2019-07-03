@@ -55,6 +55,7 @@ RUN sudo pip install pipenv
 #RUN apt install pandoc -y
 ## python package to parse plantuml files. docs: https://pythonhosted.org/plantuml/
 #RUN apt install plantuml -y
+RUN mkdir ~/.visdom
 
 RUN sudo mkdir /build
 WORKDIR /build
@@ -64,6 +65,6 @@ RUN sudo make clean
 
 RUN pipenv --python python3.7
 RUN pipenv install --dev --skip-lock
-RUN pipenv run pip3 install .
+RUN pipenv run pip3 install . --no-cache-dir --force
 
 ENTRYPOINT []

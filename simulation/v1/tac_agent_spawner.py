@@ -31,7 +31,7 @@ import time
 from typing import Optional, List
 
 import tac
-from tac.agents.v2.examples.baseline import BaselineAgent
+from tac.agents.v1.examples.baseline import BaselineAgent
 from tac.platform.controller import ControllerAgent
 
 logger = logging.getLogger("tac")
@@ -136,7 +136,7 @@ def run_baseline_agent(**kwargs) -> None:
     """
     # give the time to the controller to connect to the OEF
     time.sleep(5.0)
-    tac.agents.v2.examples.baseline.main(**kwargs)
+    tac.agents.v1.examples.baseline.main(**kwargs)
 
 
 def spawn_baseline_agents(arguments) -> List[multiprocessing.Process]:
