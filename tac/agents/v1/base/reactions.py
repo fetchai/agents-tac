@@ -221,7 +221,6 @@ class OEFReactions(OEFSearchReactionInterface):
         :return: None
         """
         search_id = search_result.msg_id
-        self.game_instance.stats_manager.search_end(search_id, len(search_result.agents))
         logger.debug("[{}]: on search result: {} {}".format(self.agent_name, search_id, search_result.agents))
         if search_id in self.game_instance.search.ids_for_tac:
             self._on_controller_search_result(search_result.agents)

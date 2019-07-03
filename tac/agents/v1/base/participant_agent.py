@@ -76,7 +76,7 @@ class ParticipantAgent(Agent):
         self.out_box = OutBox(self.mail_box)
 
         self._is_competing = False  # type: bool
-        self._game_instance = GameInstance(name, strategy, services_interval, pending_transaction_timeout, dashboard)  # type: Optional[GameInstance]
+        self._game_instance = GameInstance(name, strategy, self.mail_box.mail_stats, services_interval, pending_transaction_timeout, dashboard)  # type: Optional[GameInstance]
         self.max_reactions = max_reactions
 
         self.controller_handler = ControllerHandler(self.crypto, self.liveness, self.game_instance, self.out_box, self.name)

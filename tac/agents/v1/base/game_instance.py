@@ -28,6 +28,7 @@ from oef.messages import CFP_TYPES
 from oef.query import Query
 from oef.schema import Description
 
+from tac.agents.v1.mail import MailStats
 from tac.agents.v1.base.dialogues import Dialogues
 from tac.agents.v1.base.lock_manager import LockManager
 from tac.agents.v1.base.strategy import Strategy
@@ -77,6 +78,7 @@ class GameInstance:
 
     def __init__(self, agent_name: str,
                  strategy: Strategy,
+                 mail_stats: MailStats,
                  services_interval: int = 10,
                  pending_transaction_timeout: int = 10,
                  dashboard: Optional[AgentDashboard] = None) -> None:
@@ -85,6 +87,7 @@ class GameInstance:
 
         :param agent_name: the name of the agent.
         :param strategy: the strategy of the agent.
+        :param mail_starts: the mail stats of the mailbox.
         :param services_interval: the interval at which services are updated.
         :param pending_transaction_timeout: the timeout after which transactions are removed from the lock manager.
         :param dashboard: the agent dashboard.
@@ -116,7 +119,7 @@ class GameInstance:
         self.lock_manager = LockManager(agent_name, pending_transaction_timeout=pending_transaction_timeout)
         self.lock_manager.start()
 
-        self.stats_manager = StatsManager(dashboard)
+        self.stats_manager = StatsManager(mail_stats, dashboard)
 
         self.dashboard = dashboard
         if self.dashboard is not None:
