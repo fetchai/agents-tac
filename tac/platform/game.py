@@ -856,7 +856,7 @@ class WorldState:
         :param is_accepted: whether the transaction is accepted or not
         :return: None
         """
-        good_pbks = []
+        good_pbks = []  # type: List[str]
         for good_pbk, quantity in transaction.quantities_by_good_pbk.items():
             if quantity > 0:
                 good_pbks += [good_pbk] * quantity
@@ -939,7 +939,7 @@ class WorldState:
 class GameTransaction:
     """Represent a transaction between agents."""
 
-    def __init__(self, buyer_pbk: str, seller_pbk: str, amount: int, quantities_by_good_pbk: Dict[str, int],
+    def __init__(self, buyer_pbk: str, seller_pbk: str, amount: float, quantities_by_good_pbk: Dict[str, int],
                  timestamp: Optional[datetime.datetime] = None):
         """
         Instantiate a game transaction object.

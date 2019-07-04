@@ -199,9 +199,9 @@ class Crypto(object):
 
         :return: the public key object
         """
-        pbk = self._pbk_b58_to_b64(pbk)
-        pbk = self._pbk_b64_to_pem(pbk)
-        pbk_obj = serialization.load_pem_public_key(pbk, backend=default_backend())
+        pbk_b64 = self._pbk_b58_to_b64(pbk)
+        pbk_pem = self._pbk_b64_to_pem(pbk_b64)
+        pbk_obj = serialization.load_pem_public_key(pbk_pem, backend=default_backend())
         return pbk_obj
 
     def sign_data(self, data: bytes) -> bytes:
@@ -225,10 +225,10 @@ class Crypto(object):
 
         :return: bool indicating whether the integrity is confirmed or not
         """
-        signer_pbk = self._pbk_b58_to_obj(signer_pbk)
+        signer_pbk_obj = self._pbk_b58_to_obj(signer_pbk)
         digest = self._hash_data(data)
         try:
-            signer_pbk.verify(signature, digest, ec.ECDSA(utils.Prehashed(self._chosen_hash)))
+            signer_pbk_obj.verify(signature, digest, ec.ECDSA(utils.Prehashed(self._chosen_hash)))
             return True
         except CryptoError as e:
             logger.exception(str(e))

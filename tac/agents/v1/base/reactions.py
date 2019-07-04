@@ -288,10 +288,10 @@ class OEFReactions(OEFSearchReactionInterface):
 
         :return: None
         """
-        agent_pbks = set(agent_pbks)
-        if self.crypto.public_key in agent_pbks:
-            agent_pbks.remove(self.crypto.public_key)
-        agent_pbks = list(agent_pbks)
+        agent_pbks_set = set(agent_pbks)
+        if self.crypto.public_key in agent_pbks_set:
+            agent_pbks_set.remove(self.crypto.public_key)
+        agent_pbks = list(agent_pbks_set)
         searched_for = 'sellers' if is_searching_for_sellers else 'buyers'
         logger.debug("[{}]: Found potential {}: {}".format(self.agent_name, searched_for, agent_pbks))
 
@@ -409,7 +409,7 @@ class DialogueReactions(DialogueReactionInterface):
         :return: a list of agent messages
         """
         dialogue.incoming_extend([msg])
-        results = []
+        results = []  # type: List[Union[OutContainer, Accept, Decline, Propose]]
         if isinstance(msg, CFP):
             result = self.negotiation_behaviour.on_cfp(msg, dialogue)
             results = [result]
@@ -419,7 +419,7 @@ class DialogueReactions(DialogueReactionInterface):
         elif isinstance(msg, Accept):
             results = self.negotiation_behaviour.on_accept(msg, dialogue)
         elif isinstance(msg, Decline):
-            result = self.negotiation_behaviour.on_decline(msg, dialogue)
+            self.negotiation_behaviour.on_decline(msg, dialogue)
             results = []
         dialogue.outgoing_extend(results)
         return results

@@ -23,7 +23,7 @@
 import datetime
 import logging
 import random
-from typing import List, Set, Dict
+from typing import List, Set, Dict, Tuple
 
 import dateutil.parser
 import math
@@ -162,7 +162,7 @@ def generate_money_endowments(nb_agents: int, money_endowment: int) -> List[int]
     return [money_endowment] * nb_agents
 
 
-def generate_equilibrium_prices_and_holdings(endowments: List[List[int]], utility_function_params: List[List[float]], money_endowment: float, scaling_factor: float) -> (List[float], List[List[float]], List[float]):
+def generate_equilibrium_prices_and_holdings(endowments: List[List[int]], utility_function_params: List[List[float]], money_endowment: float, scaling_factor: float) -> Tuple[List[float], List[List[float]], List[float]]:
     """
     Compute the competitive equilibrium prices and allocation.
 
@@ -265,7 +265,7 @@ def get_goods_quantities_description(good_pbks: List[str], good_quantities: List
     return desc
 
 
-def build_query(good_pbks: Set[int], is_searching_for_sellers: bool) -> Query:
+def build_query(good_pbks: Set[str], is_searching_for_sellers: bool) -> Query:
     """
     Build buyer or seller search query.
 
@@ -285,7 +285,7 @@ def build_query(good_pbks: Set[int], is_searching_for_sellers: bool) -> Query:
 
     :return: the query
     """
-    data_model = None if good_pbks is None else build_datamodel(good_pbks, is_supply=is_searching_for_sellers)
+    data_model = None if good_pbks is None else build_datamodel(list(good_pbks), is_supply=is_searching_for_sellers)
     constraints = [Constraint(good_pbk, GtEq(1)) for good_pbk in good_pbks]
 
     if len(good_pbks) > 1:
