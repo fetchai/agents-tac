@@ -269,7 +269,6 @@ class OEFReactions(OEFSearchReactionInterface):
 
         if len(agent_pbks) == 0:
             logger.debug("[{}]: Couldn't find the TAC controller. Retrying...".format(self.agent_name))
-            time.sleep(3.0)
         elif len(agent_pbks) > 1:
             logger.error("[{}]: Found more than one TAC controller. Stopping...".format(self.agent_name))
             self.liveness._is_stopped = True
