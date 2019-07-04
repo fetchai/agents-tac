@@ -64,6 +64,6 @@ RUN sudo make clean
 
 RUN pipenv --python python3.7
 RUN pipenv install --dev --skip-lock
-RUN pipenv run pip3 install .
+RUN pipenv run pip3 install . --no-cache-dir --force
 
 ENTRYPOINT []

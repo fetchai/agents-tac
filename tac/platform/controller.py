@@ -40,7 +40,7 @@ import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from threading import Thread
-from typing import Dict, Type, List
+from typing import Any, Dict, Type, List
 from typing import Optional, Set
 
 import dateutil
@@ -193,7 +193,7 @@ class TACParameters(object):
         return datetime.timedelta(0, self._inactivity_timeout)
 
     @property
-    def whitelist(self) -> Set[str]:
+    def whitelist(self) -> Optional[Set[str]]:
         """Whitelist of agent public keys allowed into the TAC instance."""
         return self._whitelist
 
@@ -210,7 +210,7 @@ class RequestHandler(ABC):
         """
         self.controller_agent = controller_agent
 
-    def __call__(self, request: Request) -> Response:
+    def __call__(self, request: Request) -> Optional[Response]:
         """Call the handler."""
         return self.handle(request)
 
@@ -323,7 +323,7 @@ class TransactionHandler(RequestHandler):
                 if self.controller_agent.game_handler.current_game.is_transaction_valid(tx):
                     self.controller_agent.game_handler.confirmed_transaction_per_participant[pending_tx.sender].append(pending_tx)
                     self.controller_agent.game_handler.confirmed_transaction_per_participant[request.sender].append(request)
-                    return self._handle_valid_transaction(request)
+                    self._handle_valid_transaction(request)
                 else:
                     return self._handle_invalid_transaction(request)
             else:
@@ -605,6 +605,7 @@ class GameHandler:
 
     def notify_tac_cancelled(self):
         """Notify agents that the TAC is cancelled."""
+        logger.debug("[{}]: Notifying agents that TAC is cancelled.".format(self.controller_agent.name))
         for agent_pbk in self.registered_agents:
             self.controller_agent.send_message(0, 0, agent_pbk, Cancelled(agent_pbk, self.controller_agent.crypto).serialize())
 
@@ -694,7 +695,7 @@ class ControllerAgent(OEFAgent):
 
         if self.game_handler is None or not self.game_handler.is_game_running():
             logger.warning("[{}]: Game not present. Using empty dictionary.".format(self.name))
-            game_dict = {}
+            game_dict = {}  # type: Dict[str, Any]
         else:
             game_dict = self.game_handler.current_game.to_dict()
 
@@ -713,9 +714,10 @@ class ControllerAgent(OEFAgent):
             self._is_running = False
             self.game_handler.notify_tac_cancelled()
             self._loop.call_soon_threadsafe(self.stop)
-            if self.monitor.is_running: self.monitor.stop()
             self._message_processing_task.join()
             self._message_processing_task = None
+            if self.monitor.is_running:
+                self.monitor.stop()
 
     def check_inactivity_timeout(self, rate: Optional[float] = 2.0) -> None:
         """
@@ -883,6 +885,8 @@ def main(
 
     except Exception as e:
         logger.exception(e)
+    except KeyboardInterrupt:
+        logger.debug("Controller interrupted...")
     finally:
         if agent is not None:
             agent.terminate()

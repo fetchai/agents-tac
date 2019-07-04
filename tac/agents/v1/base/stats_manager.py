@@ -20,13 +20,14 @@
 
 """This module contains a class to handle statistics on the TAC."""
 
-import datetime
 import time
 from enum import Enum
 from threading import Thread
 from typing import Dict
 
 import numpy as np
+
+from tac.agents.v1.mail import MailStats
 
 
 class EndState(Enum):
@@ -41,10 +42,11 @@ class EndState(Enum):
 class StatsManager(object):
     """Class to handle statistics on the game."""
 
-    def __init__(self, dashboard, task_timeout: float = 2.0) -> None:
+    def __init__(self, mail_stats, dashboard, task_timeout: float = 2.0) -> None:
         """
         Initialize a StatsManager.
 
+        :param mail_stats: the mail stats of the mail box.
         :param dashboard: The dashboard.
         :param task_timeout: seconds to sleep for the task
 
@@ -55,9 +57,7 @@ class StatsManager(object):
         self._update_stats_task = None
         self._update_stats_task_timeout = task_timeout
 
-        self._search_start_time = {}  # type: Dict[int, datetime.datetime]
-        self._search_timedelta = {}  # type: Dict[int, datetime.timedelta]
-        self._search_result_counts = {}  # type: Dict[int, int]
+        self._mail_stats = mail_stats
 
         self._self_initiated_dialogue_stats = {EndState.SUCCESSFUL: 0,
                                                EndState.DECLINED_CFP: 0,
@@ -67,6 +67,11 @@ class StatsManager(object):
                                                 EndState.DECLINED_CFP: 0,
                                                 EndState.DECLINED_PROPOSE: 0,
                                                 EndState.DECLINED_ACCEPT: 0}  # type: Dict[EndState, int]
+
+    @property
+    def mail_stats(self) -> MailStats:
+        """Get the mail stats."""
+        return self._mail_stats
 
     @property
     def self_initiated_dialogue_stats(self) -> Dict[EndState, int]:
@@ -92,40 +97,15 @@ class StatsManager(object):
         else:
             self._other_initiated_dialogue_stats[end_state] += 1
 
-    def search_start(self, search_id: int) -> None:
-        """
-        Add a search id and start time.
-
-        :param search_id: the search id
-
-        :return: None
-        """
-        assert search_id not in self._search_start_time
-        self._search_start_time[search_id] = datetime.datetime.now()
-
-    def search_end(self, search_id: int, nb_search_results: int) -> None:
-        """
-        Add end time for a search id.
-
-        :param search_id: the search id
-        :param nb_search_results: the number of agents returned in the search result
-
-        :return: None
-        """
-        assert search_id in self._search_start_time
-        assert search_id not in self._search_timedelta
-        self._search_timedelta[search_id] = (datetime.datetime.now() - self._search_start_time[search_id]).total_seconds() * 1000
-        self._search_result_counts[search_id] = nb_search_results
-
     def avg_search_time(self) -> float:
         """
         Average the search timedeltas.
 
         :return: avg search time in seconds
         """
-        timedeltas = list(self._search_timedelta.values())
+        timedeltas = list(self.mail_stats._search_timedelta.values())
         if len(timedeltas) == 0:
-            result = 0
+            result = 0.0
         else:
             result = sum(timedeltas) / len(timedeltas)
         return result
@@ -136,9 +116,9 @@ class StatsManager(object):
 
         :return: avg search result counts
         """
-        counts = list(self._search_result_counts.values())
+        counts = list(self.mail_stats._search_result_counts.values())
         if len(counts) == 0:
-            result = 0
+            result = 0.0
         else:
             result = sum(counts) / len(counts)
         return result

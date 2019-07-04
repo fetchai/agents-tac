@@ -82,8 +82,7 @@ class AgentDashboard(Dashboard):
         self._transaction_window = None
 
     def init(self):
-        """Re-initiate the AgntDashboard."""
-        self.viz.delete_env(self.env_name)
+        """Re-initiate the AgentDashboard."""
         self._transaction_window = self.viz.text(self._transaction_table.to_html(), env=self.env_name)
 
     def add_transaction(self, new_tx: Transaction, agent_name: Optional[str] = None) -> None:

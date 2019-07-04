@@ -1,5 +1,5 @@
 {
-  "image": "fetchai/oef-search:v4",
+  "image": "fetchai/oef-search:latest",
   "params": [
     [
       "-d",
@@ -16,7 +16,7 @@
       "positional_args": ["run_mode", "run_sh_in_the_end"],
       "run_mode": "node",
       "run_sh_in_the_end": "no_sh",
-      "config_file": "/config/node_config.json"
+      "config_file": "/config/node_config_latest.json"
     }
   }
 }

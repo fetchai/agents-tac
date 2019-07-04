@@ -522,7 +522,7 @@ class Error(Response):
 class GameData(Response):
     """Class that holds the game configuration and the initialization of a TAC agent."""
 
-    def __init__(self, public_key: str, crypto: Crypto, money: int, endowment: List[int], utility_params: List[float],
+    def __init__(self, public_key: str, crypto: Crypto, money: float, endowment: List[int], utility_params: List[float],
                  nb_agents: int, nb_goods: int, tx_fee: float, agent_pbk_to_name: Dict[str, str], good_pbk_to_name: Dict[str, str]) -> None:
         """
         Initialize a game data object.
@@ -577,9 +577,9 @@ class GameData(Response):
         msg.nb_agents = self.nb_agents
         msg.nb_goods = self.nb_goods
         msg.tx_fee = self.tx_fee
-        agent_pbk_to_name_pairs = [_make_str_str_pair(agent_pbk, agent_name) for agent_pbk, agent_name in self.agent_pbk_to_name.items()]
+        agent_pbk_to_name_pairs = [_make_str_str_pair(agent_pbk, agent_name) for agent_pbk, agent_name in self.agent_pbk_to_name.items()]  # type: List[tac_pb2.StrStrPair]
         msg.agent_pbk_to_name.extend(agent_pbk_to_name_pairs)
-        good_pbk_to_name_pairs = [_make_str_str_pair(good_pbk, good_name) for good_pbk, good_name in self.good_pbk_to_name.items()]
+        good_pbk_to_name_pairs = [_make_str_str_pair(good_pbk, good_name) for good_pbk, good_name in self.good_pbk_to_name.items()]  # type: List[tac_pb2.StrStrPair]
         msg.good_pbk_to_name.extend(good_pbk_to_name_pairs)
         envelope = tac_pb2.TACController.Message()
         envelope.game_data.CopyFrom(msg)
@@ -672,9 +672,9 @@ class StateUpdate(Response):
         game_data.nb_agents = self.initial_state.nb_agents
         game_data.nb_goods = self.initial_state.nb_goods
         game_data.tx_fee = self.initial_state.tx_fee
-        agent_pbk_to_name_pairs = [_make_str_str_pair(agent_pbk, agent_name) for agent_pbk, agent_name in self.initial_state.agent_pbk_to_name.items()]
+        agent_pbk_to_name_pairs = [_make_str_str_pair(agent_pbk, agent_name) for agent_pbk, agent_name in self.initial_state.agent_pbk_to_name.items()]  # type: List[tac_pb2.StrStrPair]
         game_data.agent_pbk_to_name.extend(agent_pbk_to_name_pairs)
-        good_pbk_to_name_pairs = [_make_str_str_pair(good_pbk, good_name) for good_pbk, good_name in self.initial_state.good_pbk_to_name.items()]
+        good_pbk_to_name_pairs = [_make_str_str_pair(good_pbk, good_name) for good_pbk, good_name in self.initial_state.good_pbk_to_name.items()]  # type: List[tac_pb2.StrStrPair]
         game_data.good_pbk_to_name.extend(good_pbk_to_name_pairs)
 
         msg.initial_state.CopyFrom(game_data)
@@ -688,7 +688,7 @@ class StateUpdate(Response):
             tx_pb.amount = tx.amount
 
             good_pbk_quantity_pairs = [_make_str_int_pair(good_pbk, quantity) for good_pbk, quantity in
-                                       tx.quantities_by_good_pbk.items()]
+                                       tx.quantities_by_good_pbk.items()]  # type: List[tac_pb2.StrIntPair]
             tx_pb.quantities.extend(good_pbk_quantity_pairs)
 
             transactions.append(tx_pb)

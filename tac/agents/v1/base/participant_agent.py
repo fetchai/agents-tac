@@ -55,7 +55,7 @@ class ParticipantAgent(Agent):
                  services_interval: int = 10,
                  pending_transaction_timeout: int = 30,
                  dashboard: Optional[AgentDashboard] = None,
-                 private_key_pem_path: Optional[str] = None):
+                 private_key_pem: Optional[str] = None):
         """
         Initialize a participant agent.
 
@@ -68,15 +68,14 @@ class ParticipantAgent(Agent):
         :param services_interval: the number of seconds between different searches.
         :param pending_transaction_timeout: the timeout for cleanup of pending negotiations and unconfirmed transactions.
         :param dashboard: a Visdom dashboard to visualize agent statistics during the competition.
-        :param private_key_pem_path: the path to a private key in PEM format.
+        :param private_key_pem: the path to a private key in PEM format.
         """
-        super().__init__(name, oef_addr, oef_port, private_key_pem_path, agent_timeout)
+        super().__init__(name, oef_addr, oef_port, private_key_pem, agent_timeout)
         self.mail_box = FIPAMailBox(self.crypto.public_key, oef_addr, oef_port)
         self.in_box = InBox(self.mail_box)
         self.out_box = OutBox(self.mail_box)
 
-        self._is_competing = False  # type: bool
-        self._game_instance = GameInstance(name, strategy, services_interval, pending_transaction_timeout, dashboard)  # type: Optional[GameInstance]
+        self._game_instance = GameInstance(name, strategy, self.mail_box.mail_stats, services_interval, pending_transaction_timeout, dashboard)  # type: Optional[GameInstance]
         self.max_reactions = max_reactions
 
         self.controller_handler = ControllerHandler(self.crypto, self.liveness, self.game_instance, self.out_box, self.name)
@@ -88,20 +87,14 @@ class ParticipantAgent(Agent):
         """Get the game instance."""
         return self._game_instance
 
-    @property
-    def is_competing(self) -> bool:
-        """Check if the agent is competing."""
-        return self._is_competing
-
     def act(self) -> None:
         """
         Perform the agent's actions.
 
         :return: None
         """
-        if not self.is_competing:
+        if self.game_instance.game_phase == GamePhase.PRE_GAME:
             self.oef_handler.search_for_tac()
-            self._is_competing = True
         if self.game_instance.game_phase == GamePhase.GAME:
             if self.game_instance.is_time_to_update_services():
                 self.oef_handler.update_services()

@@ -21,16 +21,18 @@
 """
 This module contains the classes required for message management.
 
+- MailStats: The MailStats class tracks statistics on messages processed by MailBox.
 - MailBox: The MailBox enqueues incoming messages, searches and errors from the OEF and sends outgoing messages to the OEF.
 - InBox: Temporarily stores messages for the agent.
 - OutBox: Temporarily stores and sends messages to the OEF and other agents.
 """
 
-import logging
 import asyncio
+import datetime
+import logging
 from queue import Queue, Empty
 from threading import Thread
-from typing import List, Optional, Any, Union
+from typing import List, Optional, Any, Union, Dict
 
 from oef.agents import OEFAgent
 from oef.messages import PROPOSE_TYPES, CFP_TYPES, CFP, Decline, Propose, Accept, Message as ByteMessage, \
@@ -46,6 +48,45 @@ OEFMessage = Union[SearchResult, OEFErrorMessage, DialogueErrorMessage]
 ControllerMessage = ByteMessage
 AgentMessage = Union[ByteMessage, CFP, Propose, Accept, Decline]
 Message = Union[OEFMessage, ControllerMessage, AgentMessage]
+
+
+class MailStats(object):
+    """The MailStats class tracks statistics on messages processed by MailBox."""
+
+    def __init__(self) -> None:
+        """
+        Instantiate mail stats.
+
+        :return: None
+        """
+        self._search_start_time = {}  # type: Dict[int, datetime.datetime]
+        self._search_timedelta = {}  # type: Dict[int, float]
+        self._search_result_counts = {}  # type: Dict[int, int]
+
+    def search_start(self, search_id: int) -> None:
+        """
+        Add a search id and start time.
+
+        :param search_id: the search id
+
+        :return: None
+        """
+        assert search_id not in self._search_start_time
+        self._search_start_time[search_id] = datetime.datetime.now()
+
+    def search_end(self, search_id: int, nb_search_results: int) -> None:
+        """
+        Add end time for a search id.
+
+        :param search_id: the search id
+        :param nb_search_results: the number of agents returned in the search result
+
+        :return: None
+        """
+        assert search_id in self._search_start_time
+        assert search_id not in self._search_timedelta
+        self._search_timedelta[search_id] = (datetime.datetime.now() - self._search_start_time[search_id]).total_seconds() * 1000
+        self._search_result_counts[search_id] = nb_search_results
 
 
 class MailBox(OEFAgent):
@@ -66,6 +107,12 @@ class MailBox(OEFAgent):
         self.in_queue = Queue()
         self.out_queue = Queue()
         self._mail_box_thread = None  # type: Optional[Thread]
+        self._mail_stats = MailStats()
+
+    @property
+    def mail_stats(self) -> MailStats:
+        """Get the mail stats."""
+        return self._mail_stats
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
         """
@@ -89,6 +136,7 @@ class MailBox(OEFAgent):
 
         :return: None
         """
+        self.mail_stats.search_end(search_id, len(agents))
         self.in_queue.put(SearchResult(search_id, agents))
 
     def on_oef_error(self, answer_id: int, operation: OEFErrorOperation) -> None:
@@ -254,6 +302,7 @@ class OutBox(object):
                 self.mail_box.unregister_service(out.message_id, out.service_description)
             elif isinstance(out, OutContainer) and out.query is not None:
                 logger.debug("Outgoing query: search_id={}".format(out.search_id))
+                self.mail_box.mail_stats.search_start(out.search_id)
                 self.mail_box.search_services(out.search_id, out.query)
             elif isinstance(out, CFP):
                 logger.debug("Outgoing cfp: msg_id={}, dialogue_id={}, origin={}, target={}, query={}".format(out.msg_id, out.dialogue_id, out.destination, out.target, out.query))

@@ -26,7 +26,7 @@ The sandbox is starting up:
   <img src="https://github.com/fetchai/agents-tac/blob/master/docs/sandbox.png?raw=true" alt="Sandbox" width="60%"/>
 </p>
 
-Once the controller has started the competition, connect the agent:
+Once agent is connecting and searching for the competition:
 <p align="center">
   <img src="https://github.com/fetchai/agents-tac/blob/master/docs/agent.png?raw=true" alt="Sandbox" width="60%"/>
 </p>
@@ -34,15 +34,17 @@ Once the controller has started the competition, connect the agent:
 The controller GUI at http://localhost:8097 provides real time insights:
 ![Controller GUI](../master/docs/controller_gui.png)
 
+- [x] You have had a look at the documentation and are developing your first agent.
+
 ## Quick Links
-
-### 📏 📏 📏 Specification 📏 📏 📏
-
-The [framework specification](../master/docs/Trading_Agent_Competition____Specification.pdf) introduces the agent and competition frameworks and discusses the project vision and components.
 
 ### 📜 📜 📜 Documentation 📜 📜 📜
 
-The [package documentation](../master/docs) introduces the key components of the agent and competition frameworks and helps agent developers getting started.
+The [package documentation](../master/docs) introduces the key components of the agent and competition frameworks and helps agent developers getting started. _This is **required** reading material if you want to build your own agent._
+
+### 📏 📏 📏 Specification 📏 📏 📏
+
+The [framework specification](../master/docs/Trading_Agent_Competition____Specification.pdf) introduces the agent and competition frameworks and discusses the project vision and components. _This is complementary reading material._
 
 ### 🤖 🤖 🤖 Simulation 🤖 🤖 🤖
 
@@ -72,12 +74,11 @@ The [competition sandbox](../master/sandbox) provides the code to build the dock
 
 ## Dependencies
 
-- The project requires the [Google Protocol Buffers](https://developers.google.com/protocol-buffers/) compiler. A guide on how to install it is found [here](https://fetchai.github.io/oef-sdk-python/user/install.html#protobuf-compiler).
 - All python specific dependencies are specified in the Pipfile (and installed via the commands specified in 'Preliminaries').
 - The package requires that you install [Docker](https://www.docker.com/) and the sanbox requires that you in addition install [Docker Compose](https://docs.docker.com/compose/).
 - The project requires oef-search-pluto which can be pulled here:
 	
-	  docker pull fetchai/oef-search:v4
+	  docker pull fetchai/oef-search:latest
 
 ## Preliminaries
 
@@ -91,15 +92,18 @@ The [competition sandbox](../master/sandbox) provides the code to build the dock
 
 ## Contribute
 
+The following dependency is only relevant if you intend to contribute to the repository:
+- the project uses [Google Protocol Buffers](https://developers.google.com/protocol-buffers/) compiler for message serialization. A guide on how to install it is found [here](https://fetchai.github.io/oef-sdk-python/user/install.html#protobuf-compiler).
+
 The following steps are only relevant if you intend to contribute to the repository. They are not required for agent development.
 
 - Install development dependencies:
 
 	  pipenv install --dev
 
-- After each change to the codebase re-install package:
+- Install package in (development mode):
 
-      python3 setup.py install
+	  pip3 install -e .
 
 - After changes to the protobuf schema run:
 
@@ -107,23 +111,15 @@ The following steps are only relevant if you intend to contribute to the reposit
 
 - To run tests (ensure no oef docker containers are running):
 
-      tox -e py37
+	  tox -e py37
 
 - To run linters:
 
-      tox -e flake8
+	  tox -e flake8
 
-- We recommend you use the tested OEF build:
+- We recommend you use the latest OEF build:
 
-```
-python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config.json
-```
-
-- To start OEF latest build (the latest build might not be compatible with the current repo):
-
-```
-python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config_latest.json
-``` 
+	  python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config_latest.json
 
 ## Resources
 

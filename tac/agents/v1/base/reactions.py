@@ -35,12 +35,12 @@ from oef.utils import Context
 
 from tac.agents.v1.agent import Liveness
 from tac.agents.v1.base.dialogues import Dialogue
-from tac.agents.v1.base.helpers import dialogue_label_from_transaction_id
 from tac.agents.v1.base.game_instance import GameInstance, GamePhase
-from tac.agents.v1.base.stats_manager import EndState
+from tac.agents.v1.base.helpers import dialogue_label_from_transaction_id
 from tac.agents.v1.base.interfaces import ControllerReactionInterface, OEFSearchReactionInterface, \
     DialogueReactionInterface
 from tac.agents.v1.base.negotiation_behaviours import FIPABehaviour
+from tac.agents.v1.base.stats_manager import EndState
 from tac.agents.v1.mail import OutBox, OutContainer
 from tac.helpers.crypto import Crypto
 from tac.helpers.misc import TAC_SUPPLY_DATAMODEL_NAME
@@ -221,7 +221,6 @@ class OEFReactions(OEFSearchReactionInterface):
         :return: None
         """
         search_id = search_result.msg_id
-        self.game_instance.stats_manager.search_end(search_id, len(search_result.agents))
         logger.debug("[{}]: on search result: {} {}".format(self.agent_name, search_id, search_result.agents))
         if search_id in self.game_instance.search.ids_for_tac:
             self._on_controller_search_result(search_result.agents)
@@ -247,7 +246,7 @@ class OEFReactions(OEFSearchReactionInterface):
         """
         Handle a dialogue error message.
 
-        :param dialogue_error_msg: the dialogue error message
+        :param dialogue_error: the dialogue error message
 
         :return: None
         """
@@ -262,11 +261,14 @@ class OEFReactions(OEFSearchReactionInterface):
 
         :return: None
         """
+        if self.game_instance.game_phase != GamePhase.PRE_GAME:
+            logger.debug("[{}]: Ignoring controller search result, the agent is already competing.".format(self.agent_name))
+            return
+
         if len(agent_pbks) == 0:
-            logger.debug("[{}]: Couldn't find the TAC controller.".format(self.agent_name))
-            self.liveness._is_stopped = True
+            logger.debug("[{}]: Couldn't find the TAC controller. Retrying...".format(self.agent_name))
         elif len(agent_pbks) > 1:
-            logger.debug("[{}]: Found more than one TAC controller.".format(self.agent_name))
+            logger.error("[{}]: Found more than one TAC controller. Stopping...".format(self.agent_name))
             self.liveness._is_stopped = True
         elif self.rejoin:
             logger.debug("[{}]: Found the TAC controller. Rejoining...".format(self.agent_name))
@@ -286,10 +288,10 @@ class OEFReactions(OEFSearchReactionInterface):
 
         :return: None
         """
-        agent_pbks = set(agent_pbks)
-        if self.crypto.public_key in agent_pbks:
-            agent_pbks.remove(self.crypto.public_key)
-        agent_pbks = list(agent_pbks)
+        agent_pbks_set = set(agent_pbks)
+        if self.crypto.public_key in agent_pbks_set:
+            agent_pbks_set.remove(self.crypto.public_key)
+        agent_pbks = list(agent_pbks_set)
         searched_for = 'sellers' if is_searching_for_sellers else 'buyers'
         logger.debug("[{}]: Found potential {}: {}".format(self.agent_name, searched_for, agent_pbks))
 
@@ -407,7 +409,7 @@ class DialogueReactions(DialogueReactionInterface):
         :return: a list of agent messages
         """
         dialogue.incoming_extend([msg])
-        results = []
+        results = []  # type: List[Union[OutContainer, Accept, Decline, Propose]]
         if isinstance(msg, CFP):
             result = self.negotiation_behaviour.on_cfp(msg, dialogue)
             results = [result]
@@ -417,7 +419,7 @@ class DialogueReactions(DialogueReactionInterface):
         elif isinstance(msg, Accept):
             results = self.negotiation_behaviour.on_accept(msg, dialogue)
         elif isinstance(msg, Decline):
-            result = self.negotiation_behaviour.on_decline(msg, dialogue)
-            results = [result]
+            self.negotiation_behaviour.on_decline(msg, dialogue)
+            results = []
         dialogue.outgoing_extend(results)
         return results

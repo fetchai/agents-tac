@@ -839,9 +839,9 @@ class WorldState:
         """Update the world state when a new proposal is received."""
         pass
 
-    def update_on_decline(self, transaction: Transaction) -> None:
+    def update_on_declined_propose(self, transaction: Transaction) -> None:
         """
-        Update the world state when a transaction is rejected.
+        Update the world state when a transaction (propose) is rejected.
 
         :param transaction: the transaction
         :return: None
@@ -856,7 +856,7 @@ class WorldState:
         :param is_accepted: whether the transaction is accepted or not
         :return: None
         """
-        good_pbks = []
+        good_pbks = []  # type: List[str]
         for good_pbk, quantity in transaction.quantities_by_good_pbk.items():
             if quantity > 0:
                 good_pbks += [good_pbk] * quantity
@@ -865,7 +865,7 @@ class WorldState:
         for good_pbk in list(set(good_pbks)):
             self._update_price(good_pbk, price, is_accepted=is_accepted)
 
-    def update_on_accept(self, transaction: Transaction) -> None:
+    def update_on_initial_accept(self, transaction: Transaction) -> None:
         """
         Update the world state when a proposal is accepted.
 
@@ -939,7 +939,7 @@ class WorldState:
 class GameTransaction:
     """Represent a transaction between agents."""
 
-    def __init__(self, buyer_pbk: str, seller_pbk: str, amount: int, quantities_by_good_pbk: Dict[str, int],
+    def __init__(self, buyer_pbk: str, seller_pbk: str, amount: float, quantities_by_good_pbk: Dict[str, int],
                  timestamp: Optional[datetime.datetime] = None):
         """
         Instantiate a game transaction object.

@@ -115,6 +115,8 @@ tac/gui/static/tmp/*
 
 *.sqlite3
 data/*
+!data/oef-logs
+data/oef-logs/*
 !data/.gitkeep
 
 notebooks/.ipynb_checkpoints

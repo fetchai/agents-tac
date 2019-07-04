@@ -14,8 +14,6 @@ docker = "*"
 flake8-docstrings = "*"
 
 [packages]
-flask-sqlalchemy = "*"
-sqlalchemy = "*"
 numpy = "*"
 matplotlib = "*"
 python-dateutil = "*"

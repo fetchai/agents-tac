@@ -20,7 +20,7 @@
 
 """This module contains a baseline implementation of the abstract strategy class defining an agent's strategy for the TAC."""
 
-from typing import List, Set
+from typing import List, Optional, Set
 
 from oef.schema import Description
 
@@ -85,7 +85,7 @@ class BaselineStrategy(Strategy):
         """
         return {good_pbk for good_pbk, quantity in zip(good_pbks, current_holdings)}
 
-    def get_proposals(self, good_pbks: List[str], current_holdings: List[int], utility_params: List[int], tx_fee: float, is_seller: bool, world_state: WorldState) -> List[Description]:
+    def get_proposals(self, good_pbks: List[str], current_holdings: List[int], utility_params: List[float], tx_fee: float, is_seller: bool, world_state: Optional[WorldState]) -> List[Description]:
         """
         Generate a proposals from the seller/buyer.
 
