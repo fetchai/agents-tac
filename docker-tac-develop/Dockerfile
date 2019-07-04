@@ -55,7 +55,6 @@ RUN sudo pip install pipenv
 #RUN apt install pandoc -y
 ## python package to parse plantuml files. docs: https://pythonhosted.org/plantuml/
 #RUN apt install plantuml -y
-RUN mkdir ~/.visdom
 
 RUN sudo mkdir /build
 WORKDIR /build
