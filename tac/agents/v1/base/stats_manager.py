@@ -105,7 +105,7 @@ class StatsManager(object):
         """
         timedeltas = list(self.mail_stats._search_timedelta.values())
         if len(timedeltas) == 0:
-            result = 0
+            result = 0.0
         else:
             result = sum(timedeltas) / len(timedeltas)
         return result
@@ -118,7 +118,7 @@ class StatsManager(object):
         """
         counts = list(self.mail_stats._search_result_counts.values())
         if len(counts) == 0:
-            result = 0
+            result = 0.0
         else:
             result = sum(counts) / len(counts)
         return result

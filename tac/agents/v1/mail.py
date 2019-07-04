@@ -60,7 +60,7 @@ class MailStats(object):
         :return: None
         """
         self._search_start_time = {}  # type: Dict[int, datetime.datetime]
-        self._search_timedelta = {}  # type: Dict[int, datetime.timedelta]
+        self._search_timedelta = {}  # type: Dict[int, float]
         self._search_result_counts = {}  # type: Dict[int, int]
 
     def search_start(self, search_id: int) -> None:

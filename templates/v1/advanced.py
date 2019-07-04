@@ -23,7 +23,7 @@
 
 import argparse
 import logging
-from typing import List, Set
+from typing import List, Optional, Set
 
 from oef.schema import Description
 
@@ -102,7 +102,7 @@ class MyStrategy(Strategy):
         """
         raise NotImplementedError("Your agent must implement this method.")
 
-    def get_proposals(self, good_pbks: List[str], current_holdings: List[int], utility_params: List[int], tx_fee: float, is_seller: bool, world_state: WorldState) -> List[Description]:
+    def get_proposals(self, good_pbks: List[str], current_holdings: List[int], utility_params: List[float], tx_fee: float, is_seller: bool, world_state: Optional[WorldState]) -> List[Description]:
         """
         To generate a proposals from the seller/buyer.
 

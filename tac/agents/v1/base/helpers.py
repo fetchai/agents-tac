@@ -95,5 +95,5 @@ def dialogue_label_from_transaction_id(agent_pbk: str, transaction_id: str) -> D
         dialogue_opponent_pbk = seller_pbk
     else:
         dialogue_opponent_pbk = buyer_pbk
-    dialogue_label = DialogueLabel(dialogue_id, dialogue_opponent_pbk, dialogue_starter_pbk)
+    dialogue_label = DialogueLabel(int(dialogue_id), dialogue_opponent_pbk, dialogue_starter_pbk)
     return dialogue_label
