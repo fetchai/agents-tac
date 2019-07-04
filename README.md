@@ -78,7 +78,7 @@ The [competition sandbox](../master/sandbox) provides the code to build the dock
 - The package requires that you install [Docker](https://www.docker.com/) and the sanbox requires that you in addition install [Docker Compose](https://docs.docker.com/compose/).
 - The project requires oef-search-pluto which can be pulled here:
 	
-	  docker pull fetchai/oef-search:v4
+	  docker pull fetchai/oef-search:latest
 
 ## Preliminaries
 
