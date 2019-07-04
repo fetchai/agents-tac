@@ -27,22 +27,20 @@ This module contains the classes which define the reactions of an agent.
 """
 
 import logging
-import time
 from typing import List, Union
 
 from oef.messages import CFP, Propose, Accept, Decline, Message as ByteMessage, SearchResult, OEFErrorMessage, \
     DialogueErrorMessage
-from oef.query import Query, Constraint, GtEq
 from oef.utils import Context
 
 from tac.agents.v1.agent import Liveness
 from tac.agents.v1.base.dialogues import Dialogue
-from tac.agents.v1.base.helpers import dialogue_label_from_transaction_id
 from tac.agents.v1.base.game_instance import GameInstance, GamePhase
-from tac.agents.v1.base.stats_manager import EndState
+from tac.agents.v1.base.helpers import dialogue_label_from_transaction_id
 from tac.agents.v1.base.interfaces import ControllerReactionInterface, OEFSearchReactionInterface, \
     DialogueReactionInterface
 from tac.agents.v1.base.negotiation_behaviours import FIPABehaviour
+from tac.agents.v1.base.stats_manager import EndState
 from tac.agents.v1.mail import OutBox, OutContainer
 from tac.helpers.crypto import Crypto
 from tac.helpers.misc import TAC_SUPPLY_DATAMODEL_NAME
