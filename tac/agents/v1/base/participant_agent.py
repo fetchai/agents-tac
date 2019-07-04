@@ -75,7 +75,6 @@ class ParticipantAgent(Agent):
         self.in_box = InBox(self.mail_box)
         self.out_box = OutBox(self.mail_box)
 
-        self._is_competing = False  # type: bool
         self._game_instance = GameInstance(name, strategy, self.mail_box.mail_stats, services_interval, pending_transaction_timeout, dashboard)  # type: Optional[GameInstance]
         self.max_reactions = max_reactions
 
@@ -88,20 +87,14 @@ class ParticipantAgent(Agent):
         """Get the game instance."""
         return self._game_instance
 
-    @property
-    def is_competing(self) -> bool:
-        """Check if the agent is competing."""
-        return self._is_competing
-
     def act(self) -> None:
         """
         Perform the agent's actions.
 
         :return: None
         """
-        if not self.is_competing:
+        if self.game_instance.game_phase == GamePhase.PRE_GAME:
             self.oef_handler.search_for_tac()
-            self._is_competing = True
         if self.game_instance.game_phase == GamePhase.GAME:
             if self.game_instance.is_time_to_update_services():
                 self.oef_handler.update_services()
