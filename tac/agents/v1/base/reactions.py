@@ -35,12 +35,12 @@ from oef.utils import Context
 
 from tac.agents.v1.agent import Liveness
 from tac.agents.v1.base.dialogues import Dialogue
-from tac.agents.v1.base.helpers import dialogue_label_from_transaction_id
 from tac.agents.v1.base.game_instance import GameInstance, GamePhase
-from tac.agents.v1.base.stats_manager import EndState
+from tac.agents.v1.base.helpers import dialogue_label_from_transaction_id
 from tac.agents.v1.base.interfaces import ControllerReactionInterface, OEFSearchReactionInterface, \
     DialogueReactionInterface
 from tac.agents.v1.base.negotiation_behaviours import FIPABehaviour
+from tac.agents.v1.base.stats_manager import EndState
 from tac.agents.v1.mail import OutBox, OutContainer
 from tac.helpers.crypto import Crypto
 from tac.helpers.misc import TAC_SUPPLY_DATAMODEL_NAME
@@ -246,7 +246,7 @@ class OEFReactions(OEFSearchReactionInterface):
         """
         Handle a dialogue error message.
 
-        :param dialogue_error_msg: the dialogue error message
+        :param dialogue_error: the dialogue error message
 
         :return: None
         """
@@ -261,11 +261,14 @@ class OEFReactions(OEFSearchReactionInterface):
 
         :return: None
         """
+        if self.game_instance.game_phase != GamePhase.PRE_GAME:
+            logger.debug("[{}]: Ignoring controller search result, the agent is already competing.".format(self.agent_name))
+            return
+
         if len(agent_pbks) == 0:
-            logger.debug("[{}]: Couldn't find the TAC controller.".format(self.agent_name))
-            self.liveness._is_stopped = True
+            logger.debug("[{}]: Couldn't find the TAC controller. Retrying...".format(self.agent_name))
         elif len(agent_pbks) > 1:
-            logger.debug("[{}]: Found more than one TAC controller.".format(self.agent_name))
+            logger.error("[{}]: Found more than one TAC controller. Stopping...".format(self.agent_name))
             self.liveness._is_stopped = True
         elif self.rejoin:
             logger.debug("[{}]: Found the TAC controller. Rejoining...".format(self.agent_name))
