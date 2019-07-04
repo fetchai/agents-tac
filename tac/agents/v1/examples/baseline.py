@@ -96,7 +96,12 @@ def main(
         visdom_addr: str = "127.0.0.1",
         visdom_port: int = 8097,
 ):
+    """
+    Launch a baseline agent.
 
+    Main entrypoint for starting a baseline agent.
+    Please run the module with hte '--help flag' to get more details about the parameters.
+    """
     if gui:
         dashboard = AgentDashboard(agent_name=name, env_name=name, visdom_addr=visdom_addr, visdom_port=visdom_port)
     else:
