@@ -30,9 +30,8 @@ import signal
 import time
 from typing import Optional, List
 
-import tac
-from tac.agents.v1.examples.baseline import BaselineAgent
-from tac.platform.controller import ControllerAgent
+from tac.agents.v1.examples.baseline import main as baseline_main
+from tac.platform.controller import main as controller_main
 
 logger = logging.getLogger("tac")
 
@@ -101,63 +100,63 @@ def _make_id(agent_id: int, is_world_modeling: bool, nb_agents: int) -> str:
 
 
 def spawn_controller_agent(arguments):
-    result = multiprocessing.Process(target=tac.platform.controller.main, kwargs=dict(
-            name="tac_controller",
-            nb_agents=arguments.nb_agents,
-            nb_goods=arguments.nb_goods,
-            money_endowment=arguments.money_endowment,
-            base_good_endowment=arguments.base_good_endowment,
-            lower_bound_factor=arguments.lower_bound_factor,
-            upper_bound_factor=arguments.upper_bound_factor,
-            tx_fee=arguments.tx_fee,
-            oef_addr=arguments.oef_addr,
-            oef_port=arguments.oef_port,
-            start_time=arguments.start_time,
-            registration_timeout=arguments.registration_timeout,
-            inactivity_timeout=arguments.inactivity_timeout,
-            competition_timeout=arguments.competition_timeout,
-            whitelist_file=arguments.whitelist_file,
-            verbose=True,
-            gui=arguments.gui,
-            visdom_addr=arguments.visdom_addr,
-            visdom_port=arguments.visdom_port,
-            data_output_dir=arguments.data_output_dir,
-            experiment_id=arguments.experiment_id,
-            seed=arguments.seed,
-            version=1,
-        ))
+    """Spawn a controller agent."""
+    result = multiprocessing.Process(target=controller_main, kwargs=dict(
+        name="tac_controller",
+        nb_agents=arguments.nb_agents,
+        nb_goods=arguments.nb_goods,
+        money_endowment=arguments.money_endowment,
+        base_good_endowment=arguments.base_good_endowment,
+        lower_bound_factor=arguments.lower_bound_factor,
+        upper_bound_factor=arguments.upper_bound_factor,
+        tx_fee=arguments.tx_fee,
+        oef_addr=arguments.oef_addr,
+        oef_port=arguments.oef_port,
+        start_time=arguments.start_time,
+        registration_timeout=arguments.registration_timeout,
+        inactivity_timeout=arguments.inactivity_timeout,
+        competition_timeout=arguments.competition_timeout,
+        whitelist_file=arguments.whitelist_file,
+        verbose=True,
+        gui=arguments.gui,
+        visdom_addr=arguments.visdom_addr,
+        visdom_port=arguments.visdom_port,
+        data_output_dir=arguments.data_output_dir,
+        experiment_id=arguments.experiment_id,
+        seed=arguments.seed,
+        version=1,
+    ))
     result.start()
     return result
 
 
 def run_baseline_agent(**kwargs) -> None:
-    """
-    Run a baseline agent.
-    """
+    """Run a baseline agent."""
     # give the time to the controller to connect to the OEF
     time.sleep(5.0)
-    tac.agents.v1.examples.baseline.main(**kwargs)
+    baseline_main(**kwargs)
 
 
 def spawn_baseline_agents(arguments) -> List[multiprocessing.Process]:
+    """Spawn baseline agents."""
     fraction_world_modeling = 0.1
     nb_baseline_agents_world_modeling = round(arguments.nb_baseline_agents * fraction_world_modeling)
 
     threads = [multiprocessing.Process(target=run_baseline_agent, kwargs=dict(
-            name=_make_id(i, i < nb_baseline_agents_world_modeling, arguments.nb_agents),
-            oef_addr=arguments.oef_addr,
-            oef_port=arguments.oef_port,
-            register_as=arguments.register_as,
-            search_for=arguments.search_for,
-            is_world_modeling=i < nb_baseline_agents_world_modeling,
-            services_interval=arguments.services_interval,
-            pending_transaction_timeout=arguments.pending_transaction_timeout,
-            gui=arguments.gui,
-            visdom_addr=arguments.visdom_addr,
-            visdom_port=arguments.visdom_port)) for i in range(arguments.nb_agents)]
+        name=_make_id(i, i < nb_baseline_agents_world_modeling, arguments.nb_agents),
+        oef_addr=arguments.oef_addr,
+        oef_port=arguments.oef_port,
+        register_as=arguments.register_as,
+        search_for=arguments.search_for,
+        is_world_modeling=i < nb_baseline_agents_world_modeling,
+        services_interval=arguments.services_interval,
+        pending_transaction_timeout=arguments.pending_transaction_timeout,
+        gui=arguments.gui,
+        visdom_addr=arguments.visdom_addr,
+        visdom_port=arguments.visdom_port)) for i in range(arguments.nb_agents)]
 
     def signal_handler(sig, frame):
-        """This is a signal handler that does nothing - used to filter the SIGINT from the parent process."""
+        """Filter the SIGINT from the parent process."""
 
     original_sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
     signal.signal(signal.SIGINT, signal_handler)
