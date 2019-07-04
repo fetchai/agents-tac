@@ -26,7 +26,7 @@ The sandbox is starting up:
   <img src="https://github.com/fetchai/agents-tac/blob/master/docs/sandbox.png?raw=true" alt="Sandbox" width="60%"/>
 </p>
 
-Once the controller has started the competition, connect the agent:
+Once agent is connecting and searching for the competition:
 <p align="center">
   <img src="https://github.com/fetchai/agents-tac/blob/master/docs/agent.png?raw=true" alt="Sandbox" width="60%"/>
 </p>
