@@ -6,7 +6,7 @@
   "director_port": 40000,
   "html_dir": "api/src/resources/website",
   "http_port": 7500,
-  "log_dir": "",
+  "log_dir": "/logs",
   "ssl_certificate": "/app/server.pem",
   "core": {
     "core_binary": "fetch_teams/OEFCore",

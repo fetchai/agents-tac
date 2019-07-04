@@ -605,6 +605,7 @@ class GameHandler:
 
     def notify_tac_cancelled(self):
         """Notify agents that the TAC is cancelled."""
+        logger.debug("[{}]: Notifying agents that TAC is cancelled.".format(self.controller_agent.name))
         for agent_pbk in self.registered_agents:
             self.controller_agent.send_message(0, 0, agent_pbk, Cancelled(agent_pbk, self.controller_agent.crypto).serialize())
 

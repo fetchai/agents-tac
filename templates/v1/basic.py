@@ -43,7 +43,7 @@ def parse_arguments():
     parser.add_argument("--register-as", choices=['seller', 'buyer', 'both'], default='both', help="The string indicates whether the baseline agent registers as seller, buyer or both on the oef.")
     parser.add_argument("--search-for", choices=['sellers', 'buyers', 'both'], default='both', help="The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.")
     parser.add_argument("--is-world-modeling", type=bool, default=False, help="Whether the agent uses a workd model or not.")
-    parser.add_argument("--services-interval", type=int, default=10, help="The number of seconds to wait before doing another search.")
+    parser.add_argument("--services-interval", type=int, default=5, help="The number of seconds to wait before doing another search.")
     parser.add_argument("--pending-transaction-timeout", type=int, default=30, help="The timeout in seconds to wait for pending transaction/negotiations.")
     parser.add_argument("--private-key-pem", default=None, help="Path to a file containing a private key in PEM format.")
     parser.add_argument("--rejoin", action="store_true", default=False, help="Whether the agent is joining a running TAC.")
