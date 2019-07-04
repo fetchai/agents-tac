@@ -14,7 +14,7 @@ pipeline {
                 stage('Code Style Check') {
 
                     steps {
-                        sh 'pip install tox'
+                        sh 'pip3 install tox'
                         sh 'tox -e flake8'
                     }
 
@@ -23,7 +23,7 @@ pipeline {
                 stage('Unit Tests') {
 
                     steps {
-                        sh 'pip install tox'
+                        sh 'pip3 install tox'
                         sh 'tox -e py37 -- --no-oef'
                     }
 
