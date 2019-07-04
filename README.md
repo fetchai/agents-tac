@@ -117,11 +117,7 @@ The following steps are only relevant if you intend to contribute to the reposit
 
 	  tox -e flake8
 
-- We recommend you use the tested OEF build:
-
-	  python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config.json
-
-- To start OEF latest build (the latest build might not be compatible with the current repo):
+- We recommend you use the latest OEF build:
 
 	  python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config_latest.json
 
