@@ -8,10 +8,7 @@ import os
 from collections import defaultdict
 from typing import Optional, Dict, List
 
-import numpy as np
-
 from tac.gui.dashboards.base import start_visdom_server, Dashboard
-from tac.helpers.crypto import Crypto
 from tac.platform.game import Game
 from tac.platform.stats import GameStats
 
@@ -89,6 +86,7 @@ class LeaderboardDashboard(Dashboard):
         self.viz.properties(properties, env=self.env_name, win=window_name, opts=dict(title="Configuration"))
 
     def display(self):
+        """Display the leaderboard."""
         self._display_ranking()
 
 
