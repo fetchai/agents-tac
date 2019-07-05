@@ -45,6 +45,7 @@ from typing import Optional, Set
 
 import dateutil
 from oef.agents import OEFAgent
+from oef.messages import Message as OEFErrorOperation
 from oef.schema import Description, DataModel, AttributeSchema
 
 from tac.gui.monitor import Monitor, NullMonitor, VisdomMonitor
@@ -672,6 +673,31 @@ class ControllerAgent(OEFAgent):
         response = self.dispatcher.process_request(content, origin)  # type: Optional[Response]
         if response is not None:
             self.send_message(msg_id, dialogue_id, origin, response.serialize())
+
+    def on_oef_error(self, answer_id: int, operation: OEFErrorOperation) -> None:
+        """
+        Handle an oef error.
+
+        :param answer_id: the answer id
+        :param operation: the oef operation
+
+        :return: None
+        """
+        logger.debug("[{}]: Received OEF error: answer_id={}, operation={}"
+                     .format(self.name, answer_id, operation))
+
+    def on_dialogue_error(self, answer_id: int, dialogue_id: int, origin: str) -> None:
+        """
+        Handle a dialogue error.
+
+        :param answer_id: the answer id
+        :param dialogue_id: the dialogue id
+        :param origin: the public key of the sending agent
+
+        :return: None
+        """
+        logger.debug("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}"
+                     .format(self.name, answer_id, dialogue_id, origin))
 
     def register(self):
         """
