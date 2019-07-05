@@ -236,13 +236,13 @@ class Unregister(Request):
 class Transaction(Request):
     """Transaction message for an agent to submit to the controller."""
 
-    def __init__(self, transaction_id: str, buyer: bool, counterparty: str,
+    def __init__(self, transaction_id: str, is_sender_buyer: bool, counterparty: str,
                  amount: float, quantities_by_good_pbk: Dict[str, int], sender: str, crypto: Crypto) -> None:
         """
         Instantiate transaction request.
 
         :param transaction_id: the id of the transaction.
-        :param buyer: whether the transaction request is sent by a buyer.
+        :param is_sender_buyer: whether the transaction is sent by a buyer.
         :param counterparty: the counterparty of the transaction.
         :param amount: the amount of money involved.
         :param quantities_by_good_pbk: a map from good pbk to the quantity of that good involved in the transaction.
@@ -253,21 +253,58 @@ class Transaction(Request):
         """
         super().__init__(sender, crypto)
         self.transaction_id = transaction_id
-        self.buyer = buyer
+        self.is_sender_buyer = is_sender_buyer
         self.counterparty = counterparty
         self.amount = amount
         self.quantities_by_good_pbk = quantities_by_good_pbk
+
+        self._check_consistency()
 
     @property
     def sender(self):
         """Get the sender public key."""
         return self.public_key
 
+    @property
+    def buyer_pbk(self) -> str:
+        """Get the publick key of the buyer."""
+        result = self.sender if self.is_sender_buyer else self.counterparty
+        return result
+
+    @property
+    def seller_pbk(self) -> str:
+        """Get the publick key of the seller."""
+        result = self.counterparty if self.is_sender_buyer else self.sender
+        return result
+
+    def _check_consistency(self) -> None:
+        """
+        Check the consistency of the transaction parameters.
+
+        :return: None
+        :raises AssertionError if some constraint is not satisfied.
+        """
+        assert self.sender != self.counterparty
+        assert self.amount >= 0
+        assert len(self.quantities_by_good_pbk.keys()) == len(set(self.quantities_by_good_pbk.keys()))
+        assert all(quantity >= 0 for quantity in self.quantities_by_good_pbk.values())
+
+    def to_dict(self) -> Dict[str, Any]:
+        """From object to dictionary."""
+        return {
+            "transaction_id": self.transaction_id,
+            "is_sender_buyer": self.is_sender_buyer,
+            "counterparty": self.counterparty,
+            "amount": self.amount,
+            "quantities_by_good_pbk": self.quantities_by_good_pbk,
+            "sender": self.sender
+        }
+
     def to_pb(self) -> tac_pb2.TACAgent.Message:
         """Convert to protobuf."""
         msg = tac_pb2.TACAgent.Transaction()
         msg.transaction_id = self.transaction_id
-        msg.buyer = self.buyer
+        msg.buyer = self.is_sender_buyer  # maintain old notation for backwards compatibility
         msg.counterparty = self.counterparty
         msg.amount = self.amount
 
@@ -300,24 +337,36 @@ class Transaction(Request):
                            crypto)
 
     @classmethod
+    def from_dict(cls, d: Dict[str, Any], crypto: Crypto) -> 'Transaction':
+        """Return a class instance from a dictionary."""
+        return cls(
+            transaction_id=d["transaction_id"],
+            is_sender_buyer=d["is_sender_buyer"],
+            counterparty=d["counterparty"],
+            amount=d["amount"],
+            quantities_by_good_pbk=d["quantities_by_good_pbk"],
+            sender=d["sender"],
+            crypto=crypto
+        )
+
+    @classmethod
     def from_proposal(cls, proposal: Description, transaction_id: str,
-                      is_buyer: bool, counterparty: str, sender: str, crypto: Crypto) -> 'Transaction':
+                      is_sender_buyer: bool, counterparty: str, sender: str, crypto: Crypto) -> 'Transaction':
         """
         Create a transaction from a proposal.
 
-        :param proposal:
-        :param transaction_id:
-        :param is_buyer:
-        :param counterparty:
-        :param sender:
-        :param crypto:
+        :param proposal: the proposal
+        :param transaction_id: the transaction id
+        :param is_sender_buyer: whether the sender is the buyer
+        :param counterparty: the counterparty public key
+        :param sender: the sender public key
+        :param crypto: the crypto object
         :return: Transaction
         """
         data = copy.deepcopy(proposal.values)
         price = data.pop("price")
         quantity_by_good_pbk = {key: value for key, value in data.items()}
-        return Transaction(transaction_id, is_buyer, counterparty, price, quantity_by_good_pbk,
-                           sender=sender, crypto=crypto)
+        return Transaction(transaction_id, is_sender_buyer, counterparty, price, quantity_by_good_pbk, sender, crypto)
 
     def matches(self, other: 'Transaction') -> bool:
         """
@@ -334,7 +383,7 @@ class Transaction(Request):
         """
         result = True
         result = result and self.transaction_id == other.transaction_id
-        result = result and self.buyer != other.buyer
+        result = result and self.is_sender_buyer != other.is_sender_buyer
         result = result and self.counterparty == other.sender
         result = result and other.counterparty == self.sender
         result = result and self.amount == other.amount
@@ -346,7 +395,7 @@ class Transaction(Request):
         """Return as string."""
         return self._build_str(
             transaction_id=self.transaction_id,
-            buyer=self.buyer,
+            is_sender_buyer=self.is_sender_buyer,
             counterparty=self.counterparty,
             amount=self.amount,
             good_pbk_quantity_pairs=self.quantities_by_good_pbk
@@ -357,7 +406,7 @@ class Transaction(Request):
         if type(self) != type(other):
             return False
         return self.transaction_id == other.transaction_id and \
-            self.buyer == other.buyer and \
+            self.is_sender_buyer == other.is_sender_buyer and \
             self.counterparty == other.counterparty and \
             self.amount == other.amount and \
             self.quantities_by_good_pbk == other.quantities_by_good_pbk
@@ -683,7 +732,7 @@ class StateUpdate(Response):
         for tx in self.transactions:
             tx_pb = tac_pb2.TACAgent.Transaction()
             tx_pb.transaction_id = tx.transaction_id
-            tx_pb.buyer = tx.buyer
+            tx_pb.buyer = tx.is_sender_buyer
             tx_pb.counterparty = tx.counterparty
             tx_pb.amount = tx.amount
 

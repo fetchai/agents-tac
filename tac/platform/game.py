@@ -27,19 +27,18 @@ Classes:
 - Game: the class that manages an instance of a game (e.g. validate and settling transactions).
 - AgentState: a class to hold the current state of an agent.
 - GoodState: a class to hold the current state of a good.
-- GameTransaction: a class that keeps information about a transaction in the game.
-
+- WorldState represent the state of the world from the perspective of the agent.
 """
 
 import copy
-import datetime
 import logging
 import pprint
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 
-from tac.helpers.misc import generate_money_endowments, generate_good_endowments, generate_utility_params, from_iso_format, \
+from tac.helpers.misc import generate_money_endowments, generate_good_endowments, generate_utility_params, \
     logarithmic_utility, generate_equilibrium_prices_and_holdings, determine_scaling_factor
 from tac.helpers.price_model import GoodPriceModel
+from tac.helpers.crypto import Crypto
 from tac.platform.protocol import Transaction
 
 Endowment = List[int]  # an element e_j is the endowment of good j.
@@ -342,7 +341,7 @@ class Game:
         """
         self._configuration = configuration  # type GameConfiguration
         self._initialization = initialization  # type: GameInitialization
-        self.transactions = []  # type: List[GameTransaction]
+        self.transactions = []  # type: List[Transaction]
 
         self._initial_agent_states = dict(
             (agent_pbk,
@@ -436,11 +435,11 @@ class Game:
         """
         return self.agent_states[agent_pbk]
 
-    def is_transaction_valid(self, tx: 'GameTransaction') -> bool:
+    def is_transaction_valid(self, tx: Transaction) -> bool:
         """
         Check whether the transaction is valid given the state of the game.
 
-        :param tx: the game transaction.
+        :param tx: the transaction.
         :return: True if the transaction is valid, False otherwise.
         :raises: AssertionError: if the data in the transaction are not allowed (e.g. negative amount).
         """
@@ -457,7 +456,7 @@ class Game:
 
         return True
 
-    def settle_transaction(self, tx: 'GameTransaction') -> None:
+    def settle_transaction(self, tx: Transaction) -> None:
         """
         Settle a valid transaction.
 
@@ -506,7 +505,8 @@ class Game:
         (20, [2, 1, 1])
         >>> agent_state_2.balance, agent_state_2.current_holdings
         (20, [1, 1, 2])
-        >>> game.settle_transaction(GameTransaction('tac_agent_0_pbk', 'tac_agent_1_pbk', 15, {'tac_good_0': 1, 'tac_good_1': 0, 'tac_good_2': 0}))
+        >>> tx = Transaction('some_tx_id', True, 'tac_agent_1_pbk', 15, {'tac_good_0': 1, 'tac_good_1': 0, 'tac_good_2': 0}, 'tac_agent_0_pbk', Crypto())
+        >>> game.settle_transaction(tx)
         >>> agent_state_0.balance, agent_state_0.current_holdings
         (4.5, [2, 1, 1])
         >>> agent_state_1.balance, agent_state_1.current_holdings
@@ -626,7 +626,7 @@ class Game:
         return result
 
     def to_dict(self) -> Dict[str, Any]:
-        """From object to dictionary."""
+        """Get a dictionary from the object."""
         return {
             "configuration": self.configuration.to_dict(),
             "initialization": self.initialization.to_dict(),
@@ -634,14 +634,14 @@ class Game:
         }
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> 'Game':
+    def from_dict(cls, d: Dict[str, Any], crypto: Crypto) -> 'Game':
         """Get class instance from dictionary."""
         configuration = GameConfiguration.from_dict(d["configuration"])
         initialization = GameInitialization.from_dict(d["initialization"])
 
         game = Game(configuration, initialization)
         for tx_dict in d["transactions"]:
-            tx = GameTransaction.from_dict(tx_dict)
+            tx = Transaction.from_dict(tx_dict, crypto)
             game.settle_transaction(tx)
 
         return game
@@ -715,7 +715,7 @@ class AgentState:
         :return: True if the transaction is legal wrt the current state, false otherwise.
         """
         share_of_tx_fee = round(tx_fee / 2.0, 2)
-        if tx.buyer:
+        if tx.is_sender_buyer:
             # check if we have the money.
             result = self.balance >= tx.amount + share_of_tx_fee
         else:
@@ -741,14 +741,14 @@ class AgentState:
 
     def update(self, tx: Transaction, tx_fee: float) -> None:
         """
-        Update the agent state from a transaction request.
+        Update the agent state from a transaction.
 
-        :param tx: the transaction request message.
+        :param tx: the transaction.
         :param tx_fee: the transaction fee.
         :return: None
         """
         share_of_tx_fee = round(tx_fee / 2.0, 2)
-        if tx.buyer:
+        if tx.is_sender_buyer:
             diff = tx.amount + share_of_tx_fee
             self.balance -= diff
         else:
@@ -756,7 +756,7 @@ class AgentState:
             self.balance += diff
 
         for good_id, quantity in enumerate(tx.quantities_by_good_pbk.values()):
-            quantity_delta = quantity if tx.buyer else -quantity
+            quantity_delta = quantity if tx.is_sender_buyer else -quantity
             self._current_holdings[good_id] += quantity_delta
 
     def __copy__(self):
@@ -934,88 +934,3 @@ class WorldState:
         price = round(price, 1)
         good_price_model = self.good_price_models[good_pbk]
         good_price_model.update(is_accepted, price)
-
-
-class GameTransaction:
-    """Represent a transaction between agents."""
-
-    def __init__(self, buyer_pbk: str, seller_pbk: str, amount: float, quantities_by_good_pbk: Dict[str, int],
-                 timestamp: Optional[datetime.datetime] = None):
-        """
-        Instantiate a game transaction object.
-
-        :param buyer_pbk: the pbk of the buyer in the game.
-        :param seller_pbk: the pbk of the seller in the game.
-        :param amount: the amount transferred.
-        :param quantities_by_good_pbk: a map from good pbk to the quantity transacted.
-        :param timestamp: the timestamp of the transaction.
-        """
-        self.buyer_pbk = buyer_pbk
-        self.seller_pbk = seller_pbk
-        self.amount = amount
-        self.quantities_by_good_pbk = quantities_by_good_pbk
-        self.timestamp = datetime.datetime.now() if timestamp is None else timestamp
-
-        self._check_consistency()
-
-    def _check_consistency(self) -> None:
-        """
-        Check the consistency of the transaction parameters.
-
-        :return: None
-        :raises AssertionError if some constraint is not satisfied.
-        """
-        assert self.buyer_pbk != self.seller_pbk
-        assert self.amount >= 0
-        assert len(self.quantities_by_good_pbk.keys()) == len(set(self.quantities_by_good_pbk.keys()))
-        assert all(quantity >= 0 for quantity in self.quantities_by_good_pbk.values())
-
-    def to_dict(self) -> Dict[str, Any]:
-        """From object to dictionary."""
-        return {
-            "buyer_pbk": self.buyer_pbk,
-            "seller_pbk": self.seller_pbk,
-            "amount": self.amount,
-            "quantities_by_good_pbk": self.quantities_by_good_pbk,
-            "timestamp": str(self.timestamp)
-        }
-
-    @classmethod
-    def from_request_to_game_tx(cls, transaction: Transaction) -> 'GameTransaction':
-        """
-        From a transaction request message to a game transaction.
-
-        :param transaction: the request message for a transaction.
-        :return: the game transaction.
-        """
-        sender_pbk = transaction.sender
-        receiver_pbk = transaction.counterparty
-        buyer_pbk, seller_pbk = (sender_pbk, receiver_pbk) if transaction.buyer else (receiver_pbk, sender_pbk)
-
-        tx = GameTransaction(
-            buyer_pbk,
-            seller_pbk,
-            transaction.amount,
-            transaction.quantities_by_good_pbk
-        )
-        return tx
-
-    @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> 'GameTransaction':
-        """Return a class instance from a dictionary."""
-        return cls(
-            buyer_pbk=d["buyer_pbk"],
-            seller_pbk=d["seller_pbk"],
-            amount=d["amount"],
-            quantities_by_good_pbk=d["quantities_by_good_pbk"],
-            timestamp=from_iso_format(d["timestamp"])
-        )
-
-    def __eq__(self, other) -> bool:
-        """Compare equality of two instances from class."""
-        return isinstance(other, GameTransaction) and \
-            self.buyer_pbk == other.buyer_pbk and \
-            self.seller_pbk == other.seller_pbk and \
-            self.amount == other.amount and \
-            self.quantities_by_good_pbk == other.quantities_by_good_pbk and \
-            self.timestamp == other.timestamp

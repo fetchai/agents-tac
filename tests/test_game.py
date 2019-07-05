@@ -21,7 +21,9 @@
 
 import pytest
 
-from tac.platform.game import GameConfiguration, GameInitialization, Game, GameTransaction, AgentState, GoodState
+from tac.platform.game import GameConfiguration, GameInitialization, Game, AgentState, GoodState
+from tac.platform.protocol import Transaction
+from tac.helpers.crypto import Crypto
 
 
 class TestGameConfiguration:
@@ -362,11 +364,13 @@ class TestGame:
         game = Game(game_configuration, game_initialization)
 
         # not enough money: amount + fee > balance of player 0
-        buyer_id = 'tac_agent_0_pbk'
-        seller_id = 'tac_agent_1_pbk'
+        tx_id = 'some_tx_id'
+        is_sender_buyer = True
+        buyer_pbk = 'tac_agent_0_pbk'
+        seller_pbk = 'tac_agent_1_pbk'
         amount = 20
         quantities_by_good = {0: 1, 1: 1, 2: 1}
-        invalid_transaction = GameTransaction(buyer_id, seller_id, amount, quantities_by_good)
+        invalid_transaction = Transaction(tx_id, is_sender_buyer, buyer_pbk, amount, quantities_by_good, seller_pbk, Crypto())
 
         # transaction is invalide because buyer_balance < amount + fee
         assert not game.is_transaction_valid(invalid_transaction)
@@ -415,11 +419,13 @@ class TestGame:
 
         game = Game(game_configuration, game_initialization)
 
-        buyer_id = 'tac_agent_0_pbk'
-        seller_id = 'tac_agent_1_pbk'
+        tx_id = 'some_tx_id'
+        sender_pbk = 'tac_agent_0_pbk'
+        is_sender_buyer = True
+        counterparty_pbk = 'tac_agent_1_pbk'
         amount = 20
         quantities_by_good = {0: 3, 1: 0, 2: 0}
-        invalid_transaction = GameTransaction(buyer_id, seller_id, amount, quantities_by_good)
+        invalid_transaction = Transaction(tx_id, is_sender_buyer, counterparty_pbk, amount, quantities_by_good, sender_pbk, Crypto())
 
         assert not game.is_transaction_valid(invalid_transaction)
 
@@ -536,18 +542,21 @@ class TestGame:
 
         game = Game(game_configuration, game_initialization)
 
-        game_transaction_1 = GameTransaction('tac_agent_0_pbk', 'tac_agent_1_pbk', 10, {'tac_good_0_pbk': 1})
-        game_transaction_2 = GameTransaction('tac_agent_1_pbk', 'tac_agent_0_pbk', 10, {'tac_good_0_pbk': 1})
-        game.settle_transaction(game_transaction_1)
-        game.settle_transaction(game_transaction_2)
+        tx_id = 'some_tx_id'
+        sender_pbk = 'tac_agent_0_pbk'
+        counterparty_pbk = 'tac_agent_1_pbk'
+        transaction_1 = Transaction(tx_id, True, counterparty_pbk, 10, {'tac_good_0_pbk': 1}, sender_pbk, Crypto())
+        transaction_2 = Transaction(tx_id, False, counterparty_pbk, 10, {'tac_good_0_pbk': 1}, sender_pbk, Crypto())
+        game.settle_transaction(transaction_1)
+        game.settle_transaction(transaction_2)
 
         actual_game_dict = game.to_dict()
         expected_game_dict = {
             "configuration": game_configuration.to_dict(),
             "initialization": game_initialization.to_dict(),
             "transactions": [
-                game_transaction_1.to_dict(),
-                game_transaction_2.to_dict()
+                transaction_1.to_dict(),
+                transaction_2.to_dict()
             ]
         }
 
@@ -597,12 +606,15 @@ class TestGame:
 
         expected_game = Game(game_configuration, game_initialization)
 
-        game_transaction_1 = GameTransaction('tac_agent_0_pbk', 'tac_agent_1_pbk', 10, {'tac_good_0_pbk': 1})
-        game_transaction_2 = GameTransaction('tac_agent_1_pbk', 'tac_agent_0_pbk', 10, {'tac_good_0_pbk': 1})
-        expected_game.settle_transaction(game_transaction_1)
-        expected_game.settle_transaction(game_transaction_2)
+        tx_id = 'some_tx_id'
+        sender_pbk = 'tac_agent_0_pbk'
+        counterparty_pbk = 'tac_agent_1_pbk'
+        transaction_1 = Transaction(tx_id, True, counterparty_pbk, 10, {'tac_good_0_pbk': 1}, sender_pbk, Crypto())
+        transaction_2 = Transaction(tx_id, False, counterparty_pbk, 10, {'tac_good_0_pbk': 1}, sender_pbk, Crypto())
+        expected_game.settle_transaction(transaction_1)
+        expected_game.settle_transaction(transaction_2)
 
-        actual_game = Game.from_dict(expected_game.to_dict())
+        actual_game = Game.from_dict(expected_game.to_dict(), Crypto())
 
         assert actual_game == expected_game
 

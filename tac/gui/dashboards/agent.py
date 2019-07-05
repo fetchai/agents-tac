@@ -28,7 +28,8 @@ class TransactionTable(object):
         """Instantiate a TransactionTable."""
         self.tx_table = dict()
         self.tx_table["#"] = []
-        self.tx_table["Role"] = []
+        self.tx_table["Sender"] = []
+        self.tx_table["Sender Role"] = []
         self.tx_table["Counterparty"] = []
         self.tx_table["Amount"] = []
         self.tx_table["Goods Exchanged"] = []
@@ -42,7 +43,8 @@ class TransactionTable(object):
         :return: None
         """
         self.tx_table["#"].append(str(len(self.tx_table["#"])))
-        self.tx_table["Role"].append("Buyer" if tx.buyer else "Seller")
+        self.tx_table["Sender"].append(tx.sender[:5] + "..." + tx.sender[-5:])
+        self.tx_table["Sender Role"].append("Buyer" if tx.is_sender_buyer else "Seller")
         self.tx_table["Counterparty"].append(agent_name if agent_name is not None else tx.counterparty[:5] + "..." + tx.counterparty[-5:])
         self.tx_table["Amount"].append("{:02.2f}".format(tx.amount))
         self.tx_table["Goods Exchanged"].append("\n"
