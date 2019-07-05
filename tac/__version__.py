@@ -18,7 +18,7 @@
 #
 # ------------------------------------------------------------------------------
 
-"""Specifies the version of the platform package."""
+"""Specifies the version of the TAC package."""
 
 __title__ = 'tac'
 __description__ = 'Trading Agent Competition agents'
