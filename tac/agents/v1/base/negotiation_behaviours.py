@@ -123,7 +123,7 @@ class FIPABehaviour:
         transaction_id = generate_transaction_id(self.crypto.public_key, propose.destination, dialogue.dialogue_label, dialogue.is_seller)
         transaction = Transaction.from_proposal(proposal,
                                                 transaction_id,
-                                                is_buyer=not dialogue.is_seller,
+                                                is_sender_buyer=not dialogue.is_seller,
                                                 counterparty=propose.destination,
                                                 sender=self.crypto.public_key,
                                                 crypto=self.crypto)
