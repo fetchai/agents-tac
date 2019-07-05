@@ -30,10 +30,8 @@ To configure the execution of TAC, you can tune the following parameters:
 - `NB_BASELINE_AGENTS` is the number of baseline agents spawned in the TAC instance. 
 - `OEF_ADDR` and `OEF_PORT` allow you to specify a different OEF Node to use for the sandbox. 
 - `SERVICE_REGISTRATION_STRATEGY` indicates whether the baseline agent registers supply, demand or both services on the oef.
-- `UML` specifies whether or not to store the activity of the simulation in PlantUML syntax.
 - `DATA_OUTPUT_DIR` is the output directory to use for storing simulation data in `${DATA_OUTPUT_DIR}/${EXPERIMENT_ID}`.
 - `EXPERIMENT_ID` is the name to give to the simulation.
-- `PLOT` specifies whether to plot a summary of the game.
 - `LOWER_BOUND_FACTOR` is the lower bound factor of a uniform distribution used for generating good instances.
 - `UPPER_BOUND_FACTOR` is the upper bound factor of a uniform distribution used for generating good instances.
 - `TX_FEE` is the transaction fee.
@@ -93,7 +91,8 @@ To run the sandbox multiple times, use the script `run_iterated_games.py`:
 Usage:
 ```
 usage: run_iterated_games [-h] [--nb_games NB_GAMES] [--output_dir OUTPUT_DIR]
-                          [--seeds SEEDS [SEEDS ...]] [--config CONFIG]
+                          [--seeds SEEDS [SEEDS ...]] [--skip]
+                          [--interval INTERVAL] [--config CONFIG]
 
 Run the sandbox multiple times and collect scores for every run.
 
@@ -105,10 +104,22 @@ optional arguments:
                         game.
   --seeds SEEDS [SEEDS ...]
                         The list of seeds to use for different games.
+  --skip                Don't ask to user for continuation.
+  --interval INTERVAL   The minimum number of minutes to wait for the next
+                        TAC.E.g. if 5, and the time is 09:00, then the next
+                        competition will start at 09:05:00.
   --config CONFIG       The path for a config file (in JSON format). If None,
                         use only command line arguments. The config file
                         overrides the command line options.
+
 ```
+
+The script will run the sandbox `nb_games` times with the configuration variables set in `.env`.
+
+The only ignored variables are `DATA_OUTPUT_DIR`, `EXPERIMENT_ID` and `SEEDS`. The first is set with `--output_dir`,
+the second will be `game_01` for the first game, `game_02` for the second and so on, the third is set via `--seeds` for
+every game.
+
 
 ## 4. Visualization:
 
