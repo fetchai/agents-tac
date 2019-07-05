@@ -18,7 +18,25 @@
 #
 # ------------------------------------------------------------------------------
 
-"""Schemas for the protocol to communicate with the controller."""
+"""
+Schemas for the protocol to communicate with the controller.
+
+Classes:
+
+- ErrorCode: this class defines the error codes.
+- Message: abstract class representing a message between TAC agents and TAC controller.
+- Request: message from client to controller.
+- Register: message to register an agent to the competition..
+- Unregister: message to unregister an agent from the competition.
+- Transaction: transaction message for an agent to submit to the controller.
+- GetStateUpdate: message to request an agent state update from the controller.
+- Response: message from controller to clients.
+- Cancelled: this response means that the competition to which the agent was registered has been cancelled.
+- Error: this response means that something bad happened while processing a request
+- GameData: class that holds the game configuration and the initialization of a TAC agent.
+- TransactionConfirmed: class that holds the transaction confirmation sent from the controller to the agent.
+- StateUpdate: class that holds the state update sent from the controller to the agent.
+"""
 
 import copy
 import logging
@@ -446,11 +464,7 @@ class Response(Message):
                 msg = tac_pb2.TACController.Message()
                 msg.ParseFromString(signed_msg.message)
                 case = msg.WhichOneof("msg")
-                if case == "registered":
-                    return Registered(public_key, crypto)
-                elif case == "unregistered":
-                    return Unregistered(public_key, crypto)
-                elif case == "cancelled":
+                if case == "cancelled":
                     return Cancelled(public_key, crypto)
                 elif case == "game_data":
                     return GameData.from_pb(msg.game_data, public_key, crypto)
@@ -475,28 +489,6 @@ class Response(Message):
     def __eq__(self, other):
         """Compare equality of two instances."""
         return type(self) == type(other)
-
-
-class Registered(Response):
-    """This response from the TAC Controller means that the agent has been registered to the TAC."""
-
-    def to_pb(self) -> tac_pb2.TACController.Message:
-        """Convert to protobuf."""
-        msg = tac_pb2.TACController.Registered()
-        envelope = tac_pb2.TACController.Message()
-        envelope.registered.CopyFrom(msg)
-        return envelope
-
-
-class Unregistered(Response):
-    """This response from the TAC Controller means that the agent has been unregistered from the TAC."""
-
-    def to_pb(self) -> tac_pb2.TACController.Message:
-        """Convert to protobuf."""
-        msg = tac_pb2.TACController.Unregistered()
-        envelope = tac_pb2.TACController.Message()
-        envelope.unregistered.CopyFrom(msg)
-        return envelope
 
 
 class Cancelled(Response):

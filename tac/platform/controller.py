@@ -23,9 +23,15 @@
 This module contains the classes that implements the Controller agent behaviour.
 
 The methods are split in three classes:
-- ControllerAgent: extends OEFAgent, receives messages and sends them to the ControllerHandler.
-- ControllerHandler: dispatches the handling of the message to the right handler.
+- TACParameters: this class contains the parameters for the TAC.
+- ControllerAgent: extends OEFAgent, receives messages and dispatches them using the ControllerDispatcher.
+- ControllerDispatcher: class to wrap the decoding procedure and dispatching the handling of the message to the right function.
 - GameHandler: handles an instance of the game.
+- RequestHandler: abstract class for a request handler.
+- RegisterHandler: class for a register handler.
+- UnregisterHandler: class for an unregister handler
+- TransactionHandler: class for a transaction handler.
+- GetStateUpdateHandler: class for a state update handler.
 """
 
 import argparse
@@ -267,7 +273,7 @@ class RegisterHandler(RequestHandler):
 
 
 class UnregisterHandler(RequestHandler):
-    """Class for a unregister handler."""
+    """Class for an unregister handler."""
 
     def handle(self, request: Unregister) -> Optional[Response]:
         """
@@ -658,7 +664,7 @@ class ControllerAgent(OEFAgent):
         Handle a simple message.
 
         The TAC Controller expects that 'content' is a Protobuf serialization of a tac.messages.Request object.
-        The request is dispatched to the right request handler (using the ControllerHandler).
+        The request is dispatched to the right request handler (using the ControllerDispatcher).
         The handler returns an optional response, that is sent back to the sender.
         Notice: the message sent back has the same message id, such that the client knows to which request the response is associated to.
 
