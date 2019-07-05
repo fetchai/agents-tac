@@ -27,6 +27,7 @@ import matplotlib
 import os
 import pylab as plt
 
+from tac.helpers.crypto import Crypto
 from tac.platform.game import Game, AgentState
 
 matplotlib.use('agg')
@@ -48,7 +49,7 @@ class GameStats:
     @classmethod
     def from_json(cls, d: Dict[str, Any]):
         """Read from json."""
-        game = Game.from_dict(d)
+        game = Game.from_dict(d, Crypto())  # any crypto object will do here
         return GameStats(game)
 
     def holdings_history(self):

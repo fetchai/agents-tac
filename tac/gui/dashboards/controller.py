@@ -10,6 +10,7 @@ from typing import Optional, Dict
 import numpy as np
 
 from tac.gui.dashboards.base import start_visdom_server, Dashboard
+from tac.helpers.crypto import Crypto
 from tac.platform.game import Game
 from tac.platform.stats import GameStats
 
@@ -64,7 +65,7 @@ class ControllerDashboard(Dashboard):
         game_data_json_filepath = os.path.join(datadir, "game.json")
         print("Loading data from {}".format(game_data_json_filepath))
         game_data = json.load(open(game_data_json_filepath))
-        game = Game.from_dict(game_data)
+        game = Game.from_dict(game_data, Crypto())  # any crypto object will do here
         game_stats = GameStats(game)
         return ControllerDashboard(game_stats, env_name=env_name)
 

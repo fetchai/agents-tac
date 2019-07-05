@@ -20,12 +20,10 @@
 
 """A module containing miscellaneous methods and classes."""
 
-import datetime
 import logging
 import random
 from typing import List, Set, Dict, Tuple
 
-import dateutil.parser
 import math
 import numpy as np
 from oef.query import Query, Constraint, GtEq, Or
@@ -293,16 +291,6 @@ def build_query(good_pbks: Set[str], is_searching_for_sellers: bool) -> Query:
 
     query = Query(constraints, model=data_model)
     return query
-
-
-def from_iso_format(date_string: str) -> datetime.datetime:
-    """
-    From string representation in ISO format to a datetime.datetime object.
-
-    :param date_string: the string to parse.
-    :return: the datetime object.
-    """
-    return dateutil.parser.parse(date_string)
 
 
 def generate_good_pbk_to_name(nb_goods: int) -> Dict[str, str]:

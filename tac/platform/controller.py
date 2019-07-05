@@ -23,9 +23,15 @@
 This module contains the classes that implements the Controller agent behaviour.
 
 The methods are split in three classes:
-- ControllerAgent: extends OEFAgent, receives messages and sends them to the ControllerHandler.
-- ControllerHandler: dispatches the handling of the message to the right handler.
+- TACParameters: this class contains the parameters for the TAC.
+- ControllerAgent: extends OEFAgent, receives messages and dispatches them using the ControllerDispatcher.
+- ControllerDispatcher: class to wrap the decoding procedure and dispatching the handling of the message to the right function.
 - GameHandler: handles an instance of the game.
+- RequestHandler: abstract class for a request handler.
+- RegisterHandler: class for a register handler.
+- UnregisterHandler: class for an unregister handler
+- TransactionHandler: class for a transaction handler.
+- GetStateUpdateHandler: class for a state update handler.
 """
 
 import argparse
@@ -51,7 +57,7 @@ from oef.schema import Description, DataModel, AttributeSchema
 from tac.gui.monitor import Monitor, NullMonitor, VisdomMonitor
 from tac.helpers.crypto import Crypto
 from tac.helpers.misc import generate_good_pbk_to_name
-from tac.platform.game import Game, GameTransaction
+from tac.platform.game import Game
 from tac.platform.protocol import Response, Request, Register, Unregister, Error, GameData, \
     Transaction, TransactionConfirmation, ErrorCode, Cancelled, GetStateUpdate, StateUpdate
 from tac.platform.stats import GameStats
@@ -267,7 +273,7 @@ class RegisterHandler(RequestHandler):
 
 
 class UnregisterHandler(RequestHandler):
-    """Class for a unregister handler."""
+    """Class for an unregister handler."""
 
     def handle(self, request: Unregister) -> Optional[Response]:
         """
@@ -297,7 +303,7 @@ class TransactionHandler(RequestHandler):
         super().__init__(controller_agent)
         self._pending_transaction_requests = {}  # type: Dict[str, Transaction]
 
-    def handle(self, request: Transaction) -> Optional[Response]:
+    def handle(self, tx: Transaction) -> Optional[Response]:
         """
         Handle a transaction request message.
 
@@ -306,31 +312,33 @@ class TransactionHandler(RequestHandler):
         :param request: the transaction request.
         :return: an Error response if an error occurred, else None (no response to send back).
         """
-        logger.debug("[{}]: Handling transaction: {}".format(self.controller_agent.name, request))
+        logger.debug("[{}]: Handling transaction: {}".format(self.controller_agent.name, tx))
 
         # if transaction arrives first time then put it into the pending pool
-        if request.transaction_id not in self._pending_transaction_requests:
-            logger.debug("[{}]: Put transaction request in the pool: {}".format(self.controller_agent.name, request.transaction_id))
-            self._pending_transaction_requests[request.transaction_id] = request
+        if tx.transaction_id not in self._pending_transaction_requests:
+            if self.controller_agent.game_handler.current_game.is_transaction_valid(tx):
+                logger.debug("[{}]: Put transaction request in the pool: {}".format(self.controller_agent.name, tx.transaction_id))
+                self._pending_transaction_requests[tx.transaction_id] = tx
+            else:
+                return self._handle_invalid_transaction(tx)
         # if transaction arrives second time then process it
         else:
             # TODO how to handle failures in matching transaction?
             #   that is, should the pending txs be removed from the pool?
             #       if yes, should the senders be notified and how?
             #  don't care for now, because assuming only (properly implemented) baseline agents.
-            pending_tx = self._pending_transaction_requests.pop(request.transaction_id)
-            if request.matches(pending_tx):
-                tx = GameTransaction.from_request_to_game_tx(request)
+            pending_tx = self._pending_transaction_requests.pop(tx.transaction_id)
+            if tx.matches(pending_tx):
                 if self.controller_agent.game_handler.current_game.is_transaction_valid(tx):
                     self.controller_agent.game_handler.confirmed_transaction_per_participant[pending_tx.sender].append(pending_tx)
-                    self.controller_agent.game_handler.confirmed_transaction_per_participant[request.sender].append(request)
-                    self._handle_valid_transaction(request)
+                    self.controller_agent.game_handler.confirmed_transaction_per_participant[tx.sender].append(tx)
+                    self._handle_valid_transaction(tx)
                 else:
-                    return self._handle_invalid_transaction(request)
+                    return self._handle_invalid_transaction(tx)
             else:
-                return self._handle_non_matching_transaction(request)
+                return self._handle_non_matching_transaction(tx)
 
-    def _handle_valid_transaction(self, request: Transaction) -> None:
+    def _handle_valid_transaction(self, tx: Transaction) -> None:
         """
         Handle a valid transaction.
 
@@ -338,38 +346,37 @@ class TransactionHandler(RequestHandler):
         - update the game state
         - send a transaction confirmation both to the buyer and the seller.
 
-        :param request: the transaction request.
+        :param tx: the transaction.
         :return: None
         """
-        logger.debug("[{}]: Handling valid transaction: {}".format(self.controller_agent.name, request.transaction_id))
+        logger.debug("[{}]: Handling valid transaction: {}".format(self.controller_agent.name, tx.transaction_id))
 
         # update the game state.
-        tx = GameTransaction.from_request_to_game_tx(request)
         self.controller_agent.game_handler.current_game.settle_transaction(tx)
 
         # update the GUI monitor
         self.controller_agent.monitor.update()
 
         # send the transaction confirmation.
-        tx_confirmation = TransactionConfirmation(request.public_key, self.controller_agent.crypto, request.transaction_id)
-        self.controller_agent.send_message(0, 0, request.public_key, tx_confirmation.serialize())
-        self.controller_agent.send_message(0, 0, request.counterparty, tx_confirmation.serialize())
+        tx_confirmation = TransactionConfirmation(tx.public_key, self.controller_agent.crypto, tx.transaction_id)
+        self.controller_agent.send_message(0, 0, tx.public_key, tx_confirmation.serialize())
+        self.controller_agent.send_message(0, 0, tx.counterparty, tx_confirmation.serialize())
 
         # log messages
-        logger.debug("[{}]: Transaction '{}' settled successfully.".format(self.controller_agent.name, request.transaction_id))
+        logger.debug("[{}]: Transaction '{}' settled successfully.".format(self.controller_agent.name, tx.transaction_id))
         holdings_summary = self.controller_agent.game_handler.current_game.get_holdings_summary()
         logger.debug("[{}]: Current state:\n{}".format(self.controller_agent.name, holdings_summary))
 
         return None
 
-    def _handle_invalid_transaction(self, request: Transaction) -> Response:
+    def _handle_invalid_transaction(self, tx: Transaction) -> Response:
         """Handle an invalid transaction."""
-        return Error(request.public_key, self.controller_agent.crypto, ErrorCode.TRANSACTION_NOT_VALID,
-                     details={"transaction_id": request.transaction_id})
+        return Error(tx.public_key, self.controller_agent.crypto, ErrorCode.TRANSACTION_NOT_VALID,
+                     details={"transaction_id": tx.transaction_id})
 
-    def _handle_non_matching_transaction(self, request: Transaction) -> Response:
+    def _handle_non_matching_transaction(self, tx: Transaction) -> Response:
         """Handle non-matching transaction."""
-        return Error(request.public_key, self.controller_agent.crypto, ErrorCode.TRANSACTION_NOT_MATCHING)
+        return Error(tx.public_key, self.controller_agent.crypto, ErrorCode.TRANSACTION_NOT_MATCHING)
 
 
 class GetStateUpdateHandler(RequestHandler):
@@ -657,7 +664,7 @@ class ControllerAgent(OEFAgent):
         Handle a simple message.
 
         The TAC Controller expects that 'content' is a Protobuf serialization of a tac.messages.Request object.
-        The request is dispatched to the right request handler (using the ControllerHandler).
+        The request is dispatched to the right request handler (using the ControllerDispatcher).
         The handler returns an optional response, that is sent back to the sender.
         Notice: the message sent back has the same message id, such that the client knows to which request the response is associated to.
 
