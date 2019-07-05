@@ -239,7 +239,7 @@ class OEFReactions(OEFSearchReactionInterface):
 
         :return: None
         """
-        logger.debug("[{}]: Received OEF error: answer_id={}, operation={}"
+        logger.error("[{}]: Received OEF error: answer_id={}, operation={}"
                      .format(self.agent_name, oef_error.msg_id, oef_error.oef_error_operation))
 
     def on_dialogue_error(self, dialogue_error: DialogueErrorMessage) -> None:
@@ -250,7 +250,7 @@ class OEFReactions(OEFSearchReactionInterface):
 
         :return: None
         """
-        logger.debug("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}"
+        logger.error("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}"
                      .format(self.agent_name, dialogue_error.msg_id, dialogue_error.dialogue_id, dialogue_error.origin))
 
     def _on_controller_search_result(self, agent_pbks: List[str]) -> None:

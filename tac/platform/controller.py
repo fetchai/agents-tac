@@ -683,7 +683,7 @@ class ControllerAgent(OEFAgent):
 
         :return: None
         """
-        logger.debug("[{}]: Received OEF error: answer_id={}, operation={}"
+        logger.error("[{}]: Received OEF error: answer_id={}, operation={}"
                      .format(self.name, answer_id, operation))
 
     def on_dialogue_error(self, answer_id: int, dialogue_id: int, origin: str) -> None:
@@ -696,7 +696,7 @@ class ControllerAgent(OEFAgent):
 
         :return: None
         """
-        logger.debug("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}"
+        logger.error("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}"
                      .format(self.name, answer_id, dialogue_id, origin))
 
     def register(self):
