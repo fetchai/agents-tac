@@ -73,7 +73,9 @@ def launch_job(args, j):
     print("Work dir: ", work_dir)
     c += [
         "-v",
-        work_dir+":/config"
+        work_dir+":/config",
+        "-v",
+        work_dir+"/data/oef-logs:/logs"
     ]
 
     for arg in j['params']:
