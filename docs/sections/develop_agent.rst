@@ -45,9 +45,11 @@ The strategy interface is defined in :class:`~tac.agents.v1.base.strategy.Strate
 - :meth:`~tac.agents.v1.base.strategy.Strategy.demanded_good_pbks` to specify the set of good public keys which are demanded by the agent.
 - :meth:`~tac.agents.v1.base.strategy.Strategy.get_proposals` to specify the proposals from the agent in the role of seller/buyer.
 
-The 
+The :meth:`~tac.agents.v1.base.strategy.Strategy.supplied_good_quantities` and :meth:`~tac.agents.v1.base.strategy.Strategy.demanded_good_quantities` methods are used to :meth:`~tac.agents.v1.base.game_instance.GameInstance.get_service_description`. The service descriptions thus generated are used for registration on the OEF. Changing these methods therefore directly affects what an agent registers and what services/goods of the agent other agents can therefore find.
 
-write a section dedicated to how the supplied_good_quantities, supplied_good_pbks, demanded_good_quantities and demanded_good_pbks methods get involved in a generic negotiation, potentially supported by sequence diagrams.
+The :meth:`~tac.agents.v1.base.strategy.Strategy.supplied_good_pbks` and :meth:`~tac.agents.v1.base.strategy.Strategy.demanded_good_pbks` methods are used to :meth:`~tac.agents.v1.base.game_instance.GameInstance.build_services_query`. The service queries thus generated are used to search for services/goods on the OEF. Changing these methods therefore directly affects what an agent searches on the OEF.
+
+The :meth:`~tac.agents.v1.base.strategy.Strategy.get_proposals` method is used to generate proposals. Changing this method directly affects what an agent proposes. Of particular relevance here is the price at which an agent proposes to sell\buy the goods referenced in the proposal.
 
 
 Expert: Start from Scratch
