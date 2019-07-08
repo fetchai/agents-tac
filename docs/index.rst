@@ -15,6 +15,7 @@ Welcome to TAC's documentation!
    sections/trading_phase
    sections/controller_protocol
    sections/baseline_agent
+   sections/develop_agent
    sections/glossary
 
    reference/api/tac

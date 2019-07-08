@@ -21,7 +21,7 @@ Actions and Reactions
 
 The v1 architecture distinguishes between `actions` and `reactions`. Actions are scheduled behaviours by the agent whereas reactions are behaviours which the agent makes in response to individual messages it receives.
 
-We split both actions and reactions into three domains: :class:`~tac.agents.v1.base.actions.ControllerActions` and :class:`~tac.agents.v1.base.reactions.ControllerReactions`,  :class:`~tac.agents.v1.base.actions.OEFActions` and :class:`~tac.agents.v1.base.reactions.OEFReactions` and :class:`~tac.agents.v1.base.actions.DialogueActions` and :class:`~tac.agents.v1.base.reactions.DialogueReactions` related. Dialogues are agent to agent communications and maintained in :class:`~tac.agents.v1.base.dialogues.Dialogues`.
+We split both actions and reactions into three domains: :class:`~tac.agents.v1.base.actions.ControllerActions` and :class:`~tac.agents.v1.base.reactions.ControllerReactions`,  :class:`~tac.agents.v1.base.actions.OEFActions` and :class:`~tac.agents.v1.base.reactions.OEFReactions` and :class:`~tac.agents.v1.base.actions.DialogueActions` and :class:`~tac.agents.v1.base.reactions.DialogueReactions`. Dialogues are agent to agent communications and maintained in :class:`~tac.agents.v1.base.dialogues.Dialogues`.
 
 
 Actions
@@ -92,7 +92,7 @@ The :class:`~tac.agents.v1.base.participant_agent.ParticipantAgent` keeps track 
 Controller Registration
 -----------------------
 
-The :class:`~tac.agents.v1.base.participant_agent.ParticipantAgent` implements the registration with the controller via :meth:`~tac.agents.v1.base.actions.OEFActions.search_for_tac`.
+The :class:`~tac.agents.v1.base.participant_agent.ParticipantAgent` initiates the registration with the controller via :meth:`~tac.agents.v1.base.actions.OEFActions.search_for_tac`.
 
 
 Services (/Goods) Registration
@@ -120,9 +120,13 @@ Trade can break down at various stages in the negotiation due to the :class:`~ta
 
 .. mermaid:: ../_static/diagrams/fipa_negotiation_2.mmd
     :align: center
-    :caption: An unsuccessful FIPA negotiation between two agents breaking down after proposal.
+    :caption: An unsuccessful FIPA negotiation between two agents breaking down after initial accept.
 
 .. mermaid:: ../_static/diagrams/fipa_negotiation_3.mmd
+    :align: center
+    :caption: An unsuccessful FIPA negotiation between two agents breaking down after proposal.
+
+.. mermaid:: ../_static/diagrams/fipa_negotiation_4.mmd
     :align: center
     :caption: An unsuccessful FIPA negotiation between two agents breaking down after cfp.
 
@@ -130,4 +134,7 @@ Trade can break down at various stages in the negotiation due to the :class:`~ta
 Agent Speed
 -----------
 
-There are two parameters of the :class:`~tac.agents.v1.base.participant_agent.ParticipantAgent` which affect the agent speed directly. First, the `agent_timeout` parameter specifies the duration in (fractions of) seconds for which the :class:`~tac.agents.v1.agent.Agent` times out. Second, the `services_interval` parameter specifies the length of the interval at which the agent updates its services on the OEF and searches for services on the OEF. Lowering this parameter leads to more frequent updates and searches and therefore higher number of negotiations initiated by the agent.
+There are two parameters of the :class:`~tac.agents.v1.base.participant_agent.ParticipantAgent` which affect the agent speed directly. First, the `agent_timeout` parameter specifies the duration in (fractions of) seconds for which the :class:`~tac.agents.v1.agent.Agent` times out between :meth:`~tac.agents.v1.agent.Agent.act` and :meth:`~tac.agents.v1.agent.Agent.react`. Lowering this parameter increases the speed at which the agent loop spins. Second, the `services_interval` parameter specifies the length of the interval at which the agent updates its services on the OEF and searches for services on the OEF. Lowering this parameter leads to more frequent updates and searches and therefore higher number of negotiations initiated by the agent.
+
+There is a further parameter of the :class:`~tac.agents.v1.base.participant_agent.ParticipantAgent` which affects the agent speed indirectly: the `max_reactions` parameter sets an upper bound on the number of messages which are processed by the :class:`~tac.agents.v1.base.participant_agent.ParticipantAgent` during each call to :meth:`~tac.agents.v1.agent.Agent.react`. Lowering this number slows down the reactive behaviour of the agent relative to the active behaviour of the agent.
+
