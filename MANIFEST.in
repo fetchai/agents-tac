@@ -4,5 +4,7 @@ recursive-include tac *
 recursive-include proto *
 recursive-include tests *
 recursive-include docs *
-recursive-include examples *
+recursive-include templates *
 recursive-include sandbox *
+recursive-include simulation *
+recursive-include scripts *
