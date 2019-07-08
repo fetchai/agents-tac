@@ -34,8 +34,6 @@ Requests
 Responses
 ---------
 
-- :class:`~tac.platform.protocol.Registered`
-- :class:`~tac.platform.protocol.Unregistered`
 - :class:`~tac.platform.protocol.Cancelled`
 - :class:`~tac.platform.protocol.Error`
 - :class:`~tac.platform.protocol.GameData`
