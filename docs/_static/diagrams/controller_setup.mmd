@@ -4,7 +4,7 @@ sequenceDiagram
 
     Note right of Controller: register as a controller agent.
 
-    OEF->>Controller: register_service("tac", Description{version=1})
+    Controller->>OEF: register_service("tac", Description{version=1})
     Controller->>Controller: run()
     activate Controller
     deactivate Controller
