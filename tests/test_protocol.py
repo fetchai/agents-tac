@@ -21,7 +21,7 @@
 
 import pytest
 
-from tac.platform.protocol import Register, Unregister, Transaction, Registered, Unregistered, TransactionConfirmation, Error, \
+from tac.platform.protocol import Register, Unregister, Transaction, TransactionConfirmation, Error, \
     GameData, Request, Response, ErrorCode, Cancelled, GetStateUpdate, StateUpdate
 from tac.helpers.crypto import Crypto
 
@@ -77,28 +77,6 @@ class TestRequest:
 
 class TestResponse:
     """Class to test the Response classes."""
-
-    class TestRegistered:
-        """Class to test the Registered class."""
-
-        def test_serialization_deserialization(self):
-            """Test that serialization and deserialization gives the same result."""
-            crypto = Crypto()
-            expected_msg = Registered(crypto.public_key, crypto)
-            actual_msg = Response.from_pb(expected_msg.serialize(), crypto.public_key, crypto)
-
-            assert expected_msg == actual_msg
-
-    class TestUnregistered:
-        """Class to test the Unregistered class."""
-
-        def test_serialization_deserialization(self):
-            """Test that serialization and deserialization gives the same result."""
-            crypto = Crypto()
-            expected_msg = Unregistered(crypto.public_key, crypto)
-            actual_msg = Response.from_pb(expected_msg.serialize(), crypto.public_key, crypto)
-
-            assert expected_msg == actual_msg
 
     class TestCancelled:
         """Class to test the Cancelled class."""

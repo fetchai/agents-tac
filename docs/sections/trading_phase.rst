@@ -23,14 +23,14 @@ in order to devise a strategy and to start playing.
 
 More precisely, the :class:`~tac.platform.protocol.GameData` contains the following information:
 
-- money (integer): the money amount available to the TAC agent.
-- endowment (list of integers): the endowment for every good.
-- utility_params (list of floats): the utility parameters for every good.
-- nb_agents (integer): the number of agents in the competition.
-- nb_goods (integer): the number of goods in the competition.
-- tx_fee (float): the transaction fee for every trade.
-- agent_pbk_to_name (dictionary[string, string]): mapping the public key of each agent to its name.
-- good_pbk_to_name (dictionary[string, string]): mapping the public key of each good to its name.
+- ``money`` (integer): the money amount available to the TAC agent.
+- ``endowment`` (list of integers): the endowment for every good.
+- ``utility_params`` (list of floats): the utility parameters for every good.
+- ``nb_agents`` (integer): the number of agents in the competition.
+- ``nb_goods`` (integer): the number of goods in the competition.
+- ``tx_fee`` (float): the transaction fee for every trade.
+- ``agent_pbk_to_name`` (dictionary[string, string]): mapping the public key of each agent to its name.
+- ``good_pbk_to_name`` (dictionary[string, string]): mapping the public key of each good to its name.
 
 .. note::
 

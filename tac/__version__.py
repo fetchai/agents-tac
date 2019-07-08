@@ -18,12 +18,12 @@
 #
 # ------------------------------------------------------------------------------
 
-"""Specifies the version of the platform package."""
+"""Specifies the version of the TAC package."""
 
 __title__ = 'tac'
 __description__ = 'Trading Agent Competition agents'
 __url__ = 'https://github.com/uvue-git/tac-agents.git'
-__version__ = '0.1.0'
+__version__ = '0.1.2'
 __build__ = 0x000100
 __author__ = 'Fetch.AI Limited'
 __license__ = 'Apache 2.0'

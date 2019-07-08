@@ -254,7 +254,7 @@ class LockManager(object):
             transaction_id = generate_transaction_id(crypto.public_key, origin, dialogue.dialogue_label, is_seller)  # TODO fix if more than one proposal!
             transaction = Transaction.from_proposal(proposal=proposal,
                                                     transaction_id=transaction_id,
-                                                    is_buyer=not is_seller,
+                                                    is_sender_buyer=not is_seller,
                                                     counterparty=origin,
                                                     sender=crypto.public_key,
                                                     crypto=crypto)

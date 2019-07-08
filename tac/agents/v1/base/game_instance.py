@@ -267,23 +267,6 @@ class GameInstance:
         res = None if len(good_pbks) == 0 else build_query(good_pbks, is_searching_for_sellers)
         return res
 
-    def get_goods_description(self, is_supply: bool) -> Description:
-        """
-        Get the goods description.
-
-        In particular, get the description of
-            - the supplied goods (as a seller), or
-            - the demanded goods (as a buyer).
-
-        :param is_supply: Boolean indicating whether it is supply or demand.
-
-        :return: the description (to advertise on the Service Directory).
-        """
-        desc = get_goods_quantities_description(self.game_configuration.good_pbks,
-                                                self.get_goods_quantities(is_supply),
-                                                is_supply=is_supply)
-        return desc
-
     def get_goods_pbks(self, is_supply: bool) -> Set[str]:
         """
         Wrap the function which determines supplied and demanded good public keys.
