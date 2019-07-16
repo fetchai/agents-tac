@@ -190,8 +190,8 @@ def compute_aggregate_scores(all_game_stats: List[GameStats]) -> Dict[str, float
     for game_stats in all_game_stats:
         agent_names = game_stats.game.configuration.agent_names
         agent_scores = game_stats.game.get_scores()
-        for name, score in zip(agent_names, agent_scores):
-            result[name] += score
+        for name, agent_id in zip(agent_names, agent_scores):
+            result[name] += agent_scores[agent_id]
     return result
 
 
