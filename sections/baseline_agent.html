@@ -1,0 +1,295 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Baseline Agent v1 &#8212; TAC 0.1.2 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <script type="text/javascript" src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Developing Your Own Agent" href="develop_agent.html" />
+    <link rel="prev" title="Protocol for the Controller" href="controller_protocol.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="baseline-agent-v1">
+<span id="baseline-agent"></span><h1>Baseline Agent v1<a class="headerlink" href="#baseline-agent-v1" title="Permalink to this headline">¶</a></h1>
+<p>In this section, we describe the baseline agent v1 <a class="reference internal" href="../reference/api/tac.agents.v1.examples.html#tac.agents.v1.examples.baseline.BaselineAgent" title="tac.agents.v1.examples.baseline.BaselineAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaselineAgent</span></code></a>. This agent inherits from <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.participant_agent.ParticipantAgent" title="tac.agents.v1.base.participant_agent.ParticipantAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParticipantAgent</span></code></a> and implements the <a class="reference internal" href="../reference/api/tac.agents.v1.examples.html#tac.agents.v1.examples.strategy.BaselineStrategy" title="tac.agents.v1.examples.strategy.BaselineStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaselineStrategy</span></code></a>. <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.participant_agent.ParticipantAgent" title="tac.agents.v1.base.participant_agent.ParticipantAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParticipantAgent</span></code></a> is a TAC specific implementation of a generic <a class="reference internal" href="../reference/api/tac.agents.v1.html#tac.agents.v1.agent.Agent" title="tac.agents.v1.agent.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a>.</p>
+<div class="section" id="main-loop-and-event-loop">
+<h2>Main Loop and Event Loop<a class="headerlink" href="#main-loop-and-event-loop" title="Permalink to this headline">¶</a></h2>
+<p>A generic <a class="reference internal" href="../reference/api/tac.agents.v1.html#tac.agents.v1.agent.Agent" title="tac.agents.v1.agent.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a> can be started via <a class="reference internal" href="../reference/api/tac.agents.v1.html#tac.agents.v1.agent.Agent.start" title="tac.agents.v1.agent.Agent.start"><code class="xref py py-meth docutils literal notranslate"><span class="pre">start()</span></code></a>. This starts the <a class="reference internal" href="../reference/api/tac.agents.v1.html#tac.agents.v1.mail.MailBox" title="tac.agents.v1.mail.MailBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">MailBox</span></code></a> and a main loop implemented in <a class="reference internal" href="../reference/api/tac.agents.v1.html#tac.agents.v1.agent.Agent.run_main_loop" title="tac.agents.v1.agent.Agent.run_main_loop"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_main_loop()</span></code></a>.</p>
+<p>The mailbox is responsible for handling incoming and outgoing messages. The <a class="reference internal" href="../reference/api/tac.agents.v1.html#tac.agents.v1.mail.InBox" title="tac.agents.v1.mail.InBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">InBox</span></code></a> enqueues incoming messages on an <code class="xref py py-attr docutils literal notranslate"><span class="pre">in_queue</span></code> for later processing, the <a class="reference internal" href="../reference/api/tac.agents.v1.html#tac.agents.v1.mail.OutBox" title="tac.agents.v1.mail.OutBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">OutBox</span></code></a> picks messages from the <code class="xref py py-attr docutils literal notranslate"><span class="pre">out_queue</span></code> and sends them to the OEF.</p>
+<p>The main loop deals with processing enqueued events/messages. It has the methods <a class="reference internal" href="../reference/api/tac.agents.v1.html#tac.agents.v1.agent.Agent.act" title="tac.agents.v1.agent.Agent.act"><code class="xref py py-meth docutils literal notranslate"><span class="pre">act()</span></code></a> and <a class="reference internal" href="../reference/api/tac.agents.v1.html#tac.agents.v1.agent.Agent.react" title="tac.agents.v1.agent.Agent.react"><code class="xref py py-meth docutils literal notranslate"><span class="pre">react()</span></code></a> which handle the active and reactive agent behaviours.</p>
+</div>
+<div class="section" id="actions-and-reactions">
+<h2>Actions and Reactions<a class="headerlink" href="#actions-and-reactions" title="Permalink to this headline">¶</a></h2>
+<p>The v1 architecture distinguishes between <cite>actions</cite> and <cite>reactions</cite>. Actions are scheduled behaviours by the agent whereas reactions are behaviours which the agent makes in response to individual messages it receives.</p>
+<p>We split both actions and reactions into three domains: <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.actions.ControllerActions" title="tac.agents.v1.base.actions.ControllerActions"><code class="xref py py-class docutils literal notranslate"><span class="pre">ControllerActions</span></code></a> and <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.reactions.ControllerReactions" title="tac.agents.v1.base.reactions.ControllerReactions"><code class="xref py py-class docutils literal notranslate"><span class="pre">ControllerReactions</span></code></a>,  <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.actions.OEFActions" title="tac.agents.v1.base.actions.OEFActions"><code class="xref py py-class docutils literal notranslate"><span class="pre">OEFActions</span></code></a> and <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.reactions.OEFReactions" title="tac.agents.v1.base.reactions.OEFReactions"><code class="xref py py-class docutils literal notranslate"><span class="pre">OEFReactions</span></code></a> and <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.actions.DialogueActions" title="tac.agents.v1.base.actions.DialogueActions"><code class="xref py py-class docutils literal notranslate"><span class="pre">DialogueActions</span></code></a> and <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.reactions.DialogueReactions" title="tac.agents.v1.base.reactions.DialogueReactions"><code class="xref py py-class docutils literal notranslate"><span class="pre">DialogueReactions</span></code></a>. Dialogues are agent to agent communications and maintained in <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.dialogues.Dialogues" title="tac.agents.v1.base.dialogues.Dialogues"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dialogues</span></code></a>.</p>
+<div class="section" id="actions">
+<h3>Actions<a class="headerlink" href="#actions" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.actions.ControllerActions" title="tac.agents.v1.base.actions.ControllerActions"><code class="xref py py-class docutils literal notranslate"><span class="pre">ControllerActions</span></code></a> class includes the methods:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.actions.ControllerActions.request_state_update" title="tac.agents.v1.base.actions.ControllerActions.request_state_update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">request_state_update()</span></code></a> to request the current agent state. This method is not utilised by <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.participant_agent.ParticipantAgent" title="tac.agents.v1.base.participant_agent.ParticipantAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParticipantAgent</span></code></a>.</p></li>
+</ul>
+<p>The <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.actions.OEFActions" title="tac.agents.v1.base.actions.OEFActions"><code class="xref py py-class docutils literal notranslate"><span class="pre">OEFActions</span></code></a> class includes the methods:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.actions.OEFActions.search_for_tac" title="tac.agents.v1.base.actions.OEFActions.search_for_tac"><code class="xref py py-meth docutils literal notranslate"><span class="pre">search_for_tac()</span></code></a> to search for the active <a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.controller.ControllerAgent" title="tac.platform.controller.ControllerAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ControllerAgent</span></code></a>;</p></li>
+<li><p><a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.actions.OEFActions.update_services" title="tac.agents.v1.base.actions.OEFActions.update_services"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_services()</span></code></a> to <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.actions.OEFActions.unregister_service" title="tac.agents.v1.base.actions.OEFActions.unregister_service"><code class="xref py py-meth docutils literal notranslate"><span class="pre">unregister_service()</span></code></a> and <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.actions.OEFActions.register_service" title="tac.agents.v1.base.actions.OEFActions.register_service"><code class="xref py py-meth docutils literal notranslate"><span class="pre">register_service()</span></code></a> on the OEF where the registration behaviour is specified via <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.strategy.RegisterAs" title="tac.agents.v1.base.strategy.RegisterAs"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegisterAs</span></code></a> in the <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.strategy.Strategy" title="tac.agents.v1.base.strategy.Strategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Strategy</span></code></a>;</p></li>
+<li><p><a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.actions.OEFActions.search_services" title="tac.agents.v1.base.actions.OEFActions.search_services"><code class="xref py py-meth docutils literal notranslate"><span class="pre">search_services()</span></code></a> to search for services on the OEF where the search behaviour is specified via <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.strategy.SearchFor" title="tac.agents.v1.base.strategy.SearchFor"><code class="xref py py-class docutils literal notranslate"><span class="pre">SearchFor</span></code></a> in the <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.strategy.Strategy" title="tac.agents.v1.base.strategy.Strategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Strategy</span></code></a>.</p></li>
+</ul>
+<p>The <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.participant_agent.ParticipantAgent" title="tac.agents.v1.base.participant_agent.ParticipantAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParticipantAgent</span></code></a> does not implement any methods in <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.actions.DialogueActions" title="tac.agents.v1.base.actions.DialogueActions"><code class="xref py py-class docutils literal notranslate"><span class="pre">DialogueActions</span></code></a>. This is because all dialogue related methods are reactions to events. In particular, the search for services (<a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.actions.OEFActions.search_services" title="tac.agents.v1.base.actions.OEFActions.search_services"><code class="xref py py-meth docutils literal notranslate"><span class="pre">search_services()</span></code></a>) initiates a chain of reactions leading to a dialogue.</p>
+</div>
+<div class="section" id="reactions">
+<h3>Reactions<a class="headerlink" href="#reactions" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.reactions.ControllerReactions" title="tac.agents.v1.base.reactions.ControllerReactions"><code class="xref py py-class docutils literal notranslate"><span class="pre">ControllerReactions</span></code></a> class includes the methods:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.reactions.ControllerReactions.on_start" title="tac.agents.v1.base.reactions.ControllerReactions.on_start"><code class="xref py py-meth docutils literal notranslate"><span class="pre">on_start()</span></code></a> which handles the ‘start’ event emitted by the controller;</p></li>
+<li><p><a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.reactions.ControllerReactions.on_transaction_confirmed" title="tac.agents.v1.base.reactions.ControllerReactions.on_transaction_confirmed"><code class="xref py py-meth docutils literal notranslate"><span class="pre">on_transaction_confirmed()</span></code></a> which handles the ‘on transaction confirmed’ event emitted by the controller;</p></li>
+<li><p><a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.reactions.ControllerReactions.on_state_update" title="tac.agents.v1.base.reactions.ControllerReactions.on_state_update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">on_state_update()</span></code></a> which handles the ‘on state update’ event emitted by the controller;</p></li>
+<li><p><a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.reactions.ControllerReactions.on_cancelled" title="tac.agents.v1.base.reactions.ControllerReactions.on_cancelled"><code class="xref py py-meth docutils literal notranslate"><span class="pre">on_cancelled()</span></code></a> which handles the cancellation of the competition from the TAC controller;</p></li>
+<li><p><a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.reactions.ControllerReactions.on_tac_error" title="tac.agents.v1.base.reactions.ControllerReactions.on_tac_error"><code class="xref py py-meth docutils literal notranslate"><span class="pre">on_tac_error()</span></code></a> which handles the ‘on tac error’ event emitted by the controller;</p></li>
+<li><p><a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.reactions.ControllerReactions.on_dialogue_error" title="tac.agents.v1.base.reactions.ControllerReactions.on_dialogue_error"><code class="xref py py-meth docutils literal notranslate"><span class="pre">on_dialogue_error()</span></code></a> which handles the ‘dialogue error’ event emitted by the controller.</p></li>
+</ul>
+<p>The <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.reactions.OEFReactions" title="tac.agents.v1.base.reactions.OEFReactions"><code class="xref py py-class docutils literal notranslate"><span class="pre">OEFReactions</span></code></a> class includes the methods:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.reactions.OEFReactions.on_search_result" title="tac.agents.v1.base.reactions.OEFReactions.on_search_result"><code class="xref py py-meth docutils literal notranslate"><span class="pre">on_search_result()</span></code></a> which handles the OEF search results;</p></li>
+<li><p><a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.reactions.OEFReactions.on_oef_error" title="tac.agents.v1.base.reactions.OEFReactions.on_oef_error"><code class="xref py py-meth docutils literal notranslate"><span class="pre">on_oef_error()</span></code></a> which handles the OEF error message;</p></li>
+<li><p><a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.reactions.OEFReactions.on_dialogue_error" title="tac.agents.v1.base.reactions.OEFReactions.on_dialogue_error"><code class="xref py py-meth docutils literal notranslate"><span class="pre">on_dialogue_error()</span></code></a> which handles the dialogue error message.</p></li>
+</ul>
+<p>The <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.reactions.DialogueReactions" title="tac.agents.v1.base.reactions.DialogueReactions"><code class="xref py py-class docutils literal notranslate"><span class="pre">DialogueReactions</span></code></a> class includes the methods:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.reactions.DialogueReactions.on_new_dialogue" title="tac.agents.v1.base.reactions.DialogueReactions.on_new_dialogue"><code class="xref py py-meth docutils literal notranslate"><span class="pre">on_new_dialogue()</span></code></a> which handles reaction to a new dialogue;</p></li>
+<li><p><a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.reactions.DialogueReactions.on_existing_dialogue" title="tac.agents.v1.base.reactions.DialogueReactions.on_existing_dialogue"><code class="xref py py-meth docutils literal notranslate"><span class="pre">on_existing_dialogue()</span></code></a> which handles reaction to an existing dialogue;</p></li>
+<li><p><a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.reactions.DialogueReactions.on_unidentified_dialogue" title="tac.agents.v1.base.reactions.DialogueReactions.on_unidentified_dialogue"><code class="xref py py-meth docutils literal notranslate"><span class="pre">on_unidentified_dialogue()</span></code></a> which handles reaction to an unidentified dialogue.</p></li>
+</ul>
+<p>The message level handling of a negotiation dialogue is performed in <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.negotiation_behaviours.FIPABehaviour" title="tac.agents.v1.base.negotiation_behaviours.FIPABehaviour"><code class="xref py py-class docutils literal notranslate"><span class="pre">FIPABehaviour</span></code></a>.</p>
+</div>
+</div>
+<div class="section" id="handlers">
+<h2>Handlers<a class="headerlink" href="#handlers" title="Permalink to this headline">¶</a></h2>
+<p>The three types of handlers <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.handlers.ControllerHandler" title="tac.agents.v1.base.handlers.ControllerHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">ControllerHandler</span></code></a>, <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.handlers.OEFHandler" title="tac.agents.v1.base.handlers.OEFHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">OEFHandler</span></code></a> and <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.handlers.DialogueHandler" title="tac.agents.v1.base.handlers.DialogueHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">DialogueHandler</span></code></a> inherit from the actions and reactions of their specific type. They are resonsible for handling the implemented behaviours.</p>
+</div>
+<div class="section" id="strategy">
+<h2>Strategy<a class="headerlink" href="#strategy" title="Permalink to this headline">¶</a></h2>
+<p>The strategy of a <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.participant_agent.ParticipantAgent" title="tac.agents.v1.base.participant_agent.ParticipantAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParticipantAgent</span></code></a> has to implement is defined via an interface <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.strategy.Strategy" title="tac.agents.v1.base.strategy.Strategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Strategy</span></code></a>. We also provide a sample implementation of a strategy called <a class="reference internal" href="../reference/api/tac.agents.v1.examples.html#tac.agents.v1.examples.strategy.BaselineStrategy" title="tac.agents.v1.examples.strategy.BaselineStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaselineStrategy</span></code></a> and utilised by the <a class="reference internal" href="../reference/api/tac.agents.v1.examples.html#tac.agents.v1.examples.baseline.BaselineAgent" title="tac.agents.v1.examples.baseline.BaselineAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaselineAgent</span></code></a>.</p>
+<p>The <cite>advanced.py</cite> template can be used to build a <a class="reference internal" href="../reference/api/tac.agents.v1.examples.html#tac.agents.v1.examples.baseline.BaselineAgent" title="tac.agents.v1.examples.baseline.BaselineAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaselineAgent</span></code></a> with a custom strategy.</p>
+<p>We have implemented a basic model of a <a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.game.WorldState" title="tac.platform.game.WorldState"><code class="xref py py-class docutils literal notranslate"><span class="pre">WorldState</span></code></a> which can be used and extended to enrich an agents strategy.</p>
+</div>
+<div class="section" id="agent-state-and-world-state">
+<h2>Agent State and World State<a class="headerlink" href="#agent-state-and-world-state" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.participant_agent.ParticipantAgent" title="tac.agents.v1.base.participant_agent.ParticipantAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParticipantAgent</span></code></a> keeps track of its state via <a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.game.AgentState" title="tac.platform.game.AgentState"><code class="xref py py-class docutils literal notranslate"><span class="pre">AgentState</span></code></a> and it can keep track of its environment via <a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.game.WorldState" title="tac.platform.game.WorldState"><code class="xref py py-class docutils literal notranslate"><span class="pre">WorldState</span></code></a>.</p>
+</div>
+<div class="section" id="controller-registration">
+<h2>Controller Registration<a class="headerlink" href="#controller-registration" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.participant_agent.ParticipantAgent" title="tac.agents.v1.base.participant_agent.ParticipantAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParticipantAgent</span></code></a> initiates the registration with the controller via <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.actions.OEFActions.search_for_tac" title="tac.agents.v1.base.actions.OEFActions.search_for_tac"><code class="xref py py-meth docutils literal notranslate"><span class="pre">search_for_tac()</span></code></a>.</p>
+</div>
+<div class="section" id="services-goods-registration">
+<h2>Services (/Goods) Registration<a class="headerlink" href="#services-goods-registration" title="Permalink to this headline">¶</a></h2>
+<p>Once the game has started, the <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.participant_agent.ParticipantAgent" title="tac.agents.v1.base.participant_agent.ParticipantAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParticipantAgent</span></code></a> can register on the OEF’s Service Directory either as a <em>seller</em>, as a <em>buyer</em> or both. To be specific, the agent can either register the goods it is willing to sell, the goods it is willing to buy or both. The registration options are available in <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.strategy.RegisterAs" title="tac.agents.v1.base.strategy.RegisterAs"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegisterAs</span></code></a>. The registration and unregistering of services is handled via the OEF action <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.actions.OEFActions.update_services" title="tac.agents.v1.base.actions.OEFActions.update_services"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_services()</span></code></a>.</p>
+</div>
+<div class="section" id="services-goods-search">
+<h2>Services (/Goods) Search<a class="headerlink" href="#services-goods-search" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.participant_agent.ParticipantAgent" title="tac.agents.v1.base.participant_agent.ParticipantAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParticipantAgent</span></code></a> can search for the demand and supply registered by other agents on the OEF’s Service Directory. The search options are available in <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.strategy.SearchFor" title="tac.agents.v1.base.strategy.SearchFor"><code class="xref py py-class docutils literal notranslate"><span class="pre">SearchFor</span></code></a>. The search is handled via the OEF action <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.actions.OEFActions.search_services" title="tac.agents.v1.base.actions.OEFActions.search_services"><code class="xref py py-meth docutils literal notranslate"><span class="pre">search_services()</span></code></a>.</p>
+</div>
+<div class="section" id="negotiation">
+<h2>Negotiation<a class="headerlink" href="#negotiation" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.participant_agent.ParticipantAgent" title="tac.agents.v1.base.participant_agent.ParticipantAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParticipantAgent</span></code></a> implements the FIPA negotiation protocol in <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.negotiation_behaviours.FIPABehaviour" title="tac.agents.v1.base.negotiation_behaviours.FIPABehaviour"><code class="xref py py-class docutils literal notranslate"><span class="pre">FIPABehaviour</span></code></a>. A FIPA negotiation starts with a call for proposal (<a class="reference external" href="https://fetchai.github.io/oef-sdk-python/oef.html#oef.messages.CFP" title="(in oef v0.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">CFP</span></code></a>) which contains a <a class="reference external" href="https://fetchai.github.io/oef-sdk-python/oef.html#oef.query.Query" title="(in oef v0.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Query</span></code></a> referencing the services which are demanded or supplied by the sending agent. The receiving agent then responds, if it implements the FIPA negotiation protocol, with a suitable proposal (<a class="reference external" href="https://fetchai.github.io/oef-sdk-python/oef.html#oef.messages.Propose" title="(in oef v0.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Propose</span></code></a>) which contains a list of <a class="reference external" href="https://fetchai.github.io/oef-sdk-python/oef.html#oef.schema.Description" title="(in oef v0.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Description</span></code></a> objects (think individual proposals). The first agent responds to the proposal with either a <a class="reference external" href="https://fetchai.github.io/oef-sdk-python/oef.html#oef.messages.Decline" title="(in oef v0.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Decline</span></code></a> or an <a class="reference external" href="https://fetchai.github.io/oef-sdk-python/oef.html#oef.messages.Accept" title="(in oef v0.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Accept</span></code></a>. Assuming the agent accepts, it will also send the <a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.protocol.Transaction" title="tac.platform.protocol.Transaction"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transaction</span></code></a> to the <a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.controller.ControllerAgent" title="tac.platform.controller.ControllerAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ControllerAgent</span></code></a>. Finally, the second agent can close the negotiation by responding with a matching <a class="reference external" href="https://fetchai.github.io/oef-sdk-python/oef.html#oef.messages.Accept" title="(in oef v0.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Accept</span></code></a> and a submission of the <a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.protocol.Transaction" title="tac.platform.protocol.Transaction"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transaction</span></code></a> to the <a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.controller.ControllerAgent" title="tac.platform.controller.ControllerAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ControllerAgent</span></code></a>. The controller only settles a transaction if it receives matching transactions from each one of the two trading parties referenced in the transaction.</p>
+<div class="figure align-center" id="id1">
+
+            <style>
+            /* mermaid issue 527 workaround */
+            .section {
+                opacity: 1.0 !important;
+            }
+            </style>
+            <script>mermaid.initialize({startOnLoad:true});</script><div class="mermaid">
+            sequenceDiagram
+    participant Agent_0
+	participant Agent_1
+    participant Agent_2
+    participant Controller
+    participant OEF
+
+    activate Controller
+    Agent_1-&gt;&gt;Agent_2: send_cfp(msg_id: 1, dialogue_id: 1, destination: agent_2_pbk, target: 0, query=Query)
+    Agent_2-&gt;&gt;Agent_1: send_propose(msg_id: 2, dialogue_id: 1, destination: agent_1_pbk, target: 1, proposals=List[Description])
+    Agent_1-&gt;&gt;Agent_2: send_accept(msg_id: 3, dialogue_id: 1, destination: agent_2_pbk, target: 2)
+    Agent_1-&gt;&gt;Controller: send_message(msg_id: 3, dialogue_id: 1, destination: controller_pbk, msg: Transaction)
+    Agent_2-&gt;&gt;Agent_1: send_accept(msg_id: 4, dialogue_id: 1, destination: agent_1_pbk, target: 3)
+    Agent_2-&gt;&gt;Controller: send_message(msg_id: 4, dialogue_id: 1, destination: controller_pbk, msg: Transaction)
+    deactivate Controller
+        </div><p class="caption"><span class="caption-text">A successful FIPA negotiation between two agents.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<p>Trade can break down at various stages in the negotiation due to the <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.strategy.Strategy" title="tac.agents.v1.base.strategy.Strategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Strategy</span></code></a> employed by the agents:</p>
+<div class="figure align-center" id="id2">
+
+            <style>
+            /* mermaid issue 527 workaround */
+            .section {
+                opacity: 1.0 !important;
+            }
+            </style>
+            <div class="mermaid">
+            sequenceDiagram
+	participant Agent_0
+	participant Agent_1
+    participant Agent_2
+    participant Controller
+    participant OEF
+
+    activate Controller
+    Agent_1-&gt;&gt;Agent_2: send_cfp(msg_id: 1, dialogue_id: 1, destination: agent_2_pbk, target: 0, query=Query)
+    Agent_2-&gt;&gt;Agent_1: send_propose(msg_id: 2, dialogue_id: 1, destination: agent_1_pbk, target: 1, proposals=List[Description])
+    Agent_1-&gt;&gt;Agent_2: send_accept(msg_id: 3, dialogue_id: 1, destination: agent_2_pbk, target: 2)
+    Agent_2-&gt;&gt;Agent_1: send_decline(msg_id: 4, dialogue_id: 1, destination: agent_1_pbk, target: 3)
+    deactivate Controller
+        </div><p class="caption"><span class="caption-text">An unsuccessful FIPA negotiation between two agents breaking down after initial accept.</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-center" id="id3">
+
+            <style>
+            /* mermaid issue 527 workaround */
+            .section {
+                opacity: 1.0 !important;
+            }
+            </style>
+            <div class="mermaid">
+            sequenceDiagram
+	participant Agent_0
+	participant Agent_1
+    participant Agent_2
+    participant Controller
+    participant OEF
+
+    activate Controller
+    Agent_1-&gt;&gt;Agent_2: send_cfp(msg_id: 1, dialogue_id: 1, destination: agent_2_pbk, target: 0, query=Query)
+    Agent_2-&gt;&gt;Agent_1: send_propose(msg_id: 2, dialogue_id: 1, destination: agent_1_pbk, target: 1, proposals=List[Description])
+    Agent_1-&gt;&gt;Agent_2: send_decline(msg_id: 3, dialogue_id: 1, destination: agent_2_pbk, target: 2)
+    deactivate Controller
+        </div><p class="caption"><span class="caption-text">An unsuccessful FIPA negotiation between two agents breaking down after proposal.</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-center" id="id4">
+
+            <style>
+            /* mermaid issue 527 workaround */
+            .section {
+                opacity: 1.0 !important;
+            }
+            </style>
+            <div class="mermaid">
+            sequenceDiagram
+	participant Agent_0
+	participant Agent_1
+    participant Agent_2
+    participant Controller
+    participant OEF
+
+    activate Controller
+    Agent_1-&gt;&gt;Agent_2: send_cfp(msg_id: 1, dialogue_id: 1, destination: agent_2_pbk, target: 0, query=Query)
+    Agent_2-&gt;&gt;Agent_1: send_decline(msg_id: 2, dialogue_id: 1, destination: agent_1_pbk, target: 1)
+    deactivate Controller
+        </div><p class="caption"><span class="caption-text">An unsuccessful FIPA negotiation between two agents breaking down after cfp.</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="agent-speed">
+<h2>Agent Speed<a class="headerlink" href="#agent-speed" title="Permalink to this headline">¶</a></h2>
+<p>There are two parameters of the <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.participant_agent.ParticipantAgent" title="tac.agents.v1.base.participant_agent.ParticipantAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParticipantAgent</span></code></a> which affect the agent speed directly. First, the <cite>agent_timeout</cite> parameter specifies the duration in (fractions of) seconds for which the <a class="reference internal" href="../reference/api/tac.agents.v1.html#tac.agents.v1.agent.Agent" title="tac.agents.v1.agent.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a> times out between <a class="reference internal" href="../reference/api/tac.agents.v1.html#tac.agents.v1.agent.Agent.act" title="tac.agents.v1.agent.Agent.act"><code class="xref py py-meth docutils literal notranslate"><span class="pre">act()</span></code></a> and <a class="reference internal" href="../reference/api/tac.agents.v1.html#tac.agents.v1.agent.Agent.react" title="tac.agents.v1.agent.Agent.react"><code class="xref py py-meth docutils literal notranslate"><span class="pre">react()</span></code></a>. Lowering this parameter increases the speed at which the agent loop spins. Second, the <cite>services_interval</cite> parameter specifies the length of the interval at which the agent updates its services on the OEF and searches for services on the OEF. Lowering this parameter leads to more frequent updates and searches and therefore higher number of negotiations initiated by the agent.</p>
+<p>There is a further parameter of the <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.participant_agent.ParticipantAgent" title="tac.agents.v1.base.participant_agent.ParticipantAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParticipantAgent</span></code></a> which affects the agent speed indirectly: the <cite>max_reactions</cite> parameter sets an upper bound on the number of messages which are processed by the <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.participant_agent.ParticipantAgent" title="tac.agents.v1.base.participant_agent.ParticipantAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParticipantAgent</span></code></a> during each call to <a class="reference internal" href="../reference/api/tac.agents.v1.html#tac.agents.v1.agent.Agent.react" title="tac.agents.v1.agent.Agent.react"><code class="xref py py-meth docutils literal notranslate"><span class="pre">react()</span></code></a>. Lowering this number slows down the reactive behaviour of the agent relative to the active behaviour of the agent.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registration_phase.html">Registration Phase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trading_phase.html">Trading Phase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="controller_protocol.html">Protocol for the Controller</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Baseline Agent v1</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#main-loop-and-event-loop">Main Loop and Event Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#actions-and-reactions">Actions and Reactions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#handlers">Handlers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#strategy">Strategy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#agent-state-and-world-state">Agent State and World State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#controller-registration">Controller Registration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#services-goods-registration">Services (/Goods) Registration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#services-goods-search">Services (/Goods) Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#negotiation">Negotiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#agent-speed">Agent Speed</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="develop_agent.html">Developing Your Own Agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/api/tac.html">tac package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/api/modules.html">tac</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="controller_protocol.html" title="previous chapter">Protocol for the Controller</a></li>
+      <li>Next: <a href="develop_agent.html" title="next chapter">Developing Your Own Agent</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Fetch.AI.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/sections/baseline_agent.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

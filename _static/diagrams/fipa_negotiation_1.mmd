@@ -1,0 +1,15 @@
+sequenceDiagram
+    participant Agent_0
+	participant Agent_1
+    participant Agent_2
+    participant Controller
+    participant OEF
+
+    activate Controller
+    Agent_1->>Agent_2: send_cfp(msg_id: 1, dialogue_id: 1, destination: agent_2_pbk, target: 0, query=Query)
+    Agent_2->>Agent_1: send_propose(msg_id: 2, dialogue_id: 1, destination: agent_1_pbk, target: 1, proposals=List[Description])
+    Agent_1->>Agent_2: send_accept(msg_id: 3, dialogue_id: 1, destination: agent_2_pbk, target: 2)
+    Agent_1->>Controller: send_message(msg_id: 3, dialogue_id: 1, destination: controller_pbk, msg: Transaction)
+    Agent_2->>Agent_1: send_accept(msg_id: 4, dialogue_id: 1, destination: agent_1_pbk, target: 3)
+    Agent_2->>Controller: send_message(msg_id: 4, dialogue_id: 1, destination: controller_pbk, msg: Transaction)
+    deactivate Controller

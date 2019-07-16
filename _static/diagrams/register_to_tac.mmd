@@ -1,0 +1,8 @@
+sequenceDiagram
+	participant Agent
+    participant OEF
+    participant Controller
+
+    activate Controller
+    Agent->>Controller: Message{Register{}}
+    deactivate Controller

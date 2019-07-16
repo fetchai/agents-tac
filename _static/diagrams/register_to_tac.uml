@@ -1,0 +1,11 @@
+@startuml
+
+participant "TAC Agent"
+participant "OEF Node"
+participant "Controller"
+
+activate "Controller"
+
+"TAC Agent" -> "Controller": Message{Register{}}
+
+@enduml
