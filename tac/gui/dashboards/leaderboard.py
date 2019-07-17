@@ -9,6 +9,7 @@ from collections import defaultdict
 from typing import Optional, Dict, List
 
 from tac.gui.dashboards.base import start_visdom_server, Dashboard
+from tac.helpers.crypto import Crypto
 from tac.platform.game import Game
 from tac.platform.stats import GameStats
 
@@ -60,7 +61,7 @@ class LeaderboardDashboard(Dashboard):
         for game_dir in game_dirs:
             game_data_json_filepath = os.path.join(self.competition_directory, game_dir, "game.json")
             game_data = json.load(open(game_data_json_filepath))
-            game = Game.from_dict(game_data)
+            game = Game.from_dict(game_data, Crypto())
             game_stats = GameStats(game)
             result.append(game_stats)
 
