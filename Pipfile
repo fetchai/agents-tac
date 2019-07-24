@@ -25,7 +25,6 @@ sphinxcontrib-mermaid = "*"
 sphinxcontrib-apidoc = "*"
 sphinx = "*"
 nbsphinx = "*"
-jupyter-sphinx = "*"
 
 [requires]
 python_version = "3.7"
