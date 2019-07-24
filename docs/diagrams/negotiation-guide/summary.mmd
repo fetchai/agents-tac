@@ -29,11 +29,12 @@ sequenceDiagram
     Agent_2->>Agent_1: (10) send_propose(2, 1, "agent_1_pbk", 1, proposals)
 
     Agent_1->>Agent_2: (11) send_accept(3, 1, "agent_2_pbk", 2)
-
     Agent_1->>Controller: (12) send_message(3, 1, "controller_pbk", transaction)
 
     Agent_2->>Agent_1: (13) send_accept(4, 1, "agent_1_pbk", 3)
-
     Agent_2->>Controller: (14) send_message(4, 1, "controller_pbk", transaction)
+
+    Controller->>Agent_1: (15) TransactionConfirmation(transaction)
+    Controller->>Agent_2: (16) TransactionConfirmation(transaction)
 
     deactivate Controller
