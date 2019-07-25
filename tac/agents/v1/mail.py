@@ -59,9 +59,15 @@ class MailStats(object):
 
         :return: None
         """
+        self._search_count = 0
         self._search_start_time = {}  # type: Dict[int, datetime.datetime]
         self._search_timedelta = {}  # type: Dict[int, float]
         self._search_result_counts = {}  # type: Dict[int, int]
+
+    @property
+    def search_count(self) -> int:
+        """Get the search count."""
+        return self._search_count
 
     def search_start(self, search_id: int) -> None:
         """
@@ -72,6 +78,7 @@ class MailStats(object):
         :return: None
         """
         assert search_id not in self._search_start_time
+        self._search_count += 1
         self._search_start_time[search_id] = datetime.datetime.now()
 
     def search_end(self, search_id: int, nb_search_results: int) -> None:
