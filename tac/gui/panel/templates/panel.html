@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form action="" method="post">
+        {% for name, field in form_sandbox._fields.items() %}
+                {{ field.label }}: {{ field }} <br/>
+        {% endfor %}
+</form>
+{% endblock %}
