@@ -329,7 +329,7 @@ class Game:
 
     Get the scores:
     >>> game.get_scores()
-    {'tac_agent_0_pbk': 20.0, 'tac_agent_1_pbk': 26.931471805599454, 'tac_agent_2_pbk': 40.79441541679836}
+    {'tac_agent_0_pbk': 89.31471805599453, 'tac_agent_1_pbk': 93.36936913707618, 'tac_agent_2_pbk': 101.47867129923947}
     """
 
     def __init__(self, configuration: GameConfiguration, initialization: GameInitialization):
