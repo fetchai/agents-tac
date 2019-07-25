@@ -143,7 +143,7 @@ def spawn_baseline_agents(arguments) -> List[multiprocessing.Process]:
     nb_baseline_agents_world_modeling = round(arguments.nb_baseline_agents * fraction_world_modeling)
 
     threads = [multiprocessing.Process(target=run_baseline_agent, kwargs=dict(
-        name=_make_id(i, i < nb_baseline_agents_world_modeling, arguments.nb_agents),
+        name=_make_id(i, i < nb_baseline_agents_world_modeling, arguments.nb_baseline_agents),
         oef_addr=arguments.oef_addr,
         oef_port=arguments.oef_port,
         register_as=arguments.register_as,
@@ -153,7 +153,7 @@ def spawn_baseline_agents(arguments) -> List[multiprocessing.Process]:
         pending_transaction_timeout=arguments.pending_transaction_timeout,
         gui=arguments.gui,
         visdom_addr=arguments.visdom_addr,
-        visdom_port=arguments.visdom_port)) for i in range(arguments.nb_agents)]
+        visdom_port=arguments.visdom_port)) for i in range(arguments.nb_baseline_agents)]
 
     def signal_handler(sig, frame):
         """Filter the SIGINT from the parent process."""
