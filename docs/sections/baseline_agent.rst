@@ -112,21 +112,21 @@ Negotiation
 
 The :class:`~tac.agents.v1.base.participant_agent.ParticipantAgent` implements the FIPA negotiation protocol in :class:`~tac.agents.v1.base.negotiation_behaviours.FIPABehaviour`. A FIPA negotiation starts with a call for proposal (:class:`~oef.messages.CFP`) which contains a :class:`~oef.query.Query` referencing the services which are demanded or supplied by the sending agent. The receiving agent then responds, if it implements the FIPA negotiation protocol, with a suitable proposal (:class:`~oef.messages.Propose`) which contains a list of :class:`~oef.schema.Description` objects (think individual proposals). The first agent responds to the proposal with either a :class:`~oef.messages.Decline` or an :class:`~oef.messages.Accept`. Assuming the agent accepts, it will also send the :class:`~tac.platform.protocol.Transaction` to the :class:`~tac.platform.controller.ControllerAgent`. Finally, the second agent can close the negotiation by responding with a matching :class:`~oef.messages.Accept` and a submission of the :class:`~tac.platform.protocol.Transaction` to the :class:`~tac.platform.controller.ControllerAgent`. The controller only settles a transaction if it receives matching transactions from each one of the two trading parties referenced in the transaction.
 
-.. mermaid:: ../_static/diagrams/fipa_negotiation_1.mmd
+.. mermaid:: ../diagrams/fipa_negotiation_1.mmd
     :align: center
     :caption: A successful FIPA negotiation between two agents.
 
 Trade can break down at various stages in the negotiation due to the :class:`~tac.agents.v1.base.strategy.Strategy` employed by the agents:
 
-.. mermaid:: ../_static/diagrams/fipa_negotiation_2.mmd
+.. mermaid:: ../diagrams/fipa_negotiation_2.mmd
     :align: center
     :caption: An unsuccessful FIPA negotiation between two agents breaking down after initial accept.
 
-.. mermaid:: ../_static/diagrams/fipa_negotiation_3.mmd
+.. mermaid:: ../diagrams/fipa_negotiation_3.mmd
     :align: center
     :caption: An unsuccessful FIPA negotiation between two agents breaking down after proposal.
 
-.. mermaid:: ../_static/diagrams/fipa_negotiation_4.mmd
+.. mermaid:: ../diagrams/fipa_negotiation_4.mmd
     :align: center
     :caption: An unsuccessful FIPA negotiation between two agents breaking down after cfp.
 

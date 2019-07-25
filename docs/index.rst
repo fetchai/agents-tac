@@ -16,6 +16,7 @@ Welcome to TAC's documentation!
    sections/controller_protocol
    sections/baseline_agent
    sections/develop_agent
+   sections/negotiation_guide
    sections/glossary
 
    reference/api/tac
