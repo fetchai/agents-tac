@@ -10,8 +10,8 @@
   "search_prometheus_log_file": "./fetch-logs/search-vars.txt",
   "http_port": 7500,
   "log_dir": "./fetch-logs/",
-  "search_log": "./fetch-logs/search.log",
-  "core_log": "./fetch-logs/core.log",
+  "search_log": "/logs/search.log",
+  "core_log": "/logs/core.log",
   "ssl_certificate": "",
   "core": {
     "core_binary": "/oef-mt-core/bazel-bin/mt-core/main/src/cpp/app",
