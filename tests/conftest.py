@@ -86,7 +86,7 @@ def _create_oef_docker_image(oef_addr_, oef_port_) -> Container:
              '{}/tcp'.format(oef_port_): ("0.0.0.0", oef_port_)}
     volumes = {ROOT_DIR + '/oef_search_pluto_scripts': {'bind': '/config', 'mode': 'rw'}, ROOT_DIR + '/data/oef-logs': {'bind': '/logs', 'mode': 'rw'}}
     c = client.containers.run("fetchai/oef-search:latest",
-                              "node no_sh --config_file /config/node_config_latest.json",
+                              "/config/node_config_latest.json",
                               detach=True, ports=ports, volumes=volumes)
     return c
 
