@@ -191,7 +191,7 @@ def logarithmic_utility(utility_function_params: List[float], good_bundle: List[
     :param quantity_shift: a factor to shift the quantities in the utility function (to ensure the natural logarithm can be used on the entire range of quantities)
     :return: utility value
     """
-    goodwise_utility = [param * math.log(quantity + quantity_shift) if (quantity_shift > 0 or quantity > 0) else -10000
+    goodwise_utility = [param * math.log(quantity + quantity_shift) if quantity + quantity_shift > 0 else -10000
                         for param, quantity in zip(utility_function_params, good_bundle)]
     return sum(goodwise_utility)
 
