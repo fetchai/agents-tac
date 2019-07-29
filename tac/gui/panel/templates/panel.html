@@ -1,9 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-<form action="" method="post">
-        {% for name, field in form_sandbox._fields.items() %}
-                {{ field.label }}: {{ field }} <br/>
-        {% endfor %}
-</form>
+        <h2>Sandbox Configurations</h2>
+        <form action="/" method="post">
+                {% for name, field in form_sandbox._fields.items() %}
+                        {{ field.label }} <br/>
+                        {{ field }} <br/>
+                {% endfor %}
+                <button type="submit" class="btn btn-success">Submit</button>
+        </form>
 {% endblock %}

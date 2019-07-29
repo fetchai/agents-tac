@@ -25,6 +25,7 @@ sphinxcontrib-mermaid = "*"
 sphinxcontrib-apidoc = "*"
 sphinx = "*"
 nbsphinx = "*"
+flask-restful = "*"
 
 [requires]
 python_version = "3.7"
