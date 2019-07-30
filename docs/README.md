@@ -9,6 +9,7 @@ This requires `pandoc` to be installed locally.  See [here](https://pandoc.org/i
 - Before getting started, check that:
 
   - [x] You have followed the steps under 'Dependencies' and 'Preliminaries' on root readme.
+  - [x] You have installed the development dependencies as described on root readme.
 
 - Activate the virtual environment:
 
