@@ -332,7 +332,7 @@ class GameInstance:
         state_after_locks = self._agent_state.apply(transactions, self.game_configuration.tx_fee)
         return state_after_locks
 
-    def get_proposal(self, query: CFP_TYPES, is_seller: bool) -> List[Description]:
+    def generate_proposal(self, query: CFP_TYPES, is_seller: bool) -> List[Description]:
         """
         Wrap the function which generates proposals from a seller or buyer.
 
@@ -350,8 +350,9 @@ class GameInstance:
             if not query.check(proposal): continue
             proposals.append(proposal)
         if proposals == []:
-            proposals.append(candidate_proposals[0])  # TODO remove this
-        return random.choice(proposals)
+            return None
+        else:
+            return random.choice(proposals)
 
     def stop(self):
         """Stop the services attached to the game instance."""

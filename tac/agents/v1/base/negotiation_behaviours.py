@@ -83,8 +83,17 @@ class FIPABehaviour:
         """
         goods_description = self.game_instance.get_service_description(is_supply=dialogue.is_seller)
         new_msg_id = cfp.msg_id + 1
+        decline = False
         if not cfp.query.check(goods_description):
+            decline = True
             logger.debug("[{}]: Current holdings do not satisfy CFP query.".format(self.agent_name))
+        else:
+            proposal = self.game_instance.generate_proposal(cfp.query, dialogue.is_seller)
+            if proposal is None:
+                decline = True
+                logger.debug("[{}]: Current strategy does not generate proposal that satisfies CFP query.".format(self.agent_name))
+
+        if decline:
             logger.debug("[{}]: sending to {} a Decline{}".format(self.agent_name, cfp.destination,
                                                                   pprint.pformat({
                                                                       "msg_id": new_msg_id,
@@ -95,7 +104,6 @@ class FIPABehaviour:
             response = Decline(new_msg_id, cfp.dialogue_id, cfp.destination, cfp.msg_id, Context())
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_CFP, dialogue.is_self_initiated)
         else:
-            proposal = self.game_instance.get_proposal(cfp.query, dialogue.is_seller)
             transaction_id = generate_transaction_id(self.crypto.public_key, cfp.destination, dialogue.dialogue_label, dialogue.is_seller)
             transaction = Transaction.from_proposal(proposal=proposal,
                                                     transaction_id=transaction_id,

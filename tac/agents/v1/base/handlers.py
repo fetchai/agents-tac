@@ -110,7 +110,7 @@ class ControllerHandler(ControllerActions, ControllerReactions):
 
         :return: None
         """
-        response = Response.from_pb(msg.msg, msg.destination, self.crypto)  # TODO this is already created once above!
+        response = Response.from_pb(msg.msg, msg.destination, self.crypto)
         logger.debug("[{}]: Handling controller response. type={}".format(self.agent_name, type(response)))
         try:
             if msg.destination != self.game_instance.controller_pbk:

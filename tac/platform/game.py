@@ -605,9 +605,8 @@ class Game:
         :return: a string representing the holdings for every agent.
         """
         result = ""
-        # TODO > assuming agent_names ordering is consistent with agent_pbks ordering
-        for agent_name, agent_state in zip(self.configuration.agent_names, self.agent_states.values()):
-            result = result + agent_name + " " + str(agent_state._current_holdings) + "\n"
+        for agent_pbk, agent_state in self.agent_states.items():
+            result = result + self.configuration.agent_pbk_to_name[agent_pbk] + " " + str(agent_state._current_holdings) + "\n"
         return result
 
     def get_equilibrium_summary(self) -> str:
@@ -666,7 +665,6 @@ class AgentState:
         """
         assert len(endowment) == len(utility_params)
         self.balance = money
-        # TODO: fix notation to utility_params
         self._utility_params = copy.copy(utility_params)
         self._current_holdings = copy.copy(endowment)
 
@@ -680,7 +678,6 @@ class AgentState:
         """Get utility parameter for each good."""
         return copy.copy(self._utility_params)
 
-    # TODO: potentially move the next three methods out as separate utilities; separate state (data) from member functions
     def get_score(self) -> float:
         """
         Compute the score of the current state.
@@ -725,7 +722,6 @@ class AgentState:
                 result = result and (self._current_holdings[good_id] >= quantity)
         return result
 
-    # TODO: think about potentially taking apply and update out (simplifies not having to worry about changing state from within the class)
     def apply(self, transactions: List[Transaction], tx_fee: float) -> 'AgentState':
         """
         Apply a list of transactions to the current state.
