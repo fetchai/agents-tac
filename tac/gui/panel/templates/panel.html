@@ -2,7 +2,7 @@
 
 {% block content %}
         <h2>Sandbox Configurations</h2>
-        <form action="/" method="post">
+        <form action="/api/simulations" method="post">
                 {% for name, field in form_sandbox._fields.items() %}
                         {{ field.label }} <br/>
                         {{ field }} <br/>
