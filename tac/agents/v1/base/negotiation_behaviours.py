@@ -22,7 +22,6 @@
 
 import logging
 import pprint
-import random
 from typing import Union, List
 
 from oef.messages import CFP, Decline, Propose, Accept
@@ -96,17 +95,24 @@ class FIPABehaviour:
             response = Decline(new_msg_id, cfp.dialogue_id, cfp.destination, cfp.msg_id, Context())
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_CFP, dialogue.is_self_initiated)
         else:
-            proposals = [random.choice(self.game_instance.get_proposals(cfp.query, dialogue.is_seller))]
-            self.game_instance.lock_manager.store_proposals(proposals, new_msg_id, dialogue, cfp.destination, dialogue.is_seller, self.crypto)
+            proposal = self.game_instance.get_proposal(cfp.query, dialogue.is_seller)
+            transaction_id = generate_transaction_id(self.crypto.public_key, cfp.destination, dialogue.dialogue_label, dialogue.is_seller)
+            transaction = Transaction.from_proposal(proposal=proposal,
+                                                    transaction_id=transaction_id,
+                                                    is_sender_buyer=not dialogue.is_seller,
+                                                    counterparty=cfp.destination,
+                                                    sender=self.crypto.public_key,
+                                                    crypto=self.crypto)
+            self.game_instance.transaction_manager.add_pending_proposal(dialogue.dialogue_label, new_msg_id, transaction)
             logger.debug("[{}]: sending to {} a Propose{}".format(self.agent_name, cfp.destination,
                                                                   pprint.pformat({
                                                                       "msg_id": new_msg_id,
                                                                       "dialogue_id": cfp.dialogue_id,
                                                                       "origin": cfp.destination,
                                                                       "target": cfp.msg_id,
-                                                                      "propose": proposals[0].values  # TODO fix if more than one proposal!
+                                                                      "propose": proposal.values
                                                                   })))
-            response = Propose(new_msg_id, cfp.dialogue_id, cfp.destination, cfp.msg_id, proposals, Context())
+            response = Propose(new_msg_id, cfp.dialogue_id, cfp.destination, cfp.msg_id, [proposal], Context())
         return response
 
     def on_propose(self, propose: Propose, dialogue: Dialogue) -> Union[Accept, Decline]:
@@ -121,50 +127,24 @@ class FIPABehaviour:
         logger.debug("[{}]: on propose as {}.".format(self.agent_name, dialogue.role))
         proposal = propose.proposals[0]
         transaction_id = generate_transaction_id(self.crypto.public_key, propose.destination, dialogue.dialogue_label, dialogue.is_seller)
-        transaction = Transaction.from_proposal(proposal,
-                                                transaction_id,
+        transaction = Transaction.from_proposal(proposal=proposal,
+                                                transaction_id=transaction_id,
                                                 is_sender_buyer=not dialogue.is_seller,
                                                 counterparty=propose.destination,
                                                 sender=self.crypto.public_key,
                                                 crypto=self.crypto)
         new_msg_id = propose.msg_id + 1
-        if self._is_profitable_transaction(transaction, dialogue):
+        is_profitable_transaction, message = self.game_instance.is_profitable_transaction(transaction, dialogue)
+        logger.debug(message)
+        if is_profitable_transaction:
             logger.debug("[{}]: Accepting propose (as {}).".format(self.agent_name, dialogue.role))
-            self.game_instance.lock_manager.add_lock(transaction, as_seller=dialogue.is_seller)
-            self.game_instance.lock_manager.add_pending_initial_acceptance(dialogue, new_msg_id, transaction)
+            self.game_instance.transaction_manager.add_locked_tx(transaction, as_seller=dialogue.is_seller)
+            self.game_instance.transaction_manager.add_pending_initial_acceptance(dialogue.dialogue_label, new_msg_id, transaction)
             result = Accept(new_msg_id, propose.dialogue_id, propose.destination, propose.msg_id, Context())
         else:
             logger.debug("[{}]: Declining propose (as {})".format(self.agent_name, dialogue.role))
             result = Decline(new_msg_id, propose.dialogue_id, propose.destination, propose.msg_id, Context())
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_PROPOSE, dialogue.is_self_initiated)
-        return result
-
-    def _is_profitable_transaction(self, transaction: Transaction, dialogue: Dialogue) -> bool:
-        """
-        Check if a transaction is profitable.
-
-        Is it a profitable transaction?
-        - apply all the locks for role.
-        - check if the transaction is consistent with the locks (enough money/holdings)
-        - check that we gain score.
-
-        :param transaction: the transaction
-        :param dialogue: the dialogue
-
-        :return: True if the transaction is good (as stated above), False otherwise.
-        """
-        state_after_locks = self.game_instance.state_after_locks(dialogue.is_seller)
-
-        if not state_after_locks.check_transaction_is_consistent(transaction, self.game_instance.game_configuration.tx_fee):
-            logger.debug("[{}]: the proposed transaction is not consistent with the state after locks.".format(self.agent_name))
-            return False
-        proposal_delta_score = state_after_locks.get_score_diff_from_transaction(transaction, self.game_instance.game_configuration.tx_fee)
-
-        result = self.game_instance.strategy.is_acceptable_proposal(proposal_delta_score)
-        logger.debug("[{}]: is good proposal for {}? {}: tx_id={}, "
-                     "delta_score={}, amount={}"
-                     .format(self.agent_name, dialogue.role, result, transaction.transaction_id,
-                             proposal_delta_score, transaction.amount))
         return result
 
     def on_decline(self, decline: Decline, dialogue: Dialogue) -> None:
@@ -183,13 +163,13 @@ class FIPABehaviour:
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_CFP, dialogue.is_self_initiated)
         elif decline.target == 2:
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_PROPOSE, dialogue.is_self_initiated)
-            transaction = self.game_instance.lock_manager.pop_pending_proposal(dialogue, decline.target)
+            transaction = self.game_instance.transaction_manager.pop_pending_proposal(dialogue.dialogue_label, decline.target)
             if self.game_instance.strategy.is_world_modeling:
                 self.game_instance.world_state.update_on_declined_propose(transaction)
         elif decline.target == 3:
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_ACCEPT, dialogue.is_self_initiated)
-            transaction = self.game_instance.lock_manager.pop_pending_initial_acceptance(dialogue, decline.target)
-            self.game_instance.lock_manager.pop_lock(transaction.transaction_id)
+            transaction = self.game_instance.transaction_manager.pop_pending_initial_acceptance(dialogue.dialogue_label, decline.target)
+            self.game_instance.transaction_manager.pop_locked_tx(transaction.transaction_id)
 
         return None
 
@@ -205,8 +185,8 @@ class FIPABehaviour:
         logger.debug("[{}]: on_accept: msg_id={}, dialogue_id={}, origin={}, target={}"
                      .format(self.agent_name, accept.msg_id, accept.dialogue_id, accept.destination, accept.target))
 
-        if dialogue.dialogue_label in self.game_instance.lock_manager.pending_tx_acceptances \
-                and accept.target in self.game_instance.lock_manager.pending_tx_acceptances[dialogue.dialogue_label]:
+        if dialogue.dialogue_label in self.game_instance.transaction_manager.pending_initial_acceptances \
+                and accept.target in self.game_instance.transaction_manager.pending_initial_acceptances[dialogue.dialogue_label]:
             results = self._on_match_accept(accept, dialogue)
         else:
             results = self._on_initial_accept(accept, dialogue)
@@ -221,14 +201,16 @@ class FIPABehaviour:
 
         :return: a Deline or an Accept and a Transaction (in OutContainer
         """
-        transaction = self.game_instance.lock_manager.pop_pending_proposal(dialogue, accept.target)
+        transaction = self.game_instance.transaction_manager.pop_pending_proposal(dialogue.dialogue_label, accept.target)
         new_msg_id = accept.msg_id + 1
         results = []
-        if self._is_profitable_transaction(transaction, dialogue):
+        is_profitable_transaction, message = self.game_instance.is_profitable_transaction(transaction, dialogue)
+        logger.debug(message)
+        if is_profitable_transaction:
             if self.game_instance.strategy.is_world_modeling:
                 self.game_instance.world_state.update_on_initial_accept(transaction)
             logger.debug("[{}]: Locking the current state (as {}).".format(self.agent_name, dialogue.role))
-            self.game_instance.lock_manager.add_lock(transaction, as_seller=dialogue.is_seller)
+            self.game_instance.transaction_manager.add_locked_tx(transaction, as_seller=dialogue.is_seller)
             results.append(OutContainer(message=transaction.serialize(), message_id=STARTING_MESSAGE_ID, dialogue_id=accept.dialogue_id, destination=self.game_instance.controller_pbk))
             results.append(Accept(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id, Context()))
         else:
@@ -248,6 +230,6 @@ class FIPABehaviour:
         """
         logger.debug("[{}]: on match accept".format(self.agent_name))
         results = []
-        transaction = self.game_instance.lock_manager.pop_pending_initial_acceptance(dialogue, accept.target)
+        transaction = self.game_instance.transaction_manager.pop_pending_initial_acceptance(dialogue.dialogue_label, accept.target)
         results.append(OutContainer(message=transaction.serialize(), message_id=STARTING_MESSAGE_ID, dialogue_id=accept.dialogue_id, destination=self.game_instance.controller_pbk))
         return results

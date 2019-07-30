@@ -113,12 +113,12 @@ class ControllerReactions(ControllerReactionInterface):
         :return: None
         """
         logger.debug("[{}]: Received transaction confirmation from the controller: transaction_id={}".format(self.agent_name, tx_confirmation.transaction_id))
-        if tx_confirmation.transaction_id not in self.game_instance.lock_manager.locks:
+        if tx_confirmation.transaction_id not in self.game_instance.transaction_manager.locked_txs:
             logger.debug("[{}]: transaction not found - ask the controller an update of the state.".format(self.agent_name))
             self._request_state_update()
             return
 
-        transaction = self.game_instance.lock_manager.pop_lock(tx_confirmation.transaction_id)
+        transaction = self.game_instance.transaction_manager.pop_locked_tx(tx_confirmation.transaction_id)
         self.game_instance.agent_state.update(transaction, self.game_instance.game_configuration.tx_fee)
         dialogue_label = dialogue_label_from_transaction_id(self.crypto.public_key, tx_confirmation.transaction_id)
         self.game_instance.stats_manager.add_dialogue_endstate(EndState.SUCCESSFUL, self.crypto.public_key == dialogue_label.dialogue_starter_pbk)
@@ -167,8 +167,8 @@ class ControllerReactions(ControllerReactionInterface):
             # if error in checking transaction, remove it from the pending transactions.
             start_idx_of_tx_id = len("Error in checking transaction: ")
             transaction_id = error.error_msg[start_idx_of_tx_id:]
-            if transaction_id in self.game_instance.lock_manager.locks:
-                self.game_instance.lock_manager.pop_lock(transaction_id)
+            if transaction_id in self.game_instance.transaction_manager.locked_txs:
+                self.game_instance.transaction_manager.pop_locked_tx(transaction_id)
             else:
                 logger.warning("[{}]: Received error on unknown transaction id: {}".format(self.agent_name, transaction_id))
             pass

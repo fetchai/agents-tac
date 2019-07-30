@@ -17,6 +17,7 @@ Welcome to TAC's documentation!
    sections/baseline_agent
    sections/develop_agent
    sections/negotiation_guide
+   sections/agent_state_management_guide
    sections/glossary
 
    reference/api/tac

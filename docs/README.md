@@ -1,5 +1,9 @@
 # TAC Documentation
 
+## Dependency
+
+This requires `pandoc` to be installed locally.  See [here](https://pandoc.org/installing.html) for instructions.
+
 ## Build
 
 - Before getting started, check that:

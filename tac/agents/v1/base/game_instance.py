@@ -22,6 +22,7 @@
 
 import datetime
 from enum import Enum
+import random
 from typing import List, Optional, Set
 
 from oef.messages import CFP_TYPES
@@ -29,14 +30,14 @@ from oef.query import Query
 from oef.schema import Description
 
 from tac.agents.v1.mail import MailStats
-from tac.agents.v1.base.dialogues import Dialogues
-from tac.agents.v1.base.lock_manager import LockManager
+from tac.agents.v1.base.dialogues import Dialogues, Dialogue
+from tac.agents.v1.base.transaction_manager import TransactionManager
 from tac.agents.v1.base.strategy import Strategy
 from tac.agents.v1.base.stats_manager import StatsManager
 from tac.gui.dashboards.agent import AgentDashboard
 from tac.platform.game import AgentState, WorldState, GameConfiguration
 from tac.helpers.misc import build_query, get_goods_quantities_description
-from tac.platform.protocol import GameData, StateUpdate
+from tac.platform.protocol import GameData, StateUpdate, Transaction
 
 
 class GamePhase(Enum):
@@ -116,8 +117,8 @@ class GameInstance:
         self.goods_supplied_description = None
         self.goods_demanded_description = None
 
-        self.lock_manager = LockManager(agent_name, pending_transaction_timeout=pending_transaction_timeout)
-        self.lock_manager.start()
+        self.transaction_manager = TransactionManager(agent_name, pending_transaction_timeout=pending_transaction_timeout)
+        self.transaction_manager.start()
 
         self.stats_manager = StatsManager(mail_stats, dashboard)
 
@@ -237,6 +238,31 @@ class GameInstance:
             self._last_search_time = now
         return result
 
+    def is_profitable_transaction(self, transaction: Transaction, dialogue: Dialogue) -> bool:
+        """
+        Check if a transaction is profitable.
+
+        Is it a profitable transaction?
+        - apply all the locks for role.
+        - check if the transaction is consistent with the locks (enough money/holdings)
+        - check that we gain score.
+
+        :param transaction: the transaction
+        :param dialogue: the dialogue
+
+        :return: True if the transaction is good (as stated above), False otherwise.
+        """
+        state_after_locks = self.state_after_locks(dialogue.is_seller)
+
+        if not state_after_locks.check_transaction_is_consistent(transaction, self.game_configuration.tx_fee):
+            message = "[{}]: the proposed transaction is not consistent with the state after locks.".format(self.agent_name)
+            return [False, message]
+        proposal_delta_score = state_after_locks.get_score_diff_from_transaction(transaction, self.game_configuration.tx_fee)
+
+        result = self.strategy.is_acceptable_proposal(proposal_delta_score)
+        message = "[{}]: is good proposal for {}? {}: tx_id={}, delta_score={}, amount={}".format(self.agent_name, dialogue.role, result, transaction.transaction_id, proposal_delta_score, transaction.amount)
+        return [result, message]
+
     def get_service_description(self, is_supply: bool) -> Description:
         """
         Get the description of the supplied goods (as a seller), or the demanded goods (as a buyer).
@@ -301,12 +327,12 @@ class GameInstance:
 
         :return: the agent state with the locks applied to current state
         """
-        transactions = list(self.lock_manager.locks_as_seller.values()) if is_seller \
-            else list(self.lock_manager.locks_as_buyer.values())
+        transactions = list(self.transaction_manager.locked_txs_as_seller.values()) if is_seller \
+            else list(self.transaction_manager.locked_txs_as_buyer.values())
         state_after_locks = self._agent_state.apply(transactions, self.game_configuration.tx_fee)
         return state_after_locks
 
-    def get_proposals(self, query: CFP_TYPES, is_seller: bool) -> List[Description]:
+    def get_proposal(self, query: CFP_TYPES, is_seller: bool) -> List[Description]:
         """
         Wrap the function which generates proposals from a seller or buyer.
 
@@ -325,9 +351,9 @@ class GameInstance:
             proposals.append(proposal)
         if proposals == []:
             proposals.append(candidate_proposals[0])  # TODO remove this
-        return proposals
+        return random.choice(proposals)
 
     def stop(self):
         """Stop the services attached to the game instance."""
-        self.lock_manager.stop()
+        self.transaction_manager.stop()
         self.stats_manager.stop()
