@@ -6,7 +6,7 @@ from flask import Flask
 from flask_restful import Api
 
 from tac.gui.panel import home
-from tac.gui.panel.api.resources.sandboxes import SandboxList, Sandbox
+from tac.gui.panel.api.resources.sandboxes import Sandbox
 
 
 def create_app(test_config=None):
@@ -28,8 +28,7 @@ def create_app(test_config=None):
 
     # register api endpoints
     api = Api(app, prefix='/api')
-    api.add_resource(SandboxList, "/sandboxes")
-    api.add_resource(Sandbox, '/sandboxes/<sandbox_id>')
+    api.add_resource(Sandbox, "/sandbox")
 
     # register home pages
     app.register_blueprint(home.bp)

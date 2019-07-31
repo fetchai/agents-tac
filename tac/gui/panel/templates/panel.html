@@ -7,7 +7,8 @@
                         {{ field.label }} <br/>
                         {{ field }} <br/>
                 {% endfor %}
-                <button type="submit" class="btn btn-success" id="btn-start-sandbox" onclick="startSandbox()">Start Sandbox</button>
-                <button type="submit" class="btn btn-danger" id="btn-stop-sandbox">Stop Sandbox</button>
+                <input type="submit" class="btn btn-success" id="btn-start-sandbox" name="btn-start-sandbox" value="Start Sandbox" onclick='this.form.target="btn-start-sandbox";'>
+                <input type="submit" class="btn btn-danger" id="btn-stop-sandbox" name="btn-stop-sandbox" value="Stop Sandbox" onclick='this.form.target="btn-stop-sandbox";'>
         </form>
+        <div id="response"></div>
 {% endblock %}

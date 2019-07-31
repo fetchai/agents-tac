@@ -26,6 +26,7 @@ sphinxcontrib-apidoc = "*"
 sphinx = "*"
 nbsphinx = "*"
 flask-restful = "*"
+wtforms = "*"
 
 [requires]
 python_version = "3.7"

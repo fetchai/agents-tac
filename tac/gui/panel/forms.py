@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import datetime
 
 import wtforms
 from wtforms import Form, StringField, IntegerField, FloatField, widgets, FileField, DateTimeField
@@ -53,29 +52,6 @@ class ServicesIntervalField(IntegerField):
         )
 
 
-class OefIPAddress(StringField):
-
-    def __init__(self, **kwargs):
-        super().__init__(
-            'OEF node IP address',
-            validators=[wtforms.validators.IPAddress()],
-            default="127.0.0.1",
-            **kwargs
-        )
-
-
-class OefPort(IntegerField):
-
-    def __init__(self, **kwargs):
-        super().__init__(
-            'OEF node port',
-            default=10000,
-            widget=widgets.Input(input_type="number"),
-            validators=[wtforms.validators.NumberRange(min=1024, max=65535)],
-            **kwargs
-        )
-
-
 class LowerBoundFactorField(IntegerField):
 
     def __init__(self, **kwargs):
@@ -118,8 +94,6 @@ class SandboxForm(Form):
     nb_goods = NbGoodsField()
     nb_baseline_agents = NbBaselineAgentsField()
     services_interval = ServicesIntervalField()
-    oef_addr = OefIPAddress()
-    oef_port = OefPort()
     data_output_dir = FileField("Data output directory", default="./data")
     experiment_id = StringField("Experiment ID", "experiment")
     lower_bound_factor = LowerBoundFactorField()
