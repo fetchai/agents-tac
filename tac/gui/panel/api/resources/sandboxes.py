@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
 import datetime
-import multiprocessing
+import logging
 import os
 import subprocess
+from enum import Enum
+from typing import Dict
 
+import marshmallow as marshmallow
+from flask import jsonify
 from flask_restful import Resource, reqparse
+from marshmallow import fields, Schema
 
-from tac.platform import simulation
-from tac.platform.simulation import build_simulation_parameters
+import tac.platform.simulation
+from tac.platform.simulation import build_simulation_parameters, SimulationParams
+
+logger = logging.getLogger(__name__)
 
 parser = reqparse.RequestParser()
 parser.add_argument("nb_agents", type=int, default=10, help="(minimum) number of TAC agent to wait for the competition.")
@@ -33,46 +40,101 @@ parser.add_argument("experiment_id", default=None, help="The experiment ID.")
 parser.add_argument("seed", default=42, help="The random seed of the simulation.")
 parser.add_argument("whitelist_file", default=None, type=str, help="The file that contains the list of agent names to be whitelisted.")
 
-pool = multiprocessing.Pool(processes=1)
-
-simulations = {}
+sandboxes = {}  # type: Dict[int, SandboxRunner]
 
 
-class Simulation(Resource):
+class SandboxState(Enum):
+    NOT_STARTED = "Not started yet"
+    RUNNING = "Running"
+    STOPPED = "Stopped"
+    FINISHED = "Finished"
+    FAILED = "Failed"
 
-    def get(self):
-        return {"get": None}
 
-    def delete(self):
+class SandboxRunner:
+
+    def __init__(self, id: int, params: SimulationParams):
+        self.id = id
+        self.params = params
+        self.status = SandboxState.NOT_STARTED  # type: SandboxState
+
+    def __call__(self):
+        try:
+            self.status = SandboxState.RUNNING
+            tac.platform.simulation.run(self.params)
+        except KeyboardInterrupt:
+            self.status = SandboxState.STOPPED
+        except Exception:
+            self.status = SandboxState.FAILED
+
+        self.status = SandboxState.FINISHED
+
+    def __dict__(self):
+        return {
+            "id": self.id,
+            "status": self.status,
+            "params": self.params
+        }
+
+
+class Sandbox(Resource):
+
+    def get(self, sandbox_id):
         return {}
 
-    def create(self):
-        pass
+    def delete(self, sandbox_id):
+        return {}
 
 
-class SimulationList(Resource):
+class SandboxList(Resource):
 
     def get(self):
-        return simulations
+        return jsonify(list(sandboxes.items()))
 
     def post(self):
         args = parser.parse_args(strict=True)
-        print(args)
-        args = self._post_preprocessing(args)
+        args = self._post_args_preprocessing(args)
 
         simulation_params = build_simulation_parameters(args)
 
-        # cannot use multiprocessing module - daemonic process do not allow children processes
-        pid = os.fork()
-        if pid == 0:
-            # here we are in the new process
-            simulation.run(simulation_params)
-        elif pid > 0:
-            return vars(args), 201
-        else:
-            pass
+        # # cannot use multiprocessing module - daemonic process do not allow children processes
+        sandbox_id = len(sandboxes)
+        # simulation_runner = SandboxRunner(sandbox_id, simulation_params)
+        # sandboxes[len(sandboxes)] = simulation_runner
+        # tac.platform.simulation.run(simulation_params)
+        env = {
+            "NB_AGENTS": "10",
+            "NB_GOODS": "10",
+            "NB_BASELINE_AGENTS": "10",
+            "SERVICES_INTERVAL": "5",
+            "OEF_ADDR": "172.28.1.1",
+            "OEF_PORT": "10000",
+            "DATA_OUTPUT_DIR": "data",
+            "EXPERIMENT_ID": str(sandbox_id),
+            "LOWER_BOUND_FACTOR": "0",
+            "UPPER_BOUND_FACTOR": "0",
+            "TX_FEE": "0.1",
+            "REGISTRATION_TIMEOUT": "30",
+            "INACTIVITY_TIMEOUT": "180",
+            "COMPETITION_TIMEOUT": "300",
+            "SEED": "42",
+            "WHITELIST": "''",
+            **os.environ
+        }
 
-    def _post_preprocessing(self, args):
+        p = subprocess.Popen([
+            "docker-compose",
+            "-f",
+            "../../../sandbox/docker-compose.yml",
+            "up",
+            "--abort-on-container-exit"],
+            env=env)
+        p.wait()
+        p.communicate()
+        print(p.returncode())
+        return args, 201
+
+    def _post_args_preprocessing(self, args):
         if args["data_output_dir"] == "":
             args["data_output_dir"] = "./data"
         if args["experiment_id"] == "":

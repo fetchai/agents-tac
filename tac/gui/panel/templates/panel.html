@@ -2,11 +2,12 @@
 
 {% block content %}
         <h2>Sandbox Configurations</h2>
-        <form action="/api/simulations" method="post">
+        <form id="form-sandbox">
                 {% for name, field in form_sandbox._fields.items() %}
                         {{ field.label }} <br/>
                         {{ field }} <br/>
                 {% endfor %}
-                <button type="submit" class="btn btn-success">Submit</button>
+                <button type="submit" class="btn btn-success" id="btn-start-sandbox" onclick="startSandbox()">Start Sandbox</button>
+                <button type="submit" class="btn btn-danger" id="btn-stop-sandbox">Stop Sandbox</button>
         </form>
 {% endblock %}
