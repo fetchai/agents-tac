@@ -322,10 +322,6 @@ class TransactionHandler(RequestHandler):
                 return self._handle_invalid_transaction(tx)
         # if transaction arrives second time then process it
         else:
-            # TODO how to handle failures in matching transaction?
-            #   that is, should the pending txs be removed from the pool?
-            #       if yes, should the senders be notified and how?
-            #  don't care for now, because assuming only (properly implemented) baseline agents.
             pending_tx = self._pending_transaction_requests.pop(tx.transaction_id)
             if tx.matches(pending_tx):
                 if self.controller_agent.game_handler.current_game.is_transaction_valid(tx):

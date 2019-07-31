@@ -14,8 +14,12 @@ def run(cmd):
     return c.returncode
 
 
-def fail(*x):
+def error(*x):
     print(''.join([str(xx) for xx in x]), file=sys.stderr)
+
+
+def fail(*x):
+    error(x)
     exit(1)
 
 
@@ -31,7 +35,7 @@ def pull_image(run_sudo, img):
     ]
     r = run(c)
     if r != 0:
-        fail("can't pull " + img)
+        error("can't pull " + img)
 
 
 def parse_command(j):

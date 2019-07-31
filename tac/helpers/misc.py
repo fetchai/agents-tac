@@ -33,6 +33,7 @@ from oef.schema import AttributeSchema, DataModel, Description
 logger = logging.getLogger("tac")
 TAC_SUPPLY_DATAMODEL_NAME = "tac_supply"
 TAC_DEMAND_DATAMODEL_NAME = "tac_demand"
+QUANTITY_SHIFT = 1  # Any non-negative integer is fine.
 
 
 class TacError(Exception):
@@ -160,7 +161,7 @@ def generate_money_endowments(nb_agents: int, money_endowment: int) -> List[int]
     return [money_endowment] * nb_agents
 
 
-def generate_equilibrium_prices_and_holdings(endowments: List[List[int]], utility_function_params: List[List[float]], money_endowment: float, scaling_factor: float) -> Tuple[List[float], List[List[float]], List[float]]:
+def generate_equilibrium_prices_and_holdings(endowments: List[List[int]], utility_function_params: List[List[float]], money_endowment: float, scaling_factor: float, quantity_shift: int = QUANTITY_SHIFT) -> Tuple[List[float], List[List[float]], List[float]]:
     """
     Compute the competitive equilibrium prices and allocation.
 
@@ -168,27 +169,29 @@ def generate_equilibrium_prices_and_holdings(endowments: List[List[int]], utilit
     :param utility_function_params: utility function params of the agents (already scaled)
     :param money_endowment: money endowment per agent.
     :param scaling_factor: a scaling factor for all the utility params generated.
+    :param quantity_shift: a factor to shift the quantities in the utility function (to ensure the natural logarithm can be used on the entire range of quantities)
     :return: the lists of equilibrium prices, equilibrium good holdings and equilibrium money holdings
     """
     endowments_a = np.array(endowments, dtype=np.int)
     scaled_utility_function_params_a = np.array(utility_function_params, dtype=np.float)  # note, they are already scaled
     endowments_by_good = np.sum(endowments_a, axis=0)
     scaled_params_by_good = np.sum(scaled_utility_function_params_a, axis=0)
-    eq_prices = np.divide(scaled_params_by_good, endowments_by_good)
-    eq_good_holdings = np.divide(scaled_utility_function_params_a, eq_prices)
-    eq_money_holdings = np.transpose(np.dot(eq_prices, np.transpose(endowments_a))) + money_endowment - scaling_factor
+    eq_prices = np.divide(scaled_params_by_good, quantity_shift * len(endowments) + endowments_by_good)
+    eq_good_holdings = np.divide(scaled_utility_function_params_a, eq_prices) - quantity_shift
+    eq_money_holdings = np.transpose(np.dot(eq_prices, np.transpose(endowments_a + quantity_shift))) + money_endowment - scaling_factor
     return eq_prices.tolist(), eq_good_holdings.tolist(), eq_money_holdings.tolist()
 
 
-def logarithmic_utility(utility_function_params: List[float], good_bundle: List[int]) -> float:
+def logarithmic_utility(utility_function_params: List[float], good_bundle: List[int], quantity_shift: int = QUANTITY_SHIFT) -> float:
     """
     Compute agent's utility given her utility function params and a good bundle.
 
     :param utility_function_params: utility function params of the agent
     :param good_bundle: a bundle of goods with the quantity for each good
+    :param quantity_shift: a factor to shift the quantities in the utility function (to ensure the natural logarithm can be used on the entire range of quantities)
     :return: utility value
     """
-    goodwise_utility = [param * math.log(quantity) if quantity > 0 else -10000
+    goodwise_utility = [param * math.log(quantity + quantity_shift) if quantity + quantity_shift > 0 else -10000
                         for param, quantity in zip(utility_function_params, good_bundle)]
     return sum(goodwise_utility)
 

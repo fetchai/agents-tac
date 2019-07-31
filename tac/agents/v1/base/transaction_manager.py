@@ -18,20 +18,16 @@
 #
 # ------------------------------------------------------------------------------
 
-"""This module contains a class to manage locked agent states."""
+"""This module contains a class to manage transactions the agent has committed to at varying degrees."""
 
 import datetime
 import logging
 import time
 from collections import defaultdict, deque
 from threading import Thread
-from typing import Dict, Tuple, Deque, List
+from typing import Dict, Tuple, Deque
 
-from oef.schema import Description
-
-from tac.agents.v1.base.dialogues import DialogueLabel, Dialogue
-from tac.helpers.crypto import Crypto
-from tac.agents.v1.base.helpers import generate_transaction_id
+from tac.agents.v1.base.dialogues import DialogueLabel
 from tac.platform.protocol import Transaction
 
 logger = logging.getLogger(__name__)
@@ -40,8 +36,8 @@ MESSAGE_ID = int
 TRANSACTION_ID = str
 
 
-class LockManager(object):
-    """Class to handle pending proposals/acceptances and locks."""
+class TransactionManager(object):
+    """Class to handle pending transaction proposals/acceptances and locked transactions."""
 
     def __init__(self, agent_name: str, pending_transaction_timeout: int = 30, task_timeout: float = 2.0) -> None:
         """
@@ -55,21 +51,21 @@ class LockManager(object):
         """
         self.agent_name = agent_name
 
-        self.pending_tx_proposals = defaultdict(lambda: {})  # type: Dict[DialogueLabel, Dict[MESSAGE_ID, Transaction]]
-        self.pending_tx_acceptances = defaultdict(lambda: {})  # type: Dict[DialogueLabel, Dict[MESSAGE_ID, Transaction]]
+        self.pending_proposals = defaultdict(lambda: {})  # type: Dict[DialogueLabel, Dict[MESSAGE_ID, Transaction]]
+        self.pending_initial_acceptances = defaultdict(lambda: {})  # type: Dict[DialogueLabel, Dict[MESSAGE_ID, Transaction]]
 
-        self.locks = {}  # type: Dict[TRANSACTION_ID, Transaction]
-        self.locks_as_buyer = {}  # type: Dict[TRANSACTION_ID, Transaction]
-        self.locks_as_seller = {}  # type: Dict[TRANSACTION_ID, Transaction]
+        self.locked_txs = {}  # type: Dict[TRANSACTION_ID, Transaction]
+        self.locked_txs_as_buyer = {}  # type: Dict[TRANSACTION_ID, Transaction]
+        self.locked_txs_as_seller = {}  # type: Dict[TRANSACTION_ID, Transaction]
 
         self.pending_transaction_timeout = pending_transaction_timeout
-        self._cleanup_locks_task = None
-        self._cleanup_locks_task_is_running = False
-        self._cleanup_locks_task_timeout = task_timeout
+        self._cleanup_locked_transactions_task = None
+        self._cleanup_locked_transactions_task_is_running = False
+        self._cleanup_locked_transactions_task_timeout = task_timeout
 
         self._last_update_for_transactions = deque()  # type: Deque[Tuple[datetime.datetime, TRANSACTION_ID]]
 
-    def cleanup_locks_job(self) -> None:
+    def cleanup_locked_transactions_job(self) -> None:
         """
         Periodically check for transactions in one of the pending pools.
 
@@ -77,8 +73,8 @@ class LockManager(object):
 
         :return: None
         """
-        while self._cleanup_locks_task_is_running:
-            time.sleep(self._cleanup_locks_task_timeout)
+        while self._cleanup_locked_transactions_task_is_running:
+            time.sleep(self._cleanup_locked_transactions_task_timeout)
             self._cleanup_pending_transactions()
 
     def _cleanup_pending_transactions(self) -> None:
@@ -105,9 +101,9 @@ class LockManager(object):
             logger.debug("[{}]: Removing transaction: {}".format(self.agent_name, transaction_id))
 
             # remove (safely) the associated pending proposal (if present)
-            self.locks.pop(transaction_id, None)
-            self.locks_as_buyer.pop(transaction_id, None)
-            self.locks_as_seller.pop(transaction_id, None)
+            self.locked_txs.pop(transaction_id, None)
+            self.locked_txs_as_buyer.pop(transaction_id, None)
+            self.locked_txs_as_seller.pop(transaction_id, None)
 
             # check the next transaction, if present
             if len(queue) == 0:
@@ -125,63 +121,63 @@ class LockManager(object):
         now = datetime.datetime.now()
         self._last_update_for_transactions.append((now, transaction_id))
 
-    def add_pending_proposal(self, dialogue: Dialogue, proposal_id: int, transaction: Transaction) -> None:
+    def add_pending_proposal(self, dialogue_label: DialogueLabel, proposal_id: int, transaction: Transaction) -> None:
         """
         Add a proposal (in the form of a transaction) to the pending list.
 
-        :param dialogue: the dialogue associated with the proposal
+        :param dialogue_label: the dialogue label associated with the proposal
         :param proposal_id: the message id of the proposal
         :param transaction: the transaction
         :raise AssertionError: if the pending proposal is already present.
 
         :return: None
         """
-        assert dialogue.dialogue_label not in self.pending_tx_proposals and proposal_id not in self.pending_tx_proposals[dialogue.dialogue_label]
-        self.pending_tx_proposals[dialogue.dialogue_label][proposal_id] = transaction
+        assert dialogue_label not in self.pending_proposals and proposal_id not in self.pending_proposals[dialogue_label]
+        self.pending_proposals[dialogue_label][proposal_id] = transaction
 
-    def pop_pending_proposal(self, dialogue: Dialogue, proposal_id: int) -> Transaction:
+    def pop_pending_proposal(self, dialogue_label: DialogueLabel, proposal_id: int) -> Transaction:
         """
         Remove a proposal (in the form of a transaction) from the pending list.
 
-        :param dialogue: the dialogue associated with the proposal
+        :param dialogue_label: the dialogue label associated with the proposal
         :param proposal_id: the message id of the proposal
         :raise AssertionError: if the pending proposal is not present.
 
         :return: the transaction
         """
-        assert dialogue.dialogue_label in self.pending_tx_proposals and proposal_id in self.pending_tx_proposals[dialogue.dialogue_label]
-        transaction = self.pending_tx_proposals[dialogue.dialogue_label].pop(proposal_id)
+        assert dialogue_label in self.pending_proposals and proposal_id in self.pending_proposals[dialogue_label]
+        transaction = self.pending_proposals[dialogue_label].pop(proposal_id)
         return transaction
 
-    def add_pending_initial_acceptance(self, dialogue: Dialogue, proposal_id: int, transaction: Transaction) -> None:
+    def add_pending_initial_acceptance(self, dialogue_label: DialogueLabel, proposal_id: int, transaction: Transaction) -> None:
         """
         Add an acceptance (in the form of a transaction) to the pending list.
 
-        :param dialogue: the dialogue associated with the proposal
+        :param dialogue_label: the dialogue label associated with the proposal
         :param proposal_id: the message id of the proposal
         :param transaction: the transaction
         :raise AssertionError: if the pending acceptance is already present.
 
         :return: None
         """
-        assert dialogue.dialogue_label not in self.pending_tx_acceptances and proposal_id not in self.pending_tx_acceptances[dialogue.dialogue_label]
-        self.pending_tx_acceptances[dialogue.dialogue_label][proposal_id] = transaction
+        assert dialogue_label not in self.pending_initial_acceptances and proposal_id not in self.pending_initial_acceptances[dialogue_label]
+        self.pending_initial_acceptances[dialogue_label][proposal_id] = transaction
 
-    def pop_pending_initial_acceptance(self, dialogue: Dialogue, proposal_id: int) -> Transaction:
+    def pop_pending_initial_acceptance(self, dialogue_label: DialogueLabel, proposal_id: int) -> Transaction:
         """
         Remove an acceptance (in the form of a transaction) from the pending list.
 
-        :param dialogue: the dialogue associated with the proposal
+        :param dialogue_label: the dialogue label associated with the proposal
         :param proposal_id: the message id of the proposal
         :raise AssertionError: if the pending acceptance is not present.
 
         :return: the transaction
         """
-        assert dialogue.dialogue_label in self.pending_tx_acceptances and proposal_id in self.pending_tx_acceptances[dialogue.dialogue_label]
-        transaction = self.pending_tx_acceptances[dialogue.dialogue_label].pop(proposal_id)
+        assert dialogue_label in self.pending_initial_acceptances and proposal_id in self.pending_initial_acceptances[dialogue_label]
+        transaction = self.pending_initial_acceptances[dialogue_label].pop(proposal_id)
         return transaction
 
-    def add_lock(self, transaction: Transaction, as_seller: bool) -> None:
+    def add_locked_tx(self, transaction: Transaction, as_seller: bool) -> None:
         """
         Add a lock (in the form of a transaction).
 
@@ -192,15 +188,15 @@ class LockManager(object):
         :return: None
         """
         transaction_id = transaction.transaction_id
-        assert transaction_id not in self.locks
+        assert transaction_id not in self.locked_txs
         self._register_transaction_with_time(transaction_id)
-        self.locks[transaction_id] = transaction
+        self.locked_txs[transaction_id] = transaction
         if as_seller:
-            self.locks_as_seller[transaction_id] = transaction
+            self.locked_txs_as_seller[transaction_id] = transaction
         else:
-            self.locks_as_buyer[transaction_id] = transaction
+            self.locked_txs_as_buyer[transaction_id] = transaction
 
-    def pop_lock(self, transaction_id: str) -> Transaction:
+    def pop_locked_tx(self, transaction_id: str) -> Transaction:
         """
         Remove a lock (in the form of a transaction).
 
@@ -209,10 +205,10 @@ class LockManager(object):
 
         :return: the transaction
         """
-        assert transaction_id in self.locks
-        transaction = self.locks.pop(transaction_id)
-        self.locks_as_buyer.pop(transaction_id, None)
-        self.locks_as_seller.pop(transaction_id, None)
+        assert transaction_id in self.locked_txs
+        transaction = self.locked_txs.pop(transaction_id)
+        self.locked_txs_as_buyer.pop(transaction_id, None)
+        self.locked_txs_as_seller.pop(transaction_id, None)
         return transaction
 
     def start(self) -> None:
@@ -221,10 +217,10 @@ class LockManager(object):
 
         :return: None
         """
-        if not self._cleanup_locks_task_is_running:
-            self._cleanup_locks_task_is_running = True
-            self._cleanup_locks_task = Thread(target=self.cleanup_locks_job)
-            self._cleanup_locks_task.start()
+        if not self._cleanup_locked_transactions_task_is_running:
+            self._cleanup_locked_transactions_task_is_running = True
+            self._cleanup_locked_transactions_task = Thread(target=self.cleanup_locked_transactions_job)
+            self._cleanup_locked_transactions_task.start()
 
     def stop(self) -> None:
         """
@@ -232,30 +228,6 @@ class LockManager(object):
 
         :return: None
         """
-        if self._cleanup_locks_task_is_running:
-            self._cleanup_locks_task_is_running = False
-            self._cleanup_locks_task.join()
-
-    def store_proposals(self, proposals: List[Description], new_msg_id: int, dialogue: Dialogue, origin: str, is_seller: bool, crypto: Crypto) -> None:
-        """
-        Store proposals as pending transactions.
-
-        :param proposals: the list of proposals
-        :param new_msg_id: the new message id
-        :param dialogue: the dialogue
-        :param origin: the public key of the message sender.
-        :param is_seller: Boolean indicating the role of the agent
-        :param crypto: the crypto object
-
-        :return: None
-        """
-        for proposal in proposals:
-            proposal_id = new_msg_id  # TODO fix if more than one proposal!
-            transaction_id = generate_transaction_id(crypto.public_key, origin, dialogue.dialogue_label, is_seller)  # TODO fix if more than one proposal!
-            transaction = Transaction.from_proposal(proposal=proposal,
-                                                    transaction_id=transaction_id,
-                                                    is_sender_buyer=not is_seller,
-                                                    counterparty=origin,
-                                                    sender=crypto.public_key,
-                                                    crypto=crypto)
-            self.add_pending_proposal(dialogue, proposal_id, transaction)
+        if self._cleanup_locked_transactions_task_is_running:
+            self._cleanup_locked_transactions_task_is_running = False
+            self._cleanup_locked_transactions_task.join()

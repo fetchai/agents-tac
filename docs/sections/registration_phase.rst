@@ -50,7 +50,7 @@ The controller agent will wait for *registration_timeout*. At the end, if there 
 participant, it will start the competition. Otherwise, it will send back a "Cancelled" message to every
 registered participant
 
-.. mermaid:: ../_static/diagrams/controller_setup.mmd
+.. mermaid:: ../diagrams/controller_setup.mmd
     :align: center
     :caption: The setup of the controller agent.
 
@@ -78,7 +78,7 @@ In order to complete a registration, a trading agent should do the following ste
 Search for controller agent
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. mermaid:: ../_static/diagrams/search_controller.mmd
+.. mermaid:: ../diagrams/search_controller.mmd
     :align: center
     :caption: TAC Agent search for controller agents.
 
@@ -92,7 +92,7 @@ The message :class:`~tac.platform.protocol.Register` is an empty message. In ord
 the registration, the agent can unregister from the competition by sending the :class:`~tac.platform.protocol.Unregister`
 message.
 
-.. mermaid:: ../_static/diagrams/register_to_tac.mmd
+.. mermaid:: ../diagrams/register_to_tac.mmd
     :align: center
     :caption: an agent registers to TAC.
 
@@ -120,6 +120,6 @@ Summary
 
 In the following, a transition diagram that sumarize the *registration phase*:
 
-.. mermaid:: ../_static/diagrams/registration.mmd
+.. mermaid:: ../diagrams/registration.mmd
    :align: center
    :caption: The transition diagram for the registration phase.

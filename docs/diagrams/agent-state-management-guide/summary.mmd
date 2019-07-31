@@ -1,0 +1,45 @@
+sequenceDiagram
+
+    participant Agent_1
+
+    participant Agent_2
+
+    participant Controller
+
+    activate Controller
+
+    Agent_1->>Agent_2: (1) send_cfp(1, 1, "agent_2_pbk", 0, query)
+    
+    Agent_2->>Agent_2: (2) get_proposal()
+    Agent_2->>Agent_2: (3) add_pending_proposal()
+
+    Agent_2->>Agent_1: (4) send_propose(2, 1, "agent_1_pbk", 1, proposals)
+
+    Agent_1->>Agent_1: (5) is_profitable_transaction()
+    Agent_1->>Agent_1: (6) add_locked_tx()
+    Agent_1->>Agent_1: (7) add_pending_initial_acceptance()
+
+    Agent_1->>Agent_2: (8) send_accept(3, 1, "agent_2_pbk", 2)
+
+    Agent_2->>Agent_2: (9) pop_pending_proposal()
+    Agent_2->>Agent_2: (10) is_profitable_transaction()
+    Agent_2->>Agent_2: (11) add_locked_tx()
+
+    Agent_2->>Agent_1: (12) send_accept(4, 1, "agent_1_pbk", 3)
+    Agent_2->>Controller: (13) send_message(4, 1, "controller_pbk", transaction)
+
+    Agent_1->>Agent_1: (14) pop_pending_initial_acceptance()
+
+    Agent_1->>Controller: (15) send_message(5, 1, "controller_pbk", transaction)
+
+    Controller->>Agent_1: (16) TransactionConfirmation(transaction)
+
+    Agent_1->>Agent_1: (17) pop_locked_tx()
+    Agent_1->>Agent_1: (18) agent_state.update()
+
+    Controller->>Agent_2: (19) TransactionConfirmation(transaction)
+
+    Agent_2->>Agent_2: (20) pop_locked_tx()
+    Agent_2->>Agent_2: (21) agent_state.update()
+
+    deactivate Controller
