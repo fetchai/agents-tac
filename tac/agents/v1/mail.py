@@ -30,6 +30,7 @@ This module contains the classes required for message management.
 import asyncio
 import datetime
 import logging
+import time
 from queue import Queue, Empty
 from threading import Thread
 from typing import List, Optional, Any, Union, Dict
@@ -172,6 +173,19 @@ class MailBox(OEFAgent):
     def is_running(self) -> bool:
         """Check whether the mailbox is running."""
         return self._mail_box_thread is None
+
+    def connect(self) -> bool:
+        success = False
+
+        while not success:
+            try:
+                success = super().connect()
+            except ConnectionError as e:
+                logger.error("Problems when connecting to the OEF. Retrying in 3 seconds...")
+                success = False
+                time.sleep(3.0)
+
+        return success
 
     def start(self) -> None:
         """
