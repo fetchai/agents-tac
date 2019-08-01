@@ -1,5 +1,37 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# ------------------------------------------------------------------------------
+#
+#   Copyright 2018-2019 Fetch.AI Limited
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+# ------------------------------------------------------------------------------
+
+"""
+This module implements a TAC simulation.
+
+It spawn a controller agent that handles the competition and
+several baseline agents that will participate to the competition.
+
+It requires an OEF node running and a Visdom server, if the visualization is desired.
+
+You can also run it as a script. To check the available arguments:
+
+    python3 -m tac.platform.simulation -h
+
+"""
+
 import argparse
 import datetime
 import logging
@@ -22,6 +54,7 @@ logger = logging.getLogger(__name__)
 
 
 class SimulationParams:
+    """Class to hold simulation parameters."""
 
     def __init__(self,
                  oef_addr: str = "localhost",
@@ -39,6 +72,25 @@ class SimulationParams:
                  experiment_id: int = None,
                  seed: int = 42,
                  tac_parameters: Optional[TACParameters] = None):
+        """
+        Initialize a SimulationParams class.
+
+        :param oef_addr: the IP address of the OEF.
+        :param oef_port: the port of the OEF.
+        :param nb_baseline_agents: the number of baseline agents to spawn.
+        :param register_as: the registration policy the agents will follow.
+        :param search_for: the search policy the agents will follow.
+        :param services_interval: The amount of time (in seconds) the baseline agents wait until it updates services again.
+        :param pending_transaction_timeout: The amount of time (in seconds) the baseline agents wait until the transaction confirmation.
+        :param verbose: control the verbosity of the simulation.
+        :param gui: enable the Visdom visualization.
+        :param visdom_addr: the IP address of the Visdom server
+        :param visdom_port: the port of the Visdom server.
+        :param data_output_dir: the path to the output directory.
+        :param experiment_id: the name of the experiment.
+        :param seed: the random seed.
+        :param tac_parameters: the parameters for the TAC.
+        """
         self.tac_parameters = tac_parameters if tac_parameters is not None else TACParameters()
         self.oef_addr = oef_addr
         self.oef_port = oef_port
@@ -186,7 +238,8 @@ def parse_arguments():
     return arguments
 
 
-def build_simulation_parameters(arguments: argparse.Namespace):
+def build_simulation_parameters(arguments: argparse.Namespace) -> SimulationParams:
+    """From argparse output, build an instance of SimulationParams."""
     tac_parameters = TACParameters(
         min_nb_agents=arguments.nb_agents,
         money_endowment=arguments.money_endowment,
@@ -219,6 +272,7 @@ def build_simulation_parameters(arguments: argparse.Namespace):
 
 
 def run(params: SimulationParams):
+    """Run the simulation."""
     random.seed(params.seed)
 
     controller_thread = None  # type: Optional[multiprocessing.Process]
