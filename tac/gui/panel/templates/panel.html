@@ -1,14 +1,28 @@
 {% extends "base.html" %}
 
 {% block content %}
-        <h2>Sandbox Configurations</h2>
-        <form id="form-sandbox">
-                {% for name, field in form_sandbox._fields.items() %}
-                        {{ field.label }} <br/>
-                        {{ field }} <br/>
-                {% endfor %}
-                <input type="submit" class="btn btn-success" id="btn-start-sandbox" name="btn-start-sandbox" value="Start Sandbox" onclick='this.form.target="btn-start-sandbox";'>
-                <input type="submit" class="btn btn-danger" id="btn-stop-sandbox" name="btn-stop-sandbox" value="Stop Sandbox" onclick='this.form.target="btn-stop-sandbox";'>
-        </form>
-        <div id="response"></div>
+<div class="row">
+        <div class="col-xs-6">
+                <h2>Sandbox Configurations</h2>
+                <form id="form-sandbox">
+                        {% for name, field in form_sandbox._fields.items() %}
+                                {{ field.label }} <br/>
+                                {{ field }} <br/>
+                        {% endfor %}
+                        <input type="submit" class="btn btn-success" id="btn-start-sandbox" name="btn-start-sandbox" value="Start Sandbox" onclick='this.form.target="btn-start-sandbox";'>
+                        <input type="submit" class="btn btn-danger" id="btn-stop-sandbox" name="btn-stop-sandbox" value="Stop Sandbox" onclick='this.form.target="btn-stop-sandbox";'>
+                </form>
+        </div>
+        <div class="col-xs-6">
+                <h2>Agent Configurations</h2>
+                <form id="form-agent">
+                        {% for name, field in form_agent._fields.items() %}
+                                {{ field.label }} <br/>
+                                {{ field }} <br/>
+                        {% endfor %}
+                        <input type="submit" class="btn btn-success" id="btn-start-agent" name="btn-start-agent" value="Start Agent" onclick='this.form.target="btn-start-agent";'>
+                        <input type="submit" class="btn btn-danger" id="btn-stop-agent" name="btn-stop-agent" value="Stop Agent" onclick='this.form.target="btn-stop-agent";'>
+                </form>
+        </div>
+</div>
 {% endblock %}

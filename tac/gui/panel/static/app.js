@@ -4,21 +4,21 @@
     let configureSandboxForm = function(){
 
         let form = document.getElementById("form-sandbox");
-        let startSandboxBtn = document.getElementById("btn-start-sandbox");
-        let stopSandboxBtn = document.getElementById("btn-stop-sandbox");
+        let startBtn = document.getElementById("btn-start-sandbox");
+        let stopBtn = document.getElementById("btn-stop-sandbox");
 
-        stopSandboxBtn.disabled = true;
+        stopBtn.disabled = true;
 
         form.addEventListener("submit", function (ev) {
             ev.preventDefault();
 
             let clickedBtnId = ev.target.target;
             console.log(clickedBtnId, " clicked");
-            if(clickedBtnId === startSandboxBtn.id){
+            if(clickedBtnId === startBtn.id){
                 // start sandbox button clicked
                 startSandbox();
             }
-            else if(clickedBtnId === stopSandboxBtn.id){
+            else if(clickedBtnId === stopBtn.id){
                 // stop sandbox button clicked
                 stopSandbox();
             }
@@ -33,15 +33,15 @@
 
             // Define what happens on successful data submission
             XHR.addEventListener("load", function (event) {
-                startSandboxBtn.disabled = true;
-                stopSandboxBtn.disabled = false;
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
             });
 
             // Define what happens in case of error
             XHR.addEventListener("error", function (event) {
                 alert('ERROR: could not start sandbox.');
-                startSandboxBtn.disabled = false;
-                stopSandboxBtn.disabled = true;
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
             });
 
             XHR.open("POST", "/api/sandbox", true);
@@ -57,15 +57,15 @@
 
             // Define what happens on successful data submission
             XHR.addEventListener("load", function (event) {
-                startSandboxBtn.disabled = false;
-                stopSandboxBtn.disabled = true;
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
             });
 
             // Define what happens in case of error
             XHR.addEventListener("error", function (event) {
                 alert('ERROR: could not stop sandbox.');
-                startSandboxBtn.disabled = true;
-                stopSandboxBtn.disabled = false;
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
             });
 
             XHR.open("DELETE", "/api/sandbox", true);
@@ -74,9 +74,82 @@
         };
     };
 
+    let configureAgentForm = function(){
+        let form = document.getElementById("form-agent");
+        let startBtn = document.getElementById("btn-start-agent");
+        let stopBtn = document.getElementById("btn-stop-agent");
+
+        stopBtn.disabled = true;
+
+        form.addEventListener("submit", function (ev) {
+            ev.preventDefault();
+
+            let clickedBtnId = ev.target.target;
+            console.log(clickedBtnId, " clicked");
+            if(clickedBtnId === startBtn.id){
+                // start agent button clicked
+                startAgent();
+            }
+            else if(clickedBtnId === stopBtn.id){
+                // stop sandbox button clicked
+                stopAgent();
+            }
+
+        });
+
+        let startAgent = function(){
+            let XHR = new XMLHttpRequest();
+
+            // Bind the FormData object and the form element
+            let FD = new FormData(form);
+
+            // Define what happens on successful data submission
+            XHR.addEventListener("load", function (event) {
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+            });
+
+            // Define what happens in case of error
+            XHR.addEventListener("error", function (event) {
+                alert('ERROR: could not start agent.');
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+            });
+
+            XHR.open("POST", "/api/agent", true);
+            XHR.send(FD);
+            return XHR.responseText;
+        };
+
+        let stopAgent = function(){
+            let XHR = new XMLHttpRequest();
+
+            // Bind the FormData object and the form element
+            let FD = new FormData(form);
+
+            // Define what happens on successful data submission
+            XHR.addEventListener("load", function (event) {
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+            });
+
+            // Define what happens in case of error
+            XHR.addEventListener("error", function (event) {
+                alert('ERROR: could not stop agent.');
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+            });
+
+            XHR.open("DELETE", "/api/agent", true);
+            XHR.send(FD);
+            return XHR.responseText;
+        };
+
+    };
 
     window.addEventListener("load", function () {
         configureSandboxForm();
+        configureAgentForm();
     });
 
 

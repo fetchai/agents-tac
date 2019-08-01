@@ -122,7 +122,6 @@ class Sandbox(Resource):
             return current_sandbox.to_dict(), 200
         else:
             return None, 200
-        return result
 
     def post(self):
         global current_sandbox
@@ -152,6 +151,7 @@ class Sandbox(Resource):
         else:
             current_sandbox.stop()
             current_sandbox = None
+            return {}, 204
 
     def _post_args_preprocessing(self, args):
         if args["data_output_dir"] == "":
