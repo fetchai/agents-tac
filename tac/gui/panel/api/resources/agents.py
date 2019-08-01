@@ -1,7 +1,26 @@
 # -*- coding: utf-8 -*-
-import datetime
+
+# ------------------------------------------------------------------------------
+#
+#   Copyright 2018-2019 Fetch.AI Limited
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+# ------------------------------------------------------------------------------
+
+"""Implement the agent resource and other utility classes."""
+
 import logging
-import os
 import subprocess
 from enum import Enum
 from typing import Dict, Any, Optional
@@ -26,6 +45,8 @@ current_agent = None  # type: Optional[AgentRunner]
 
 
 class AgentState(Enum):
+    """The state of execution of an agent."""
+
     NOT_STARTED = "not_started"
     RUNNING = "running"
     FINISHED = "finished"
@@ -33,14 +54,22 @@ class AgentState(Enum):
 
 
 class AgentRunner:
+    """Wrapper class to track the execution of an agent script."""
 
     def __init__(self, id: int, params: Dict[str, Any]):
+        """
+        Initialize the agent runner.
+
+        :param id: an identifier for the object.
+        :param params: the parameters of the agent script.
+        """
         self.id = id
         self.params = params
 
         self.process = None  # type: Optional[subprocess.Popen]
 
     def __call__(self):
+        """Launch the agent script."""
         if self.status != AgentState.NOT_STARTED:
             return
 
@@ -71,6 +100,7 @@ class AgentRunner:
 
     @property
     def status(self) -> AgentState:
+        """Return the state of the execution."""
         if self.process is None:
             return AgentState.NOT_STARTED
         returncode = self.process.poll()
@@ -82,6 +112,7 @@ class AgentRunner:
             return AgentState.FAILED
 
     def to_dict(self):
+        """Serialize the object into a dictionary."""
         return {
             "id": self.id,
             "status": self.status.value,
@@ -89,6 +120,7 @@ class AgentRunner:
         }
 
     def stop(self):
+        """Stop the execution of the sandbox."""
         try:
             self.process.terminate()
             self.process.wait()
@@ -98,8 +130,10 @@ class AgentRunner:
 
 
 class Agent(Resource):
+    """The agent REST resource."""
 
     def get(self):
+        """Get the current instance of the agent."""
         global current_agent
         if current_agent is not None:
             return current_agent.to_dict(), 200
@@ -107,6 +141,7 @@ class Agent(Resource):
             return None, 200
 
     def post(self):
+        """Create an agent instance."""
         global current_agent
         if current_agent is not None and current_agent.status == AgentState.RUNNING:
             # a sandbox is already running
@@ -127,6 +162,7 @@ class Agent(Resource):
         return agent_runner.to_dict(), 202
 
     def delete(self):
+        """Delete the current agent instance."""
         global current_agent
         if current_agent is None:
             return None, 400
