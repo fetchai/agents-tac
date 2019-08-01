@@ -32,6 +32,8 @@ services:
     image: "hypnosapos/visdom:latest"
     ports:
       - "8097:8097"
+    logging:
+      driver: none
     networks:
       main_net:
         ipv4_address: 172.28.1.2
@@ -88,6 +90,12 @@ services:
       - "${COMPETITION_TIMEOUT}"
       - "--services-interval"
       - "${SERVICES_INTERVAL}"
+      - "--pending-transaction-timeout"
+      - "${PENDING_TRANSACTION_TIMEOUT}"
+      - "--register-as"
+      - "${REGISTER_AS}"
+      - "--search-for"
+      - "${SEARCH_FOR}"
       - "--gui"
       - "--visdom-addr"
       - "172.28.1.2"
