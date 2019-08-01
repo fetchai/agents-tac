@@ -120,6 +120,8 @@ setup(
         "numpy",
         "matplotlib",
         "flask",
+        "flask_restful",
+        "wtforms",
         "python-dateutil",
         "visdom",
         "cryptography",

@@ -1,4 +1,25 @@
 # -*- coding: utf-8 -*-
+
+# ------------------------------------------------------------------------------
+#
+#   Copyright 2018-2019 Fetch.AI Limited
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+# ------------------------------------------------------------------------------
+
+"""Implement the sandbox resource and other utility classes."""
+
 import datetime
 import logging
 import os
@@ -36,6 +57,8 @@ current_sandbox = None  # type: Optional[SandboxRunner]
 
 
 class SandboxState(Enum):
+    """The state of execution of a sandbox."""
+
     NOT_STARTED = "Not started yet"
     RUNNING = "Running"
     FINISHED = "Finished"
@@ -43,14 +66,22 @@ class SandboxState(Enum):
 
 
 class SandboxRunner:
+    """Wrapper class to track the execution of a sandbox."""
 
     def __init__(self, id: int, params: Dict[str, Any]):
+        """
+        Initialize the sandbox runner.
+
+        :param id: an identifier for the object.
+        :param params: the parameters of the simulation.
+        """
         self.id = id
         self.params = params
 
         self.process = None  # type: Optional[subprocess.Popen]
 
     def __call__(self):
+        """Launch the sandbox."""
         if self.status != SandboxState.NOT_STARTED:
             return
 
@@ -88,6 +119,7 @@ class SandboxRunner:
 
     @property
     def status(self) -> SandboxState:
+        """Return the state of the execution."""
         if self.process is None:
             return SandboxState.NOT_STARTED
         returncode = self.process.poll()
@@ -98,7 +130,8 @@ class SandboxRunner:
         elif returncode > 0:
             return SandboxState.FAILED
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize the object into a dictionary."""
         return {
             "id": self.id,
             "status": self.status.value,
@@ -106,6 +139,7 @@ class SandboxRunner:
         }
 
     def stop(self):
+        """Stop the execution of the sandbox."""
         try:
             self.process.terminate()
             self.process.wait()
@@ -115,8 +149,10 @@ class SandboxRunner:
 
 
 class Sandbox(Resource):
+    """The sandbox REST resource."""
 
     def get(self):
+        """Get the current instance of the sandbox."""
         global current_sandbox
         if current_sandbox is not None:
             return current_sandbox.to_dict(), 200
@@ -124,6 +160,7 @@ class Sandbox(Resource):
             return None, 200
 
     def post(self):
+        """Create a sandbox instance."""
         global current_sandbox
         if current_sandbox is not None and current_sandbox.status == SandboxState.RUNNING:
             # a sandbox is already running
@@ -145,6 +182,7 @@ class Sandbox(Resource):
         return simulation_runner.to_dict(), 202
 
     def delete(self):
+        """Delete the current sandbox instance."""
         global current_sandbox
         if current_sandbox is None:
             return None, 400
@@ -154,6 +192,7 @@ class Sandbox(Resource):
             return {}, 204
 
     def _post_args_preprocessing(self, args):
+        """Process the arguments of the POST request on /api/sandbox."""
         if args["data_output_dir"] == "":
             args["data_output_dir"] = "./data"
         if args["experiment_id"] == "":
