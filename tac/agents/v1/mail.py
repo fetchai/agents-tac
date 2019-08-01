@@ -175,12 +175,17 @@ class MailBox(OEFAgent):
         return self._mail_box_thread is None
 
     def connect(self) -> bool:
+        """
+        Connect to the OEF Node. If it fails, then sleep for 3 seconds and try to reconnect again.
+
+        :return: True if the connection has been established successfully, False otherwise.
+        """
         success = False
 
         while not success:
             try:
                 success = super().connect()
-            except ConnectionError as e:
+            except ConnectionError:
                 logger.error("Problems when connecting to the OEF. Retrying in 3 seconds...")
                 success = False
                 time.sleep(3.0)
