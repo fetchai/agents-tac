@@ -26,12 +26,13 @@ This module contains the classes which define the reactions of an agent.
 - DialogueReactions: The DialogueReactions class defines the reactions of an agent in the context of a Dialogue.
 """
 
+import json
 import logging
 from typing import List, Union
 
 from oef.messages import CFP, Propose, Accept, Decline, Message as ByteMessage, SearchResult, OEFErrorMessage, \
     DialogueErrorMessage
-from oef.utils import Context
+from oef.uri import Context
 
 from tac.agents.v1.agent import Liveness
 from tac.agents.v1.base.dialogues import Dialogue
@@ -43,7 +44,7 @@ from tac.agents.v1.base.negotiation_behaviours import FIPABehaviour
 from tac.agents.v1.base.stats_manager import EndState
 from tac.agents.v1.mail import OutBox, OutContainer
 from tac.helpers.crypto import Crypto
-from tac.helpers.misc import TAC_SUPPLY_DATAMODEL_NAME
+from tac.helpers.misc import TAC_DEMAND_DATAMODEL_NAME
 from tac.platform.protocol import Error, ErrorCode, GameData, TransactionConfirmation, StateUpdate, Register, \
     GetStateUpdate
 
@@ -295,16 +296,16 @@ class OEFReactions(OEFSearchReactionInterface):
         searched_for = 'sellers' if is_searching_for_sellers else 'buyers'
         logger.debug("[{}]: Found potential {}: {}".format(self.agent_name, searched_for, agent_pbks))
 
-        query = self.game_instance.build_services_query(is_searching_for_sellers)
-        if query is None:
+        services = self.game_instance.build_services_dict(is_supply=not is_searching_for_sellers)
+        if services is None:
             response = 'demanding' if is_searching_for_sellers else 'supplying'
             logger.debug("[{}]: No longer {} any goods...".format(self.agent_name, response))
             return
         for agent_pbk in agent_pbks:
             dialogue = self.game_instance.dialogues.create_self_initiated(agent_pbk, self.crypto.public_key, not is_searching_for_sellers)
-            cfp = CFP(STARTING_MESSAGE_ID, dialogue.dialogue_label.dialogue_id, agent_pbk, STARTING_MESSAGE_TARGET, query, Context())
-            logger.debug("[{}]: send_cfp_as_{}: msg_id={}, dialogue_id={}, destination={}, target={}, query={}"
-                         .format(self.agent_name, dialogue.role, cfp.msg_id, cfp.dialogue_id, cfp.destination, cfp.target, query))
+            cfp = CFP(STARTING_MESSAGE_ID, dialogue.dialogue_label.dialogue_id, agent_pbk, STARTING_MESSAGE_TARGET, json.dumps(services).encode('utf-8'), Context())
+            logger.debug("[{}]: send_cfp_as_{}: msg_id={}, dialogue_id={}, destination={}, target={}, services={}"
+                         .format(self.agent_name, dialogue.role, cfp.msg_id, cfp.dialogue_id, cfp.destination, cfp.target, services))
             dialogue.outgoing_extend([cfp])
             self.out_box.out_queue.put(cfp)
 
@@ -366,7 +367,8 @@ class DialogueReactions(DialogueReactionInterface):
 
         :return: None
         """
-        is_seller = msg.query.model.name == TAC_SUPPLY_DATAMODEL_NAME
+        services = json.loads(msg.query.decode('utf-8'))
+        is_seller = services['description'] == TAC_DEMAND_DATAMODEL_NAME
         dialogue = self.dialogues.create_opponent_initiated(msg.destination, msg.dialogue_id, is_seller)
         logger.debug("[{}]: saving dialogue (as {}): dialogue_id={}".format(self.agent_name, dialogue.role, dialogue.dialogue_label.dialogue_id))
         results = self._handle(msg, dialogue)

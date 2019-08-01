@@ -41,7 +41,7 @@ class TransactionManager(object):
 
     def __init__(self, agent_name: str, pending_transaction_timeout: int = 30, task_timeout: float = 2.0) -> None:
         """
-        Initialize a LockManager.
+        Initialize a TransactionManager.
 
         :param agent_name: The name of the agent the manager refers to.
         :param pending_transaction_timeout: seconds to wait before a transaction/message can be removed from any pool.

@@ -26,7 +26,7 @@ import math
 import multiprocessing
 import pprint
 import random
-import signal
+# import signal
 import time
 from typing import Optional, List
 
@@ -157,12 +157,13 @@ def spawn_baseline_agents(arguments) -> List[multiprocessing.Process]:
 
     def signal_handler(sig, frame):
         """Filter the SIGINT from the parent process."""
+        pass
 
-    original_sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
-    signal.signal(signal.SIGINT, signal_handler)
-    for t in threads:
+    # original_sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
+    # signal.signal(signal.SIGINT, signal_handler)
+    for i, t in enumerate(threads):
         t.start()
-    signal.signal(signal.SIGINT, original_sigint_handler)
+    # signal.signal(signal.SIGINT, original_sigint_handler)
     return threads
 
 

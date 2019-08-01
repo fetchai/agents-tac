@@ -20,12 +20,13 @@
 
 """This module contains a class which implements the FIPA protocol for the TAC."""
 
+import json
 import logging
 import pprint
 from typing import Union, List
 
 from oef.messages import CFP, Decline, Propose, Accept
-from oef.utils import Context
+from oef.uri import Context
 
 from tac.agents.v1.base.game_instance import GameInstance
 from tac.agents.v1.base.dialogues import Dialogue
@@ -84,11 +85,12 @@ class FIPABehaviour:
         goods_description = self.game_instance.get_service_description(is_supply=dialogue.is_seller)
         new_msg_id = cfp.msg_id + 1
         decline = False
-        if not cfp.query.check(goods_description):
+        cfp_services = json.loads(cfp.query.decode('utf-8'))
+        if not self.game_instance.is_matching(cfp_services, goods_description):
             decline = True
             logger.debug("[{}]: Current holdings do not satisfy CFP query.".format(self.agent_name))
         else:
-            proposal = self.game_instance.generate_proposal(cfp.query, dialogue.is_seller)
+            proposal = self.game_instance.generate_proposal(cfp_services, dialogue.is_seller)
             if proposal is None:
                 decline = True
                 logger.debug("[{}]: Current strategy does not generate proposal that satisfies CFP query.".format(self.agent_name))

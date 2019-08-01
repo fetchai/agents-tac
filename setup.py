@@ -123,6 +123,7 @@ setup(
         "python-dateutil",
         "visdom",
         "cryptography",
+        "fetchai-ledger-api @ git+https://github.com/fetchai/ledger-api-py.git#egg=fetchai-ledger-api",
         "base58"
     ],
     tests_require=["tox"],

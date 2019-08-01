@@ -39,7 +39,7 @@ from oef.messages import PROPOSE_TYPES, CFP_TYPES, CFP, Decline, Propose, Accept
     SearchResult, OEFErrorOperation, OEFErrorMessage, DialogueErrorMessage
 from oef.query import Query
 from oef.schema import Description
-from oef.utils import Context
+from oef.uri import Context
 
 logger = logging.getLogger(__name__)
 

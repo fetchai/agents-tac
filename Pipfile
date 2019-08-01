@@ -3,12 +3,18 @@ name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
 
+[[source]]
+url = "https://test.pypi.org/simple"
+verify_ssl = true
+name = "test-pypi"
+
 [dev-packages]
 flake8 = "*"
 ipython = "*"
 jupyter = "*"
 pytest = "*"
 tox = "*"
+tox-pipenv = "*"
 pytest-cov = "*"
 docker = "*"
 flake8-docstrings = "*"
@@ -20,7 +26,8 @@ python-dateutil = "*"
 visdom = "*"
 cryptography = "*"
 base58 = "*"
-oef = "==0.4.0"
+fetchai-ledger-api = {git = "https://github.com/fetchai/ledger-api-py.git",
+oef = {version="*", index="test-pypi"}
 sphinxcontrib-mermaid = "*"
 sphinxcontrib-apidoc = "*"
 sphinx = "*"

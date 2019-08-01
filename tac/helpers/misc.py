@@ -22,7 +22,7 @@
 
 import logging
 import random
-from typing import List, Set, Dict, Tuple
+from typing import List, Set, Dict, Tuple, Union
 
 import math
 import numpy as np
@@ -294,6 +294,20 @@ def build_query(good_pbks: Set[str], is_searching_for_sellers: bool) -> Query:
 
     query = Query(constraints, model=data_model)
     return query
+
+
+def build_dict(good_pbks: Set[str], is_supply: bool) -> Dict[str, Union[str, List]]:
+    """
+    Build supply or demand services dictionary.
+
+    :param good_pbks: the good public keys to put in the query
+    :param is_supply: Boolean indicating whether the services are for supply or demand.
+
+    :return: the dictionary
+    """
+    description = TAC_SUPPLY_DATAMODEL_NAME if is_supply else TAC_DEMAND_DATAMODEL_NAME
+    result = {'description': description, 'services': list(good_pbks)}
+    return result
 
 
 def generate_good_pbk_to_name(nb_goods: int) -> Dict[str, str]:
