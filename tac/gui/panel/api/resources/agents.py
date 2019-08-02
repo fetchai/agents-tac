@@ -21,11 +21,14 @@
 """Implement the agent resource and other utility classes."""
 
 import logging
+import os
 import subprocess
 from enum import Enum
 from typing import Dict, Any, Optional
 
 from flask_restful import Resource, reqparse
+
+from tac import ROOT_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +94,7 @@ class AgentRunner:
 
         self.process = subprocess.Popen([
             "python3",
-            "../../../templates/v1/basic.py",
+            os.path.join(ROOT_DIR, "templates", "v1", "basic.py"),
             *args,
             "--gui",
             "--visdom-addr", "127.0.0.1",

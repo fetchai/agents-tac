@@ -20,7 +20,7 @@
 
 """Implement the sandbox resource and other utility classes."""
 
-import datetime
+# import datetime
 import logging
 import os
 import subprocess
@@ -28,6 +28,8 @@ from enum import Enum
 from typing import Dict, Any, Optional
 
 from flask_restful import Resource, reqparse
+
+from tac import ROOT_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +41,7 @@ parser.add_argument("base_good_endowment", default=2, type=int, help="The base a
 parser.add_argument("lower_bound_factor", default=0, type=int, help="The lower bound factor of a uniform distribution.")
 parser.add_argument("upper_bound_factor", default=0, type=int, help="The upper bound factor of a uniform distribution.")
 parser.add_argument("tx_fee", default=0.1, type=float, help="The transaction fee.")
-parser.add_argument("start_time", default=str(datetime.datetime.now() + datetime.timedelta(0, 10)), type=str, help="The start time for the competition (in UTC format).")
+# parser.add_argument("start_time", default=str(datetime.datetime.now() + datetime.timedelta(0, 10)), type=str, help="The start time for the competition (in UTC format).")
 parser.add_argument("registration_timeout", default=10, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
 parser.add_argument("inactivity_timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
 parser.add_argument("competition_timeout", default=240, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
@@ -112,7 +114,7 @@ class SandboxRunner:
         self.process = subprocess.Popen([
             "docker-compose",
             "-f",
-            "../../../sandbox/docker-compose.yml",
+            os.path.join(ROOT_DIR, "sandbox", "docker-compose.yml"),
             "up",
             "--abort-on-container-exit"],
             env=env)
@@ -167,7 +169,8 @@ class Sandbox(Resource):
             return None, 400
 
         # parse the arguments
-        args = parser.parse_args(strict=True)
+        args = parser.parse_args()
+        logger.debug("Args: \n{}".format(str(args)))
         args = self._post_args_preprocessing(args)
 
         # create the simulation runner wrapper
@@ -197,7 +200,8 @@ class Sandbox(Resource):
             args["data_output_dir"] = "./data"
         if args["experiment_id"] == "":
             args["experiment_id"] = "./experiment"
-        if args["start_time"] == "":
-            args["start_time"] = str(datetime.datetime.now())
-        args["start_time"] = str(args["start_time"])
+        # if args["start_time"] == "":
+        #     args["start_time"] = str(datetime.datetime.now())
+        # else:
+        #     args["start_time"] = str(datetime.datetime.strptime(args["start_time"], "%m/%d/%Y %I:%M %p"))
         return args

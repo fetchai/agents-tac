@@ -42,7 +42,6 @@ In particular, it provides REST methods to start/stop a sandbox and an agent, al
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
-
 import os
 
 from flask import Flask
