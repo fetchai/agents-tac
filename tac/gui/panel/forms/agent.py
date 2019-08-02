@@ -28,7 +28,7 @@ class AgentForm(Form):
     """The form to set the agent parameters."""
 
     name = StringField("Agent name", default="my_baseline_agent", validators=[wtforms.validators.Length(min=1)])
-    agent_timeout = FloatField("Agent timeout", default=1.0, widget=widgets.Input(input_type="number"), validators=[wtforms.validators.NumberRange(min=0.0)])
+    agent_timeout = FloatField("Agent timeout", default=1.0, validators=[wtforms.validators.NumberRange(min=0.0)])
     max_reactions = IntegerField("Max reactions", default=100, widget=widgets.Input(input_type="number"), validators=[wtforms.validators.NumberRange(min=0.0)])
     register_as = wtforms.SelectField("Register as", choices=[("buyer", "buyer"), ("seller", "seller"), ("both", "both")], default="both")
     search_for = wtforms.SelectField("Search for", choices=[("buyers", "buyers"), ("sellers", "sellers"), ("both", "both")], default="both")
