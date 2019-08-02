@@ -602,7 +602,6 @@ class GameHandler:
         else:
             logger.debug("[{}]: Not enough agents to start TAC. Registered agents: {}, minimum number of agents: {}."
                          .format(self.controller_agent.name, nb_reg_agents, min_nb_agents))
-            self.notify_tac_cancelled()
             self.controller_agent.terminate()
             return False
 
