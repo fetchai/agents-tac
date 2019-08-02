@@ -29,6 +29,8 @@ from typing import Dict, Any, Optional
 
 from flask_restful import Resource, reqparse
 
+from tac import ROOT_DIR
+
 logger = logging.getLogger(__name__)
 
 parser = reqparse.RequestParser()
@@ -112,7 +114,7 @@ class SandboxRunner:
         self.process = subprocess.Popen([
             "docker-compose",
             "-f",
-            "sandbox/docker-compose.yml",
+            os.path.join(ROOT_DIR, "sandbox", "docker-compose.yml"),
             "up",
             "--abort-on-container-exit"],
             env=env)
