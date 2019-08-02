@@ -23,9 +23,8 @@
 import datetime
 from enum import Enum
 import random
-from typing import List, Optional, Set
+from typing import List, Optional, Set, Tuple, Dict, Union
 
-from oef.messages import CFP_TYPES
 from oef.query import Query
 from oef.schema import Description
 
@@ -36,7 +35,7 @@ from tac.agents.v1.base.strategy import Strategy
 from tac.agents.v1.base.stats_manager import StatsManager
 from tac.gui.dashboards.agent import AgentDashboard
 from tac.platform.game import AgentState, WorldState, GameConfiguration
-from tac.helpers.misc import build_query, get_goods_quantities_description
+from tac.helpers.misc import build_dict, build_query, get_goods_quantities_description
 from tac.platform.protocol import GameData, StateUpdate, Transaction
 
 
@@ -238,7 +237,7 @@ class GameInstance:
             self._last_search_time = now
         return result
 
-    def is_profitable_transaction(self, transaction: Transaction, dialogue: Dialogue) -> bool:
+    def is_profitable_transaction(self, transaction: Transaction, dialogue: Dialogue) -> Tuple[bool, str]:
         """
         Check if a transaction is profitable.
 
@@ -293,6 +292,37 @@ class GameInstance:
         res = None if len(good_pbks) == 0 else build_query(good_pbks, is_searching_for_sellers)
         return res
 
+    def build_services_dict(self, is_supply: bool) -> Optional[Dict[str, Union[str, List]]]:
+        """
+        Build a dictionary containing the services demanded/supplied.
+
+        :param is_supply: Boolean indicating whether the services are demanded or supplied.
+
+        :return: a Dict.
+        """
+        good_pbks = self.get_goods_pbks(is_supply=is_supply)
+
+        res = None if len(good_pbks) == 0 else build_dict(good_pbks, is_supply)
+        return res
+
+    def is_matching(self, cfp_services: Dict[str, Union[bool, List]], goods_description: Description) -> bool:
+        """
+        Check for a match between the CFP services and the goods description.
+
+        :param cfp_services: a dictionary with the cfp services
+        :param goods_description: a description of the goods
+
+        :return: Bool
+        """
+        services = cfp_services['services']
+        if cfp_services['description'] is goods_description.data_model.name:
+            # The call for proposal description and the goods model name cannot be the same for trading agent pairs.
+            return False
+        for good_pbk in goods_description.data_model.attributes_by_name.keys():
+            if good_pbk not in services: continue
+            return True
+        return False
+
     def get_goods_pbks(self, is_supply: bool) -> Set[str]:
         """
         Wrap the function which determines supplied and demanded good public keys.
@@ -332,7 +362,7 @@ class GameInstance:
         state_after_locks = self._agent_state.apply(transactions, self.game_configuration.tx_fee)
         return state_after_locks
 
-    def generate_proposal(self, query: CFP_TYPES, is_seller: bool) -> List[Description]:
+    def generate_proposal(self, cfp_services: Dict[str, Union[bool, List]], is_seller: bool) -> List[Description]:
         """
         Wrap the function which generates proposals from a seller or buyer.
 
@@ -347,7 +377,7 @@ class GameInstance:
         candidate_proposals = self.strategy.get_proposals(self.game_configuration.good_pbks, state_after_locks.current_holdings, state_after_locks.utility_params, self.game_configuration.tx_fee, is_seller, self._world_state)
         proposals = []
         for proposal in candidate_proposals:
-            if not query.check(proposal): continue
+            if not self.is_matching(cfp_services, proposal): continue
             proposals.append(proposal)
         if proposals == []:
             return None
