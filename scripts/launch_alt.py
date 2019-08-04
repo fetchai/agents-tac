@@ -5,8 +5,10 @@
 
 import inspect
 import os
+import platform
 import re
 import subprocess
+import sys
 
 import docker
 
@@ -20,6 +22,10 @@ ROOT_DIR = os.path.join(os.path.dirname(CUR_PATH), "..")
 class VisdomServer:
 
     def __enter__(self):
+        if platform.system() == 'Darwin':
+            # This is required due to a bug in mac os Mojave
+            print("Setting environment var...")
+            os.environ["OBJC_DISABLE_INITIALIZE_FORK_SAFETY"] = "YES"
         print("Starting Visdom server...")
         self.proc = subprocess.Popen(["python3", "-m", "visdom.server"], env=os.environ, cwd=ROOT_DIR)
 
@@ -71,6 +77,7 @@ class OEFNode:
 
 
 if __name__ == '__main__':
+    sys.argv += ['--gui']
     args = parse_arguments()
     simulation_params = build_simulation_parameters(args)
 
