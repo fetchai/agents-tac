@@ -39,7 +39,6 @@ import math
 import multiprocessing
 import pprint
 import random
-import signal
 import time
 from typing import Optional, List
 
@@ -192,14 +191,9 @@ def spawn_baseline_agents(params: SimulationParams) -> List[multiprocessing.Proc
         visdom_addr=params.visdom_addr,
         visdom_port=params.visdom_port)) for i in range(params.nb_baseline_agents)]
 
-    def signal_handler(sig, frame):
-        """Filter the SIGINT from the parent process."""
-
-    original_sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
-    signal.signal(signal.SIGINT, signal_handler)
     for t in threads:
         t.start()
-    signal.signal(signal.SIGINT, original_sigint_handler)
+
     return threads
 
 
