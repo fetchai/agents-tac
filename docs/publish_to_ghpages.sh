@@ -25,7 +25,7 @@ make html
 cd ..
 
 echo "Create a local gh-pages branch containing the splitted output folder"
-sed -i "" 'docs/_build/' ./.gitignore
+sed -i "" '/docs\/_build\//d' ./.gitignore
 git add .
 git commit -m "Edit .gitignore to publish"
 git subtree split --prefix docs/_build -b gh-pages
