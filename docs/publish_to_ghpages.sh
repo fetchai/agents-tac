@@ -8,7 +8,7 @@ fi
 
 STATUS="$(git status)"
 
-if ! [[ $STATUS == *"nothing to commit, working directory clean"* ]]
+if ! [[ $STATUS == *"nothing to commit, working tree clean"* ]]
 then
     echo "The working directory is dirty. Please commit any pending changes."
     exit 1;
