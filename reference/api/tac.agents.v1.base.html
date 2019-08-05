@@ -443,6 +443,20 @@ and with an attribute version = 1.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="tac.agents.v1.base.game_instance.GameInstance.build_services_dict">
+<code class="sig-name descname">build_services_dict</code><span class="sig-paren">(</span><em class="sig-param">is_supply: bool</em><span class="sig-paren">)</span> &#x2192; Optional[Dict[str, Union[str, List]]]<a class="headerlink" href="#tac.agents.v1.base.game_instance.GameInstance.build_services_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build a dictionary containing the services demanded/supplied.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>is_supply</strong> – Boolean indicating whether the services are demanded or supplied.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a Dict.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="tac.agents.v1.base.game_instance.GameInstance.build_services_query">
 <code class="sig-name descname">build_services_query</code><span class="sig-paren">(</span><em class="sig-param">is_searching_for_sellers: bool</em><span class="sig-paren">)</span> &#x2192; Optional[oef.query.Query]<a class="headerlink" href="#tac.agents.v1.base.game_instance.GameInstance.build_services_query" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build a query to search for services.</p>
@@ -482,6 +496,24 @@ and with an attribute version = 1.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="tac.agents.v1.base.game_instance.GameInstance.generate_proposal">
+<code class="sig-name descname">generate_proposal</code><span class="sig-paren">(</span><em class="sig-param">cfp_services: Dict[str, Union[bool, List]], is_seller: bool</em><span class="sig-paren">)</span> &#x2192; List[oef.schema.Description]<a class="headerlink" href="#tac.agents.v1.base.game_instance.GameInstance.generate_proposal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrap the function which generates proposals from a seller or buyer.</p>
+<p>If there are locks as seller, it applies them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>query</strong> – the query associated with the cfp.</p></li>
+<li><p><strong>is_seller</strong> – Boolean indicating the role of the agent.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a list of descriptions</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="tac.agents.v1.base.game_instance.GameInstance.get_goods_pbks">
 <code class="sig-name descname">get_goods_pbks</code><span class="sig-paren">(</span><em class="sig-param">is_supply: bool</em><span class="sig-paren">)</span> &#x2192; Set[str]<a class="headerlink" href="#tac.agents.v1.base.game_instance.GameInstance.get_goods_pbks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrap the function which determines supplied and demanded good public keys.</p>
@@ -505,24 +537,6 @@ and with an attribute version = 1.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the vector of good quantities offered/requested.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="tac.agents.v1.base.game_instance.GameInstance.get_proposals">
-<code class="sig-name descname">get_proposals</code><span class="sig-paren">(</span><em class="sig-param">query: Union[oef.query.Query, bytes, None], is_seller: bool</em><span class="sig-paren">)</span> &#x2192; List[oef.schema.Description]<a class="headerlink" href="#tac.agents.v1.base.game_instance.GameInstance.get_proposals" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrap the function which generates proposals from a seller or buyer.</p>
-<p>If there are locks as seller, it applies them.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>query</strong> – the query associated with the cfp.</p></li>
-<li><p><strong>is_seller</strong> – Boolean indicating the role of the agent.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a list of descriptions</p>
 </dd>
 </dl>
 </dd></dl>
@@ -562,6 +576,44 @@ and with an attribute version = 1.</p>
 <dt id="tac.agents.v1.base.game_instance.GameInstance.initial_agent_state">
 <em class="property">property </em><code class="sig-name descname">initial_agent_state</code><a class="headerlink" href="#tac.agents.v1.base.game_instance.GameInstance.initial_agent_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the initial agent state.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.v1.base.game_instance.GameInstance.is_matching">
+<code class="sig-name descname">is_matching</code><span class="sig-paren">(</span><em class="sig-param">cfp_services: Dict[str, Union[bool, List]], goods_description: oef.schema.Description</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#tac.agents.v1.base.game_instance.GameInstance.is_matching" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check for a match between the CFP services and the goods description.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cfp_services</strong> – a dictionary with the cfp services</p></li>
+<li><p><strong>goods_description</strong> – a description of the goods</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.v1.base.game_instance.GameInstance.is_profitable_transaction">
+<code class="sig-name descname">is_profitable_transaction</code><span class="sig-paren">(</span><em class="sig-param">transaction: tac.platform.protocol.Transaction</em>, <em class="sig-param">dialogue: tac.agents.v1.base.dialogues.Dialogue</em><span class="sig-paren">)</span> &#x2192; Tuple[bool, str]<a class="headerlink" href="#tac.agents.v1.base.game_instance.GameInstance.is_profitable_transaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if a transaction is profitable.</p>
+<p>Is it a profitable transaction?
+- apply all the locks for role.
+- check if the transaction is consistent with the locks (enough money/holdings)
+- check that we gain score.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>transaction</strong> – the transaction</p></li>
+<li><p><strong>dialogue</strong> – the dialogue</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the transaction is good (as stated above), False otherwise.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -1127,191 +1179,6 @@ and with an attribute version = 1.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>search_result</strong> – the search result</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="module-tac.agents.v1.base.lock_manager">
-<span id="tac-agents-v1-base-lock-manager-module"></span><h2>tac.agents.v1.base.lock_manager module<a class="headerlink" href="#module-tac.agents.v1.base.lock_manager" title="Permalink to this headline">¶</a></h2>
-<p>This module contains a class to manage locked agent states.</p>
-<dl class="class">
-<dt id="tac.agents.v1.base.lock_manager.LockManager">
-<em class="property">class </em><code class="sig-prename descclassname">tac.agents.v1.base.lock_manager.</code><code class="sig-name descname">LockManager</code><span class="sig-paren">(</span><em class="sig-param">agent_name: str</em>, <em class="sig-param">pending_transaction_timeout: int = 30</em>, <em class="sig-param">task_timeout: float = 2.0</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.agents.v1.base.lock_manager.LockManager" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Class to handle pending proposals/acceptances and locks.</p>
-<dl class="method">
-<dt id="tac.agents.v1.base.lock_manager.LockManager.add_lock">
-<code class="sig-name descname">add_lock</code><span class="sig-paren">(</span><em class="sig-param">transaction: tac.platform.protocol.Transaction</em>, <em class="sig-param">as_seller: bool</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.v1.base.lock_manager.LockManager.add_lock" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add a lock (in the form of a transaction).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>transaction</strong> – the transaction</p></li>
-<li><p><strong>as_seller</strong> – whether the agent is a seller or not</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>AssertionError</strong> – if the transaction is already present.</p>
-</dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="tac.agents.v1.base.lock_manager.LockManager.add_pending_initial_acceptance">
-<code class="sig-name descname">add_pending_initial_acceptance</code><span class="sig-paren">(</span><em class="sig-param">dialogue: tac.agents.v1.base.dialogues.Dialogue</em>, <em class="sig-param">proposal_id: int</em>, <em class="sig-param">transaction: tac.platform.protocol.Transaction</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.v1.base.lock_manager.LockManager.add_pending_initial_acceptance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add an acceptance (in the form of a transaction) to the pending list.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dialogue</strong> – the dialogue associated with the proposal</p></li>
-<li><p><strong>proposal_id</strong> – the message id of the proposal</p></li>
-<li><p><strong>transaction</strong> – the transaction</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>AssertionError</strong> – if the pending acceptance is already present.</p>
-</dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="tac.agents.v1.base.lock_manager.LockManager.add_pending_proposal">
-<code class="sig-name descname">add_pending_proposal</code><span class="sig-paren">(</span><em class="sig-param">dialogue: tac.agents.v1.base.dialogues.Dialogue</em>, <em class="sig-param">proposal_id: int</em>, <em class="sig-param">transaction: tac.platform.protocol.Transaction</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.v1.base.lock_manager.LockManager.add_pending_proposal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add a proposal (in the form of a transaction) to the pending list.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dialogue</strong> – the dialogue associated with the proposal</p></li>
-<li><p><strong>proposal_id</strong> – the message id of the proposal</p></li>
-<li><p><strong>transaction</strong> – the transaction</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>AssertionError</strong> – if the pending proposal is already present.</p>
-</dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="tac.agents.v1.base.lock_manager.LockManager.cleanup_locks_job">
-<code class="sig-name descname">cleanup_locks_job</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.v1.base.lock_manager.LockManager.cleanup_locks_job" title="Permalink to this definition">¶</a></dt>
-<dd><p>Periodically check for transactions in one of the pending pools.</p>
-<p>If they have been there for too much time, remove them.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="tac.agents.v1.base.lock_manager.LockManager.pop_lock">
-<code class="sig-name descname">pop_lock</code><span class="sig-paren">(</span><em class="sig-param">transaction_id: str</em><span class="sig-paren">)</span> &#x2192; tac.platform.protocol.Transaction<a class="headerlink" href="#tac.agents.v1.base.lock_manager.LockManager.pop_lock" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove a lock (in the form of a transaction).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>transaction_id</strong> – the transaction id</p>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>AssertionError</strong> – if the transaction with the given transaction id has not been found.</p>
-</dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the transaction</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="tac.agents.v1.base.lock_manager.LockManager.pop_pending_initial_acceptance">
-<code class="sig-name descname">pop_pending_initial_acceptance</code><span class="sig-paren">(</span><em class="sig-param">dialogue: tac.agents.v1.base.dialogues.Dialogue</em>, <em class="sig-param">proposal_id: int</em><span class="sig-paren">)</span> &#x2192; tac.platform.protocol.Transaction<a class="headerlink" href="#tac.agents.v1.base.lock_manager.LockManager.pop_pending_initial_acceptance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove an acceptance (in the form of a transaction) from the pending list.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dialogue</strong> – the dialogue associated with the proposal</p></li>
-<li><p><strong>proposal_id</strong> – the message id of the proposal</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>AssertionError</strong> – if the pending acceptance is not present.</p>
-</dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the transaction</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="tac.agents.v1.base.lock_manager.LockManager.pop_pending_proposal">
-<code class="sig-name descname">pop_pending_proposal</code><span class="sig-paren">(</span><em class="sig-param">dialogue: tac.agents.v1.base.dialogues.Dialogue</em>, <em class="sig-param">proposal_id: int</em><span class="sig-paren">)</span> &#x2192; tac.platform.protocol.Transaction<a class="headerlink" href="#tac.agents.v1.base.lock_manager.LockManager.pop_pending_proposal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove a proposal (in the form of a transaction) from the pending list.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dialogue</strong> – the dialogue associated with the proposal</p></li>
-<li><p><strong>proposal_id</strong> – the message id of the proposal</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>AssertionError</strong> – if the pending proposal is not present.</p>
-</dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the transaction</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="tac.agents.v1.base.lock_manager.LockManager.start">
-<code class="sig-name descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.v1.base.lock_manager.LockManager.start" title="Permalink to this definition">¶</a></dt>
-<dd><p>Start the lock manager.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="tac.agents.v1.base.lock_manager.LockManager.stop">
-<code class="sig-name descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.v1.base.lock_manager.LockManager.stop" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stop the lock manager.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="tac.agents.v1.base.lock_manager.LockManager.store_proposals">
-<code class="sig-name descname">store_proposals</code><span class="sig-paren">(</span><em class="sig-param">proposals: List[oef.schema.Description], new_msg_id: int, dialogue: tac.agents.v1.base.dialogues.Dialogue, origin: str, is_seller: bool, crypto: tac.helpers.crypto.Crypto</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.v1.base.lock_manager.LockManager.store_proposals" title="Permalink to this definition">¶</a></dt>
-<dd><p>Store proposals as pending transactions.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>proposals</strong> – the list of proposals</p></li>
-<li><p><strong>new_msg_id</strong> – the new message id</p></li>
-<li><p><strong>dialogue</strong> – the dialogue</p></li>
-<li><p><strong>origin</strong> – the public key of the message sender.</p></li>
-<li><p><strong>is_seller</strong> – Boolean indicating the role of the agent</p></li>
-<li><p><strong>crypto</strong> – the crypto object</p></li>
-</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>None</p>
@@ -2007,6 +1874,170 @@ and with an attribute version = 1.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="module-tac.agents.v1.base.transaction_manager">
+<span id="tac-agents-v1-base-transaction-manager-module"></span><h2>tac.agents.v1.base.transaction_manager module<a class="headerlink" href="#module-tac.agents.v1.base.transaction_manager" title="Permalink to this headline">¶</a></h2>
+<p>This module contains a class to manage transactions the agent has committed to at varying degrees.</p>
+<dl class="class">
+<dt id="tac.agents.v1.base.transaction_manager.TransactionManager">
+<em class="property">class </em><code class="sig-prename descclassname">tac.agents.v1.base.transaction_manager.</code><code class="sig-name descname">TransactionManager</code><span class="sig-paren">(</span><em class="sig-param">agent_name: str</em>, <em class="sig-param">pending_transaction_timeout: int = 30</em>, <em class="sig-param">task_timeout: float = 2.0</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.agents.v1.base.transaction_manager.TransactionManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to handle pending transaction proposals/acceptances and locked transactions.</p>
+<dl class="method">
+<dt id="tac.agents.v1.base.transaction_manager.TransactionManager.add_locked_tx">
+<code class="sig-name descname">add_locked_tx</code><span class="sig-paren">(</span><em class="sig-param">transaction: tac.platform.protocol.Transaction</em>, <em class="sig-param">as_seller: bool</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.v1.base.transaction_manager.TransactionManager.add_locked_tx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a lock (in the form of a transaction).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>transaction</strong> – the transaction</p></li>
+<li><p><strong>as_seller</strong> – whether the agent is a seller or not</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – if the transaction is already present.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.v1.base.transaction_manager.TransactionManager.add_pending_initial_acceptance">
+<code class="sig-name descname">add_pending_initial_acceptance</code><span class="sig-paren">(</span><em class="sig-param">dialogue_label: tac.agents.v1.base.dialogues.DialogueLabel</em>, <em class="sig-param">proposal_id: int</em>, <em class="sig-param">transaction: tac.platform.protocol.Transaction</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.v1.base.transaction_manager.TransactionManager.add_pending_initial_acceptance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an acceptance (in the form of a transaction) to the pending list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dialogue_label</strong> – the dialogue label associated with the proposal</p></li>
+<li><p><strong>proposal_id</strong> – the message id of the proposal</p></li>
+<li><p><strong>transaction</strong> – the transaction</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – if the pending acceptance is already present.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.v1.base.transaction_manager.TransactionManager.add_pending_proposal">
+<code class="sig-name descname">add_pending_proposal</code><span class="sig-paren">(</span><em class="sig-param">dialogue_label: tac.agents.v1.base.dialogues.DialogueLabel</em>, <em class="sig-param">proposal_id: int</em>, <em class="sig-param">transaction: tac.platform.protocol.Transaction</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.v1.base.transaction_manager.TransactionManager.add_pending_proposal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a proposal (in the form of a transaction) to the pending list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dialogue_label</strong> – the dialogue label associated with the proposal</p></li>
+<li><p><strong>proposal_id</strong> – the message id of the proposal</p></li>
+<li><p><strong>transaction</strong> – the transaction</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – if the pending proposal is already present.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.v1.base.transaction_manager.TransactionManager.cleanup_locked_transactions_job">
+<code class="sig-name descname">cleanup_locked_transactions_job</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.v1.base.transaction_manager.TransactionManager.cleanup_locked_transactions_job" title="Permalink to this definition">¶</a></dt>
+<dd><p>Periodically check for transactions in one of the pending pools.</p>
+<p>If they have been there for too much time, remove them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.v1.base.transaction_manager.TransactionManager.pop_locked_tx">
+<code class="sig-name descname">pop_locked_tx</code><span class="sig-paren">(</span><em class="sig-param">transaction_id: str</em><span class="sig-paren">)</span> &#x2192; tac.platform.protocol.Transaction<a class="headerlink" href="#tac.agents.v1.base.transaction_manager.TransactionManager.pop_locked_tx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a lock (in the form of a transaction).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>transaction_id</strong> – the transaction id</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – if the transaction with the given transaction id has not been found.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the transaction</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.v1.base.transaction_manager.TransactionManager.pop_pending_initial_acceptance">
+<code class="sig-name descname">pop_pending_initial_acceptance</code><span class="sig-paren">(</span><em class="sig-param">dialogue_label: tac.agents.v1.base.dialogues.DialogueLabel</em>, <em class="sig-param">proposal_id: int</em><span class="sig-paren">)</span> &#x2192; tac.platform.protocol.Transaction<a class="headerlink" href="#tac.agents.v1.base.transaction_manager.TransactionManager.pop_pending_initial_acceptance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove an acceptance (in the form of a transaction) from the pending list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dialogue_label</strong> – the dialogue label associated with the proposal</p></li>
+<li><p><strong>proposal_id</strong> – the message id of the proposal</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – if the pending acceptance is not present.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the transaction</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.v1.base.transaction_manager.TransactionManager.pop_pending_proposal">
+<code class="sig-name descname">pop_pending_proposal</code><span class="sig-paren">(</span><em class="sig-param">dialogue_label: tac.agents.v1.base.dialogues.DialogueLabel</em>, <em class="sig-param">proposal_id: int</em><span class="sig-paren">)</span> &#x2192; tac.platform.protocol.Transaction<a class="headerlink" href="#tac.agents.v1.base.transaction_manager.TransactionManager.pop_pending_proposal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a proposal (in the form of a transaction) from the pending list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dialogue_label</strong> – the dialogue label associated with the proposal</p></li>
+<li><p><strong>proposal_id</strong> – the message id of the proposal</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – if the pending proposal is not present.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the transaction</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.v1.base.transaction_manager.TransactionManager.start">
+<code class="sig-name descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.v1.base.transaction_manager.TransactionManager.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start the lock manager.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.v1.base.transaction_manager.TransactionManager.stop">
+<code class="sig-name descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.v1.base.transaction_manager.TransactionManager.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop the lock manager.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 <div class="section" id="module-tac.agents.v1.base">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-tac.agents.v1.base" title="Permalink to this headline">¶</a></h2>
 <p>This module contains the modules of a base implementation of an agent for TAC.</p>
@@ -2029,6 +2060,8 @@ and with an attribute version = 1.</p>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/controller_protocol.html">Protocol for the Controller</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/baseline_agent.html">Baseline Agent v1</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/develop_agent.html">Developing Your Own Agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/negotiation_guide.html">Step-by-step agent negotiation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/agent_state_management_guide.html">Step-by-step agent state management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/glossary.html">Glossary</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="tac.html">tac package</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="tac.html#subpackages">Subpackages</a></li>

@@ -17,7 +17,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="tac.platform package" href="tac.platform.html" />
-    <link rel="prev" title="tac.gui.dashboards package" href="tac.gui.dashboards.html" />
+    <link rel="prev" title="tac.gui.panel.forms package" href="tac.gui.panel.forms.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -150,6 +150,23 @@
 </dd></dl>
 
 <dl class="function">
+<dt id="tac.helpers.misc.build_dict">
+<code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">build_dict</code><span class="sig-paren">(</span><em class="sig-param">good_pbks: Set[str], is_supply: bool</em><span class="sig-paren">)</span> &#x2192; Dict[str, Union[str, List]]<a class="headerlink" href="#tac.helpers.misc.build_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build supply or demand services dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>good_pbks</strong> – the good public keys to put in the query</p></li>
+<li><p><strong>is_supply</strong> – Boolean indicating whether the services are for supply or demand.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the dictionary</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
 <dt id="tac.helpers.misc.build_query">
 <code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">build_query</code><span class="sig-paren">(</span><em class="sig-param">good_pbks: Set[str], is_searching_for_sellers: bool</em><span class="sig-paren">)</span> &#x2192; oef.query.Query<a class="headerlink" href="#tac.helpers.misc.build_query" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build buyer or seller search query.</p>
@@ -212,7 +229,7 @@
 
 <dl class="function">
 <dt id="tac.helpers.misc.generate_equilibrium_prices_and_holdings">
-<code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">generate_equilibrium_prices_and_holdings</code><span class="sig-paren">(</span><em class="sig-param">endowments: List[List[int]], utility_function_params: List[List[float]], money_endowment: float, scaling_factor: float</em><span class="sig-paren">)</span> &#x2192; Tuple[List[float], List[List[float]], List[float]]<a class="headerlink" href="#tac.helpers.misc.generate_equilibrium_prices_and_holdings" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">generate_equilibrium_prices_and_holdings</code><span class="sig-paren">(</span><em class="sig-param">endowments: List[List[int]], utility_function_params: List[List[float]], money_endowment: float, scaling_factor: float, quantity_shift: int = 1</em><span class="sig-paren">)</span> &#x2192; Tuple[List[float], List[List[float]], List[float]]<a class="headerlink" href="#tac.helpers.misc.generate_equilibrium_prices_and_holdings" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the competitive equilibrium prices and allocation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -221,6 +238,7 @@
 <li><p><strong>utility_function_params</strong> – utility function params of the agents (already scaled)</p></li>
 <li><p><strong>money_endowment</strong> – money endowment per agent.</p></li>
 <li><p><strong>scaling_factor</strong> – a scaling factor for all the utility params generated.</p></li>
+<li><p><strong>quantity_shift</strong> – a factor to shift the quantities in the utility function (to ensure the natural logarithm can be used on the entire range of quantities)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -377,13 +395,14 @@
 
 <dl class="function">
 <dt id="tac.helpers.misc.logarithmic_utility">
-<code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">logarithmic_utility</code><span class="sig-paren">(</span><em class="sig-param">utility_function_params: List[float], good_bundle: List[int]</em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#tac.helpers.misc.logarithmic_utility" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">logarithmic_utility</code><span class="sig-paren">(</span><em class="sig-param">utility_function_params: List[float], good_bundle: List[int], quantity_shift: int = 1</em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#tac.helpers.misc.logarithmic_utility" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute agent’s utility given her utility function params and a good bundle.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>utility_function_params</strong> – utility function params of the agent</p></li>
 <li><p><strong>good_bundle</strong> – a bundle of goods with the quantity for each good</p></li>
+<li><p><strong>quantity_shift</strong> – a factor to shift the quantities in the utility function (to ensure the natural logarithm can be used on the entire range of quantities)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -510,6 +529,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../sections/controller_protocol.html">Protocol for the Controller</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/baseline_agent.html">Baseline Agent v1</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/develop_agent.html">Developing Your Own Agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/negotiation_guide.html">Step-by-step agent negotiation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/agent_state_management_guide.html">Step-by-step agent state management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/glossary.html">Glossary</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="tac.html">tac package</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="tac.html#subpackages">Subpackages</a></li>
@@ -528,7 +549,7 @@
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
   <li><a href="tac.html">tac package</a><ul>
-      <li>Previous: <a href="tac.gui.dashboards.html" title="previous chapter">tac.gui.dashboards package</a></li>
+      <li>Previous: <a href="tac.gui.panel.forms.html" title="previous chapter">tac.gui.panel.forms package</a></li>
       <li>Next: <a href="tac.platform.html" title="next chapter">tac.platform package</a></li>
   </ul></li>
   </ul></li>

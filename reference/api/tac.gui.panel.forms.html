@@ -1,0 +1,261 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>tac.gui.panel.forms package &#8212; TAC 0.1.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="tac.helpers package" href="tac.helpers.html" />
+    <link rel="prev" title="tac.gui.panel.api.resources package" href="tac.gui.panel.api.resources.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="tac-gui-panel-forms-package">
+<h1>tac.gui.panel.forms package<a class="headerlink" href="#tac-gui-panel-forms-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-tac.gui.panel.forms.agent">
+<span id="tac-gui-panel-forms-agent-module"></span><h2>tac.gui.panel.forms.agent module<a class="headerlink" href="#module-tac.gui.panel.forms.agent" title="Permalink to this headline">¶</a></h2>
+<p>Implement the form for agent parameters.</p>
+<dl class="class">
+<dt id="tac.gui.panel.forms.agent.AgentForm">
+<em class="property">class </em><code class="sig-prename descclassname">tac.gui.panel.forms.agent.</code><code class="sig-name descname">AgentForm</code><span class="sig-paren">(</span><em class="sig-param">formdata=None</em>, <em class="sig-param">obj=None</em>, <em class="sig-param">prefix=''</em>, <em class="sig-param">data=None</em>, <em class="sig-param">meta=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.gui.panel.forms.agent.AgentForm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">wtforms.form.Form</span></code></p>
+<p>The form to set the agent parameters.</p>
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.agent.AgentForm.agent_timeout">
+<code class="sig-name descname">agent_timeout</code><em class="property"> = &lt;UnboundField(FloatField, ('Agent timeout',), {'default': 1.0, 'validators': [&lt;wtforms.validators.NumberRange object&gt;]})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.agent.AgentForm.agent_timeout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.agent.AgentForm.is_world_modeling">
+<code class="sig-name descname">is_world_modeling</code><em class="property"> = &lt;UnboundField(BooleanField, ('Is world modeling?',), {'default': False})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.agent.AgentForm.is_world_modeling" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.agent.AgentForm.max_reactions">
+<code class="sig-name descname">max_reactions</code><em class="property"> = &lt;UnboundField(IntegerField, ('Max reactions',), {'default': 100, 'widget': &lt;wtforms.widgets.core.Input object&gt;, 'validators': [&lt;wtforms.validators.NumberRange object&gt;]})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.agent.AgentForm.max_reactions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.agent.AgentForm.name">
+<code class="sig-name descname">name</code><em class="property"> = &lt;UnboundField(StringField, ('Agent name',), {'default': 'my_baseline_agent', 'validators': [&lt;wtforms.validators.Length object&gt;]})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.agent.AgentForm.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.agent.AgentForm.pending_transaction_timeout">
+<code class="sig-name descname">pending_transaction_timeout</code><em class="property"> = &lt;UnboundField(IntegerField, ('Pending transaction timeout',), {'default': 30, 'validators': [&lt;wtforms.validators.NumberRange object&gt;]})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.agent.AgentForm.pending_transaction_timeout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.agent.AgentForm.private_key_pem">
+<code class="sig-name descname">private_key_pem</code><em class="property"> = &lt;UnboundField(FileField, ('Private key PEM file path',), {'default': None, 'validators': [&lt;class 'wtforms.validators.Optional'&gt;]})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.agent.AgentForm.private_key_pem" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.agent.AgentForm.register_as">
+<code class="sig-name descname">register_as</code><em class="property"> = &lt;UnboundField(SelectField, ('Register as',), {'choices': [('buyer', 'buyer'), ('seller', 'seller'), ('both', 'both')], 'default': 'both'})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.agent.AgentForm.register_as" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.agent.AgentForm.rejoin">
+<code class="sig-name descname">rejoin</code><em class="property"> = &lt;UnboundField(BooleanField, ('Is rejoining?',), {'default': False})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.agent.AgentForm.rejoin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.agent.AgentForm.search_for">
+<code class="sig-name descname">search_for</code><em class="property"> = &lt;UnboundField(SelectField, ('Search for',), {'choices': [('buyers', 'buyers'), ('sellers', 'sellers'), ('both', 'both')], 'default': 'both'})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.agent.AgentForm.search_for" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.agent.AgentForm.services_interval">
+<code class="sig-name descname">services_interval</code><em class="property"> = &lt;UnboundField(IntegerField, ('Services interval',), {'default': 5, 'widget': &lt;wtforms.widgets.core.Input object&gt;, 'validators': [&lt;wtforms.validators.NumberRange object&gt;]})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.agent.AgentForm.services_interval" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.agent.AgentForm.whitelist_file">
+<code class="sig-name descname">whitelist_file</code><em class="property"> = &lt;UnboundField(FileField, ('Private key PEM file path',), {'default': None, 'validators': [&lt;class 'wtforms.validators.Optional'&gt;]})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.agent.AgentForm.whitelist_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-tac.gui.panel.forms.sandbox">
+<span id="tac-gui-panel-forms-sandbox-module"></span><h2>tac.gui.panel.forms.sandbox module<a class="headerlink" href="#module-tac.gui.panel.forms.sandbox" title="Permalink to this headline">¶</a></h2>
+<p>Implement the form for sandbox parameters.</p>
+<dl class="class">
+<dt id="tac.gui.panel.forms.sandbox.SandboxForm">
+<em class="property">class </em><code class="sig-prename descclassname">tac.gui.panel.forms.sandbox.</code><code class="sig-name descname">SandboxForm</code><span class="sig-paren">(</span><em class="sig-param">formdata=None</em>, <em class="sig-param">obj=None</em>, <em class="sig-param">prefix=''</em>, <em class="sig-param">data=None</em>, <em class="sig-param">meta=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.gui.panel.forms.sandbox.SandboxForm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">wtforms.form.Form</span></code></p>
+<p>The form to set the sandbox parameters.</p>
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.sandbox.SandboxForm.competition_timeout">
+<code class="sig-name descname">competition_timeout</code><em class="property"> = &lt;UnboundField(IntegerField, ('Competition timeout',), {'default': 240, 'validators': [&lt;wtforms.validators.NumberRange object&gt;]})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.sandbox.SandboxForm.competition_timeout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.sandbox.SandboxForm.inactivity_timeout">
+<code class="sig-name descname">inactivity_timeout</code><em class="property"> = &lt;UnboundField(IntegerField, ('Inactivity timeout',), {'default': 60, 'validators': [&lt;wtforms.validators.NumberRange object&gt;]})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.sandbox.SandboxForm.inactivity_timeout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.sandbox.SandboxForm.lower_bound_factor">
+<code class="sig-name descname">lower_bound_factor</code><em class="property"> = &lt;UnboundField(IntegerField, ('Lower bound factor',), {'default': 0, 'widget': &lt;wtforms.widgets.core.Input object&gt;, 'validators': [&lt;wtforms.validators.NumberRange object&gt;]})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.sandbox.SandboxForm.lower_bound_factor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.sandbox.SandboxForm.nb_agents">
+<code class="sig-name descname">nb_agents</code><em class="property"> = &lt;UnboundField(IntegerField, ('No. Agents',), {'default': 5, 'widget': &lt;wtforms.widgets.core.Input object&gt;, 'validators': [&lt;wtforms.validators.NumberRange object&gt;]})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.sandbox.SandboxForm.nb_agents" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.sandbox.SandboxForm.nb_baseline_agents">
+<code class="sig-name descname">nb_baseline_agents</code><em class="property"> = &lt;UnboundField(IntegerField, ('No. Baseline Agents',), {'default': 5, 'widget': &lt;wtforms.widgets.core.Input object&gt;, 'validators': [&lt;wtforms.validators.NumberRange object&gt;]})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.sandbox.SandboxForm.nb_baseline_agents" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.sandbox.SandboxForm.nb_goods">
+<code class="sig-name descname">nb_goods</code><em class="property"> = &lt;UnboundField(IntegerField, ('No. Goods',), {'default': 5, 'widget': &lt;wtforms.widgets.core.Input object&gt;, 'validators': [&lt;wtforms.validators.NumberRange object&gt;]})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.sandbox.SandboxForm.nb_goods" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.sandbox.SandboxForm.registration_timeout">
+<code class="sig-name descname">registration_timeout</code><em class="property"> = &lt;UnboundField(IntegerField, ('Registration timeout',), {'default': 10, 'validators': [&lt;wtforms.validators.NumberRange object&gt;]})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.sandbox.SandboxForm.registration_timeout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.sandbox.SandboxForm.seed">
+<code class="sig-name descname">seed</code><em class="property"> = &lt;UnboundField(IntegerField, ('Seed',), {'default': 42})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.sandbox.SandboxForm.seed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.sandbox.SandboxForm.services_interval">
+<code class="sig-name descname">services_interval</code><em class="property"> = &lt;UnboundField(IntegerField, ('Services interval',), {'default': 5, 'widget': &lt;wtforms.widgets.core.Input object&gt;, 'validators': [&lt;wtforms.validators.NumberRange object&gt;]})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.sandbox.SandboxForm.services_interval" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.sandbox.SandboxForm.tx_fee">
+<code class="sig-name descname">tx_fee</code><em class="property"> = &lt;UnboundField(FloatField, ('Transaction fee',), {'default': 0.1, 'validators': [&lt;wtforms.validators.NumberRange object&gt;]})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.sandbox.SandboxForm.tx_fee" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.sandbox.SandboxForm.upper_bound_factor">
+<code class="sig-name descname">upper_bound_factor</code><em class="property"> = &lt;UnboundField(IntegerField, ('Upper bound factor',), {'default': 0, 'widget': &lt;wtforms.widgets.core.Input object&gt;, 'validators': [&lt;wtforms.validators.NumberRange object&gt;]})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.sandbox.SandboxForm.upper_bound_factor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.panel.forms.sandbox.SandboxForm.whitelist_file">
+<code class="sig-name descname">whitelist_file</code><em class="property"> = &lt;UnboundField(FileField, ('Whitelist file',), {'default': None, 'validators': [&lt;class 'wtforms.validators.Optional'&gt;]})&gt;</em><a class="headerlink" href="#tac.gui.panel.forms.sandbox.SandboxForm.whitelist_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-tac.gui.panel.forms">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-tac.gui.panel.forms" title="Permalink to this headline">¶</a></h2>
+<p>Implement forms to display in the panel GUI.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../sections/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/registration_phase.html">Registration Phase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/trading_phase.html">Trading Phase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/controller_protocol.html">Protocol for the Controller</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/baseline_agent.html">Baseline Agent v1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/develop_agent.html">Developing Your Own Agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/negotiation_guide.html">Step-by-step agent negotiation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/agent_state_management_guide.html">Step-by-step agent state management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/glossary.html">Glossary</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tac.html">tac package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tac.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tac.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tac.html#module-tac.tac_pb2">tac.tac_pb2 module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tac.html#module-tac">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">tac</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tac.html">tac package</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="tac.html">tac package</a><ul>
+  <li><a href="tac.gui.html">tac.gui package</a><ul>
+  <li><a href="tac.gui.panel.html">tac.gui.panel package</a><ul>
+      <li>Previous: <a href="tac.gui.panel.api.resources.html" title="previous chapter">tac.gui.panel.api.resources package</a></li>
+      <li>Next: <a href="tac.helpers.html" title="next chapter">tac.helpers package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Fetch.AI.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/reference/api/tac.gui.panel.forms.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

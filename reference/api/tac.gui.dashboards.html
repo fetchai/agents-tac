@@ -16,7 +16,7 @@
     <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="tac.helpers package" href="tac.helpers.html" />
+    <link rel="next" title="tac.gui.panel package" href="tac.gui.panel.html" />
     <link rel="prev" title="tac.gui package" href="tac.gui.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -188,6 +188,45 @@
 </dd></dl>
 
 </div>
+<div class="section" id="module-tac.gui.dashboards.leaderboard">
+<span id="tac-gui-dashboards-leaderboard-module"></span><h2>tac.gui.dashboards.leaderboard module<a class="headerlink" href="#module-tac.gui.dashboards.leaderboard" title="Permalink to this headline">¶</a></h2>
+<p>Module containing the controller dashboard and related classes.</p>
+<dl class="class">
+<dt id="tac.gui.dashboards.leaderboard.LeaderboardDashboard">
+<em class="property">class </em><code class="sig-prename descclassname">tac.gui.dashboards.leaderboard.</code><code class="sig-name descname">LeaderboardDashboard</code><span class="sig-paren">(</span><em class="sig-param">competition_directory: str</em>, <em class="sig-param">visdom_addr: str = 'localhost'</em>, <em class="sig-param">visdom_port: int = 8097</em>, <em class="sig-param">env_name: Optional[str] = 'leaderboard'</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.gui.dashboards.leaderboard.LeaderboardDashboard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tac.gui.dashboards.base.Dashboard" title="tac.gui.dashboards.base.Dashboard"><code class="xref py py-class docutils literal notranslate"><span class="pre">tac.gui.dashboards.base.Dashboard</span></code></a></p>
+<p>Class to display the aggregated statistics of multiple TAC instances.</p>
+<p>It assumes that a Visdom server is running at the address and port provided in input
+(default: <a class="reference external" href="http://localhost:8097">http://localhost:8097</a>)</p>
+<dl class="method">
+<dt id="tac.gui.dashboards.leaderboard.LeaderboardDashboard.display">
+<code class="sig-name descname">display</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tac.gui.dashboards.leaderboard.LeaderboardDashboard.display" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the leaderboard.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.gui.dashboards.leaderboard.compute_aggregate_scores">
+<code class="sig-prename descclassname">tac.gui.dashboards.leaderboard.</code><code class="sig-name descname">compute_aggregate_scores</code><span class="sig-paren">(</span><em class="sig-param">all_game_stats: List[tac.platform.stats.GameStats]</em><span class="sig-paren">)</span> &#x2192; Dict[str, float]<a class="headerlink" href="#tac.gui.dashboards.leaderboard.compute_aggregate_scores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the sum of all scores for every agents.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>all_game_stats</strong> – the GameStats object for every instance of TAC.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a dictionary “agent_name” -&gt; “final score”</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.gui.dashboards.leaderboard.parse_args">
+<code class="sig-prename descclassname">tac.gui.dashboards.leaderboard.</code><code class="sig-name descname">parse_args</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tac.gui.dashboards.leaderboard.parse_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the arguments.</p>
+</dd></dl>
+
+</div>
 <div class="section" id="module-tac.gui.dashboards">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-tac.gui.dashboards" title="Permalink to this headline">¶</a></h2>
 <p>Module that contains dashboards.</p>
@@ -210,6 +249,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../sections/controller_protocol.html">Protocol for the Controller</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/baseline_agent.html">Baseline Agent v1</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/develop_agent.html">Developing Your Own Agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/negotiation_guide.html">Step-by-step agent negotiation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/agent_state_management_guide.html">Step-by-step agent state management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/glossary.html">Glossary</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="tac.html">tac package</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="tac.html#subpackages">Subpackages</a></li>
@@ -230,7 +271,7 @@
   <li><a href="tac.html">tac package</a><ul>
   <li><a href="tac.gui.html">tac.gui package</a><ul>
       <li>Previous: <a href="tac.gui.html" title="previous chapter">tac.gui package</a></li>
-      <li>Next: <a href="tac.helpers.html" title="next chapter">tac.helpers package</a></li>
+      <li>Next: <a href="tac.gui.panel.html" title="next chapter">tac.gui.panel package</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

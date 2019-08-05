@@ -52,14 +52,6 @@ tac.agents.v1.base.interfaces module
    :undoc-members:
    :show-inheritance:
 
-tac.agents.v1.base.lock\_manager module
----------------------------------------
-
-.. automodule:: tac.agents.v1.base.lock_manager
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 tac.agents.v1.base.negotiation\_behaviours module
 -------------------------------------------------
 
@@ -96,6 +88,14 @@ tac.agents.v1.base.strategy module
 ----------------------------------
 
 .. automodule:: tac.agents.v1.base.strategy
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+tac.agents.v1.base.transaction\_manager module
+----------------------------------------------
+
+.. automodule:: tac.agents.v1.base.transaction_manager
    :members:
    :undoc-members:
    :show-inheritance:

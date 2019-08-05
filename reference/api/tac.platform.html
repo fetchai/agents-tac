@@ -388,7 +388,7 @@ If this is the n_th registration request, where n is equal to nb_agents, then st
 
 <dl class="class">
 <dt id="tac.platform.controller.TACParameters">
-<em class="property">class </em><code class="sig-prename descclassname">tac.platform.controller.</code><code class="sig-name descname">TACParameters</code><span class="sig-paren">(</span><em class="sig-param">min_nb_agents: int = 5</em>, <em class="sig-param">money_endowment: int = 200</em>, <em class="sig-param">nb_goods: int = 5</em>, <em class="sig-param">tx_fee: float = 1.0</em>, <em class="sig-param">base_good_endowment: int = 2</em>, <em class="sig-param">lower_bound_factor: int = 1</em>, <em class="sig-param">upper_bound_factor: int = 1</em>, <em class="sig-param">start_time: datetime.datetime = datetime.datetime(2019</em>, <em class="sig-param">7</em>, <em class="sig-param">17</em>, <em class="sig-param">0</em>, <em class="sig-param">45</em>, <em class="sig-param">43</em>, <em class="sig-param">537223)</em>, <em class="sig-param">registration_timeout: int = 10</em>, <em class="sig-param">competition_timeout: int = 20</em>, <em class="sig-param">inactivity_timeout: int = 10</em>, <em class="sig-param">whitelist: Optional[Set[str]] = None</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.platform.controller.TACParameters" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">tac.platform.controller.</code><code class="sig-name descname">TACParameters</code><span class="sig-paren">(</span><em class="sig-param">min_nb_agents: int = 5</em>, <em class="sig-param">money_endowment: int = 200</em>, <em class="sig-param">nb_goods: int = 5</em>, <em class="sig-param">tx_fee: float = 1.0</em>, <em class="sig-param">base_good_endowment: int = 2</em>, <em class="sig-param">lower_bound_factor: int = 1</em>, <em class="sig-param">upper_bound_factor: int = 1</em>, <em class="sig-param">start_time: datetime.datetime = datetime.datetime(2019</em>, <em class="sig-param">8</em>, <em class="sig-param">5</em>, <em class="sig-param">17</em>, <em class="sig-param">27</em>, <em class="sig-param">37</em>, <em class="sig-param">897726)</em>, <em class="sig-param">registration_timeout: int = 10</em>, <em class="sig-param">competition_timeout: int = 20</em>, <em class="sig-param">inactivity_timeout: int = 10</em>, <em class="sig-param">whitelist: Optional[Set[str]] = None</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.platform.controller.TACParameters" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>This class contains the parameters for the TAC.</p>
 <dl class="method">
@@ -535,7 +535,7 @@ If this is the n_th registration request, where n is equal to nb_agents, then st
 
 <dl class="function">
 <dt id="tac.platform.controller.main">
-<code class="sig-prename descclassname">tac.platform.controller.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param">name: str = 'controller'</em>, <em class="sig-param">nb_agents: int = 5</em>, <em class="sig-param">nb_goods: int = 5</em>, <em class="sig-param">money_endowment: int = 200</em>, <em class="sig-param">base_good_endowment: int = 2</em>, <em class="sig-param">lower_bound_factor: int = 0</em>, <em class="sig-param">upper_bound_factor: int = 0</em>, <em class="sig-param">tx_fee: float = 1.0</em>, <em class="sig-param">oef_addr: str = '127.0.0.1'</em>, <em class="sig-param">oef_port: int = 10000</em>, <em class="sig-param">start_time: str = '2019-07-17 00:45:53.537531'</em>, <em class="sig-param">registration_timeout: int = 10</em>, <em class="sig-param">inactivity_timeout: int = 60</em>, <em class="sig-param">competition_timeout: int = 240</em>, <em class="sig-param">whitelist_file: Optional[str] = None</em>, <em class="sig-param">verbose: bool = False</em>, <em class="sig-param">gui: bool = False</em>, <em class="sig-param">visdom_addr: str = 'localhost'</em>, <em class="sig-param">visdom_port: int = 8097</em>, <em class="sig-param">data_output_dir: str = 'data'</em>, <em class="sig-param">experiment_id: Optional[str] = None</em>, <em class="sig-param">seed: int = 42</em>, <em class="sig-param">version: int = 1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.platform.controller.main" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">tac.platform.controller.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param">name: str = 'controller'</em>, <em class="sig-param">nb_agents: int = 5</em>, <em class="sig-param">nb_goods: int = 5</em>, <em class="sig-param">money_endowment: int = 200</em>, <em class="sig-param">base_good_endowment: int = 2</em>, <em class="sig-param">lower_bound_factor: int = 0</em>, <em class="sig-param">upper_bound_factor: int = 0</em>, <em class="sig-param">tx_fee: float = 1.0</em>, <em class="sig-param">oef_addr: str = '127.0.0.1'</em>, <em class="sig-param">oef_port: int = 10000</em>, <em class="sig-param">start_time: Union[str</em>, <em class="sig-param">datetime.datetime] = '2019-08-05 17:27:47.898273'</em>, <em class="sig-param">registration_timeout: int = 10</em>, <em class="sig-param">inactivity_timeout: int = 60</em>, <em class="sig-param">competition_timeout: int = 240</em>, <em class="sig-param">whitelist_file: Optional[str] = None</em>, <em class="sig-param">verbose: bool = False</em>, <em class="sig-param">gui: bool = False</em>, <em class="sig-param">visdom_addr: str = 'localhost'</em>, <em class="sig-param">visdom_port: int = 8097</em>, <em class="sig-param">data_output_dir: str = 'data'</em>, <em class="sig-param">experiment_id: Optional[str] = None</em>, <em class="sig-param">seed: int = 42</em>, <em class="sig-param">version: int = 1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.platform.controller.main" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the controller script.</p>
 </dd></dl>
 
@@ -679,7 +679,7 @@ with positive quantity plus the money left.
 </div>
 <p>Get the scores:
 &gt;&gt;&gt; game.get_scores()
-{‘tac_agent_0_pbk’: 20.0, ‘tac_agent_1_pbk’: 26.931471805599454, ‘tac_agent_2_pbk’: 40.79441541679836}</p>
+{‘tac_agent_0_pbk’: 89.31471805599453, ‘tac_agent_1_pbk’: 93.36936913707618, ‘tac_agent_2_pbk’: 101.47867129923947}</p>
 <dl class="method">
 <dt id="tac.platform.game.Game.configuration">
 <em class="property">property </em><code class="sig-name descname">configuration</code><a class="headerlink" href="#tac.platform.game.Game.configuration" title="Permalink to this definition">¶</a></dt>
@@ -1568,6 +1568,60 @@ with positive quantity plus the money left.
 </dd></dl>
 
 </div>
+<div class="section" id="module-tac.platform.simulation">
+<span id="tac-platform-simulation-module"></span><h2>tac.platform.simulation module<a class="headerlink" href="#module-tac.platform.simulation" title="Permalink to this headline">¶</a></h2>
+<p>This module implements a TAC simulation.</p>
+<p>It spawn a controller agent that handles the competition and
+several baseline agents that will participate to the competition.</p>
+<p>It requires an OEF node running and a Visdom server, if the visualization is desired.</p>
+<p>You can also run it as a script. To check the available arguments:</p>
+<blockquote>
+<div><p>python3 -m tac.platform.simulation -h</p>
+</div></blockquote>
+<dl class="class">
+<dt id="tac.platform.simulation.SimulationParams">
+<em class="property">class </em><code class="sig-prename descclassname">tac.platform.simulation.</code><code class="sig-name descname">SimulationParams</code><span class="sig-paren">(</span><em class="sig-param">oef_addr: str = 'localhost'</em>, <em class="sig-param">oef_port: int = 10000</em>, <em class="sig-param">nb_baseline_agents: int = 5</em>, <em class="sig-param">register_as: tac.agents.v1.base.strategy.RegisterAs = &lt;RegisterAs.BOTH: 'both'&gt;</em>, <em class="sig-param">search_for: tac.agents.v1.base.strategy.SearchFor = &lt;SearchFor.BOTH: 'both'&gt;</em>, <em class="sig-param">services_interval: int = 5</em>, <em class="sig-param">pending_transaction_timeout: int = 120</em>, <em class="sig-param">verbose: bool = False</em>, <em class="sig-param">gui: bool = False</em>, <em class="sig-param">visdom_addr: str = 'localhost'</em>, <em class="sig-param">visdom_port: int = 8097</em>, <em class="sig-param">data_output_dir: Optional[str] = 'data'</em>, <em class="sig-param">experiment_id: int = None</em>, <em class="sig-param">seed: int = 42</em>, <em class="sig-param">tac_parameters: Optional[tac.platform.controller.TACParameters] = None</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.platform.simulation.SimulationParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to hold simulation parameters.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.platform.simulation.build_simulation_parameters">
+<code class="sig-prename descclassname">tac.platform.simulation.</code><code class="sig-name descname">build_simulation_parameters</code><span class="sig-paren">(</span><em class="sig-param">arguments: argparse.Namespace</em><span class="sig-paren">)</span> &#x2192; tac.platform.simulation.SimulationParams<a class="headerlink" href="#tac.platform.simulation.build_simulation_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>From argparse output, build an instance of SimulationParams.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.platform.simulation.parse_arguments">
+<code class="sig-prename descclassname">tac.platform.simulation.</code><code class="sig-name descname">parse_arguments</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tac.platform.simulation.parse_arguments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Arguments parsing.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.platform.simulation.run">
+<code class="sig-prename descclassname">tac.platform.simulation.</code><code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">params: tac.platform.simulation.SimulationParams</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.platform.simulation.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the simulation.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.platform.simulation.run_baseline_agent">
+<code class="sig-prename descclassname">tac.platform.simulation.</code><code class="sig-name descname">run_baseline_agent</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.platform.simulation.run_baseline_agent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a baseline agent.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.platform.simulation.spawn_baseline_agents">
+<code class="sig-prename descclassname">tac.platform.simulation.</code><code class="sig-name descname">spawn_baseline_agents</code><span class="sig-paren">(</span><em class="sig-param">params: tac.platform.simulation.SimulationParams</em><span class="sig-paren">)</span> &#x2192; List[multiprocessing.context.Process]<a class="headerlink" href="#tac.platform.simulation.spawn_baseline_agents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spawn baseline agents.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.platform.simulation.spawn_controller_agent">
+<code class="sig-prename descclassname">tac.platform.simulation.</code><code class="sig-name descname">spawn_controller_agent</code><span class="sig-paren">(</span><em class="sig-param">params: tac.platform.simulation.SimulationParams</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.platform.simulation.spawn_controller_agent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spawn a controller agent.</p>
+</dd></dl>
+
+</div>
 <div class="section" id="module-tac.platform.stats">
 <span id="tac-platform-stats-module"></span><h2>tac.platform.stats module<a class="headerlink" href="#module-tac.platform.stats" title="Permalink to this headline">¶</a></h2>
 <p>This module contains a class to query statistics about a game.</p>
@@ -1708,6 +1762,8 @@ after transaction i (i=0 is a row with the initial scores.)</p>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/controller_protocol.html">Protocol for the Controller</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/baseline_agent.html">Baseline Agent v1</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/develop_agent.html">Developing Your Own Agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/negotiation_guide.html">Step-by-step agent negotiation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/agent_state_management_guide.html">Step-by-step agent state management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/glossary.html">Glossary</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="tac.html">tac package</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="tac.html#subpackages">Subpackages</a></li>

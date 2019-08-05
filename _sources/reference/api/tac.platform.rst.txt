@@ -28,6 +28,14 @@ tac.platform.protocol module
    :undoc-members:
    :show-inheritance:
 
+tac.platform.simulation module
+------------------------------
+
+.. automodule:: tac.platform.simulation
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 tac.platform.stats module
 -------------------------
 

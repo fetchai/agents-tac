@@ -48,12 +48,12 @@
 <li class="toctree-l2"><a class="reference internal" href="tac.agents.v1.base.html#module-tac.agents.v1.base.handlers">tac.agents.v1.base.handlers module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tac.agents.v1.base.html#module-tac.agents.v1.base.helpers">tac.agents.v1.base.helpers module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tac.agents.v1.base.html#module-tac.agents.v1.base.interfaces">tac.agents.v1.base.interfaces module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tac.agents.v1.base.html#module-tac.agents.v1.base.lock_manager">tac.agents.v1.base.lock_manager module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tac.agents.v1.base.html#module-tac.agents.v1.base.negotiation_behaviours">tac.agents.v1.base.negotiation_behaviours module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tac.agents.v1.base.html#module-tac.agents.v1.base.participant_agent">tac.agents.v1.base.participant_agent module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tac.agents.v1.base.html#module-tac.agents.v1.base.reactions">tac.agents.v1.base.reactions module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tac.agents.v1.base.html#module-tac.agents.v1.base.stats_manager">tac.agents.v1.base.stats_manager module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tac.agents.v1.base.html#module-tac.agents.v1.base.strategy">tac.agents.v1.base.strategy module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tac.agents.v1.base.html#module-tac.agents.v1.base.transaction_manager">tac.agents.v1.base.transaction_manager module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tac.agents.v1.base.html#module-tac.agents.v1.base">Module contents</a></li>
 </ul>
 </li>
@@ -202,7 +202,7 @@
 
 <dl class="method">
 <dt id="tac.agents.v1.mail.FIPAMailBox.on_cfp">
-<code class="sig-name descname">on_cfp</code><span class="sig-paren">(</span><em class="sig-param">msg_id: int, dialogue_id: int, origin: str, target: int, query: Union[oef.query.Query, bytes, None]</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.v1.mail.FIPAMailBox.on_cfp" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">on_cfp</code><span class="sig-paren">(</span><em class="sig-param">msg_id: int, dialogue_id: int, origin: str, target: int, query: Optional[bytes]</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.v1.mail.FIPAMailBox.on_cfp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Handle a CFP.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -336,6 +336,17 @@
 <dd><p>Bases: <a class="reference external" href="https://fetchai.github.io/oef-sdk-python/oef.html#oef.agents.OEFAgent" title="(in oef v0.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">oef.agents.OEFAgent</span></code></a></p>
 <p>The MailBox enqueues incoming messages, searches and errors from the OEF and sends outgoing messages to the OEF.</p>
 <dl class="method">
+<dt id="tac.agents.v1.mail.MailBox.connect">
+<code class="sig-name descname">connect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#tac.agents.v1.mail.MailBox.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect to the OEF Node. If it fails, then sleep for 3 seconds and try to reconnect again.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if the connection has been established successfully, False otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="tac.agents.v1.mail.MailBox.is_running">
 <code class="sig-name descname">is_running</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#tac.agents.v1.mail.MailBox.is_running" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check whether the mailbox is running.</p>
@@ -448,6 +459,12 @@
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>The MailStats class tracks statistics on messages processed by MailBox.</p>
 <dl class="method">
+<dt id="tac.agents.v1.mail.MailStats.search_count">
+<em class="property">property </em><code class="sig-name descname">search_count</code><a class="headerlink" href="#tac.agents.v1.mail.MailStats.search_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the search count.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="tac.agents.v1.mail.MailStats.search_end">
 <code class="sig-name descname">search_end</code><span class="sig-paren">(</span><em class="sig-param">search_id: int</em>, <em class="sig-param">nb_search_results: int</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.v1.mail.MailStats.search_end" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add end time for a search id.</p>
@@ -540,6 +557,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../sections/controller_protocol.html">Protocol for the Controller</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/baseline_agent.html">Baseline Agent v1</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/develop_agent.html">Developing Your Own Agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/negotiation_guide.html">Step-by-step agent negotiation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/agent_state_management_guide.html">Step-by-step agent state management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/glossary.html">Glossary</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="tac.html">tac package</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="tac.html#subpackages">Subpackages</a></li>
