@@ -103,7 +103,7 @@ setup(
     author=about['__author__'],
     url=about['__url__'],
     long_description=readme,
-    packages=find_packages(),
+    packages=find_packages(include=["tac*"]),
     cmdclass={
         'protoc': protoc,
     },
