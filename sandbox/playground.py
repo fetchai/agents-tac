@@ -50,8 +50,8 @@ def launch_oef():
     script_path = os.path.join("oef_search_pluto_scripts", "launch.py")
     configuration_file_path = os.path.join("oef_search_pluto_scripts", "launch_config_latest.json")
     print("Launching new OEF Node...")
-    oef_process = subprocess.Popen(["python3", script_path, "-c", configuration_file_path, "--background"],
-                                   stdout=subprocess.PIPE, env=os.environ, cwd=ROOT_DIR)
+    subprocess.Popen(["python3", script_path, "-c", configuration_file_path, "--background"],
+                     stdout=subprocess.PIPE, env=os.environ, cwd=ROOT_DIR)
 
     # Wait for OEF
     print("Waiting for the OEF to be operative...")
