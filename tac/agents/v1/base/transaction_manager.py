@@ -39,13 +39,12 @@ TRANSACTION_ID = str
 class TransactionManager(object):
     """Class to handle pending transaction proposals/acceptances and locked transactions."""
 
-    def __init__(self, agent_name: str, pending_transaction_timeout: int = 30, task_timeout: float = 2.0) -> None:
+    def __init__(self, agent_name: str, pending_transaction_timeout: int = 30) -> None:
         """
         Initialize a TransactionManager.
 
         :param agent_name: The name of the agent the manager refers to.
         :param pending_transaction_timeout: seconds to wait before a transaction/message can be removed from any pool.
-        :param task_timeout: seconds to sleep for the task
 
         :return: None
         """
@@ -59,25 +58,10 @@ class TransactionManager(object):
         self.locked_txs_as_seller = {}  # type: Dict[TRANSACTION_ID, Transaction]
 
         self.pending_transaction_timeout = pending_transaction_timeout
-        self._cleanup_locked_transactions_task = None
-        self._cleanup_locked_transactions_task_is_running = False
-        self._cleanup_locked_transactions_task_timeout = task_timeout
 
         self._last_update_for_transactions = deque()  # type: Deque[Tuple[datetime.datetime, TRANSACTION_ID]]
 
-    def cleanup_locked_transactions_job(self) -> None:
-        """
-        Periodically check for transactions in one of the pending pools.
-
-        If they have been there for too much time, remove them.
-
-        :return: None
-        """
-        while self._cleanup_locked_transactions_task_is_running:
-            time.sleep(self._cleanup_locked_transactions_task_timeout)
-            self._cleanup_pending_transactions()
-
-    def _cleanup_pending_transactions(self) -> None:
+    def cleanup_pending_transactions(self) -> None:
         """
         Remove all the pending messages (i.e. either proposals or acceptances) that have been stored for an amount of time longer than the timeout.
 
@@ -210,24 +194,3 @@ class TransactionManager(object):
         self.locked_txs_as_buyer.pop(transaction_id, None)
         self.locked_txs_as_seller.pop(transaction_id, None)
         return transaction
-
-    def start(self) -> None:
-        """
-        Start the lock manager.
-
-        :return: None
-        """
-        if not self._cleanup_locked_transactions_task_is_running:
-            self._cleanup_locked_transactions_task_is_running = True
-            self._cleanup_locked_transactions_task = Thread(target=self.cleanup_locked_transactions_job)
-            self._cleanup_locked_transactions_task.start()
-
-    def stop(self) -> None:
-        """
-        Stop the lock manager.
-
-        :return: None
-        """
-        if self._cleanup_locked_transactions_task_is_running:
-            self._cleanup_locked_transactions_task_is_running = False
-            self._cleanup_locked_transactions_task.join()
