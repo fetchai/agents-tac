@@ -25,12 +25,11 @@ import inspect
 import os
 import re
 import subprocess
-import sys
 from typing import Optional
 
 import docker
 
-from templates.v1 import basic as my_agent
+import tac.agents.v1.examples.baseline
 
 CUR_PATH = inspect.getfile(inspect.currentframe())
 ROOT_DIR = os.path.join(os.path.dirname(CUR_PATH), "..")
@@ -85,8 +84,7 @@ def wait_for_oef():
 
 
 if __name__ == '__main__':
-    sys.argv += ['--name', 'my_agent', '--gui']
 
     with Sandbox():
         wait_for_oef()
-        my_agent.main()
+        tac.agents.v1.examples.baseline.main(name="my_agent", gui=True)
