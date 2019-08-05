@@ -138,7 +138,7 @@ class Agent:
 
     @abstractmethod
     def update(self) -> None:
-        """Update the current state of the agent
+        """Update the current state of the agent.
 
         :return None
         """
