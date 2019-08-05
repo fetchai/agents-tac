@@ -77,7 +77,7 @@ If you want to include your own agents, set `NB_AGENTS` to a number equal to `NB
       
 - Connect your agents to `localhost:10000`, e.g.:
 ```
-python3 ../templates/v1/*.py
+python ../templates/v1/*.py
 ```
 
 Be careful with the values of `NB_AGENTS` and `NB_BASELINE_AGENTS`:
@@ -88,7 +88,7 @@ Be careful with the values of `NB_AGENTS` and `NB_BASELINE_AGENTS`:
 
 To run the sandbox multiple times, use the script `run_iterated_games.py`:
 
-    python3 run_iterated_games.py --config config.json
+    python run_iterated_games.py --config config.json
 
 Usage:
 ```
