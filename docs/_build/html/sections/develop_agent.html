@@ -1,0 +1,143 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Developing Your Own Agent &#8212; TAC 0.1.2 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <script type="text/javascript" src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Step-by-step agent negotiation" href="negotiation_guide.html" />
+    <link rel="prev" title="Baseline Agent v1" href="baseline_agent.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="developing-your-own-agent">
+<span id="develop-agent"></span><h1>Developing Your Own Agent<a class="headerlink" href="#developing-your-own-agent" title="Permalink to this headline">¶</a></h1>
+<p>In this section we describe a number of approaches you could take to develop your own agent.</p>
+<div class="section" id="basic-tuning-the-agent-s-parameters">
+<h2>Basic: Tuning the Agent’s Parameters<a class="headerlink" href="#basic-tuning-the-agent-s-parameters" title="Permalink to this headline">¶</a></h2>
+<p>We have developed a <a class="reference internal" href="../reference/api/tac.agents.v1.examples.html#tac.agents.v1.examples.baseline.BaselineAgent" title="tac.agents.v1.examples.baseline.BaselineAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaselineAgent</span></code></a> and a <a class="reference internal" href="../reference/api/tac.agents.v1.examples.html#tac.agents.v1.examples.strategy.BaselineStrategy" title="tac.agents.v1.examples.strategy.BaselineStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaselineStrategy</span></code></a> for you. You can run this agent via the <a class="reference external" href="https://github.com/fetchai/agents-tac/blob/master/templates/v1/basic.py">basic template</a>.</p>
+<p>By tuning the parameters the agent’s trading performance can be improved.</p>
+<p>The relevant parameters for agent tuning are:</p>
+<ul class="simple">
+<li><p><cite>–agent-timeout</cite>, which specifies the time in (fractions of) seconds to time out an agent between act and react.</p></li>
+<li><p><cite>–max-reactions</cite>, which specifies the maximum number of reactions (messages processed) per call to react.</p></li>
+<li><p><cite>–register-as</cite>, which specifies whether the baseline agent registers as seller, buyer or both on the OEF.</p></li>
+<li><p><cite>–search-for</cite>, which specifies whether the baseline agent searches for sellers, buyers or both on the OEF.</p></li>
+<li><p><cite>–is-world-modeling</cite>, which specifies whether the agent models its environment, specifically the goods’ prices.</p></li>
+<li><p><cite>–services-interval</cite>, which specifies the number of seconds to wait before doing another search. Searches kick off negotiations. A lower services interval directly translates to a higher number of negotiations.</p></li>
+</ul>
+<p>To evaluate changes in parameters on agent performance you can run your agent against several agents with baseline parameters in the sandbox (see the quickstart on <a class="reference external" href="https://github.com/fetchai/agents-tac/blob/master/README.md">main readme</a> or the guide in <a class="reference external" href="https://github.com/fetchai/agents-tac/blob/master/sandbox/README.md">sandbox readme</a> for details how to start the sandbox and your agent).</p>
+</div>
+<div class="section" id="advanced-changing-the-agent-s-strategy">
+<h2>Advanced: Changing the Agent’s Strategy<a class="headerlink" href="#advanced-changing-the-agent-s-strategy" title="Permalink to this headline">¶</a></h2>
+<p>An intermediate approach to developing your own agent is to adjust the strategy of your agent whilst still relying on our <a class="reference internal" href="../reference/api/tac.agents.v1.examples.html#tac.agents.v1.examples.baseline.BaselineAgent" title="tac.agents.v1.examples.baseline.BaselineAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaselineAgent</span></code></a> implementation. This way you can focus on the decision making component of the agent relevant for the TAC.</p>
+<p>The strategy interface is defined in <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.strategy.Strategy" title="tac.agents.v1.base.strategy.Strategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Strategy</span></code></a>. It defines the following methods:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.strategy.Strategy.supplied_good_quantities" title="tac.agents.v1.base.strategy.Strategy.supplied_good_quantities"><code class="xref py py-meth docutils literal notranslate"><span class="pre">supplied_good_quantities()</span></code></a> to specify the list of quantities which are supplied by the agent.</p></li>
+<li><p><a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.strategy.Strategy.supplied_good_pbks" title="tac.agents.v1.base.strategy.Strategy.supplied_good_pbks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">supplied_good_pbks()</span></code></a> to specify the set of good public keys which are supplied by the agent.</p></li>
+<li><p><a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.strategy.Strategy.demanded_good_quantities" title="tac.agents.v1.base.strategy.Strategy.demanded_good_quantities"><code class="xref py py-meth docutils literal notranslate"><span class="pre">demanded_good_quantities()</span></code></a> to specify the list of quantities which are demanded by the agent.</p></li>
+<li><p><a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.strategy.Strategy.demanded_good_pbks" title="tac.agents.v1.base.strategy.Strategy.demanded_good_pbks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">demanded_good_pbks()</span></code></a> to specify the set of good public keys which are demanded by the agent.</p></li>
+<li><p><a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.strategy.Strategy.get_proposals" title="tac.agents.v1.base.strategy.Strategy.get_proposals"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_proposals()</span></code></a> to specify the proposals from the agent in the role of seller/buyer.</p></li>
+</ul>
+<p>The <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.strategy.Strategy.supplied_good_quantities" title="tac.agents.v1.base.strategy.Strategy.supplied_good_quantities"><code class="xref py py-meth docutils literal notranslate"><span class="pre">supplied_good_quantities()</span></code></a> and <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.strategy.Strategy.demanded_good_quantities" title="tac.agents.v1.base.strategy.Strategy.demanded_good_quantities"><code class="xref py py-meth docutils literal notranslate"><span class="pre">demanded_good_quantities()</span></code></a> methods are used to <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.game_instance.GameInstance.get_service_description" title="tac.agents.v1.base.game_instance.GameInstance.get_service_description"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_service_description()</span></code></a>. The service descriptions thus generated are used for registration on the OEF. Changing these methods therefore directly affects what an agent registers and what services/goods of the agent other agents can therefore find.</p>
+<p>The <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.strategy.Strategy.supplied_good_pbks" title="tac.agents.v1.base.strategy.Strategy.supplied_good_pbks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">supplied_good_pbks()</span></code></a> and <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.strategy.Strategy.demanded_good_pbks" title="tac.agents.v1.base.strategy.Strategy.demanded_good_pbks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">demanded_good_pbks()</span></code></a> methods are used to <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.game_instance.GameInstance.build_services_query" title="tac.agents.v1.base.game_instance.GameInstance.build_services_query"><code class="xref py py-meth docutils literal notranslate"><span class="pre">build_services_query()</span></code></a>. The service queries thus generated are used to search for services/goods on the OEF. Changing these methods therefore directly affects what an agent searches on the OEF.</p>
+<p>The <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.strategy.Strategy.get_proposals" title="tac.agents.v1.base.strategy.Strategy.get_proposals"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_proposals()</span></code></a> method is used to generate proposals. Changing this method directly affects what an agent proposes. Of particular relevance here is the price at which an agent proposes to sellbuy the goods referenced in the proposal.</p>
+</div>
+<div class="section" id="expert-start-from-scratch">
+<h2>Expert: Start from Scratch<a class="headerlink" href="#expert-start-from-scratch" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="../reference/api/tac.agents.v1.base.html#tac.agents.v1.base.participant_agent.ParticipantAgent" title="tac.agents.v1.base.participant_agent.ParticipantAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParticipantAgent</span></code></a> is one possible implementation of an agent campable of competing in the TAC. You can build your own implementation by starting from scratch entirely or building on top of our basic <a class="reference internal" href="../reference/api/tac.agents.v1.html#tac.agents.v1.agent.Agent" title="tac.agents.v1.agent.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a>. We are excited to see what you will build!</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registration_phase.html">Registration Phase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trading_phase.html">Trading Phase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="controller_protocol.html">Protocol for the Controller</a></li>
+<li class="toctree-l1"><a class="reference internal" href="baseline_agent.html">Baseline Agent v1</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Developing Your Own Agent</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-tuning-the-agent-s-parameters">Basic: Tuning the Agent’s Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#advanced-changing-the-agent-s-strategy">Advanced: Changing the Agent’s Strategy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#expert-start-from-scratch">Expert: Start from Scratch</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="negotiation_guide.html">Step-by-step agent negotiation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agent_state_management_guide.html">Step-by-step agent state management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/api/tac.html">tac package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/api/modules.html">tac</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="baseline_agent.html" title="previous chapter">Baseline Agent v1</a></li>
+      <li>Next: <a href="negotiation_guide.html" title="next chapter">Step-by-step agent negotiation</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Fetch.AI.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/sections/develop_agent.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

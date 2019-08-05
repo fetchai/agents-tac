@@ -1,0 +1,310 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>tac.gui.dashboards package &#8212; TAC 0.1.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="tac.gui.panel package" href="tac.gui.panel.html" />
+    <link rel="prev" title="tac.gui package" href="tac.gui.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="tac-gui-dashboards-package">
+<h1>tac.gui.dashboards package<a class="headerlink" href="#tac-gui-dashboards-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-tac.gui.dashboards.agent">
+<span id="tac-gui-dashboards-agent-module"></span><h2>tac.gui.dashboards.agent module<a class="headerlink" href="#module-tac.gui.dashboards.agent" title="Permalink to this headline">¶</a></h2>
+<p>Module containing the agent dashboard and related classes.</p>
+<dl class="class">
+<dt id="tac.gui.dashboards.agent.AgentDashboard">
+<em class="property">class </em><code class="sig-prename descclassname">tac.gui.dashboards.agent.</code><code class="sig-name descname">AgentDashboard</code><span class="sig-paren">(</span><em class="sig-param">agent_name: str</em>, <em class="sig-param">visdom_addr: str = 'localhost'</em>, <em class="sig-param">visdom_port: int = 8097</em>, <em class="sig-param">env_name: Optional[str] = None</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.gui.dashboards.agent.AgentDashboard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tac.gui.dashboards.base.Dashboard" title="tac.gui.dashboards.base.Dashboard"><code class="xref py py-class docutils literal notranslate"><span class="pre">tac.gui.dashboards.base.Dashboard</span></code></a></p>
+<p>Class to manage a Visdom dashboard for the participant agent.</p>
+<p>It assumes that a Visdom server is running at the address and port provided in input
+(default: <a class="reference external" href="http://localhost:8097">http://localhost:8097</a>)</p>
+<dl class="method">
+<dt id="tac.gui.dashboards.agent.AgentDashboard.add_transaction">
+<code class="sig-name descname">add_transaction</code><span class="sig-paren">(</span><em class="sig-param">new_tx: tac.platform.protocol.Transaction</em>, <em class="sig-param">agent_name: Optional[str] = None</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.gui.dashboards.agent.AgentDashboard.add_transaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a transaction to the transaction table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>new_tx</strong> – a new transaction</p></li>
+<li><p><strong>agent_name</strong> – the agent name</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.gui.dashboards.agent.AgentDashboard.init">
+<code class="sig-name descname">init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tac.gui.dashboards.agent.AgentDashboard.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Re-initiate the AgentDashboard.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.gui.dashboards.agent.AgentDashboard.update_from_agent_state">
+<code class="sig-name descname">update_from_agent_state</code><span class="sig-paren">(</span><em class="sig-param">agent_state: tac.platform.game.AgentState</em>, <em class="sig-param">append: bool = True</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.gui.dashboards.agent.AgentDashboard.update_from_agent_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the dashboard from the agent state.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.gui.dashboards.agent.AgentDashboard.update_from_stats_manager">
+<code class="sig-name descname">update_from_stats_manager</code><span class="sig-paren">(</span><em class="sig-param">stats_manager: tac.agents.v1.base.stats_manager.StatsManager</em>, <em class="sig-param">append: bool = True</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.gui.dashboards.agent.AgentDashboard.update_from_stats_manager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the dashboard from the stats manager.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tac.gui.dashboards.agent.TransactionTable">
+<em class="property">class </em><code class="sig-prename descclassname">tac.gui.dashboards.agent.</code><code class="sig-name descname">TransactionTable</code><a class="headerlink" href="#tac.gui.dashboards.agent.TransactionTable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class maintaining a html table of transactions.</p>
+<dl class="method">
+<dt id="tac.gui.dashboards.agent.TransactionTable.add_transaction">
+<code class="sig-name descname">add_transaction</code><span class="sig-paren">(</span><em class="sig-param">tx: tac.platform.protocol.Transaction</em>, <em class="sig-param">agent_name: Optional[str] = None</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.gui.dashboards.agent.TransactionTable.add_transaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a transaction to the table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – the Transaction object</p></li>
+<li><p><strong>agent_name</strong> – the name of the agent</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.gui.dashboards.agent.TransactionTable.to_html">
+<code class="sig-name descname">to_html</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#tac.gui.dashboards.agent.TransactionTable.to_html" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the table to html.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-tac.gui.dashboards.base">
+<span id="tac-gui-dashboards-base-module"></span><h2>tac.gui.dashboards.base module<a class="headerlink" href="#module-tac.gui.dashboards.base" title="Permalink to this headline">¶</a></h2>
+<p>Module wrapping the visdom dashboard initialization.</p>
+<dl class="class">
+<dt id="tac.gui.dashboards.base.Dashboard">
+<em class="property">class </em><code class="sig-prename descclassname">tac.gui.dashboards.base.</code><code class="sig-name descname">Dashboard</code><span class="sig-paren">(</span><em class="sig-param">visdom_addr: str = 'localhost'</em>, <em class="sig-param">visdom_port: int = 8097</em>, <em class="sig-param">env_name: Optional[str] = None</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.gui.dashboards.base.Dashboard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Visdom dashboard base class.</p>
+<dl class="method">
+<dt id="tac.gui.dashboards.base.Dashboard.start">
+<code class="sig-name descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tac.gui.dashboards.base.Dashboard.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start the dashboard.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.gui.dashboards.base.Dashboard.stop">
+<code class="sig-name descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tac.gui.dashboards.base.Dashboard.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop the dashboard.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.gui.dashboards.base.start_visdom_server">
+<code class="sig-prename descclassname">tac.gui.dashboards.base.</code><code class="sig-name descname">start_visdom_server</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; subprocess.Popen<a class="headerlink" href="#tac.gui.dashboards.base.start_visdom_server" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start the visdom server.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-tac.gui.dashboards.controller">
+<span id="tac-gui-dashboards-controller-module"></span><h2>tac.gui.dashboards.controller module<a class="headerlink" href="#module-tac.gui.dashboards.controller" title="Permalink to this headline">¶</a></h2>
+<p>Module containing the controller dashboard and related classes.</p>
+<dl class="class">
+<dt id="tac.gui.dashboards.controller.ControllerDashboard">
+<em class="property">class </em><code class="sig-prename descclassname">tac.gui.dashboards.controller.</code><code class="sig-name descname">ControllerDashboard</code><span class="sig-paren">(</span><em class="sig-param">game_stats: Optional[tac.platform.stats.GameStats] = None</em>, <em class="sig-param">visdom_addr: str = 'localhost'</em>, <em class="sig-param">visdom_port: int = 8097</em>, <em class="sig-param">env_name: Optional[str] = 'tac_controller'</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.gui.dashboards.controller.ControllerDashboard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tac.gui.dashboards.base.Dashboard" title="tac.gui.dashboards.base.Dashboard"><code class="xref py py-class docutils literal notranslate"><span class="pre">tac.gui.dashboards.base.Dashboard</span></code></a></p>
+<p>Class to manage a Visdom dashboard for the controller agent.</p>
+<p>It assumes that a Visdom server is running at the address and port provided in input
+(default: <a class="reference external" href="http://localhost:8097">http://localhost:8097</a>)</p>
+<dl class="method">
+<dt id="tac.gui.dashboards.controller.ControllerDashboard.from_datadir">
+<em class="property">static </em><code class="sig-name descname">from_datadir</code><span class="sig-paren">(</span><em class="sig-param">datadir: str</em>, <em class="sig-param">env_name: str</em><span class="sig-paren">)</span> &#x2192; tac.gui.dashboards.controller.ControllerDashboard<a class="headerlink" href="#tac.gui.dashboards.controller.ControllerDashboard.from_datadir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a ControllerDashboard from a data directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>datadir</strong> – the data directory</p></li>
+<li><p><strong>env_name</strong> – the environment name</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>controller dashboard</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.gui.dashboards.controller.ControllerDashboard.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tac.gui.dashboards.controller.ControllerDashboard.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the dashboard.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.gui.dashboards.controller.parse_args">
+<code class="sig-prename descclassname">tac.gui.dashboards.controller.</code><code class="sig-name descname">parse_args</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tac.gui.dashboards.controller.parse_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the arguments.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-tac.gui.dashboards.leaderboard">
+<span id="tac-gui-dashboards-leaderboard-module"></span><h2>tac.gui.dashboards.leaderboard module<a class="headerlink" href="#module-tac.gui.dashboards.leaderboard" title="Permalink to this headline">¶</a></h2>
+<p>Module containing the controller dashboard and related classes.</p>
+<dl class="class">
+<dt id="tac.gui.dashboards.leaderboard.LeaderboardDashboard">
+<em class="property">class </em><code class="sig-prename descclassname">tac.gui.dashboards.leaderboard.</code><code class="sig-name descname">LeaderboardDashboard</code><span class="sig-paren">(</span><em class="sig-param">competition_directory: str</em>, <em class="sig-param">visdom_addr: str = 'localhost'</em>, <em class="sig-param">visdom_port: int = 8097</em>, <em class="sig-param">env_name: Optional[str] = 'leaderboard'</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.gui.dashboards.leaderboard.LeaderboardDashboard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tac.gui.dashboards.base.Dashboard" title="tac.gui.dashboards.base.Dashboard"><code class="xref py py-class docutils literal notranslate"><span class="pre">tac.gui.dashboards.base.Dashboard</span></code></a></p>
+<p>Class to display the aggregated statistics of multiple TAC instances.</p>
+<p>It assumes that a Visdom server is running at the address and port provided in input
+(default: <a class="reference external" href="http://localhost:8097">http://localhost:8097</a>)</p>
+<dl class="method">
+<dt id="tac.gui.dashboards.leaderboard.LeaderboardDashboard.display">
+<code class="sig-name descname">display</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tac.gui.dashboards.leaderboard.LeaderboardDashboard.display" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the leaderboard.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.gui.dashboards.leaderboard.compute_aggregate_scores">
+<code class="sig-prename descclassname">tac.gui.dashboards.leaderboard.</code><code class="sig-name descname">compute_aggregate_scores</code><span class="sig-paren">(</span><em class="sig-param">all_game_stats: List[tac.platform.stats.GameStats]</em><span class="sig-paren">)</span> &#x2192; Dict[str, float]<a class="headerlink" href="#tac.gui.dashboards.leaderboard.compute_aggregate_scores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the sum of all scores for every agents.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>all_game_stats</strong> – the GameStats object for every instance of TAC.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a dictionary “agent_name” -&gt; “final score”</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.gui.dashboards.leaderboard.parse_args">
+<code class="sig-prename descclassname">tac.gui.dashboards.leaderboard.</code><code class="sig-name descname">parse_args</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tac.gui.dashboards.leaderboard.parse_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the arguments.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-tac.gui.dashboards">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-tac.gui.dashboards" title="Permalink to this headline">¶</a></h2>
+<p>Module that contains dashboards.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../sections/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/registration_phase.html">Registration Phase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/trading_phase.html">Trading Phase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/controller_protocol.html">Protocol for the Controller</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/baseline_agent.html">Baseline Agent v1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/develop_agent.html">Developing Your Own Agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/negotiation_guide.html">Step-by-step agent negotiation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/agent_state_management_guide.html">Step-by-step agent state management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/glossary.html">Glossary</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tac.html">tac package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tac.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tac.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tac.html#module-tac.tac_pb2">tac.tac_pb2 module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tac.html#module-tac">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">tac</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tac.html">tac package</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="tac.html">tac package</a><ul>
+  <li><a href="tac.gui.html">tac.gui package</a><ul>
+      <li>Previous: <a href="tac.gui.html" title="previous chapter">tac.gui package</a></li>
+      <li>Next: <a href="tac.gui.panel.html" title="next chapter">tac.gui.panel package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Fetch.AI.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/reference/api/tac.gui.dashboards.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

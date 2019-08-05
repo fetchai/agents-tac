@@ -1,0 +1,190 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Step-by-step agent state management &#8212; TAC 0.1.2 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <script type="text/javascript" src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Glossary" href="glossary.html" />
+    <link rel="prev" title="Step-by-step agent negotiation" href="negotiation_guide.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="Step-by-step-agent-state-management">
+<h1>Step-by-step agent state management<a class="headerlink" href="#Step-by-step-agent-state-management" title="Permalink to this headline">¶</a></h1>
+<p>In this section, you will see how the agent state is managed in our framework.</p>
+<div class="section" id="The-big-picture">
+<h2>The big picture<a class="headerlink" href="#The-big-picture" title="Permalink to this headline">¶</a></h2>
+<p>The following diagram gives you a high-level understanding of how the agent state management works for a generic negotiation.</p>
+
+            <style>
+            /* mermaid issue 527 workaround */
+            .section {
+                opacity: 1.0 !important;
+            }
+            </style>
+            <script>mermaid.initialize({startOnLoad:true});</script><div class="mermaid">
+            sequenceDiagram
+
+    participant Agent_1
+
+    participant Agent_2
+
+    participant Controller
+
+    activate Controller
+
+    Agent_1-&gt;&gt;Agent_2: (1) send_cfp(1, 1, &quot;agent_2_pbk&quot;, 0, query)
+    
+    Agent_2-&gt;&gt;Agent_2: (2) get_proposal()
+    Agent_2-&gt;&gt;Agent_2: (3) add_pending_proposal()
+
+    Agent_2-&gt;&gt;Agent_1: (4) send_propose(2, 1, &quot;agent_1_pbk&quot;, 1, proposals)
+
+    Agent_1-&gt;&gt;Agent_1: (5) is_profitable_transaction()
+    Agent_1-&gt;&gt;Agent_1: (6) add_locked_tx()
+    Agent_1-&gt;&gt;Agent_1: (7) add_pending_initial_acceptance()
+
+    Agent_1-&gt;&gt;Agent_2: (8) send_accept(3, 1, &quot;agent_2_pbk&quot;, 2)
+
+    Agent_2-&gt;&gt;Agent_2: (9) pop_pending_proposal()
+    Agent_2-&gt;&gt;Agent_2: (10) is_profitable_transaction()
+    Agent_2-&gt;&gt;Agent_2: (11) add_locked_tx()
+
+    Agent_2-&gt;&gt;Agent_1: (12) send_accept(4, 1, &quot;agent_1_pbk&quot;, 3)
+    Agent_2-&gt;&gt;Controller: (13) send_message(4, 1, &quot;controller_pbk&quot;, transaction)
+
+    Agent_1-&gt;&gt;Agent_1: (14) pop_pending_initial_acceptance()
+
+    Agent_1-&gt;&gt;Controller: (15) send_message(5, 1, &quot;controller_pbk&quot;, transaction)
+
+    Controller-&gt;&gt;Agent_1: (16) TransactionConfirmation(transaction)
+
+    Agent_1-&gt;&gt;Agent_1: (17) pop_locked_tx()
+    Agent_1-&gt;&gt;Agent_1: (18) agent_state.update()
+
+    Controller-&gt;&gt;Agent_2: (19) TransactionConfirmation(transaction)
+
+    Agent_2-&gt;&gt;Agent_2: (20) pop_locked_tx()
+    Agent_2-&gt;&gt;Agent_2: (21) agent_state.update()
+
+    deactivate Controller
+
+        </div><p>Let’s see step by step what happens:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> sends a <code class="docutils literal notranslate"><span class="pre">CFP</span></code> to <code class="docutils literal notranslate"><span class="pre">Agent_2</span></code>, meaning that she wants to start a negotiation. The CFP contains a reference to the goods which <code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> is interested in and whether <code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> is a buyer or seller of these goods.</p></li>
+<li><p>Assuming <code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> does not decline the CFP, <code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> calls <code class="docutils literal notranslate"><span class="pre">get_proposals()</span></code> to generate a list of proposal for answering to <code class="docutils literal notranslate"><span class="pre">Agent_1</span></code>. When generating the proposals <code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> applies all locked transactions - we discuss below when a transaction becomes locked - to the current agent state to generate a “forward looking agent state” (i.e. the state the agent will be in when all locked transactions have been settled by the <code class="docutils literal notranslate"><span class="pre">Controller</span></code>). This ensures <code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> takes into
+account all the transactions she has committed to.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> calls <code class="docutils literal notranslate"><span class="pre">store_proposals()</span></code> to store the proposals as <code class="docutils literal notranslate"><span class="pre">pending_proposals</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> replies with a <code class="docutils literal notranslate"><span class="pre">Propose</span></code> message which includes the proposals as an answer to the <code class="docutils literal notranslate"><span class="pre">CFP</span></code> (note, currently the list of proposals includes exactly one proposal).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> translates the proposal into a transaction and calls <code class="docutils literal notranslate"><span class="pre">is_profitable_transaction()</span></code> to identify whether the transaction is profitable.</p></li>
+<li><p>Assuming the proposal is profitable, <code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> calls <code class="docutils literal notranslate"><span class="pre">add_locked_tx()</span></code> to add the transaction to the list of locked transactions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> calls <code class="docutils literal notranslate"><span class="pre">add_pending_initial_acceptance()</span></code> to add the transaction to the list of pending initial acceptances. This helps the agent identify whether an incoming <code class="docutils literal notranslate"><span class="pre">Accept</span></code> from <code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> is a matching accept or an initial accept.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> sends an <code class="docutils literal notranslate"><span class="pre">Accept</span></code> message to <code class="docutils literal notranslate"><span class="pre">Agent_2</span></code>, meaning that she accepts the proposal.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> calls <code class="docutils literal notranslate"><span class="pre">pop_pending_proposal()</span></code> to recover the proposal - in the form of a transaction - made to <code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> and referenced in the acceptance message.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> calls <code class="docutils literal notranslate"><span class="pre">is_profitable_transaction()</span></code> to identify whether the transaction is profitable. This proposal was created by <code class="docutils literal notranslate"><span class="pre">Agent_2</span></code>, however in the meanwhile <code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> might have a different agent state which could render this proposal no longer profitable.</p></li>
+<li><p>Assuming the proposal is still profitable, <code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> calls <code class="docutils literal notranslate"><span class="pre">add_locked_tx()</span></code> to add the transaction to the list of locked transactions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> sends an <code class="docutils literal notranslate"><span class="pre">Accept</span></code> message to <code class="docutils literal notranslate"><span class="pre">Agent_1</span></code>, meaning that she “match-accepts” the proposal.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> sends a Transaction request to the <code class="docutils literal notranslate"><span class="pre">Controller</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> calls <code class="docutils literal notranslate"><span class="pre">pop_pending_initial_acceptance()</span></code> to</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> sends a Transaction request to the <code class="docutils literal notranslate"><span class="pre">Controller</span></code> (analogous to step 13).</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">Controller</span></code> notifies <code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> that the transaction has been confirmed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> calls <code class="docutils literal notranslate"><span class="pre">pop_locked_tx()</span></code> to remove the transaction from the locked transaction list.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> calls <code class="docutils literal notranslate"><span class="pre">agent_state.update()</span></code> to update its state.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">Controller</span></code> notifies <code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> that the transaction has been confirmed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> calls <code class="docutils literal notranslate"><span class="pre">pop_locked_tx()</span></code> to remove the transaction from the locked transaction list (analogous to step 17).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> calls <code class="docutils literal notranslate"><span class="pre">agent_state.update()</span></code> to update its state (analogous to step 18).</p></li>
+</ol>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registration_phase.html">Registration Phase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trading_phase.html">Trading Phase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="controller_protocol.html">Protocol for the Controller</a></li>
+<li class="toctree-l1"><a class="reference internal" href="baseline_agent.html">Baseline Agent v1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="develop_agent.html">Developing Your Own Agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="negotiation_guide.html">Step-by-step agent negotiation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Step-by-step agent state management</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#The-big-picture">The big picture</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/api/tac.html">tac package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/api/modules.html">tac</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="negotiation_guide.html" title="previous chapter">Step-by-step agent negotiation</a></li>
+      <li>Next: <a href="glossary.html" title="next chapter">Glossary</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Fetch.AI.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/sections/agent_state_management_guide.ipynb.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

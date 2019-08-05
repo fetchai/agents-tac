@@ -1,0 +1,588 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>tac.helpers package &#8212; TAC 0.1.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="tac.platform package" href="tac.platform.html" />
+    <link rel="prev" title="tac.gui.panel.forms package" href="tac.gui.panel.forms.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="tac-helpers-package">
+<h1>tac.helpers package<a class="headerlink" href="#tac-helpers-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-tac.helpers.crypto">
+<span id="tac-helpers-crypto-module"></span><h2>tac.helpers.crypto module<a class="headerlink" href="#module-tac.helpers.crypto" title="Permalink to this headline">¶</a></h2>
+<p>Module wrapping the public and private key cryptography.</p>
+<dl class="class">
+<dt id="tac.helpers.crypto.Crypto">
+<em class="property">class </em><code class="sig-prename descclassname">tac.helpers.crypto.</code><code class="sig-name descname">Crypto</code><span class="sig-paren">(</span><em class="sig-param">private_key_pem_path: Optional[str] = None</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.helpers.crypto.Crypto" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class wrapping the public and private key cryptography.</p>
+<dl class="method">
+<dt id="tac.helpers.crypto.Crypto.fingerprint">
+<em class="property">property </em><code class="sig-name descname">fingerprint</code><a class="headerlink" href="#tac.helpers.crypto.Crypto.fingerprint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a 64 character fingerprint of the public key in hexadecimal format (32 bytes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the fingerprint</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.helpers.crypto.Crypto.is_confirmed_integrity">
+<code class="sig-name descname">is_confirmed_integrity</code><span class="sig-paren">(</span><em class="sig-param">data: bytes</em>, <em class="sig-param">signature: bytes</em>, <em class="sig-param">signer_pbk: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#tac.helpers.crypto.Crypto.is_confirmed_integrity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Confirrm the integrity of the data with respect to its signature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – the data to be confirmed</p></li>
+<li><p><strong>signature</strong> – the signature associated with the data</p></li>
+<li><p><strong>signer_pbk</strong> – the public key of the signer</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>bool indicating whether the integrity is confirmed or not</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.helpers.crypto.Crypto.public_key">
+<em class="property">property </em><code class="sig-name descname">public_key</code><a class="headerlink" href="#tac.helpers.crypto.Crypto.public_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a 219 character public key in base58 format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a public key string in base58 format</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.helpers.crypto.Crypto.public_key_pem">
+<em class="property">property </em><code class="sig-name descname">public_key_pem</code><a class="headerlink" href="#tac.helpers.crypto.Crypto.public_key_pem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a PEM encoded public key in base64 format. It consists of an algorithm identifier and the public key as a bit string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a public key bytes string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.helpers.crypto.Crypto.sign_data">
+<code class="sig-name descname">sign_data</code><span class="sig-paren">(</span><em class="sig-param">data: bytes</em><span class="sig-paren">)</span> &#x2192; bytes<a class="headerlink" href="#tac.helpers.crypto.Crypto.sign_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sign data with your own private key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> – the data to sign</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the signature</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="tac.helpers.crypto.CryptoError">
+<em class="property">exception </em><code class="sig-prename descclassname">tac.helpers.crypto.</code><code class="sig-name descname">CryptoError</code><a class="headerlink" href="#tac.helpers.crypto.CryptoError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Exception to be thrown when cryptographic signatures don’t match!.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-tac.helpers.misc">
+<span id="tac-helpers-misc-module"></span><h2>tac.helpers.misc module<a class="headerlink" href="#module-tac.helpers.misc" title="Permalink to this headline">¶</a></h2>
+<p>A module containing miscellaneous methods and classes.</p>
+<dl class="exception">
+<dt id="tac.helpers.misc.TacError">
+<em class="property">exception </em><code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">TacError</code><a class="headerlink" href="#tac.helpers.misc.TacError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>General purpose exception to detect exception associated with the logic of the TAC application.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.helpers.misc.build_datamodel">
+<code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">build_datamodel</code><span class="sig-paren">(</span><em class="sig-param">good_pbks: List[str], is_supply: bool</em><span class="sig-paren">)</span> &#x2192; oef.schema.DataModel<a class="headerlink" href="#tac.helpers.misc.build_datamodel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build a data model for supply and demand (i.e. for offered or requested goods).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>good_pbks</strong> – the list of good public keys</p></li>
+<li><p><strong>is_supply</strong> – Boolean indicating whether it is a supply or demand data model</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the data model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.helpers.misc.build_dict">
+<code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">build_dict</code><span class="sig-paren">(</span><em class="sig-param">good_pbks: Set[str], is_supply: bool</em><span class="sig-paren">)</span> &#x2192; Dict[str, Union[str, List]]<a class="headerlink" href="#tac.helpers.misc.build_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build supply or demand services dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>good_pbks</strong> – the good public keys to put in the query</p></li>
+<li><p><strong>is_supply</strong> – Boolean indicating whether the services are for supply or demand.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the dictionary</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.helpers.misc.build_query">
+<code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">build_query</code><span class="sig-paren">(</span><em class="sig-param">good_pbks: Set[str], is_searching_for_sellers: bool</em><span class="sig-paren">)</span> &#x2192; oef.query.Query<a class="headerlink" href="#tac.helpers.misc.build_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build buyer or seller search query.</p>
+<dl class="simple">
+<dt>Specifically, build the search query</dt><dd><ul class="simple">
+<li><p>to look for sellers if the agent is a buyer, or</p></li>
+<li><p>to look for buyers if the agent is a seller.</p></li>
+</ul>
+</dd>
+</dl>
+<p>In particular, if the agent is a buyer and the demanded good public keys are {‘tac_good_0’, ‘tac_good_2’, ‘tac_good_3’}, the resulting constraint expression is:</p>
+<blockquote>
+<div><p>tac_good_0 &gt;= 1 OR tac_good_2 &gt;= 1 OR tac_good_3 &gt;= 1</p>
+</div></blockquote>
+<p>That is, the OEF will return all the sellers that have at least one of the good in the query
+(assuming that the sellers are registered with the data model specified).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>good_pbks</strong> – the good public keys to put in the query</p></li>
+<li><p><strong>is_searching_for_sellers</strong> – Boolean indicating whether the query is for sellers (supply) or buyers (demand).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the query</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.helpers.misc.determine_scaling_factor">
+<code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">determine_scaling_factor</code><span class="sig-paren">(</span><em class="sig-param">money_endowment: int</em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#tac.helpers.misc.determine_scaling_factor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the scaling factor based on the money amount.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>money_endowment</strong> – the endowment of money for the agent</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the scaling factor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.helpers.misc.escape_html">
+<code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">escape_html</code><span class="sig-paren">(</span><em class="sig-param">string: str</em>, <em class="sig-param">quote=True</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#tac.helpers.misc.escape_html" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace special characters “&amp;”, “&lt;” and “&gt;” to HTML-safe sequences.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>string</strong> – the string</p></li>
+<li><p><strong>quote</strong> – If the optional flag quote is true (the default), the quotation mark characters, both double quote (“) and single quote (‘) characters are also translated.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the escaped string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.helpers.misc.generate_equilibrium_prices_and_holdings">
+<code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">generate_equilibrium_prices_and_holdings</code><span class="sig-paren">(</span><em class="sig-param">endowments: List[List[int]], utility_function_params: List[List[float]], money_endowment: float, scaling_factor: float, quantity_shift: int = 1</em><span class="sig-paren">)</span> &#x2192; Tuple[List[float], List[List[float]], List[float]]<a class="headerlink" href="#tac.helpers.misc.generate_equilibrium_prices_and_holdings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the competitive equilibrium prices and allocation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>endowments</strong> – endowments of the agents</p></li>
+<li><p><strong>utility_function_params</strong> – utility function params of the agents (already scaled)</p></li>
+<li><p><strong>money_endowment</strong> – money endowment per agent.</p></li>
+<li><p><strong>scaling_factor</strong> – a scaling factor for all the utility params generated.</p></li>
+<li><p><strong>quantity_shift</strong> – a factor to shift the quantities in the utility function (to ensure the natural logarithm can be used on the entire range of quantities)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the lists of equilibrium prices, equilibrium good holdings and equilibrium money holdings</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.helpers.misc.generate_good_endowments">
+<code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">generate_good_endowments</code><span class="sig-paren">(</span><em class="sig-param">nb_goods: int</em>, <em class="sig-param">nb_agents: int</em>, <em class="sig-param">base_amount: int</em>, <em class="sig-param">uniform_lower_bound_factor: int</em>, <em class="sig-param">uniform_upper_bound_factor: int</em><span class="sig-paren">)</span> &#x2192; List[List[int]]<a class="headerlink" href="#tac.helpers.misc.generate_good_endowments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute good endowments per agent. That is, a matrix of shape (nb_agents, nb_goods).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nb_goods</strong> – the number of goods.</p></li>
+<li><p><strong>nb_agents</strong> – the number of agents.</p></li>
+<li><p><strong>base_amount</strong> – the base amount of instances per good</p></li>
+<li><p><strong>uniform_lower_bound_factor</strong> – the lower bound of the uniform distribution for the sampling of the good instance number.</p></li>
+<li><p><strong>uniform_upper_bound_factor</strong> – the upper bound of the uniform distribution for the sampling of the good instance number.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the endowments matrix.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.helpers.misc.generate_good_pbk_to_name">
+<code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">generate_good_pbk_to_name</code><span class="sig-paren">(</span><em class="sig-param">nb_goods: int</em><span class="sig-paren">)</span> &#x2192; Dict[str, str]<a class="headerlink" href="#tac.helpers.misc.generate_good_pbk_to_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate public keys for things.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>nb_goods</strong> – the number of things.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a dictionary mapping goods’ public keys to names.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.helpers.misc.generate_html_table_from_dict">
+<code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">generate_html_table_from_dict</code><span class="sig-paren">(</span><em class="sig-param">dictionary: Dict[str, List[str]], title=''</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#tac.helpers.misc.generate_html_table_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a html table from a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dictionary</strong> – the dictionary</p></li>
+<li><p><strong>title</strong> – the title</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a html string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.helpers.misc.generate_money_endowments">
+<code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">generate_money_endowments</code><span class="sig-paren">(</span><em class="sig-param">nb_agents: int</em>, <em class="sig-param">money_endowment: int</em><span class="sig-paren">)</span> &#x2192; List[int]<a class="headerlink" href="#tac.helpers.misc.generate_money_endowments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the initial money amounts for each agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nb_agents</strong> – number of agents.</p></li>
+<li><p><strong>money_endowment</strong> – money endowment per agent.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the list of initial money amounts.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.helpers.misc.generate_transaction_id">
+<code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">generate_transaction_id</code><span class="sig-paren">(</span><em class="sig-param">agent_pbk: str</em>, <em class="sig-param">origin: str</em>, <em class="sig-param">dialogue_id: int</em>, <em class="sig-param">agent_is_seller: bool</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#tac.helpers.misc.generate_transaction_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a transaction id.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>agent_pbk</strong> – the pbk of the agent.</p></li>
+<li><p><strong>origin</strong> – the public key of the message sender.</p></li>
+<li><p><strong>dialogue_id</strong> – the dialogue id</p></li>
+<li><p><strong>agent_is_seller</strong> – boolean indicating if the agent is a seller</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a transaction id</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.helpers.misc.generate_utility_params">
+<code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">generate_utility_params</code><span class="sig-paren">(</span><em class="sig-param">nb_agents: int</em>, <em class="sig-param">nb_goods: int</em>, <em class="sig-param">scaling_factor: float</em><span class="sig-paren">)</span> &#x2192; List[List[float]]<a class="headerlink" href="#tac.helpers.misc.generate_utility_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the preference matrix. That is, a generic element e_ij is the utility of good j for agent i.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nb_agents</strong> – the number of agents.</p></li>
+<li><p><strong>nb_goods</strong> – the number of goods.</p></li>
+<li><p><strong>scaling_factor</strong> – a scaling factor for all the utility params generated.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the preference matrix.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.helpers.misc.get_goods_quantities_description">
+<code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">get_goods_quantities_description</code><span class="sig-paren">(</span><em class="sig-param">good_pbks: List[str], good_quantities: List[int], is_supply: bool</em><span class="sig-paren">)</span> &#x2192; oef.schema.Description<a class="headerlink" href="#tac.helpers.misc.get_goods_quantities_description" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the TAC description for supply or demand.</p>
+<p>That is, a description with the following structure:
+&gt;&gt;&gt; description = {
+…     “tac_good_0”: 1,
+…     “tac_good_1”: 0,
+…     #…
+…
+… }
+&gt;&gt;&gt;</p>
+<blockquote>
+<div><p>where the keys indicate the good_pbk and the values the quantity.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">desc</span> <span class="o">=</span> <span class="n">get_goods_quantities_description</span><span class="p">([</span><span class="s1">&#39;tac_good_0&#39;</span><span class="p">,</span> <span class="s1">&#39;tac_good_1&#39;</span><span class="p">,</span> <span class="s1">&#39;tac_good_2&#39;</span><span class="p">,</span> <span class="s1">&#39;tac_good_3&#39;</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">desc</span><span class="o">.</span><span class="n">data_model</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">TAC_SUPPLY_DATAMODEL_NAME</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">desc</span><span class="o">.</span><span class="n">values</span> <span class="o">==</span> <span class="p">{</span>
+<span class="gp">... </span>   <span class="s2">&quot;tac_good_0&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="s2">&quot;tac_good_1&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="s2">&quot;tac_good_2&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="s2">&quot;tac_good_3&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+<span class="gp">...</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>good_pbks</strong> – the public keys of the goods.</p></li>
+<li><p><strong>good_quantities</strong> – the quantities per good.</p></li>
+<li><p><strong>is_supply</strong> – True if the description is indicating supply, False if it’s indicating demand.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the description to advertise on the Service Directory.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.helpers.misc.logarithmic_utility">
+<code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">logarithmic_utility</code><span class="sig-paren">(</span><em class="sig-param">utility_function_params: List[float], good_bundle: List[int], quantity_shift: int = 1</em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#tac.helpers.misc.logarithmic_utility" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute agent’s utility given her utility function params and a good bundle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>utility_function_params</strong> – utility function params of the agent</p></li>
+<li><p><strong>good_bundle</strong> – a bundle of goods with the quantity for each good</p></li>
+<li><p><strong>quantity_shift</strong> – a factor to shift the quantities in the utility function (to ensure the natural logarithm can be used on the entire range of quantities)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>utility value</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.helpers.misc.marginal_utility">
+<code class="sig-prename descclassname">tac.helpers.misc.</code><code class="sig-name descname">marginal_utility</code><span class="sig-paren">(</span><em class="sig-param">utility_function_params: List[float], current_holdings: List[int], delta_holdings: List[int]</em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#tac.helpers.misc.marginal_utility" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute agent’s utility given her utility function params and a good bundle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>utility_function_params</strong> – utility function params of the agent</p></li>
+<li><p><strong>current_holdings</strong> – a list of goods with the quantity for each good</p></li>
+<li><p><strong>delta_holdings</strong> – a list of goods with the quantity for each good (can be positive or negative)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>utility difference between new and current utility</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-tac.helpers.price_model">
+<span id="tac-helpers-price-model-module"></span><h2>tac.helpers.price_model module<a class="headerlink" href="#module-tac.helpers.price_model" title="Permalink to this headline">¶</a></h2>
+<p>A module containing a simple price model.</p>
+<dl class="class">
+<dt id="tac.helpers.price_model.GoodPriceModel">
+<em class="property">class </em><code class="sig-prename descclassname">tac.helpers.price_model.</code><code class="sig-name descname">GoodPriceModel</code><a class="headerlink" href="#tac.helpers.price_model.GoodPriceModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class for a price model of a good.</p>
+<dl class="method">
+<dt id="tac.helpers.price_model.GoodPriceModel.get_price_expectation">
+<code class="sig-name descname">get_price_expectation</code><span class="sig-paren">(</span><em class="sig-param">constraint: float</em>, <em class="sig-param">is_seller: bool</em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#tac.helpers.price_model.GoodPriceModel.get_price_expectation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get best price (given a constraint).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>constraint</strong> – the constraint on the price</p></li>
+<li><p><strong>is_seller</strong> – indicating whether the agent is a buyer or seller</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the winning price</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.helpers.price_model.GoodPriceModel.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">outcome: bool</em>, <em class="sig-param">price: float</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.helpers.price_model.GoodPriceModel.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the respective bandit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>price</strong> – the price to be updated</p></li>
+<li><p><strong>outcome</strong> – the negotiation outcome</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tac.helpers.price_model.PriceBandit">
+<em class="property">class </em><code class="sig-prename descclassname">tac.helpers.price_model.</code><code class="sig-name descname">PriceBandit</code><span class="sig-paren">(</span><em class="sig-param">price: float</em>, <em class="sig-param">beta_a: float = 1.0</em>, <em class="sig-param">beta_b: float = 1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.helpers.price_model.PriceBandit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class for a multi-armed bandit model of price.</p>
+<dl class="method">
+<dt id="tac.helpers.price_model.PriceBandit.sample">
+<code class="sig-name descname">sample</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#tac.helpers.price_model.PriceBandit.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sample from the bandit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the sampled value</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.helpers.price_model.PriceBandit.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">outcome: bool</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.helpers.price_model.PriceBandit.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the bandit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>outcome</strong> – the outcome used for updating</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-tac.helpers">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-tac.helpers" title="Permalink to this headline">¶</a></h2>
+<p>The helpers module contains the helpers of the TAC package.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../sections/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/registration_phase.html">Registration Phase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/trading_phase.html">Trading Phase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/controller_protocol.html">Protocol for the Controller</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/baseline_agent.html">Baseline Agent v1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/develop_agent.html">Developing Your Own Agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/negotiation_guide.html">Step-by-step agent negotiation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/agent_state_management_guide.html">Step-by-step agent state management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/glossary.html">Glossary</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tac.html">tac package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tac.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tac.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tac.html#module-tac.tac_pb2">tac.tac_pb2 module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tac.html#module-tac">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">tac</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tac.html">tac package</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="tac.html">tac package</a><ul>
+      <li>Previous: <a href="tac.gui.panel.forms.html" title="previous chapter">tac.gui.panel.forms package</a></li>
+      <li>Next: <a href="tac.platform.html" title="next chapter">tac.platform package</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Fetch.AI.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/reference/api/tac.helpers.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

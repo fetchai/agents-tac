@@ -1,0 +1,646 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Step-by-step agent negotiation &#8212; TAC 0.1.2 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <script type="text/javascript" src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Step-by-step agent state management" href="agent_state_management_guide.html" />
+    <link rel="prev" title="Developing Your Own Agent" href="develop_agent.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput,
+div.nbinput div.prompt,
+div.nbinput div.input_area,
+div.nbinput div[class*=highlight],
+div.nbinput div[class*=highlight] pre,
+div.nboutput,
+div.nbinput div.prompt,
+div.nbinput div.output_area,
+div.nboutput div[class*=highlight],
+div.nboutput div[class*=highlight] pre {
+    background: none;
+    border: none;
+    padding: 0 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+/* avoid gaps between output lines */
+div.nboutput div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput,
+div.nboutput {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput,
+    div.nboutput {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput div.prompt,
+div.nboutput div.prompt {
+    min-width: 5ex;
+    padding-top: 0.4em;
+    padding-right: 0.4em;
+    text-align: right;
+    flex: 0;
+}
+@media (max-width: 540px) {
+    div.nbinput div.prompt,
+    div.nboutput div.prompt {
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput div.prompt.empty {
+        padding: 0;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput div.prompt pre,
+div.nboutput div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput div.input_area,
+div.nboutput div.output_area {
+    padding: 0.4em;
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput div.input_area,
+    div.nboutput div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    background: #f5f5f5;
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+div.rendered_html th {
+  font-weight: bold;
+}
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+</style>
+<div class="section" id="Step-by-step-agent-negotiation">
+<h1>Step-by-step agent negotiation<a class="headerlink" href="#Step-by-step-agent-negotiation" title="Permalink to this headline">¶</a></h1>
+<p>In this section, you will see how the negotiation works in our framework.</p>
+<div class="section" id="The-big-picture">
+<h2>The big picture<a class="headerlink" href="#The-big-picture" title="Permalink to this headline">¶</a></h2>
+<p>The following diagram gives you a high-level understanding on how a generic negotiation works.</p>
+
+            <style>
+            /* mermaid issue 527 workaround */
+            .section {
+                opacity: 1.0 !important;
+            }
+            </style>
+            <script>mermaid.initialize({startOnLoad:true});</script><div class="mermaid">
+            sequenceDiagram
+
+    participant Agent_1
+
+    participant Agent_2
+
+    participant Controller
+
+    participant OEF
+
+
+
+    activate Controller
+
+    Agent_1-&gt;&gt;Agent_1: (1) get_service_description()
+    Agent_1-&gt;&gt;OEF: (2) register_service(description)
+
+    Agent_2-&gt;&gt;Agent_2: (3) get_service_description()
+    Agent_2-&gt;&gt;OEF: (4) register_service(description)
+
+    Agent_1-&gt;&gt;Agent_1: (5) build_services_query()
+    Agent_1-&gt;&gt;OEF: (6) search_services(query)
+
+    OEF-&gt;&gt;Agent_1: (7) search_results(agents)
+
+    Agent_1-&gt;&gt;Agent_2: (8) send_cfp(1, 1, &quot;agent_2_pbk&quot;, 0, query)
+    Agent_2-&gt;&gt;Agent_2: (9) get_proposal()
+
+    Agent_2-&gt;&gt;Agent_1: (10) send_propose(2, 1, &quot;agent_1_pbk&quot;, 1, proposals)
+
+    Agent_1-&gt;&gt;Agent_2: (11) send_accept(3, 1, &quot;agent_2_pbk&quot;, 2)
+
+    Agent_2-&gt;&gt;Agent_1: (13) send_accept(4, 1, &quot;agent_1_pbk&quot;, 3)
+    Agent_2-&gt;&gt;Controller: (14) send_message(4, 1, &quot;controller_pbk&quot;, transaction)
+
+    Agent_1-&gt;&gt;Controller: (12) send_message(5, 1, &quot;controller_pbk&quot;, transaction)
+
+    Controller-&gt;&gt;Agent_1: (15) TransactionConfirmation(transaction)
+    Controller-&gt;&gt;Agent_2: (16) TransactionConfirmation(transaction)
+
+    deactivate Controller
+
+        </div><p>Let’s see step by step what happens:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> calls <code class="docutils literal notranslate"><span class="pre">get_service_description(is_supply)</span></code> to generate the service description. <code class="docutils literal notranslate"><span class="pre">is_supply</span></code> is a flag to switch between registering goods which the agent supplies (<code class="docutils literal notranslate"><span class="pre">is_supply</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, the agent is in a seller role for these goods) and registering goods which the agent demands (<code class="docutils literal notranslate"><span class="pre">is_supply</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>, the agent is in a buyer role for these goods).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> sends a <code class="docutils literal notranslate"><span class="pre">register_service</span></code> request to the OEF node, to register her services (the goods she supplies/demands) on the OEF.</p></li>
+<li><p>Analogous to (1), but for <code class="docutils literal notranslate"><span class="pre">Agent_2</span></code></p></li>
+<li><p>Analogous to (2), but for <code class="docutils literal notranslate"><span class="pre">Agent_2</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> calls <code class="docutils literal notranslate"><span class="pre">build_services_query(is_searching_for_sellers)</span></code> to generate a <code class="docutils literal notranslate"><span class="pre">query</span></code> for the OEF. <code class="docutils literal notranslate"><span class="pre">is_searching_for_sellers</span></code> is a flag to switch between searching for sellers and searching for buyers of the goods referenced in the query. If the agent is searching for sellers than the agent is in the buyer role, similarly when searching for buyers the agent is in a seller role.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> send a <code class="docutils literal notranslate"><span class="pre">search_service</span></code> request with the <code class="docutils literal notranslate"><span class="pre">query</span></code> previously generated.</p></li>
+<li><p>The OEF node returns a search result with the list of agent ids matching the <code class="docutils literal notranslate"><span class="pre">query</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> finds <code class="docutils literal notranslate"><span class="pre">Agent_2</span></code>, so <code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> sends a <code class="docutils literal notranslate"><span class="pre">CFP</span></code> to <code class="docutils literal notranslate"><span class="pre">Agent_2</span></code>, meaning that she wants to start a negotiation. The CFP contains a reference to the goods which Agent_1 is interested in and whether Agent_1 is a buyer or seller of these goods, both in the form of the query.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> calls <code class="docutils literal notranslate"><span class="pre">get_proposal()</span></code> to generate a proposal for answering <code class="docutils literal notranslate"><span class="pre">Agent_1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> replies with a <code class="docutils literal notranslate"><span class="pre">Propose</span></code> message as an answer for the <code class="docutils literal notranslate"><span class="pre">CFP</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> sends an <code class="docutils literal notranslate"><span class="pre">Accept</span></code> message to <code class="docutils literal notranslate"><span class="pre">Agent_2</span></code>, meaning that she accepts the proposal.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> replies with a <em>matched accept</em> to <code class="docutils literal notranslate"><span class="pre">Agent_1</span></code>, meaning that she confirms definitively the transaction.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> sends a Transaction request to the <code class="docutils literal notranslate"><span class="pre">Controller</span></code> (analogous to step 12).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> sends a Transaction request to the <code class="docutils literal notranslate"><span class="pre">Controller</span></code>.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">Controller</span></code> notifies <code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> that the transaction has been confirmed.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">Controller</span></code> notifies <code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> that the transaction has been confirmed.</p></li>
+</ol>
+<p>Notice that this is the behaviour of the <code class="docutils literal notranslate"><span class="pre">BaselineAgent</span></code>. By modifying the default strategy, you can change the behaviour in steps 1 (or 3), 5 and 9. The other methods are handled by our implementation of the FIPA negotiation protocol.</p>
+</div>
+<div class="section" id="Analyzing-the-APIs">
+<h2>Analyzing the APIs<a class="headerlink" href="#Analyzing-the-APIs" title="Permalink to this headline">¶</a></h2>
+<p>In the following, we’re going to describe the steps listed before, but more in detail, using code examples from the framework.</p>
+<div class="section" id="Instantiate-an-agent">
+<h3>Instantiate an agent<a class="headerlink" href="#Instantiate-an-agent" title="Permalink to this headline">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">tac.agents.v1.examples.baseline</span> <span class="k">import</span> <span class="n">BaselineAgent</span>
+<span class="kn">from</span> <span class="nn">tac.agents.v1.examples.strategy</span> <span class="k">import</span> <span class="n">BaselineStrategy</span>
+
+<span class="n">strategy</span> <span class="o">=</span> <span class="n">BaselineStrategy</span><span class="p">()</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">BaselineAgent</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;tac_agent&quot;</span><span class="p">,</span> <span class="n">oef_addr</span><span class="o">=</span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="n">oef_port</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="n">strategy</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">RuntimeError</span>                              Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-1-d0323160805e&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-intense-fg ansi-bold">      3</span>
+<span class="ansi-green-intense-fg ansi-bold">      4</span> strategy <span class="ansi-blue-fg">=</span> BaselineStrategy<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-fg">----&gt; 5</span><span class="ansi-red-fg"> </span>agent <span class="ansi-blue-fg">=</span> BaselineAgent<span class="ansi-blue-fg">(</span>name<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">&#34;tac_agent&#34;</span><span class="ansi-blue-fg">,</span> oef_addr<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">&#34;127.0.0.1&#34;</span><span class="ansi-blue-fg">,</span> oef_port<span class="ansi-blue-fg">=</span><span class="ansi-cyan-fg">10000</span><span class="ansi-blue-fg">,</span> strategy<span class="ansi-blue-fg">=</span>strategy<span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/work/agents-tac/tac/agents/v1/examples/baseline.py</span> in <span class="ansi-cyan-fg">__init__</span><span class="ansi-blue-fg">(self, name, oef_addr, oef_port, strategy, agent_timeout, max_reactions, services_interval, pending_transaction_timeout, dashboard, private_key_pem)</span>
+<span class="ansi-green-intense-fg ansi-bold">     57</span>         <span class="ansi-blue-fg">:</span><span class="ansi-green-fg">return</span><span class="ansi-blue-fg">:</span> <span class="ansi-green-fg">None</span>
+<span class="ansi-green-intense-fg ansi-bold">     58</span>         &#34;&#34;&#34;
+<span class="ansi-green-fg">---&gt; 59</span><span class="ansi-red-fg">         </span>super<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>__init__<span class="ansi-blue-fg">(</span>name<span class="ansi-blue-fg">,</span> oef_addr<span class="ansi-blue-fg">,</span> oef_port<span class="ansi-blue-fg">,</span> strategy<span class="ansi-blue-fg">,</span> agent_timeout<span class="ansi-blue-fg">,</span> max_reactions<span class="ansi-blue-fg">,</span> services_interval<span class="ansi-blue-fg">,</span> pending_transaction_timeout<span class="ansi-blue-fg">,</span> dashboard<span class="ansi-blue-fg">,</span> private_key_pem<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">     60</span>
+<span class="ansi-green-intense-fg ansi-bold">     61</span>
+
+<span class="ansi-green-fg">~/work/agents-tac/tac/agents/v1/base/participant_agent.py</span> in <span class="ansi-cyan-fg">__init__</span><span class="ansi-blue-fg">(self, name, oef_addr, oef_port, strategy, agent_timeout, max_reactions, services_interval, pending_transaction_timeout, dashboard, private_key_pem)</span>
+<span class="ansi-green-intense-fg ansi-bold">     72</span>         &#34;&#34;&#34;
+<span class="ansi-green-intense-fg ansi-bold">     73</span>         super<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>__init__<span class="ansi-blue-fg">(</span>name<span class="ansi-blue-fg">,</span> oef_addr<span class="ansi-blue-fg">,</span> oef_port<span class="ansi-blue-fg">,</span> private_key_pem<span class="ansi-blue-fg">,</span> agent_timeout<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-fg">---&gt; 74</span><span class="ansi-red-fg">         </span>self<span class="ansi-blue-fg">.</span>mail_box <span class="ansi-blue-fg">=</span> FIPAMailBox<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>crypto<span class="ansi-blue-fg">.</span>public_key<span class="ansi-blue-fg">,</span> oef_addr<span class="ansi-blue-fg">,</span> oef_port<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">     75</span>         self<span class="ansi-blue-fg">.</span>in_box <span class="ansi-blue-fg">=</span> InBox<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>mail_box<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">     76</span>         self<span class="ansi-blue-fg">.</span>out_box <span class="ansi-blue-fg">=</span> OutBox<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>mail_box<span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/work/agents-tac/tac/agents/v1/mail.py</span> in <span class="ansi-cyan-fg">__init__</span><span class="ansi-blue-fg">(self, public_key, oef_addr, oef_port)</span>
+<span class="ansi-green-intense-fg ansi-bold">    344</span>         <span class="ansi-blue-fg">:</span><span class="ansi-green-fg">return</span><span class="ansi-blue-fg">:</span> <span class="ansi-green-fg">None</span>
+<span class="ansi-green-intense-fg ansi-bold">    345</span>         &#34;&#34;&#34;
+<span class="ansi-green-fg">--&gt; 346</span><span class="ansi-red-fg">         </span>super<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>__init__<span class="ansi-blue-fg">(</span>public_key<span class="ansi-blue-fg">,</span> oef_addr<span class="ansi-blue-fg">,</span> oef_port<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    347</span>
+<span class="ansi-green-intense-fg ansi-bold">    348</span>     <span class="ansi-green-fg">def</span> on_cfp<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> msg_id<span class="ansi-blue-fg">:</span> int<span class="ansi-blue-fg">,</span> dialogue_id<span class="ansi-blue-fg">:</span> int<span class="ansi-blue-fg">,</span> origin<span class="ansi-blue-fg">:</span> str<span class="ansi-blue-fg">,</span> target<span class="ansi-blue-fg">:</span> int<span class="ansi-blue-fg">,</span> query<span class="ansi-blue-fg">:</span> CFP_TYPES<span class="ansi-blue-fg">)</span> <span class="ansi-blue-fg">-&gt;</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">:</span>
+
+<span class="ansi-green-fg">~/work/agents-tac/tac/agents/v1/mail.py</span> in <span class="ansi-cyan-fg">__init__</span><span class="ansi-blue-fg">(self, public_key, oef_addr, oef_port)</span>
+<span class="ansi-green-intense-fg ansi-bold">    111</span>         &#34;&#34;&#34;
+<span class="ansi-green-intense-fg ansi-bold">    112</span>         super<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>__init__<span class="ansi-blue-fg">(</span>public_key<span class="ansi-blue-fg">,</span> oef_addr<span class="ansi-blue-fg">,</span> oef_port<span class="ansi-blue-fg">,</span> loop<span class="ansi-blue-fg">=</span>asyncio<span class="ansi-blue-fg">.</span>new_event_loop<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-fg">--&gt; 113</span><span class="ansi-red-fg">         </span>self<span class="ansi-blue-fg">.</span>connect<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    114</span>         self<span class="ansi-blue-fg">.</span>in_queue <span class="ansi-blue-fg">=</span> Queue<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    115</span>         self<span class="ansi-blue-fg">.</span>out_queue <span class="ansi-blue-fg">=</span> Queue<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/.local/share/virtualenvs/agents-tac-MNXXfQ0T/lib/python3.7/site-packages/oef/agents.py</span> in <span class="ansi-cyan-fg">connect</span><span class="ansi-blue-fg">(self)</span>
+<span class="ansi-green-intense-fg ansi-bold">    140</span>         <span class="ansi-blue-fg">:</span><span class="ansi-green-fg">return</span><span class="ansi-blue-fg">:</span> <span class="ansi-green-fg">True</span> <span class="ansi-green-fg">if</span> the connection has been established successfully<span class="ansi-blue-fg">,</span> <span class="ansi-green-fg">False</span> otherwise<span class="ansi-blue-fg">.</span>
+<span class="ansi-green-intense-fg ansi-bold">    141</span>         &#34;&#34;&#34;
+<span class="ansi-green-fg">--&gt; 142</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">return</span> self<span class="ansi-blue-fg">.</span>_loop<span class="ansi-blue-fg">.</span>run_until_complete<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>async_connect<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    143</span>
+<span class="ansi-green-intense-fg ansi-bold">    144</span>     <span class="ansi-green-fg">async</span> <span class="ansi-green-fg">def</span> async_connect<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">)</span> <span class="ansi-blue-fg">-&gt;</span> bool<span class="ansi-blue-fg">:</span>
+
+<span class="ansi-green-fg">/usr/local/Cellar/python/3.7.3/Frameworks/Python.framework/Versions/3.7/lib/python3.7/asyncio/base_events.py</span> in <span class="ansi-cyan-fg">run_until_complete</span><span class="ansi-blue-fg">(self, future)</span>
+<span class="ansi-green-intense-fg ansi-bold">    569</span>         future<span class="ansi-blue-fg">.</span>add_done_callback<span class="ansi-blue-fg">(</span>_run_until_complete_cb<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    570</span>         <span class="ansi-green-fg">try</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">--&gt; 571</span><span class="ansi-red-fg">             </span>self<span class="ansi-blue-fg">.</span>run_forever<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    572</span>         <span class="ansi-green-fg">except</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    573</span>             <span class="ansi-green-fg">if</span> new_task <span class="ansi-green-fg">and</span> future<span class="ansi-blue-fg">.</span>done<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span> <span class="ansi-green-fg">and</span> <span class="ansi-green-fg">not</span> future<span class="ansi-blue-fg">.</span>cancelled<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+
+<span class="ansi-green-fg">/usr/local/Cellar/python/3.7.3/Frameworks/Python.framework/Versions/3.7/lib/python3.7/asyncio/base_events.py</span> in <span class="ansi-cyan-fg">run_forever</span><span class="ansi-blue-fg">(self)</span>
+<span class="ansi-green-intense-fg ansi-bold">    527</span>         <span class="ansi-green-fg">if</span> events<span class="ansi-blue-fg">.</span>_get_running_loop<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span> <span class="ansi-green-fg">is</span> <span class="ansi-green-fg">not</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    528</span>             raise RuntimeError(
+<span class="ansi-green-fg">--&gt; 529</span><span class="ansi-red-fg">                 &#39;Cannot run the event loop while another loop is running&#39;)
+</span><span class="ansi-green-intense-fg ansi-bold">    530</span>         self<span class="ansi-blue-fg">.</span>_set_coroutine_origin_tracking<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>_debug<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    531</span>         self<span class="ansi-blue-fg">.</span>_thread_id <span class="ansi-blue-fg">=</span> threading<span class="ansi-blue-fg">.</span>get_ident<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+
+<span class="ansi-red-fg">RuntimeError</span>: Cannot run the event loop while another loop is running
+</pre></div></div>
+</div>
+</div>
+<div class="section" id="Registration">
+<h3>Registration<a class="headerlink" href="#Registration" title="Permalink to this headline">¶</a></h3>
+<p>This part covers the steps 1-4. That is, when the agents build their own description and register their service to the OEF. This step allows the agents to be found via search queries, and hence increasing the probability to be found by other agents.</p>
+<div class="section" id="The-get_service_description(is_supply)-method">
+<h4>The <code class="docutils literal notranslate"><span class="pre">get_service_description(is_supply)</span></code> method<a class="headerlink" href="#The-get_service_description(is_supply)-method" title="Permalink to this headline">¶</a></h4>
+<p>This method generates a <code class="docutils literal notranslate"><span class="pre">Description</span></code> object of the <a class="reference external" href="https://github.com/fetchai/oef-sdk-python.git">Python OEF SDK</a> (check the documentation <a class="reference external" href="http://oef-sdk-docs.fetch.ai/oef.html#oef.schema.Description">here</a>). It is basically a data structure that holds a dictionary objects, mapping from attribute names (strings) to some values. Moreover, it might refer to a <a class="reference external" href="http://oef-sdk-docs.fetch.ai/oef.html#oef.schema.DataModel">DataModel</a> object, which defines the abstract structure that a
+<code class="docutils literal notranslate"><span class="pre">Description</span></code> object should have. You can think of them in terms of the relational database domain: a <code class="docutils literal notranslate"><span class="pre">DataModel</span></code> object corresponds to an SQL Table, whereas a <code class="docutils literal notranslate"><span class="pre">Description</span></code> object correspond to a row of that table.</p>
+<p>The method is used in steps 1 and 3 by <code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> and <code class="docutils literal notranslate"><span class="pre">Agent_2</span></code>, respectively.</p>
+<p>In the context of TAC, the <code class="docutils literal notranslate"><span class="pre">Description</span></code> for service registration looks like the following:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">oef.schema</span> <span class="k">import</span> <span class="n">Description</span>
+
+
+<span class="n">description</span> <span class="o">=</span> <span class="n">Description</span><span class="p">({</span>
+    <span class="s1">&#39;tac_good_0_pbk&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;tac_good_1_pbk&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;tac_good_2_pbk&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;tac_good_3_pbk&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;tac_good_4_pbk&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;tac_good_5_pbk&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;tac_good_6_pbk&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;tac_good_7_pbk&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;tac_good_8_pbk&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;tac_good_9_pbk&#39;</span><span class="p">:</span> <span class="mi">1</span>
+<span class="p">},</span> <span class="n">data_model</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+</pre></div>
+</div>
+</div>
+<p>The argument <code class="docutils literal notranslate"><span class="pre">data_model</span></code> is set to <code class="docutils literal notranslate"><span class="pre">None</span></code>, but in the framework it is properly set depending on the context That is, when we refer to a description of an agent in the seller role, we use the <code class="docutils literal notranslate"><span class="pre">&quot;tac_supply&quot;</span></code> data model (the agent supplies goods), whereas in the case of a description of an agent in the buyer role, we use the <code class="docutils literal notranslate"><span class="pre">&quot;tac_demand&quot;</span></code> data model (the agent demands goods).</p>
+<div class="line-block">
+<div class="line">The attribute names <code class="docutils literal notranslate"><span class="pre">tac_good_X_pbk</span></code> is the name given to each tradable good.</div>
+<div class="line">Notice that the keys are automatically generated, depending on the number of goods in the game.</div>
+</div>
+<p>Depending on the value of the flag <code class="docutils literal notranslate"><span class="pre">is_supply</span></code>, the generated description contains different quantities for each good:</p>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">is_supply</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, then the quantities good are generated by the method <code class="docutils literal notranslate"><span class="pre">Strategy.supplied_good_quantities(current_holdings)</span></code> and have to be interpreted as the amount of each good the agent is willing to sell;</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">is_supply</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>, then the quantities good are generated by the method <code class="docutils literal notranslate"><span class="pre">Strategy.demanded_good_quantities(current_holdings)</span></code> and have to be interpreted as the amount of each good the agent is willing to buy;</p></li>
+</ul>
+<p>Notice that <code class="docutils literal notranslate"><span class="pre">supplied_good_quantities</span></code> and <code class="docutils literal notranslate"><span class="pre">demanded_good_quantities</span></code> are user-defined method to be implemented in the <code class="docutils literal notranslate"><span class="pre">Strategy</span></code> object, which defines the agent’s behaviour.</p>
+<p>Here you can see the output of <code class="docutils literal notranslate"><span class="pre">BaselineStrategy.supplied_good_quantities</span></code> and <code class="docutils literal notranslate"><span class="pre">BaselineStrategy.demanded_good_quantities</span></code></p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">tac.agents.v1.examples.strategy</span> <span class="k">import</span> <span class="n">BaselineStrategy</span>
+<span class="n">baseline_strategy</span> <span class="o">=</span> <span class="n">BaselineStrategy</span><span class="p">()</span>
+
+<span class="n">current_holdings</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+<span class="n">supplied_good_quantities</span> <span class="o">=</span> <span class="n">baseline_strategy</span><span class="o">.</span><span class="n">supplied_good_quantities</span><span class="p">(</span><span class="n">current_holdings</span><span class="p">)</span>
+<span class="n">demanded_good_quantities</span> <span class="o">=</span> <span class="n">baseline_strategy</span><span class="o">.</span><span class="n">demanded_good_quantities</span><span class="p">(</span><span class="n">current_holdings</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Supplied quantities: &quot;</span><span class="p">,</span> <span class="n">supplied_good_quantities</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Demanded quantities: &quot;</span><span class="p">,</span> <span class="n">demanded_good_quantities</span><span class="p">)</span>
+
+</pre></div>
+</div>
+</div>
+<p>The baseline supplied quantities are the current holdings minus <code class="docutils literal notranslate"><span class="pre">1</span></code>. This is because the first quantity is the most valuable one in terms of utility, due to the logarithmic shape of the <a class="reference external" href="https://en.wikipedia.org/wiki/Cobb%E2%80%93Douglas_production_function#Cobb%E2%80%93Douglas_utilities">Cobb-Douglas utility function</a></p>
+<p>The baseline demanded quantities are just <code class="docutils literal notranslate"><span class="pre">1</span></code> for every good. this is because every good instance is going to be providing additional utility to the agent, due to the ever-increasing utility function.</p>
+<p>However, the baseline strategy is relatively simple and naive, so you might think to more complex and/or dynamic computation of supplied/demanded quantities, which affects the your agent’s behaviour during the whole competition.</p>
+</div>
+<div class="section" id="The-register_service(description)-method">
+<h4>The <code class="docutils literal notranslate"><span class="pre">register_service(description)</span></code> method<a class="headerlink" href="#The-register_service(description)-method" title="Permalink to this headline">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">register_service(description)</span></code> method is implemented the OEF Python SDK. You can find the informal introduction to the <a class="reference external" href="https://docs.fetch.ai/oef/registering/">registering</a> and <a class="reference external" href="https://docs.fetch.ai/oef/registering/">advertising</a> processes, and the reference documentation of the API <a class="reference external" href="http://oef-sdk-docs.fetch.ai/oef.html#oef.agents.Agent.register_service">here</a>.</p>
+<p>The method is used in steps 2 and 4 by <code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> and <code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> respectively.</p>
+</div>
+</div>
+<div class="section" id="Searching">
+<h3>Searching<a class="headerlink" href="#Searching" title="Permalink to this headline">¶</a></h3>
+<p>This part covers the steps 5-7 of the diagram.</p>
+<p>The searching/advertising features of the OEF platform are crucial in the TAC, since they allow the discovery of potential sellers or buyers.</p>
+<div class="section" id="The-build_services_query(is_searching_for_sellers)-method">
+<h4>The <code class="docutils literal notranslate"><span class="pre">build_services_query(is_searching_for_sellers)</span></code> method<a class="headerlink" href="#The-build_services_query(is_searching_for_sellers)-method" title="Permalink to this headline">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">build_services_query(is_searching_for_sellers)</span></code> method returns a <a class="reference external" href="http://oef-sdk-docs.fetch.ai/oef.html#oef.schema.Query">Query</a> object that is used for searching, on the OEF platform, potential agents to negotiate with. The method takes in input the flag <code class="docutils literal notranslate"><span class="pre">is_searching_for_sellers</span></code> that determines whether the generated query should search for buyer or sellers.</p>
+<p>More detail and code examples about how to build a query in the OEF Python SDK can be found <a class="reference external" href="https://docs.fetch.ai/oef/searching/">here</a></p>
+<p>Depending on the value of the flag <code class="docutils literal notranslate"><span class="pre">is_searching_for_sellers</span></code>, the generated description contains different quantities for each good:</p>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">is_searching_for_sellers</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, then the good public keys are generated by the method <code class="docutils literal notranslate"><span class="pre">Strategy.demanded_good_pbks(good_pbks,</span> <span class="pre">current_holdings)</span></code> and have to be interpreted as the goods the agent is willing to buy;</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">is_searching_for_sellers</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>, then the good public keys are generated by the method <code class="docutils literal notranslate"><span class="pre">Strategy.supplied_good_pbks(good_pbks,</span> <span class="pre">current_holdings)</span></code> and have to be interpreted as the goods the agent is willing to sell;</p></li>
+</ul>
+<p>Notice that <code class="docutils literal notranslate"><span class="pre">demanded_good_pbks</span></code> and <code class="docutils literal notranslate"><span class="pre">supplied_good_pbks</span></code> are user-defined method to be implemented in the <code class="docutils literal notranslate"><span class="pre">Strategy</span></code> object, which defines the agent’s behaviour.</p>
+<p>Here you can see the output of <code class="docutils literal notranslate"><span class="pre">BaselineStrategy.supplied_good_pbks</span></code> and <code class="docutils literal notranslate"><span class="pre">BaselineStrategy.demanded_good_pbks</span></code></p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+
+<span></span><span class="kn">from</span> <span class="nn">tac.agents.v1.examples.strategy</span> <span class="k">import</span> <span class="n">BaselineStrategy</span>
+<span class="n">baseline_strategy</span> <span class="o">=</span> <span class="n">BaselineStrategy</span><span class="p">()</span>
+
+<span class="n">good_pbks</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;tac_good_0_pbk&quot;</span><span class="p">,</span> <span class="s2">&quot;tac_good_1_pbk&quot;</span><span class="p">,</span> <span class="s2">&quot;tac_good_2_pbk&quot;</span><span class="p">,</span> <span class="s2">&quot;tac_good_3_pbk&quot;</span><span class="p">]</span>
+<span class="n">current_holdings</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+<span class="n">supplied_good_pbks</span> <span class="o">=</span> <span class="n">baseline_strategy</span><span class="o">.</span><span class="n">supplied_good_pbks</span><span class="p">(</span><span class="n">good_pbks</span><span class="p">,</span> <span class="n">current_holdings</span><span class="p">)</span>
+<span class="n">demanded_good_pbks</span> <span class="o">=</span> <span class="n">baseline_strategy</span><span class="o">.</span><span class="n">demanded_good_pbks</span><span class="p">(</span><span class="n">good_pbks</span><span class="p">,</span> <span class="n">current_holdings</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Supplied good public keys: &quot;</span><span class="p">,</span> <span class="n">supplied_good_pbks</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Demanded good public keys: &quot;</span><span class="p">,</span> <span class="n">demanded_good_pbks</span><span class="p">)</span>
+
+
+</pre></div>
+</div>
+</div>
+<p>As you can notice, the baseline supplied goods are the ones for which the holdings are strictly greater than <code class="docutils literal notranslate"><span class="pre">1</span></code>, whereas the baseline demanded goods are all the goods.</p>
+<p>You can control what goods your agent is looking for during the competition by modifying those methods.</p>
+</div>
+<div class="section" id="The-search_services(search_id,-query)-method">
+<h4>The <code class="docutils literal notranslate"><span class="pre">search_services(search_id,</span> <span class="pre">query)</span></code> method<a class="headerlink" href="#The-search_services(search_id,-query)-method" title="Permalink to this headline">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">`search_services(search_id,</span> <span class="pre">query)</span></code> &lt;<a class="reference external" href="http://oef-sdk-docs.fetch.ai/oef.html#oef.agents.Agent.search_services">http://oef-sdk-docs.fetch.ai/oef.html#oef.agents.Agent.search_services</a>&gt;`__ method is used send a search request to the OEF node. The OEF node will search for registered agents in the service directory, and the ones whose description matches the <code class="docutils literal notranslate"><span class="pre">query</span></code> will be included in the search result (see below).</p>
+<p>For further details, look <a class="reference external" href="https://docs.fetch.ai/oef/searching/">here</a>.</p>
+</div>
+<div class="section" id="The-on_search_result(agents)-method">
+<h4>The <code class="docutils literal notranslate"><span class="pre">on_search_result(agents)</span></code> method<a class="headerlink" href="#The-on_search_result(agents)-method" title="Permalink to this headline">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">`on_search_result(agents)</span></code> &lt;<a class="reference external" href="http://oef-sdk-docs.fetch.ai/oef.html">http://oef-sdk-docs.fetch.ai/oef.html</a>?#oef.agents.Agent.on_search_result&gt;`__ method is a callback that it is called when the agent receives a search result from the OEF node.</p>
+<p>It contains a list of agent identifiers that satisfy the search criteria of the corresponding search request.</p>
+</div>
+</div>
+<div class="section" id="Negotiation">
+<h3>Negotiation<a class="headerlink" href="#Negotiation" title="Permalink to this headline">¶</a></h3>
+<p>This part covers the steps 8-14 of the diagram.</p>
+<p>Further details of a generic negotiation in the OEF platform can be found <a class="reference external" href="https://docs.fetch.ai/oef/negotiating/">here</a> and <a class="reference external" href="https://fetchai.github.io/oef-sdk-python/user/communication-protocols.html#using-fipa-for-negotiation">here</a></p>
+<div class="section" id="Call-for-proposals">
+<h4>Call for proposals<a class="headerlink" href="#Call-for-proposals" title="Permalink to this headline">¶</a></h4>
+<p>The message that initiates a negotiation is called “Call for proposals”, or <code class="docutils literal notranslate"><span class="pre">CFP</span></code>. A <code class="docutils literal notranslate"><span class="pre">CFP</span></code> message contains a query object which defines what the agent is looking for.</p>
+</div>
+<div class="section" id="The-get_proposals()-method-and-Propose-message">
+<h4>The <code class="docutils literal notranslate"><span class="pre">get_proposals()</span></code> method and Propose message<a class="headerlink" href="#The-get_proposals()-method-and-Propose-message" title="Permalink to this headline">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">Strategy.get_proposals()</span></code> method defines how an agent replies to the incoming CFPs. The output of this method is a list of <code class="docutils literal notranslate"><span class="pre">Description</span></code> objects.</p>
+<p>Here’s an example of output:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">tac.agents.v1.examples.strategy</span> <span class="k">import</span> <span class="n">BaselineStrategy</span>
+<span class="n">baseline_strategy</span> <span class="o">=</span> <span class="n">BaselineStrategy</span><span class="p">()</span>
+<span class="n">proposals</span> <span class="o">=</span> <span class="n">baseline_strategy</span><span class="o">.</span><span class="n">get_proposals</span><span class="p">(</span>
+    <span class="n">good_pbks</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;tac_good_0_pbk&quot;</span><span class="p">,</span> <span class="s2">&quot;tac_good_1_pbk&quot;</span><span class="p">],</span>
+    <span class="n">current_holdings</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+    <span class="n">utility_params</span><span class="o">=</span><span class="p">[</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">],</span>
+    <span class="n">tx_fee</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">is_seller</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">world_state</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">proposals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+</pre></div>
+</div>
+</div>
+<p>The values of the <code class="docutils literal notranslate"><span class="pre">Description</span></code> dictionary are the good quantities plus a field <code class="docutils literal notranslate"><span class="pre">&quot;price&quot;</span></code> that specifies the price of the set of goods proposed.</p>
+<p>The generated proposals in step 9 are then sent in a <code class="docutils literal notranslate"><span class="pre">Propose</span></code> message to the agent that initiated the negotiation (step 10).</p>
+<p>Notice that <code class="docutils literal notranslate"><span class="pre">get_proposals()</span></code> is an abstract method of the <code class="docutils literal notranslate"><span class="pre">Strategy</span></code> object, which hence it’s another way to modify the behaviour of the agent.</p>
+</div>
+<div class="section" id="The-Accept-message">
+<h4>The Accept message<a class="headerlink" href="#The-Accept-message" title="Permalink to this headline">¶</a></h4>
+<p>If the proposal is profitable, the agent that receives a <code class="docutils literal notranslate"><span class="pre">Propose</span></code> (in the example <code class="docutils literal notranslate"><span class="pre">Agent_1</span></code>) can reply with an <code class="docutils literal notranslate"><span class="pre">Accept</span></code> message, which means that she accepts the offer (step 11)</p>
+</div>
+<div class="section" id="Transaction-request">
+<h4>Transaction request<a class="headerlink" href="#Transaction-request" title="Permalink to this headline">¶</a></h4>
+<p>Alongside the <code class="docutils literal notranslate"><span class="pre">Accept</span></code> message, the agent also sends a transaction request to the <code class="docutils literal notranslate"><span class="pre">Controller</span></code> agent (step 12). The controller then waits until also the counterparty sends the request for the same transaction.</p>
+</div>
+<div class="section" id="The-Matched-Accept">
+<h4>The Matched Accept<a class="headerlink" href="#The-Matched-Accept" title="Permalink to this headline">¶</a></h4>
+<p>when the other agent (in the example, <code class="docutils literal notranslate"><span class="pre">Agent_2</span></code>) receives an <code class="docutils literal notranslate"><span class="pre">Accept</span></code>, she replies with another accept, that we call “matched accept” (step 13). That is, a notification for <code class="docutils literal notranslate"><span class="pre">Agent_1</span></code> that she acknowledged the <code class="docutils literal notranslate"><span class="pre">Agent_1</span></code>’s acceptance.</p>
+<p>At the same time, <code class="docutils literal notranslate"><span class="pre">Agent_2</span></code> also sends a transaction request in step 14 (analogous to step 12).</p>
+</div>
+<div class="section" id="Transaction-confirmations">
+<h4>Transaction confirmations<a class="headerlink" href="#Transaction-confirmations" title="Permalink to this headline">¶</a></h4>
+<p>Once the <code class="docutils literal notranslate"><span class="pre">Controller</span></code> received the transaction requests from both the involved parties, he stores the transaction in the ledger and sends back a <code class="docutils literal notranslate"><span class="pre">TransactionConfirmation</span></code> message to both the agents to let them update their internal state.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="registration_phase.html">Registration Phase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trading_phase.html">Trading Phase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="controller_protocol.html">Protocol for the Controller</a></li>
+<li class="toctree-l1"><a class="reference internal" href="baseline_agent.html">Baseline Agent v1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="develop_agent.html">Developing Your Own Agent</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Step-by-step agent negotiation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#The-big-picture">The big picture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Analyzing-the-APIs">Analyzing the APIs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="agent_state_management_guide.html">Step-by-step agent state management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/api/tac.html">tac package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/api/modules.html">tac</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="develop_agent.html" title="previous chapter">Developing Your Own Agent</a></li>
+      <li>Next: <a href="agent_state_management_guide.html" title="next chapter">Step-by-step agent state management</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Fetch.AI.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/sections/negotiation_guide.ipynb.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
