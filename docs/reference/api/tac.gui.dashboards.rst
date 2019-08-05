@@ -28,6 +28,14 @@ tac.gui.dashboards.controller module
    :undoc-members:
    :show-inheritance:
 
+tac.gui.dashboards.leaderboard module
+-------------------------------------
+
+.. automodule:: tac.gui.dashboards.leaderboard
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 
 Module contents
 ---------------

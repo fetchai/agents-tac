@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
 
    tac.gui.dashboards
+   tac.gui.panel
 
 Submodules
 ----------
