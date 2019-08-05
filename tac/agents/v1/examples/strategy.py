@@ -117,5 +117,6 @@ class BaselineStrategy(Strategy):
                     desc.values["price"] = round(marginal_utility_from_delta_holdings, 2) + share_of_tx_fee + rounding_adjustment
                 else:
                     desc.values["price"] = round(marginal_utility_from_delta_holdings, 2) - share_of_tx_fee - rounding_adjustment
+            if not desc.values["price"] > 0: continue
             proposals.append(desc)
         return proposals

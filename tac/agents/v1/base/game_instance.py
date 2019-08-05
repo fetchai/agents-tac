@@ -378,6 +378,7 @@ class GameInstance:
         proposals = []
         for proposal in candidate_proposals:
             if not self.is_matching(cfp_services, proposal): continue
+            if not proposal.values["price"] > 0: continue
             proposals.append(proposal)
         if proposals == []:
             return None
