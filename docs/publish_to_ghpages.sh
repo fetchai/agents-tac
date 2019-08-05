@@ -19,24 +19,22 @@ set -e
 echo "Deleting old publication"
 rm -rf _build
 
+echo "Cloning gh-pages branch"
+mkdir _build -p
+cd _build
+git clone --single-branch --branch gh-pages git@github.com:fetchai/agents-tac.git html
+cd ..
+
 echo "Building docs"
 sphinx-apidoc -o reference/api/ ../tac/
 make html
-cd ..
-
-echo "Create a local gh-pages branch containing the splitted output folder"
-sed -i "" '/docs\/_build\//d' ./.gitignore
-git add .
-git commit -m "Edit .gitignore to publish"
-git subtree split --prefix docs/_build -b gh-pages
-git reset HEAD~
-git checkout .gitignore
+cd _build/html
 
 echo "Pushing to gh-pages branch"
-git add --all && git commit -m "Publishing to gh-pages with tag $1"
+git add --all && git commit -m "Publish docs ($1)"
 git tag $1
-git pull origin gh-pages
-git push origin gh-pages:gh-pages
+git push origin gh-pages
 
-echo "Delete local gh-pages"
-git branch -D gh-pages
+echo "Delete local repo"
+cd ../../
+make clean
