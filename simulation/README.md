@@ -9,11 +9,19 @@ This tutorial shows how to simulate a TAC.
   - [x] You have followed the steps under 'Dependencies' and 'Preliminaries' on root readme.
   - [x] You are connected to the internet (to pull the latest docker images).
 
+
+## Quickstart
+
+Simply run:
+
+      python scripts/launch_alt.py
+
+## Manual
+
 - First, ensure that you are running an OEF Node on `localhost`, using this command (make sure all docker containers are stopped `docker stop $(docker ps -q)`):
 
-```
-python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config_latest.json
-```
+      python oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config_latest.json
+
 
 - Second, (in a new terminal window, from root and in shell) start a `visdom` server:
 

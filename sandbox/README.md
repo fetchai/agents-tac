@@ -29,7 +29,6 @@ To configure the execution of TAC, you can tune the following parameters:
 - `NB_GOODS` is the number of types of goods available for trade in the competition.
 - `NB_BASELINE_AGENTS` is the number of baseline agents spawned in the TAC instance. 
 - `OEF_ADDR` and `OEF_PORT` allow you to specify a different OEF Node to use for the sandbox. 
-- `SERVICE_REGISTRATION_STRATEGY` indicates whether the baseline agent registers supply, demand or both services on the oef.
 - `DATA_OUTPUT_DIR` is the output directory to use for storing simulation data in `${DATA_OUTPUT_DIR}/${EXPERIMENT_ID}`.
 - `EXPERIMENT_ID` is the name to give to the simulation.
 - `LOWER_BOUND_FACTOR` is the lower bound factor of a uniform distribution used for generating good instances.
@@ -39,7 +38,10 @@ To configure the execution of TAC, you can tune the following parameters:
 - `INACTIVITY_TIMEOUT` is the amount of time (in seconds) to wait during inactivity until the termination of the competition.
 - `COMPETITION_TIMEOUT` is the amount of time (in seconds) to wait from the start of the competition until the termination of the competition.
 - `SEED` is the seed for the random module.
-
+- `WHITELIST` is the public keys permitted by the controller for the competition.
+- `REGISTER_AS` indicates whether the baseline agent registers supply, demand or both services on the oef.
+- `SEARCH_FOR` indicates whether the baseline agent searches supply, demand or both services on the oef.
+- `PENDING_TRANSACTION_TIMEOUT` is the amount of time an in-flight transaction is kept in the transaction manager.
 
 Specify the values in the [`.env`](.env) file.
 
@@ -75,7 +77,7 @@ If you want to include your own agents, set `NB_AGENTS` to a number equal to `NB
       
 - Connect your agents to `localhost:10000`, e.g.:
 ```
-python3 ../templates/v1/*.py
+python ../templates/v1/*.py
 ```
 
 Be careful with the values of `NB_AGENTS` and `NB_BASELINE_AGENTS`:
@@ -86,7 +88,7 @@ Be careful with the values of `NB_AGENTS` and `NB_BASELINE_AGENTS`:
 
 To run the sandbox multiple times, use the script `run_iterated_games.py`:
 
-    python3 run_iterated_games.py --config config.json
+    python run_iterated_games.py --config config.json
 
 Usage:
 ```
