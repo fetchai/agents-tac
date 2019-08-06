@@ -35,5 +35,5 @@ class AgentForm(Form):
     is_world_modeling = wtforms.BooleanField("Is world modeling?", default=False)
     services_interval = IntegerField('Services interval', default=5, widget=widgets.Input(input_type="number"), validators=[wtforms.validators.NumberRange(min=2, message="At least two baseline agents.")],)
     pending_transaction_timeout = IntegerField("Pending transaction timeout", default=30, validators=[wtforms.validators.NumberRange(min=0.0)])
-    private_key_pem = whitelist_file = FileField("Private key PEM file path", default=None, validators=[wtforms.validators.Optional])
+    private_key_pem = FileField("Private key PEM file path", default=None, validators=[wtforms.validators.Optional])
     rejoin = wtforms.BooleanField("Is rejoining?", default=False)
