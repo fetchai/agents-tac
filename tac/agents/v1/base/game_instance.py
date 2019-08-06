@@ -308,8 +308,8 @@ class GameInstance:
         """
         Check for a match between the CFP services and the goods description.
 
-        :param cfp_services: a dictionary with the cfp services
-        :param goods_description: a description of the goods
+        :param cfp_services: the services associated with the cfp.
+        :param goods_description: a description of the goods.
 
         :return: Bool
         """
