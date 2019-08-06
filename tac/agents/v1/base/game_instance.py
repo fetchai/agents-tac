@@ -117,7 +117,6 @@ class GameInstance:
         self.goods_demanded_description = None
 
         self.transaction_manager = TransactionManager(agent_name, pending_transaction_timeout=pending_transaction_timeout)
-        self.transaction_manager.start()
 
         self.stats_manager = StatsManager(mail_stats, dashboard)
 
@@ -255,12 +254,12 @@ class GameInstance:
 
         if not state_after_locks.check_transaction_is_consistent(transaction, self.game_configuration.tx_fee):
             message = "[{}]: the proposed transaction is not consistent with the state after locks.".format(self.agent_name)
-            return [False, message]
+            return False, message
         proposal_delta_score = state_after_locks.get_score_diff_from_transaction(transaction, self.game_configuration.tx_fee)
 
         result = self.strategy.is_acceptable_proposal(proposal_delta_score)
         message = "[{}]: is good proposal for {}? {}: tx_id={}, delta_score={}, amount={}".format(self.agent_name, dialogue.role, result, transaction.transaction_id, proposal_delta_score, transaction.amount)
-        return [result, message]
+        return result, message
 
     def get_service_description(self, is_supply: bool) -> Description:
         """
@@ -309,8 +308,8 @@ class GameInstance:
         """
         Check for a match between the CFP services and the goods description.
 
-        :param cfp_services: a dictionary with the cfp services
-        :param goods_description: a description of the goods
+        :param cfp_services: the services associated with the cfp.
+        :param goods_description: a description of the goods.
 
         :return: Bool
         """
@@ -362,13 +361,13 @@ class GameInstance:
         state_after_locks = self._agent_state.apply(transactions, self.game_configuration.tx_fee)
         return state_after_locks
 
-    def generate_proposal(self, cfp_services: Dict[str, Union[bool, List]], is_seller: bool) -> List[Description]:
+    def generate_proposal(self, cfp_services: Dict[str, Union[bool, List]], is_seller: bool) -> Optional[List[Description]]:
         """
         Wrap the function which generates proposals from a seller or buyer.
 
         If there are locks as seller, it applies them.
 
-        :param query: the query associated with the cfp.
+        :param cfp_services: the query associated with the cfp.
         :param is_seller: Boolean indicating the role of the agent.
 
         :return: a list of descriptions
@@ -380,12 +379,11 @@ class GameInstance:
             if not self.is_matching(cfp_services, proposal): continue
             if not proposal.values["price"] > 0: continue
             proposals.append(proposal)
-        if proposals == []:
+        if not proposals:
             return None
         else:
             return random.choice(proposals)
 
     def stop(self):
         """Stop the services attached to the game instance."""
-        self.transaction_manager.stop()
         self.stats_manager.stop()
