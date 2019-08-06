@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <h3>Sandbox list</h3>
+    <button class="btn btn-info" id="btn-add-sandbox">Add</button>
+    <button class="btn btn-success" id="btn-submit-gridsearch">Submit</button>
+  </div>
+  <br/>
+  <div class="row">
+
+    <div id="accordion">
+
+      <div class="card" id="card-1">
+        <div class="card-header" id="heading-1">
+          <h5 class="mb-0">
+            <button id="btn-title-card" class="btn btn-link" data-toggle="collapse" data-target="#collapse-1" aria-expanded="true" aria-controls="collapse-1">
+              Sandbox 1
+            </button>
+      <!--            <button class="btn btn-info" name="btn-duplicate-item">-->
+      <!--              <span class="glyphicon glyphicon-duplicate" aria-hidden="true"></span>-->
+      <!--            </button>-->
+            <button class="btn btn-danger" name="btn-remove-item">
+              <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+            </button>
+          </h5>
+        </div>
+        <div id="collapse-1" class="collapse show" aria-labelledby="heading-1" data-parent="#accordion">
+          <div class="card-body">
+            <form id="form-sandbox">
+              <table style="width:100%">
+                <tbody>
+                  {% for items_batched in form_sandbox._fields.items()|batch(3) %}
+                  <tr>
+                    {% for name, field in items_batched %}
+                      <th>
+                        {{ field.label }} <br/>
+                        {{ field }}
+                      </th>
+                    {% endfor %}
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/grid_search.js"></script>
+{% endblock %}

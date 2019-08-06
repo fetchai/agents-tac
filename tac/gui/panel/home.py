@@ -20,7 +20,7 @@
 
 """Implement the basic Flask blueprint for the common web pages (e.g. the index page)."""
 
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, redirect
 
 from tac.gui.panel.forms.sandbox import SandboxForm
 from tac.gui.panel.forms.agent import AgentForm
@@ -31,6 +31,17 @@ bp = Blueprint("home", __name__, url_prefix="/")
 @bp.route("/", methods=["GET"])
 def index():
     """Render the index page of the panel app."""
+    return redirect("/panel", code=302)
+
+
+@bp.route("/panel", methods=["GET"])
+def panel():
     sandbox_form = SandboxForm()
     agent_form = AgentForm()
     return render_template("panel.html", form_sandbox=sandbox_form, form_agent=agent_form)
+
+
+@bp.route("/grid-search", methods=["GET"])
+def grid_search():
+    sandbox_form = SandboxForm()
+    return render_template("grid_search.html", form_sandbox=sandbox_form)

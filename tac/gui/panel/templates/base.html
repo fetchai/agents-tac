@@ -13,9 +13,8 @@
     <link type="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css">
 
     <!-- Custom styles for this template -->
-    <link href="../static/main.css" rel="stylesheet">
+    <link href="../static/css/main.css" rel="stylesheet">
 
-    <script src="../static/app.js"></script>
   </head>
   <body>
     {% include "includes/navbar.html" %}
@@ -38,5 +37,6 @@
         $('#datepick').datetimepicker();
       });
     </script>
+    {% block scripts %}{% endblock %}
   </body>
 </html>
