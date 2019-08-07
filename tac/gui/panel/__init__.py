@@ -43,18 +43,56 @@ In particular, it provides REST methods to start/stop a sandbox and an agent, al
 #
 # ------------------------------------------------------------------------------
 import os
+import time
+from threading import Thread
 
 from flask import Flask
-from flask_restful import Api
 
-from tac.gui.panel import home
+from tac.gui.panel import home, api
 from tac.gui.panel.api.resources.agents import Agent
-from tac.gui.panel.api.resources.sandboxes import Sandbox
+from tac.gui.panel.api.resources.sandboxes import Sandbox, SandboxList, sandbox_queue
+
+
+class CustomFlask(Flask):
+    """Wrapper of the Flask app."""
+
+    def __init__(self, *args, **kwargs):
+        """Initialize our wrapper."""
+        super().__init__(*args, **kwargs)
+
+        self.running = False
+        self.sandbox_runner_thread = Thread(target=self.run_sandbox_queue)
+
+    def run_sandbox_queue(self):
+        """Consume elements from the sandbox queue"""
+        while self.running:
+            sandbox_runner = sandbox_queue.get()
+            sandbox_runner()
+            sandbox_runner.wait()
+            time.sleep(5.0)
+
+    def setup(self):
+        """Setup operations to execute before running"""
+        self.running = True
+        self.sandbox_runner_thread.start()
+
+    def run(self, *args, **kwargs):
+        """Wrapper of the run method to hide setup and teardown operations to the user."""
+        try:
+            self.setup()
+            super().run(*args, **kwargs)
+        finally:
+            self.teardown()
+
+    def teardown(self):
+        """Teardown the allocated resources"""
+        self.running = False
+        self.sandbox_runner_thread.join()
 
 
 def create_app(test_config=None):
     """Create and configure an instance of the Flask application."""
-    app = Flask(__name__, instance_relative_config=True)
+    app = CustomFlask(__name__, instance_relative_config=True)
 
     if test_config is None:
         # load the instance config, if it exists, when not testing
@@ -70,9 +108,7 @@ def create_app(test_config=None):
         pass
 
     # register api endpoints
-    api = Api(app, prefix='/api')
-    api.add_resource(Sandbox, "/sandbox")
-    api.add_resource(Agent, "/agent")
+    api.create_api(app)
 
     # register home pages
     app.register_blueprint(home.bp)

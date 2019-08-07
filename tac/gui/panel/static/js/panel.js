@@ -1,5 +1,6 @@
 (function() {
 
+    let currentSandboxID = null;
 
     let configureSandboxForm = function(){
 
@@ -13,7 +14,6 @@
             ev.preventDefault();
 
             let clickedBtnId = ev.target.target;
-            console.log(clickedBtnId, " clicked");
             if(clickedBtnId === startBtn.id){
                 // start sandbox button clicked
                 startSandbox();
@@ -44,8 +44,11 @@
                 stopBtn.disabled = true;
             });
 
-            XHR.open("POST", "/api/sandbox", true);
+            XHR.open("POST", "/api/sandboxes", false);
             XHR.send(FD);
+            let jsonResponse = JSON.parse(XHR.responseText);
+            console.log(jsonResponse);
+            currentSandboxID = jsonResponse["id"];
             return XHR.responseText;
         };
 
@@ -68,7 +71,7 @@
                 stopBtn.disabled = false;
             });
 
-            XHR.open("DELETE", "/api/sandbox", true);
+            XHR.open("DELETE", "/api/sandboxes/" + currentSandboxID, true);
             XHR.send(FD);
             return XHR.responseText;
         };
@@ -85,7 +88,6 @@
             ev.preventDefault();
 
             let clickedBtnId = ev.target.target;
-            console.log(clickedBtnId, " clicked");
             if(clickedBtnId === startBtn.id){
                 // start agent button clicked
                 startAgent();
