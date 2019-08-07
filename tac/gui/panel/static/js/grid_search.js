@@ -45,12 +45,17 @@
         nbCards += 1;
     });
 
-    $("#btn-submit-gridsearch").on("click", function(){
+    $("#btn-submit-gridsearch").on("click", function() {
         let sandboxObjectList = buildJSONFromSandboxFormList();
-        console.log(sandboxObjectList)
+        for (let i = 0; i < sandboxObjectList.length; i++) {
+            console.log("POST /api/sandboxes for Sandbox " + i);
+            let XHR = new XMLHttpRequest();
+            XHR.addEventListener("error", function (event) {
+                console.log("Error on request " + i + " event: " + event)
+            });
+            XHR.open("POST", "/api/sandboxes", true);
+            XHR.send(sandboxObjectList[i]);
+        }
     });
-
-
-
 
 })();

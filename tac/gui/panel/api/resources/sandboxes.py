@@ -189,24 +189,25 @@ class SandboxList(Resource):
         # parse the arguments
         args = parser.parse_args()
         logger.debug("Args: \n{}".format(str(args)))
-        args = self._post_args_preprocessing(args)
+        sandbox_id = len(sandboxes)
+        args = self._post_args_preprocessing(args, sandbox_id)
 
         # create the simulation runner wrapper
         simulation_runner = SandboxRunner(0, args)
 
         # save the created simulation to the global state
-        sandboxes[len(sandboxes)] = simulation_runner
+        sandboxes[sandbox_id] = simulation_runner
 
         global sandbox_queue
         sandbox_queue.put(simulation_runner)
         return simulation_runner.to_dict(), 202
 
-    def _post_args_preprocessing(self, args):
+    def _post_args_preprocessing(self, args, sandbox_id):
         """Process the arguments of the POST request on /api/sandbox."""
         if args["data_output_dir"] == "":
             args["data_output_dir"] = "./data"
         if args["experiment_id"] == "" or args["experiment_id"] is None:
-            args["experiment_id"] = "./experiment"
+            args["experiment_id"] = "./experiment-".format(sandbox_id)
         # if args["start_time"] == "":
         #     args["start_time"] = str(datetime.datetime.now())
         # else:

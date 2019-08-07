@@ -42,15 +42,19 @@ In particular, it provides REST methods to start/stop a sandbox and an agent, al
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+import logging
 import os
 import time
+from queue import Empty
 from threading import Thread
 
 from flask import Flask
 
 from tac.gui.panel import home, api
 from tac.gui.panel.api.resources.agents import Agent
-from tac.gui.panel.api.resources.sandboxes import Sandbox, SandboxList, sandbox_queue
+from tac.gui.panel.api.resources.sandboxes import Sandbox, SandboxList, sandbox_queue, SandboxRunner
+
+logger = logging.getLogger(__name__)
 
 
 class CustomFlask(Flask):
@@ -66,13 +70,21 @@ class CustomFlask(Flask):
     def run_sandbox_queue(self):
         """Consume elements from the sandbox queue"""
         while self.running:
-            sandbox_runner = sandbox_queue.get()
-            sandbox_runner()
-            sandbox_runner.wait()
-            time.sleep(5.0)
+            logger.debug("Waiting for sandbox to execute...")
+            try:
+                sandbox_runner = sandbox_queue.get(timeout=5.0)  # type: SandboxRunner
+                logger.debug("Launching the sandbox with id: {}".format(sandbox_runner.id))
+                sandbox_runner()
+                logger.debug("Waiting until it completes.")
+                sandbox_runner.wait()
+                logger.debug("Sandbox with ID={} has been completed.".format(sandbox_runner.id))
+            except Empty:
+                pass
+            time.sleep(1.0)
 
     def setup(self):
         """Setup operations to execute before running"""
+        logger.debug("Setup method called.")
         self.running = True
         self.sandbox_runner_thread.start()
 
@@ -86,6 +98,7 @@ class CustomFlask(Flask):
 
     def teardown(self):
         """Teardown the allocated resources"""
+        logger.debug("Teardown method called.")
         self.running = False
         self.sandbox_runner_thread.join()
 
