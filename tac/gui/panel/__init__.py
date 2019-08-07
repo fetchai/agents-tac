@@ -44,15 +44,13 @@ In particular, it provides REST methods to start/stop a sandbox and an agent, al
 # ------------------------------------------------------------------------------
 import logging
 import os
-import time
 from queue import Empty
 from threading import Thread
 
 from flask import Flask
 
 from tac.gui.panel import home, api
-from tac.gui.panel.api.resources.agents import Agent
-from tac.gui.panel.api.resources.sandboxes import Sandbox, SandboxList, sandbox_queue, SandboxRunner
+from tac.gui.panel.api.resources.sandboxes import sandbox_queue, SandboxRunner
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +66,7 @@ class CustomFlask(Flask):
         self.sandbox_runner_thread = Thread(target=self.run_sandbox_queue)
 
     def run_sandbox_queue(self):
-        """Consume elements from the sandbox queue"""
+        """Consume elements from the sandbox queue."""
         while self.running:
             logger.debug("Waiting for sandbox to execute...")
             try:
@@ -80,16 +78,16 @@ class CustomFlask(Flask):
                 logger.debug("Sandbox with ID={} has been completed.".format(sandbox_runner.id))
             except Empty:
                 pass
-            time.sleep(1.0)
+        logger.debug("Exiting from the job loop...")
 
     def setup(self):
-        """Setup operations to execute before running"""
+        """Set up resources before running the main app."""
         logger.debug("Setup method called.")
         self.running = True
         self.sandbox_runner_thread.start()
 
     def run(self, *args, **kwargs):
-        """Wrapper of the run method to hide setup and teardown operations to the user."""
+        """Wrap the run method to hide setup and teardown operations to the user."""
         try:
             self.setup()
             super().run(*args, **kwargs)
@@ -97,7 +95,7 @@ class CustomFlask(Flask):
             self.teardown()
 
     def teardown(self):
-        """Teardown the allocated resources"""
+        """Teardown the allocated resources."""
         logger.debug("Teardown method called.")
         self.running = False
         self.sandbox_runner_thread.join()

@@ -27,7 +27,6 @@ from .resources.agents import Agent
 
 def create_api(app):
     """Wrap the Flask app with the Flask-RESTful Api object."""
-
     api = Api(app, prefix='/api')
 
     api.add_resource(SandboxList, "/sandboxes")

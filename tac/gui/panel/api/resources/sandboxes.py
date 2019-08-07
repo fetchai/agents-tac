@@ -179,6 +179,7 @@ class Sandbox(Resource):
 
 
 class SandboxList(Resource):
+    """Resource to handle sandboxes."""
 
     def get(self):
         """Get all the sandboxes."""

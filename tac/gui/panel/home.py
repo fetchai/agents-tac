@@ -36,6 +36,7 @@ def index():
 
 @bp.route("/panel", methods=["GET"])
 def panel():
+    """Render the panel page."""
     sandbox_form = SandboxForm()
     agent_form = AgentForm()
     return render_template("panel.html", form_sandbox=sandbox_form, form_agent=agent_form)
@@ -43,5 +44,6 @@ def panel():
 
 @bp.route("/grid-search", methods=["GET"])
 def grid_search():
+    """Render the grid search page."""
     sandbox_form = SandboxForm()
     return render_template("grid_search.html", form_sandbox=sandbox_form)
