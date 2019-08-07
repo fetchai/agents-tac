@@ -12,38 +12,36 @@
 
     <div id="accordion">
 
-      <div class="card" id="card-1">
-        <div class="card-header" id="heading-1">
+      <div class="card" id="card-0">
+        <div class="card-header" id="heading-0">
           <h5 class="mb-0">
-            <button id="btn-title-card" class="btn btn-link" data-toggle="collapse" data-target="#collapse-1" aria-expanded="true" aria-controls="collapse-1">
+            <button id="btn-title-card" class="btn btn-link" data-toggle="collapse" data-target="#collapse-0" aria-expanded="true" aria-controls="collapse-0">
               Sandbox 1
             </button>
-      <!--            <button class="btn btn-info" name="btn-duplicate-item">-->
-      <!--              <span class="glyphicon glyphicon-duplicate" aria-hidden="true"></span>-->
-      <!--            </button>-->
+<!--            <button class="btn btn-info" name="btn-duplicate-item">-->
+<!--              <span class="glyphicon glyphicon-duplicate" aria-hidden="true"></span>-->
+<!--            </button>-->
             <button class="btn btn-danger" name="btn-remove-item">
               <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
             </button>
           </h5>
         </div>
-        <div id="collapse-1" class="collapse show" aria-labelledby="heading-1" data-parent="#accordion">
+        <div id="collapse-0" class="collapse" aria-labelledby="heading-0" data-parent="#accordion">
           <div class="card-body">
-            <form id="form-sandbox">
-              <table style="width:100%">
-                <tbody>
-                  {% for items_batched in form_sandbox._fields.items()|batch(3) %}
-                  <tr>
-                    {% for name, field in items_batched %}
-                      <th>
-                        {{ field.label }} <br/>
-                        {{ field }}
-                      </th>
-                    {% endfor %}
-                  </tr>
+            <table style="width:100%">
+              <tbody>
+                {% for items_batched in form_sandbox._fields.items()|batch(3) %}
+                <tr>
+                  {% for name, field in items_batched %}
+                    <th>
+                      {{ field.label }} <br/>
+                      {{ field }}
+                    </th>
                   {% endfor %}
-                </tbody>
-              </table>
-            </form>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
