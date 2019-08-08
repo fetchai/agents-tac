@@ -15,3 +15,8 @@ Release History
 -------------------
 
 - Minor updates, many bug fixes, no breaking changes.
+
+0.1.3 (2019-08-09)
+-------------------
+
+- Minor updates, many bug fixes, no breaking changes.
