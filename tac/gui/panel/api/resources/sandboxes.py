@@ -193,7 +193,7 @@ class SandboxList(Resource):
         args = self._post_args_preprocessing(args, sandbox_id)
 
         # create the simulation runner wrapper
-        simulation_runner = SandboxRunner(0, args)
+        simulation_runner = SandboxRunner(sandbox_id, args)
 
         # save the created simulation to the global state
         sandboxes[sandbox_id] = simulation_runner
