@@ -135,7 +135,9 @@ setup(
         ("sandbox", ["sandbox/docker-compose.yml", "sandbox/config.json", "sandbox/.env"]
          + glob.glob("sandbox/*.py")
          + glob.glob("sandbox/*.sh")),
-        ("templates", glob.glob("templates/v1/*"))
+        ("templates/v1", glob.glob("templates/v1/*.py")),
+        ("simulation/v1", glob.glob("simulation/v1/*")),
+        ("oef_search_pluto_scripts", glob.glob("oef_search_pluto_scripts/*.py") + glob.glob("oef_search_pluto_scripts/*.json"))
     ],
     license=about['__license__'],
 )

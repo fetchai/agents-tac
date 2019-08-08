@@ -8,3 +8,4 @@ recursive-include templates *
 recursive-include sandbox *
 recursive-include simulation *
 recursive-include scripts *
+recursive-include oef_search_pluto_scripts *
