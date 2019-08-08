@@ -112,7 +112,6 @@ class SandboxRunner:
             "WHITELIST": str(args["whitelist_file"]),
             **os.environ
         }
-
         self.process = subprocess.Popen([
             "docker-compose",
             "-f",
