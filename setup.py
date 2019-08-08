@@ -103,7 +103,7 @@ setup(
     author=about['__author__'],
     url=about['__url__'],
     long_description=readme,
-    packages=find_packages(include=["tac*"]),
+    packages=find_packages(include=["tac"]),
     cmdclass={
         'protoc': protoc,
     },
@@ -129,11 +129,14 @@ setup(
         "base58"
     ],
     tests_require=["tox"],
-    entry_points={
-        'console_scripts': ["tac=tac.__main__:main"],
-    },
     zip_safe=False,
     include_package_data=True,
+    data_files=[
+        ("sandbox", ["sandbox/docker-compose.yml", "sandbox/config.json", "sandbox/.env"]
+         + glob.glob("sandbox/*.py")
+         + glob.glob("sandbox/*.sh")),
+        ("templates", glob.glob("templates/v1/*"))
+    ],
     license=about['__license__'],
 )
 

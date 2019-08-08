@@ -36,7 +36,4 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
 
-# ROOT_DIR = os.path.join(os.path.dirname(inspect.getfile(inspect.currentframe())), "..")
-ROOT_DIR = os.getcwd()
-while os.path.split(ROOT_DIR)[1] != 'agents-tac':
-	ROOT_DIR = os.path.split(ROOT_DIR)[0]
+ROOT_DIR = os.path.join(os.path.dirname(inspect.getfile(inspect.currentframe())), "..")
