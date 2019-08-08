@@ -207,7 +207,7 @@ class SandboxList(Resource):
         if args["data_output_dir"] == "":
             args["data_output_dir"] = "./data"
         if args["experiment_id"] == "" or args["experiment_id"] is None:
-            args["experiment_id"] = "./experiment-".format(sandbox_id)
+            args["experiment_id"] = "./experiment-{}".format(sandbox_id)
         # if args["start_time"] == "":
         #     args["start_time"] = str(datetime.datetime.now())
         # else:
