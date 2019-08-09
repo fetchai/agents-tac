@@ -25,8 +25,10 @@ In particular, it provides REST methods to start/stop a sandbox and an agent, al
  user to easily change the parameters.
 """
 
+import docker
 import logging
 import os
+import re
 from queue import Empty
 from threading import Thread
 
@@ -66,6 +68,7 @@ class CustomFlask(Flask):
     def setup(self):
         """Set up resources before running the main app."""
         logger.debug("Setup method called.")
+        kill_any_running_oef()
         self.running = True
         self.sandbox_runner_thread.start()
 
@@ -82,6 +85,15 @@ class CustomFlask(Flask):
         logger.debug("Teardown method called.")
         self.running = False
         self.sandbox_runner_thread.join()
+
+
+def kill_any_running_oef():
+    """Kill any running OEF instance."""
+    client = docker.from_env()
+    for container in client.containers.list():
+        if any(re.match("fetchai/oef-search", tag) for tag in container.image.tags):
+            logger.debug("Stopping existing OEF Node...")
+            container.stop()
 
 
 def create_app(test_config=None):
