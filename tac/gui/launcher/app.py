@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 # ------------------------------------------------------------------------------
 #
 #   Copyright 2018-2019 Fetch.AI Limited
@@ -17,4 +18,10 @@
 #
 # ------------------------------------------------------------------------------
 
-"""Define all the REST resources for the panel APIs."""
+"""The main entrypoint for the launcher app."""
+
+from tac.gui.launcher import create_app
+
+if __name__ == '__main__':
+    app = create_app()
+    app.run("127.0.0.1", 5000, debug=True, use_reloader=False)

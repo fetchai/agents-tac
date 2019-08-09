@@ -25,6 +25,7 @@ import logging
 import os
 import subprocess
 from enum import Enum
+from queue import Queue
 from typing import Dict, Any, Optional
 
 from flask_restful import Resource, reqparse
@@ -55,7 +56,8 @@ parser.add_argument("pending_transaction_timeout", default=120, type=int, help="
 parser.add_argument("register_as", choices=['seller', 'buyer', 'both'], default='both', help="The string indicates whether the baseline agent registers as seller, buyer or both on the oef.")
 parser.add_argument("search_for", choices=['sellers', 'buyers', 'both'], default='both', help="The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.")
 
-current_sandbox = None  # type: Optional[SandboxRunner]
+sandboxes = {}  # type: Dict[int, SandboxRunner]
+sandbox_queue = Queue()
 
 
 class SandboxState(Enum):
@@ -110,7 +112,6 @@ class SandboxRunner:
             "WHITELIST": str(args["whitelist_file"]),
             **os.environ
         }
-
         self.process = subprocess.Popen([
             "docker-compose",
             "-f",
@@ -140,66 +141,73 @@ class SandboxRunner:
             "params": self.params
         }
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the execution of the sandbox."""
+        if self.process is None:
+            return
         try:
             self.process.terminate()
             self.process.wait()
-            return True
+            return
         except Exception:
             raise
+
+    def wait(self):
+        """Wait for the completion of the sandbox."""
+        return self.process.wait()
 
 
 class Sandbox(Resource):
     """The sandbox REST resource."""
 
-    def get(self):
+    def get(self, sandbox_id):
         """Get the current instance of the sandbox."""
-        global current_sandbox
-        if current_sandbox is not None:
-            return current_sandbox.to_dict(), 200
+        if sandbox_id in sandboxes:
+            return sandboxes[sandbox_id].to_dict(), 200
         else:
-            return None, 200
+            return None, 404
+
+    def delete(self, sandbox_id):
+        """Delete the current sandbox instance."""
+        if sandbox_id not in sandboxes:
+            return None, 404
+        else:
+            sandbox = sandboxes[sandbox_id]
+            sandbox.stop()
+            return {}, 204
+
+
+class SandboxList(Resource):
+    """Resource to handle sandboxes."""
+
+    def get(self):
+        """Get all the sandboxes."""
+        return {sandbox_id: sandbox.to_dict() for sandbox_id, sandbox in sandboxes.items()}
 
     def post(self):
         """Create a sandbox instance."""
-        global current_sandbox
-        if current_sandbox is not None and current_sandbox.status == SandboxState.RUNNING:
-            # a sandbox is already running
-            return None, 400
-
         # parse the arguments
         args = parser.parse_args()
         logger.debug("Args: \n{}".format(str(args)))
-        args = self._post_args_preprocessing(args)
+        sandbox_id = len(sandboxes)
+        args = self._post_args_preprocessing(args, sandbox_id)
 
         # create the simulation runner wrapper
-        simulation_runner = SandboxRunner(0, args)
+        simulation_runner = SandboxRunner(sandbox_id, args)
 
         # save the created simulation to the global state
-        current_sandbox = simulation_runner
+        sandboxes[sandbox_id] = simulation_runner
 
-        # run the simulation
-        simulation_runner()
-
+        global sandbox_queue
+        sandbox_queue.put(simulation_runner)
         return simulation_runner.to_dict(), 202
 
-    def delete(self):
-        """Delete the current sandbox instance."""
-        global current_sandbox
-        if current_sandbox is None:
-            return None, 400
-        else:
-            current_sandbox.stop()
-            current_sandbox = None
-            return {}, 204
-
-    def _post_args_preprocessing(self, args):
+    def _post_args_preprocessing(self, args, sandbox_id):
         """Process the arguments of the POST request on /api/sandbox."""
         if args["data_output_dir"] == "":
             args["data_output_dir"] = "./data"
-        if args["experiment_id"] == "":
-            args["experiment_id"] = "./experiment"
+        if args["experiment_id"] == "" or args["experiment_id"] is None:
+            args["experiment_id"] = "./experiment-{}".format(sandbox_id)
         # if args["start_time"] == "":
         #     args["start_time"] = str(datetime.datetime.now())
         # else:

@@ -18,19 +18,17 @@
 #
 # ------------------------------------------------------------------------------
 
-"""Implement the basic Flask blueprint for the common web pages (e.g. the index page)."""
+"""Define the REST APIs for the launcher app."""
+from flask_restful import Api
 
-from flask import Blueprint, render_template
-
-from tac.gui.panel.forms.sandbox import SandboxForm
-from tac.gui.panel.forms.agent import AgentForm
-
-bp = Blueprint("home", __name__, url_prefix="/")
+from .resources.sandboxes import SandboxList, Sandbox
+from .resources.agents import Agent
 
 
-@bp.route("/", methods=["GET"])
-def index():
-    """Render the index page of the panel app."""
-    sandbox_form = SandboxForm()
-    agent_form = AgentForm()
-    return render_template("panel.html", form_sandbox=sandbox_form, form_agent=agent_form)
+def create_api(app):
+    """Wrap the Flask app with the Flask-RESTful Api object."""
+    api = Api(app, prefix='/api')
+
+    api.add_resource(SandboxList, "/sandboxes")
+    api.add_resource(Sandbox, "/sandboxes/<int:sandbox_id>")
+    api.add_resource(Agent, "/agent")

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 # ------------------------------------------------------------------------------
 #
 #   Copyright 2018-2019 Fetch.AI Limited
@@ -18,4 +17,4 @@
 #
 # ------------------------------------------------------------------------------
 
-"""Define the REST APIs for the panel app."""
+"""Define all the REST resources for the launcher APIs."""
