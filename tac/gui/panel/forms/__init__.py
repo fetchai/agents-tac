@@ -18,4 +18,4 @@
 #
 # ------------------------------------------------------------------------------
 
-"""Implement forms to display in the panel GUI."""
+"""Implement forms to display in the sandbox launcher."""

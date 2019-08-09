@@ -1,6 +1,6 @@
 ## GUIs		
 
-This package contains GUI tools to interact with the TAC project (e.g. data visualization).		
+This package contains GUI tools to interact with the TAC project (e.g. data visualization & agent launcher).		
 
 ## Recommended Visualization:
 

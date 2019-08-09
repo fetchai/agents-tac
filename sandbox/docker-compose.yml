@@ -96,7 +96,7 @@ services:
       - "${REGISTER_AS}"
       - "--search-for"
       - "${SEARCH_FOR}"
-      - "--gui"
+      - "--dashboard"
       - "--visdom-addr"
       - "172.28.1.2"
       - "--visdom-port"

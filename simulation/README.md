@@ -27,9 +27,9 @@ Simply run:
 
       python -m visdom.server
   
-- Third, (in a new terminal window, from root and in shell) run the simulation example with the gui flag to visualize data in realtime:
+- Third, (in a new terminal window, from root and in shell) run the simulation example with the dashboard flag to visualize data in realtime:
 
-      python simulation/v1/tac_agent_spawner.py --gui
+      python simulation/v1/tac_agent_spawner.py --dashboard
 
 - Finally, lean back and watch the competition on `http://localhost:8097` in your browser (you might have to select the right environment `tac && tac_controller` and deselect `main` in the visdom browser tab).
 
@@ -59,7 +59,7 @@ For a full list, do `python simulation/tac_agent_spawner.py -h`
 - `--competition-timeout` is the amount of time (in seconds) to wait from the start of the competition until the termination of the competition.
 - `--visdom-addr` is the TCP/IP address of the Visdom server
 - `--visdom-port` is the TCP/IP port of the Visdom server
-- `--gui` is a flag to specify that the gui is live and expecting an event stream.
+- `--dashboard` is a flag to specify that the dashboard is live and expecting an event stream.
 - `--seed` is the seed for the random module.
 
 Example:
@@ -83,10 +83,10 @@ Example:
           --registration-timeout 10
           --inactivity-timeout 60
           --competition-timeout 240
-          --gui
+          --dashboard
           --seed 42
       
-It generates a `game.json` file in the `${data_output_dir}/${experiment_id}` that can be inspected with a GUI (see `tac/gui`).
+It generates a `game.json` file in the `${data_output_dir}/${experiment_id}` that can be inspected with a dashboard (see `tac/gui`).
 
 ### Scalability
 

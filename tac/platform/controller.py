@@ -349,7 +349,7 @@ class TransactionHandler(RequestHandler):
         # update the game state.
         self.controller_agent.game_handler.current_game.settle_transaction(tx)
 
-        # update the GUI monitor
+        # update the dashboard monitor
         self.controller_agent.monitor.update()
 
         # send the transaction confirmation.
@@ -632,7 +632,7 @@ class ControllerAgent(OEFAgent):
         :param oef_addr: the OEF address.
         :param oef_port: the OEF listening port.
         :param version: the version of the TAC controller.
-        :param monitor: the GUI monitor. If None, defaults to a null (dummy) monitor.
+        :param monitor: the dashboard monitor. If None, defaults to a null (dummy) monitor.
         """
         self.name = name
         self.crypto = Crypto()
@@ -834,7 +834,7 @@ def _parse_arguments():
     parser.add_argument("--competition-timeout", default=240, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
     parser.add_argument("--whitelist-file", default=None, type=str, help="The file that contains the list of agent names to be whitelisted.")
     parser.add_argument("--verbose", default=False, action="store_true", help="Log debug messages.")
-    parser.add_argument("--gui", action="store_true", help="Show the GUI.")
+    parser.add_argument("--dashboard", action="store_true", help="Show the agent dashboard.")
     parser.add_argument("--visdom-addr", default="localhost", help="TCP/IP address of the Visdom server.")
     parser.add_argument("--visdom-port", default=8097, help="TCP/IP port of the Visdom server.")
     parser.add_argument("--data-output-dir", default="data", help="The output directory for the simulation data.")
@@ -862,7 +862,7 @@ def main(
         competition_timeout: int = 240,
         whitelist_file: Optional[str] = None,
         verbose: bool = False,
-        gui: bool = False,
+        dashboard: bool = False,
         visdom_addr: str = "localhost",
         visdom_port: int = 8097,
         data_output_dir: str = "data",
@@ -880,7 +880,7 @@ def main(
     else:
         logger.setLevel(logging.INFO)
 
-    monitor = VisdomMonitor(visdom_addr=visdom_addr, visdom_port=visdom_port) if gui else NullMonitor()
+    monitor = VisdomMonitor(visdom_addr=visdom_addr, visdom_port=visdom_port) if dashboard else NullMonitor()
 
     try:
 

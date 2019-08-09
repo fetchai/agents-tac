@@ -13,7 +13,7 @@ Check out the [package documentation](../../master/docs) to learn more about the
 
 To test your agent run it against baseline agents in the sandbox. Follow the steps 1.-3. in sandbox readme, then start your own agent:
 
-      python templates/v1/basic.py --name basic1 --gui
+      python templates/v1/basic.py --name basic1 --dashboard
 
 
 The following additional parameters can be used to tune the agent:
@@ -35,7 +35,7 @@ If you want to use the same cryptographic key, you can follow these steps:
       
 - Every time you run your agent, add the parameter `--private-key-pem <pem-file>` to your command:
 
-      python templates/v1/basic.py --name basic1 --gui --private-key-pem private_key.pem
+      python templates/v1/basic.py --name basic1 --dashboard --private-key-pem private_key.pem
 
 ## Testing manually (not recommended)
 
@@ -49,11 +49,11 @@ If you want to use the same cryptographic key, you can follow these steps:
 
 - Third, tart the controller, followed by two agents in separate terminals.
 
-      python tac/platform/controller.py --verbose --registration-timeout 20 --nb-agents 2 --tx-fee 0.0 --gui
+      python tac/platform/controller.py --verbose --registration-timeout 20 --nb-agents 2 --tx-fee 0.0 --dashboard
 
-      python templates/v1/basic.py --name basic0 --gui
+      python templates/v1/basic.py --name basic0 --dashboard
 
-      templates/v1/basic.py --name basic1 --gui
+      templates/v1/basic.py --name basic1 --dashboard
 
 
 The following parameters can be used to tune the agent:
