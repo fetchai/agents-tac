@@ -10,14 +10,14 @@
       "-p",
       "10000:10000",
       "-p",
-      "40000:40000"
+      "40000:40000",
+      "-p",
+      "7500:7500"
     ]
   ],
   "cmd": {
     "oef-search": {
-      "positional_args": ["run_mode", "run_sh_in_the_end"],
-      "run_mode": "node",
-      "run_sh_in_the_end": "no_sh",
+      "positional_args": ["config_file"],
       "config_file": "/config/node_config_latest.json"
     }
   }

@@ -126,6 +126,14 @@ class ParticipantAgent(Agent):
 
         self.out_box.send_nowait()
 
+    def update(self) -> None:
+        """
+        Update the state of the agent.
+
+        :return: None
+        """
+        self.game_instance.transaction_manager.cleanup_pending_transactions()
+
     def stop(self) -> None:
         """
         Stop the agent.

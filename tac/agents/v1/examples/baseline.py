@@ -73,7 +73,7 @@ def _parse_arguments():
     parser.add_argument("--pending-transaction-timeout", type=int, default=30, help="The timeout in seconds to wait for pending transaction/negotiations.")
     parser.add_argument("--private-key-pem", type=str, default=None, help="Path to a file containing a private key in PEM format.")
     parser.add_argument("--rejoin", action="store_true", default=False, help="Whether the agent is joining a running TAC.")
-    parser.add_argument("--gui", action="store_true", help="Show the GUI.")
+    parser.add_argument("--dashboard", action="store_true", help="Show the agent dashboard.")
     parser.add_argument("--visdom_addr", type=str, default="localhost", help="Address of the Visdom server.")
     parser.add_argument("--visdom_port", type=int, default=8097, help="Port of the Visdom server.")
     return parser.parse_args()
@@ -92,7 +92,7 @@ def main(
         pending_transaction_timeout: int = 30,
         private_key_pem: Optional[str] = None,
         rejoin: bool = False,
-        gui: bool = False,
+        dashboard: bool = False,
         visdom_addr: str = "127.0.0.1",
         visdom_port: int = 8097,
 ):
@@ -102,15 +102,15 @@ def main(
     Main entrypoint for starting a baseline agent.
     Please run the module with hte '--help flag' to get more details about the parameters.
     """
-    if gui:
-        dashboard = AgentDashboard(agent_name=name, env_name=name, visdom_addr=visdom_addr, visdom_port=visdom_port)
+    if dashboard:
+        agent_dashboard = AgentDashboard(agent_name=name, env_name=name, visdom_addr=visdom_addr, visdom_port=visdom_port)
     else:
-        dashboard = None
+        agent_dashboard = None
 
     strategy = BaselineStrategy(register_as=RegisterAs(register_as), search_for=SearchFor(search_for), is_world_modeling=is_world_modeling)
     agent = BaselineAgent(name=name, oef_addr=oef_addr, oef_port=oef_port, strategy=strategy,
                           agent_timeout=agent_timeout, max_reactions=max_reactions, services_interval=services_interval,
-                          pending_transaction_timeout=pending_transaction_timeout, dashboard=dashboard,
+                          pending_transaction_timeout=pending_transaction_timeout, dashboard=agent_dashboard,
                           private_key_pem=private_key_pem)
 
     try:

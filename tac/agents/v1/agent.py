@@ -105,6 +105,7 @@ class Agent:
             self.act()
             time.sleep(self._timeout)
             self.react()
+            self.update()
 
         self.stop()
         logger.debug("[{}]: Exiting main loop...".format(self.name))
@@ -133,4 +134,11 @@ class Agent:
         React to incoming events.
 
         :return: None
+        """
+
+    @abstractmethod
+    def update(self) -> None:
+        """Update the current state of the agent.
+
+        :return None
         """

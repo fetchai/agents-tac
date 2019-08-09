@@ -21,6 +21,7 @@
 
 """
 Generate a private key to be used for the Trading Agent Competition.
+
 It prints the key in PEM format to the specified file.
 """
 

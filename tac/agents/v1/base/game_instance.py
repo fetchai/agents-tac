@@ -22,21 +22,21 @@
 
 import datetime
 from enum import Enum
-from typing import List, Optional, Set
+import random
+from typing import List, Optional, Set, Tuple, Dict, Union
 
-from oef.messages import CFP_TYPES
 from oef.query import Query
 from oef.schema import Description
 
 from tac.agents.v1.mail import MailStats
-from tac.agents.v1.base.dialogues import Dialogues
-from tac.agents.v1.base.lock_manager import LockManager
+from tac.agents.v1.base.dialogues import Dialogues, Dialogue
+from tac.agents.v1.base.transaction_manager import TransactionManager
 from tac.agents.v1.base.strategy import Strategy
 from tac.agents.v1.base.stats_manager import StatsManager
 from tac.gui.dashboards.agent import AgentDashboard
 from tac.platform.game import AgentState, WorldState, GameConfiguration
-from tac.helpers.misc import build_query, get_goods_quantities_description
-from tac.platform.protocol import GameData, StateUpdate
+from tac.helpers.misc import build_dict, build_query, get_goods_quantities_description
+from tac.platform.protocol import GameData, StateUpdate, Transaction
 
 
 class GamePhase(Enum):
@@ -116,8 +116,7 @@ class GameInstance:
         self.goods_supplied_description = None
         self.goods_demanded_description = None
 
-        self.lock_manager = LockManager(agent_name, pending_transaction_timeout=pending_transaction_timeout)
-        self.lock_manager.start()
+        self.transaction_manager = TransactionManager(agent_name, pending_transaction_timeout=pending_transaction_timeout)
 
         self.stats_manager = StatsManager(mail_stats, dashboard)
 
@@ -237,6 +236,31 @@ class GameInstance:
             self._last_search_time = now
         return result
 
+    def is_profitable_transaction(self, transaction: Transaction, dialogue: Dialogue) -> Tuple[bool, str]:
+        """
+        Check if a transaction is profitable.
+
+        Is it a profitable transaction?
+        - apply all the locks for role.
+        - check if the transaction is consistent with the locks (enough money/holdings)
+        - check that we gain score.
+
+        :param transaction: the transaction
+        :param dialogue: the dialogue
+
+        :return: True if the transaction is good (as stated above), False otherwise.
+        """
+        state_after_locks = self.state_after_locks(dialogue.is_seller)
+
+        if not state_after_locks.check_transaction_is_consistent(transaction, self.game_configuration.tx_fee):
+            message = "[{}]: the proposed transaction is not consistent with the state after locks.".format(self.agent_name)
+            return False, message
+        proposal_delta_score = state_after_locks.get_score_diff_from_transaction(transaction, self.game_configuration.tx_fee)
+
+        result = self.strategy.is_acceptable_proposal(proposal_delta_score)
+        message = "[{}]: is good proposal for {}? {}: tx_id={}, delta_score={}, amount={}".format(self.agent_name, dialogue.role, result, transaction.transaction_id, proposal_delta_score, transaction.amount)
+        return result, message
+
     def get_service_description(self, is_supply: bool) -> Description:
         """
         Get the description of the supplied goods (as a seller), or the demanded goods (as a buyer).
@@ -266,6 +290,37 @@ class GameInstance:
 
         res = None if len(good_pbks) == 0 else build_query(good_pbks, is_searching_for_sellers)
         return res
+
+    def build_services_dict(self, is_supply: bool) -> Optional[Dict[str, Union[str, List]]]:
+        """
+        Build a dictionary containing the services demanded/supplied.
+
+        :param is_supply: Boolean indicating whether the services are demanded or supplied.
+
+        :return: a Dict.
+        """
+        good_pbks = self.get_goods_pbks(is_supply=is_supply)
+
+        res = None if len(good_pbks) == 0 else build_dict(good_pbks, is_supply)
+        return res
+
+    def is_matching(self, cfp_services: Dict[str, Union[bool, List]], goods_description: Description) -> bool:
+        """
+        Check for a match between the CFP services and the goods description.
+
+        :param cfp_services: the services associated with the cfp.
+        :param goods_description: a description of the goods.
+
+        :return: Bool
+        """
+        services = cfp_services['services']
+        if cfp_services['description'] is goods_description.data_model.name:
+            # The call for proposal description and the goods model name cannot be the same for trading agent pairs.
+            return False
+        for good_pbk in goods_description.data_model.attributes_by_name.keys():
+            if good_pbk not in services: continue
+            return True
+        return False
 
     def get_goods_pbks(self, is_supply: bool) -> Set[str]:
         """
@@ -301,18 +356,18 @@ class GameInstance:
 
         :return: the agent state with the locks applied to current state
         """
-        transactions = list(self.lock_manager.locks_as_seller.values()) if is_seller \
-            else list(self.lock_manager.locks_as_buyer.values())
+        transactions = list(self.transaction_manager.locked_txs_as_seller.values()) if is_seller \
+            else list(self.transaction_manager.locked_txs_as_buyer.values())
         state_after_locks = self._agent_state.apply(transactions, self.game_configuration.tx_fee)
         return state_after_locks
 
-    def get_proposals(self, query: CFP_TYPES, is_seller: bool) -> List[Description]:
+    def generate_proposal(self, cfp_services: Dict[str, Union[bool, List]], is_seller: bool) -> Optional[List[Description]]:
         """
         Wrap the function which generates proposals from a seller or buyer.
 
         If there are locks as seller, it applies them.
 
-        :param query: the query associated with the cfp.
+        :param cfp_services: the query associated with the cfp.
         :param is_seller: Boolean indicating the role of the agent.
 
         :return: a list of descriptions
@@ -321,13 +376,14 @@ class GameInstance:
         candidate_proposals = self.strategy.get_proposals(self.game_configuration.good_pbks, state_after_locks.current_holdings, state_after_locks.utility_params, self.game_configuration.tx_fee, is_seller, self._world_state)
         proposals = []
         for proposal in candidate_proposals:
-            if not query.check(proposal): continue
+            if not self.is_matching(cfp_services, proposal): continue
+            if not proposal.values["price"] > 0: continue
             proposals.append(proposal)
-        if proposals == []:
-            proposals.append(candidate_proposals[0])  # TODO remove this
-        return proposals
+        if not proposals:
+            return None
+        else:
+            return random.choice(proposals)
 
     def stop(self):
         """Stop the services attached to the game instance."""
-        self.lock_manager.stop()
         self.stats_manager.stop()

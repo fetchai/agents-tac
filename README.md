@@ -8,7 +8,17 @@ This repository contains submodules. Clone with recursive strategy:
 
 	  git clone git@github.com:fetchai/agents-tac.git --recursive && cd agents-tac
 
-## Quick Start
+## Quick Start:
+
+- [x] You have followed the steps under 'Dependencies' and 'Preliminaries' below
+- [x] You have entered the virtual environment and launched the script:
+
+      pipenv shell
+      python scripts/launch.py
+
+The controller GUI at http://localhost:8097 provides real time insights.
+
+## Step by step:
 
 - [x] You have followed the steps under 'Dependencies' and 'Preliminaries' below
 - [x] In one terminal, you have built the sandbox and then launched it:
@@ -19,7 +29,7 @@ This repository contains submodules. Clone with recursive strategy:
 - [x] In another terminal, you have entered the virtual environment and connected a template agent to the sandbox:
 
       pipenv shell
-      python3 templates/v1/basic.py --name my_agent --gui
+      python templates/v1/basic.py --name my_agent --gui
 
 The sandbox is starting up:
 <p align="center">
@@ -88,7 +98,7 @@ The [competition sandbox](../master/sandbox) provides the code to build the dock
 
 - Install the package:
 
-      python3 setup.py install
+      python setup.py install
 
 ## Contribute
 
@@ -96,6 +106,10 @@ The following dependency is only relevant if you intend to contribute to the rep
 - the project uses [Google Protocol Buffers](https://developers.google.com/protocol-buffers/) compiler for message serialization. A guide on how to install it is found [here](https://fetchai.github.io/oef-sdk-python/user/install.html#protobuf-compiler).
 
 The following steps are only relevant if you intend to contribute to the repository. They are not required for agent development.
+
+- Clear cache
+
+      pipenv --clear
 
 - Install development dependencies:
 
@@ -119,7 +133,7 @@ The following steps are only relevant if you intend to contribute to the reposit
 
 - We recommend you use the latest OEF build:
 
-	  python3 oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config_latest.json
+	  python oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config_latest.json
 
 ## Resources
 

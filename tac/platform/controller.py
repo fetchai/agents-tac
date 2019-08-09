@@ -46,8 +46,7 @@ import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from threading import Thread
-from typing import Any, Dict, Type, List
-from typing import Optional, Set
+from typing import Any, Dict, Type, List, Union, Optional, Set
 
 import dateutil
 from oef.agents import OEFAgent
@@ -323,10 +322,6 @@ class TransactionHandler(RequestHandler):
                 return self._handle_invalid_transaction(tx)
         # if transaction arrives second time then process it
         else:
-            # TODO how to handle failures in matching transaction?
-            #   that is, should the pending txs be removed from the pool?
-            #       if yes, should the senders be notified and how?
-            #  don't care for now, because assuming only (properly implemented) baseline agents.
             pending_tx = self._pending_transaction_requests.pop(tx.transaction_id)
             if tx.matches(pending_tx):
                 if self.controller_agent.game_handler.current_game.is_transaction_valid(tx):
@@ -354,7 +349,7 @@ class TransactionHandler(RequestHandler):
         # update the game state.
         self.controller_agent.game_handler.current_game.settle_transaction(tx)
 
-        # update the GUI monitor
+        # update the dashboard monitor
         self.controller_agent.monitor.update()
 
         # send the transaction confirmation.
@@ -607,7 +602,6 @@ class GameHandler:
         else:
             logger.debug("[{}]: Not enough agents to start TAC. Registered agents: {}, minimum number of agents: {}."
                          .format(self.controller_agent.name, nb_reg_agents, min_nb_agents))
-            self.notify_tac_cancelled()
             self.controller_agent.terminate()
             return False
 
@@ -638,7 +632,7 @@ class ControllerAgent(OEFAgent):
         :param oef_addr: the OEF address.
         :param oef_port: the OEF listening port.
         :param version: the version of the TAC controller.
-        :param monitor: the GUI monitor. If None, defaults to a null (dummy) monitor.
+        :param monitor: the dashboard monitor. If None, defaults to a null (dummy) monitor.
         """
         self.name = name
         self.crypto = Crypto()
@@ -840,7 +834,7 @@ def _parse_arguments():
     parser.add_argument("--competition-timeout", default=240, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
     parser.add_argument("--whitelist-file", default=None, type=str, help="The file that contains the list of agent names to be whitelisted.")
     parser.add_argument("--verbose", default=False, action="store_true", help="Log debug messages.")
-    parser.add_argument("--gui", action="store_true", help="Show the GUI.")
+    parser.add_argument("--dashboard", action="store_true", help="Show the agent dashboard.")
     parser.add_argument("--visdom-addr", default="localhost", help="TCP/IP address of the Visdom server.")
     parser.add_argument("--visdom-port", default=8097, help="TCP/IP port of the Visdom server.")
     parser.add_argument("--data-output-dir", default="data", help="The output directory for the simulation data.")
@@ -862,13 +856,13 @@ def main(
         tx_fee: float = 1.0,
         oef_addr: str = "127.0.0.1",
         oef_port: int = 10000,
-        start_time: str = str(datetime.datetime.now() + datetime.timedelta(0, 10)),
+        start_time: Union[str, datetime.datetime] = str(datetime.datetime.now() + datetime.timedelta(0, 10)),
         registration_timeout: int = 10,
         inactivity_timeout: int = 60,
         competition_timeout: int = 240,
         whitelist_file: Optional[str] = None,
         verbose: bool = False,
-        gui: bool = False,
+        dashboard: bool = False,
         visdom_addr: str = "localhost",
         visdom_port: int = 8097,
         data_output_dir: str = "data",
@@ -886,7 +880,7 @@ def main(
     else:
         logger.setLevel(logging.INFO)
 
-    monitor = VisdomMonitor(visdom_addr=visdom_addr, visdom_port=visdom_port) if gui else NullMonitor()
+    monitor = VisdomMonitor(visdom_addr=visdom_addr, visdom_port=visdom_port) if dashboard else NullMonitor()
 
     try:
 
@@ -905,7 +899,7 @@ def main(
             base_good_endowment=base_good_endowment,
             lower_bound_factor=lower_bound_factor,
             upper_bound_factor=upper_bound_factor,
-            start_time=dateutil.parser.parse(start_time),
+            start_time=dateutil.parser.parse(start_time) if type(start_time) == str else start_time,
             registration_timeout=registration_timeout,
             competition_timeout=competition_timeout,
             inactivity_timeout=inactivity_timeout,

@@ -30,6 +30,7 @@ This module contains the classes required for message management.
 import asyncio
 import datetime
 import logging
+import time
 from queue import Queue, Empty
 from threading import Thread
 from typing import List, Optional, Any, Union, Dict
@@ -39,7 +40,7 @@ from oef.messages import PROPOSE_TYPES, CFP_TYPES, CFP, Decline, Propose, Accept
     SearchResult, OEFErrorOperation, OEFErrorMessage, DialogueErrorMessage
 from oef.query import Query
 from oef.schema import Description
-from oef.utils import Context
+from oef.uri import Context
 
 logger = logging.getLogger(__name__)
 
@@ -59,9 +60,15 @@ class MailStats(object):
 
         :return: None
         """
+        self._search_count = 0
         self._search_start_time = {}  # type: Dict[int, datetime.datetime]
         self._search_timedelta = {}  # type: Dict[int, float]
         self._search_result_counts = {}  # type: Dict[int, int]
+
+    @property
+    def search_count(self) -> int:
+        """Get the search count."""
+        return self._search_count
 
     def search_start(self, search_id: int) -> None:
         """
@@ -72,6 +79,7 @@ class MailStats(object):
         :return: None
         """
         assert search_id not in self._search_start_time
+        self._search_count += 1
         self._search_start_time[search_id] = datetime.datetime.now()
 
     def search_end(self, search_id: int, nb_search_results: int) -> None:
@@ -165,6 +173,24 @@ class MailBox(OEFAgent):
     def is_running(self) -> bool:
         """Check whether the mailbox is running."""
         return self._mail_box_thread is None
+
+    def connect(self) -> bool:
+        """
+        Connect to the OEF Node. If it fails, then sleep for 3 seconds and try to reconnect again.
+
+        :return: True if the connection has been established successfully, False otherwise.
+        """
+        success = False
+
+        while not success:
+            try:
+                success = super().connect()
+            except ConnectionError:
+                logger.error("Problems when connecting to the OEF. Retrying in 3 seconds...")
+                success = False
+                time.sleep(3.0)
+
+        return success
 
     def start(self) -> None:
         """

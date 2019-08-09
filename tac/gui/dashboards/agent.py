@@ -1,5 +1,23 @@
 # -*- coding: utf-8 -*-
 
+# ------------------------------------------------------------------------------
+#
+#   Copyright 2018-2019 Fetch.AI Limited
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+# ------------------------------------------------------------------------------
+
 """Module containing the agent dashboard and related classes."""
 
 import inspect
@@ -129,6 +147,16 @@ class AgentDashboard(Dashboard):
                           xlabel="Transactions",
                           ylabel="Score"))
 
+    def _update_search_count(self, stats_manager: StatsManager, append: bool = True) -> None:
+
+        window_name = "{}_search_count".format(self.env_name)
+        self.viz.line(X=[self._update_nb_stats_manager], Y=[stats_manager.mail_stats.search_count], update="append" if append else "replace",
+                      env=self.env_name, win=window_name,
+                      opts=dict(
+                          title="{}'s Search Count".format(repr(self.agent_name)),
+                          xlabel="Ticks",
+                          ylabel="Search Count"))
+
     def _update_avg_search_time(self, stats_manager: StatsManager, append: bool = True) -> None:
 
         window_name = "{}_avg_search_time".format(self.env_name)
@@ -187,6 +215,7 @@ class AgentDashboard(Dashboard):
             raise Exception("Dashboard not running, update not allowed.")
 
         self._update_nb_stats_manager += 1
+        self._update_search_count(stats_manager, append=append)
         self._update_avg_search_time(stats_manager, append=append)
         self._update_avg_search_result_counts(stats_manager, append=append)
         self._update_negotiation_metrics_self(stats_manager, append=append)

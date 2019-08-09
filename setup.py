@@ -103,7 +103,7 @@ setup(
     author=about['__author__'],
     url=about['__url__'],
     long_description=readme,
-    packages=find_packages(),
+    packages=find_packages(include=["tac"]),
     cmdclass={
         'protoc': protoc,
     },
@@ -120,17 +120,25 @@ setup(
         "numpy",
         "matplotlib",
         "flask",
+        "flask_restful",
+        "wtforms",
         "python-dateutil",
         "visdom",
         "cryptography",
+        "fetchai-ledger-api @ git+https://github.com/fetchai/ledger-api-py.git#egg=fetchai-ledger-api",
         "base58"
     ],
     tests_require=["tox"],
-    entry_points={
-        'console_scripts': ["tac=tac.__main__:main"],
-    },
     zip_safe=False,
     include_package_data=True,
+    data_files=[
+        ("sandbox", ["sandbox/docker-compose.yml", "sandbox/config.json", "sandbox/.env"]
+         + glob.glob("sandbox/*.py")
+         + glob.glob("sandbox/*.sh")),
+        ("templates/v1", glob.glob("templates/v1/*.py")),
+        ("simulation/v1", glob.glob("simulation/v1/*")),
+        ("oef_search_pluto_scripts", glob.glob("oef_search_pluto_scripts/*.py") + glob.glob("oef_search_pluto_scripts/*.json"))
+    ],
     license=about['__license__'],
 )
 

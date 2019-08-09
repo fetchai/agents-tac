@@ -19,9 +19,11 @@
 # ------------------------------------------------------------------------------
 
 """Contains the TAC package."""
+import inspect
+import os
 
 from tac.__version__ import __title__, __description__, __url__, __version__
-from tac.__version__ import __build__, __author__, __license__, __copyright__
+from tac.__version__ import __author__, __license__, __copyright__
 
 import logging
 
@@ -33,3 +35,6 @@ formatter = logging.Formatter(_DEFAULT_LOG_FORMAT)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
+
+ROOT_DIR = os.path.join(os.path.dirname(inspect.getfile(inspect.currentframe())), "..")
+

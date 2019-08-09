@@ -6,6 +6,7 @@ services:
       - "10000:10000"
       - "20000:20000"
       - "40000:40000"
+      - "7500:7500"
     networks:
       main_net:
         ipv4_address: 172.28.1.1
@@ -15,9 +16,6 @@ services:
       - "../oef_search_pluto_scripts:/config"
       - "../data/oef-logs:/logs/"
     command:
-      - "node"
-      - "no_sh"
-      - "--config_file"
       - "/config/node_config_latest.json"
     healthcheck:
       interval: 10s
@@ -34,6 +32,8 @@ services:
     image: "hypnosapos/visdom:latest"
     ports:
       - "8097:8097"
+    logging:
+      driver: none
     networks:
       main_net:
         ipv4_address: 172.28.1.2
@@ -90,7 +90,13 @@ services:
       - "${COMPETITION_TIMEOUT}"
       - "--services-interval"
       - "${SERVICES_INTERVAL}"
-      - "--gui"
+      - "--pending-transaction-timeout"
+      - "${PENDING_TRANSACTION_TIMEOUT}"
+      - "--register-as"
+      - "${REGISTER_AS}"
+      - "--search-for"
+      - "${SEARCH_FOR}"
+      - "--dashboard"
       - "--visdom-addr"
       - "172.28.1.2"
       - "--visdom-port"
