@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 # ------------------------------------------------------------------------------
 #
 #   Copyright 2018-2019 Fetch.AI Limited
@@ -18,17 +17,4 @@
 #
 # ------------------------------------------------------------------------------
 
-"""Define the REST APIs for the panel app."""
-from flask_restful import Api
-
-from .resources.sandboxes import SandboxList, Sandbox
-from .resources.agents import Agent
-
-
-def create_api(app):
-    """Wrap the Flask app with the Flask-RESTful Api object."""
-    api = Api(app, prefix='/api')
-
-    api.add_resource(SandboxList, "/sandboxes")
-    api.add_resource(Sandbox, "/sandboxes/<int:sandbox_id>")
-    api.add_resource(Agent, "/agent")
+"""Define all the REST resources for the launcher APIs."""

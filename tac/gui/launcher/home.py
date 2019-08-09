@@ -22,24 +22,24 @@
 
 from flask import Blueprint, render_template, redirect
 
-from tac.gui.panel.forms.sandbox import SandboxForm
-from tac.gui.panel.forms.agent import AgentForm
+from tac.gui.launcher.forms.sandbox import SandboxForm
+from tac.gui.launcher.forms.agent import AgentForm
 
 bp = Blueprint("home", __name__, url_prefix="/")
 
 
 @bp.route("/", methods=["GET"])
 def index():
-    """Render the index page of the panel app."""
-    return redirect("/panel", code=302)
+    """Render the index page of the launcher app."""
+    return redirect("/launcher", code=302)
 
 
-@bp.route("/panel", methods=["GET"])
-def panel():
-    """Render the panel page."""
+@bp.route("/launcher", methods=["GET"])
+def launcher():
+    """Render the launcher page."""
     sandbox_form = SandboxForm()
     agent_form = AgentForm()
-    return render_template("panel.html", form_sandbox=sandbox_form, form_agent=agent_form)
+    return render_template("launcher.html", form_sandbox=sandbox_form, form_agent=agent_form)
 
 
 @bp.route("/grid-search", methods=["GET"])
