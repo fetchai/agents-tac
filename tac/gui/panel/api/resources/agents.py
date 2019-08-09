@@ -96,7 +96,7 @@ class AgentRunner:
             "python3",
             os.path.join(ROOT_DIR, "templates", "v1", "basic.py"),
             *args,
-            "--gui",
+            "--dashboard",
             "--visdom-addr", "127.0.0.1",
             "--visdom-port", "8097",
         ], stdout=subprocess.PIPE)
