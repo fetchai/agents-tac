@@ -2,34 +2,59 @@
 
     let firstCard = $("#card-0");
     let cardHtmlTemplate = firstCard.html();
-    firstCard.find("button[name='btn-remove-item']").on('click', function(){
-        firstCard.remove();
-    });
+    let sandboxes = {};
+    let accordion = $("#accordion");
 
-    let sandboxList = $("#accordion");
-    let nbCards = 1;
+    class SandboxCard {
 
-    let createSandboxCard = function(id){
-        let card = $("<div></div>");
-        card.html(cardHtmlTemplate
-            .replace(/collapse-0/g, "collapse-" + id)
-            .replace(/heading-0/g, "heading-"+id)
-            .replace(/Sandbox 1/, "Sandbox " + (id + 1)));
-        card.addClass("card");
-        card.attr("id", "card-" + id);
+        constructor(id, jqueryObj){
+            this.id = id;
+            this.jqueryObj = jqueryObj;
+            this.trashBtn = this.jqueryObj.find("button[name='btn-remove-item']");
+            this.stopBtn = this.jqueryObj.find("button[name='btn-stop-item']");
 
-        //remove card function
-        card.find("button[name='btn-remove-item']").on('click', function(){
-            card.remove();
-        });
-        return card;
-    };
+            this.setup();
 
-    let buildJSONFromSandboxFormList = function(){
+        }
+
+        setup() {
+            let jqueryObj = this.jqueryObj;
+            let id = this.id;
+
+            let remove = function(){
+                jqueryObj.remove();
+                delete sandboxes[id];
+            };
+
+            let stop = function(){
+                let XHR = new XMLHttpRequest();
+                XHR.open("DELETE", "/api/sandboxes/" + id, true);
+                XHR.send();
+            };
+
+            this.trashBtn.on('click', remove);
+            this.stopBtn.on('click', stop);
+        }
+
+        static fromTemplate(id){
+            let card = $("<div></div>");
+            card.html(cardHtmlTemplate
+                .replace(/collapse-0/g, "collapse-" + id)
+                .replace(/heading-0/g, "heading-"+id)
+                .replace(/Sandbox 1/, "Sandbox " + (id + 1)));
+            card.addClass("card");
+            card.attr("id", "card-" + id);
+
+            accordion.append(card);
+            let jqueryObj = $('#card-'+id);
+            return new SandboxCard(id, jqueryObj);
+        }
+    }
+
+    function buildJSONFromSandboxFormList(){
         let result = [];
-        let nbCards = sandboxList.children().length;
-        for (let i = 0; i < nbCards; i++){
-            let inputs = $('#card-' + i).find('.card-body :input');
+        for (let sandboxId in sandboxes){
+            let inputs = sandboxes[sandboxId].jqueryObj.find('.card-body :input');
             let values = {};
             inputs.each(function() {
                 values[this.name] = $(this).val();
@@ -37,12 +62,12 @@
             result.push(values);
         }
         return result
-    };
+    }
 
     $("#btn-add-sandbox").on("click", function(){
-        let card = createSandboxCard(nbCards);
-        sandboxList.append(card);
-        nbCards += 1;
+        let nbCards = Object.keys(sandboxes).length;
+        let card = SandboxCard.fromTemplate(nbCards);
+        sandboxes[card.id] = card;
     });
 
     $("#btn-submit-gridsearch").on("click", function() {
@@ -55,7 +80,12 @@
             });
             XHR.open("POST", "/api/sandboxes", true);
             XHR.send(sandboxObjectList[i]);
+
         }
     });
+
+    (function main(){
+        sandboxes[0] = new SandboxCard(0, firstCard);
+    })();
 
 })();
