@@ -23,11 +23,19 @@
 
 import docker
 import inspect
+import json
 import pdb
 import os
 import re
 import subprocess
+import time
 
+from typing import Dict, Optional
+
+from oef.messages import CFP, Message
+from oef.uri import Context
+
+from tac.agents.v1.base.dialogues import Dialogue
 from tac.agents.v1.examples.baseline import BaselineAgent
 from tac.agents.v1.examples.strategy import BaselineStrategy
 from tac.platform.protocol import GameData
@@ -113,6 +121,39 @@ if __name__ == '__main__':
         agent_two.game_instance.init(game_data_two, agent_two.crypto.public_key)
 
         # Set the debugger
+        print("Setting debugger ... To continue enter: c + Enter")
+        pdb.set_trace()
+
+        # agent_one initiates a dialogue
+        is_seller = True
+        dialogue = agent_one.game_instance.dialogues.create_self_initiated(agent_two.crypto.public_key, agent_one.crypto.public_key, is_seller)  # type: Dialogue
+
+        # agent_one creates a CFP and enqueues it in the outbox
+        starting_message_id = 1
+        starting_message_target = 0
+        services = agent_one.game_instance.build_services_dict(is_supply=is_seller)  # type: Dict
+        cfp = CFP(starting_message_id, dialogue.dialogue_label.dialogue_id, agent_two.crypto.public_key, starting_message_target, json.dumps(services).encode('utf-8'), Context())
+        dialogue.outgoing_extend([cfp])
+        agent_one.out_box.out_queue.put(cfp)
+
+        # Send the messages in the outbox
+        agent_one.out_box.send_nowait()
+
+        # Check the message arrived in the inbox of agent_two
+        checks = 0
+        while checks < 10:
+            if agent_two.in_box.is_in_queue_empty():
+                # Wait a bit
+                print("Sleeping for 1 second ...")
+                time.sleep(1.0)
+                checks += 1
+            else:
+                checks = 10
+        msg = agent_two.in_box.get_no_wait()  # type: Optional[Message]
+        print("The msg is a CFP: {}".format(isinstance(msg, CFP)))
+
+        # Set the debugger
+        print("Setting debugger ... To continue enter: c + Enter")
         pdb.set_trace()
 
     finally:
