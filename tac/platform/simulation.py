@@ -64,7 +64,7 @@ class SimulationParams:
                  services_interval: int = 5,
                  pending_transaction_timeout: int = 120,
                  verbose: bool = False,
-                 gui: bool = False,
+                 dashboard: bool = False,
                  visdom_addr: str = "localhost",
                  visdom_port: int = 8097,
                  data_output_dir: Optional[str] = "data",
@@ -82,7 +82,7 @@ class SimulationParams:
         :param services_interval: The amount of time (in seconds) the baseline agents wait until it updates services again.
         :param pending_transaction_timeout: The amount of time (in seconds) the baseline agents wait until the transaction confirmation.
         :param verbose: control the verbosity of the simulation.
-        :param gui: enable the Visdom visualization.
+        :param dashboard: enable the Visdom visualization.
         :param visdom_addr: the IP address of the Visdom server
         :param visdom_port: the port of the Visdom server.
         :param data_output_dir: the path to the output directory.
@@ -99,7 +99,7 @@ class SimulationParams:
         self.services_interval = services_interval
         self.pending_transaction_timeout = pending_transaction_timeout
         self.verbose = verbose
-        self.gui = gui
+        self.dashboard = dashboard
         self.visdom_addr = visdom_addr
         self.visdom_port = visdom_port
         self.data_output_dir = data_output_dir
@@ -154,7 +154,7 @@ def spawn_controller_agent(params: SimulationParams):
         competition_timeout=params.tac_parameters.competition_timeout,
         whitelist_file=params.tac_parameters.whitelist,
         verbose=True,
-        gui=params.gui,
+        dashboard=params.dashboard,
         visdom_addr=params.visdom_addr,
         visdom_port=params.visdom_port,
         data_output_dir=params.data_output_dir,
@@ -187,7 +187,7 @@ def spawn_baseline_agents(params: SimulationParams) -> List[multiprocessing.Proc
         is_world_modeling=i < nb_baseline_agents_world_modeling,
         services_interval=params.services_interval,
         pending_transaction_timeout=params.pending_transaction_timeout,
-        gui=params.gui,
+        dashboard=params.dashboard,
         visdom_addr=params.visdom_addr,
         visdom_port=params.visdom_port)) for i in range(params.nb_baseline_agents)]
 
@@ -218,7 +218,7 @@ def parse_arguments():
     parser.add_argument("--pending-transaction-timeout", default=120, type=int, help="The amount of time (in seconds) the baseline agents wait until the transaction confirmation.")
     parser.add_argument("--register-as", choices=['seller', 'buyer', 'both'], default='both', help="The string indicates whether the baseline agent registers as seller, buyer or both on the oef.")
     parser.add_argument("--search-for", choices=['sellers', 'buyers', 'both'], default='both', help="The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.")
-    parser.add_argument("--gui", action="store_true", help="Enable the GUI.")
+    parser.add_argument("--dashboard", action="store_true", help="Enable the agent dashboard.")
     parser.add_argument("--data-output-dir", default="data", help="The output directory for the simulation data.")
     parser.add_argument("--experiment-id", default=None, help="The experiment ID.")
     parser.add_argument("--visdom-addr", default="localhost", help="TCP/IP address of the Visdom server")
@@ -253,7 +253,7 @@ def build_simulation_parameters(arguments: argparse.Namespace) -> SimulationPara
         oef_addr=arguments.oef_addr,
         oef_port=arguments.oef_port,
         nb_baseline_agents=arguments.nb_baseline_agents,
-        gui=arguments.gui,
+        dashboard=arguments.dashboard,
         visdom_addr=arguments.visdom_addr,
         visdom_port=arguments.visdom_port,
         data_output_dir=arguments.data_output_dir,

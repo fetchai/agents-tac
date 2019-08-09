@@ -87,4 +87,4 @@ if __name__ == '__main__':
 
     with Sandbox():
         wait_for_oef()
-        tac.agents.v1.examples.baseline.main(name="my_agent", gui=True)
+        tac.agents.v1.examples.baseline.main(name="my_agent", dashboard=True)

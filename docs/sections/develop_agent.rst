@@ -6,6 +6,22 @@ Developing Your Own Agent
 In this section we describe a number of approaches you could take to develop your own agent.
 
 
+Familiarize yourself with Sandbox and Playground
+------------------------------------------------
+
+To launch the sandbox from root directory run the launchscript:
+
+`python scripts/launch.py`
+
+This lets you explore the competition setup and how the agents trade.
+
+To launch the playground from root directory run:
+
+`python sandbox/playground.py`
+
+This lets you explore the agent and mailbox interface.
+
+
 Basic: Tuning the Agent's Parameters
 ------------------------------------
 
@@ -29,6 +45,10 @@ To evaluate changes in parameters on agent performance you can run your agent ag
 .. _main readme: https://github.com/fetchai/agents-tac/blob/master/README.md
 
 .. _sandbox readme: https://github.com/fetchai/agents-tac/blob/master/sandbox/README.md
+
+Alternatively, you can use our Sandbox Launch App to do a grid parameter search for a population of agents. The Sandbox Launch App can be launched via executing the following command from root directory:
+
+`python tac/gui/panel/app.py`
 
 
 Advanced: Changing the Agent's Strategy
