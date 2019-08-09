@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Step-by-step agent negotiation &#8212; TAC 0.1.2 documentation</title>
+    <title>Step-by-step agent negotiation &#8212; TAC 0.1.3 documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -317,7 +317,7 @@ div.rendered_html tbody tr:hover {
 <p>In the following, we’re going to describe the steps listed before, but more in detail, using code examples from the framework.</p>
 <div class="section" id="Instantiate-an-agent">
 <h3>Instantiate an agent<a class="headerlink" href="#Instantiate-an-agent" title="Permalink to this headline">¶</a></h3>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
@@ -329,70 +329,6 @@ div.rendered_html tbody tr:hover {
 <span class="n">agent</span> <span class="o">=</span> <span class="n">BaselineAgent</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;tac_agent&quot;</span><span class="p">,</span> <span class="n">oef_addr</span><span class="o">=</span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="n">oef_port</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="n">strategy</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">RuntimeError</span>                              Traceback (most recent call last)
-<span class="ansi-green-fg">&lt;ipython-input-1-d0323160805e&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-intense-fg ansi-bold">      3</span>
-<span class="ansi-green-intense-fg ansi-bold">      4</span> strategy <span class="ansi-blue-fg">=</span> BaselineStrategy<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-fg">----&gt; 5</span><span class="ansi-red-fg"> </span>agent <span class="ansi-blue-fg">=</span> BaselineAgent<span class="ansi-blue-fg">(</span>name<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">&#34;tac_agent&#34;</span><span class="ansi-blue-fg">,</span> oef_addr<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">&#34;127.0.0.1&#34;</span><span class="ansi-blue-fg">,</span> oef_port<span class="ansi-blue-fg">=</span><span class="ansi-cyan-fg">10000</span><span class="ansi-blue-fg">,</span> strategy<span class="ansi-blue-fg">=</span>strategy<span class="ansi-blue-fg">)</span>
-
-<span class="ansi-green-fg">~/work/agents-tac/tac/agents/v1/examples/baseline.py</span> in <span class="ansi-cyan-fg">__init__</span><span class="ansi-blue-fg">(self, name, oef_addr, oef_port, strategy, agent_timeout, max_reactions, services_interval, pending_transaction_timeout, dashboard, private_key_pem)</span>
-<span class="ansi-green-intense-fg ansi-bold">     57</span>         <span class="ansi-blue-fg">:</span><span class="ansi-green-fg">return</span><span class="ansi-blue-fg">:</span> <span class="ansi-green-fg">None</span>
-<span class="ansi-green-intense-fg ansi-bold">     58</span>         &#34;&#34;&#34;
-<span class="ansi-green-fg">---&gt; 59</span><span class="ansi-red-fg">         </span>super<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>__init__<span class="ansi-blue-fg">(</span>name<span class="ansi-blue-fg">,</span> oef_addr<span class="ansi-blue-fg">,</span> oef_port<span class="ansi-blue-fg">,</span> strategy<span class="ansi-blue-fg">,</span> agent_timeout<span class="ansi-blue-fg">,</span> max_reactions<span class="ansi-blue-fg">,</span> services_interval<span class="ansi-blue-fg">,</span> pending_transaction_timeout<span class="ansi-blue-fg">,</span> dashboard<span class="ansi-blue-fg">,</span> private_key_pem<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">     60</span>
-<span class="ansi-green-intense-fg ansi-bold">     61</span>
-
-<span class="ansi-green-fg">~/work/agents-tac/tac/agents/v1/base/participant_agent.py</span> in <span class="ansi-cyan-fg">__init__</span><span class="ansi-blue-fg">(self, name, oef_addr, oef_port, strategy, agent_timeout, max_reactions, services_interval, pending_transaction_timeout, dashboard, private_key_pem)</span>
-<span class="ansi-green-intense-fg ansi-bold">     72</span>         &#34;&#34;&#34;
-<span class="ansi-green-intense-fg ansi-bold">     73</span>         super<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>__init__<span class="ansi-blue-fg">(</span>name<span class="ansi-blue-fg">,</span> oef_addr<span class="ansi-blue-fg">,</span> oef_port<span class="ansi-blue-fg">,</span> private_key_pem<span class="ansi-blue-fg">,</span> agent_timeout<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-fg">---&gt; 74</span><span class="ansi-red-fg">         </span>self<span class="ansi-blue-fg">.</span>mail_box <span class="ansi-blue-fg">=</span> FIPAMailBox<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>crypto<span class="ansi-blue-fg">.</span>public_key<span class="ansi-blue-fg">,</span> oef_addr<span class="ansi-blue-fg">,</span> oef_port<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">     75</span>         self<span class="ansi-blue-fg">.</span>in_box <span class="ansi-blue-fg">=</span> InBox<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>mail_box<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">     76</span>         self<span class="ansi-blue-fg">.</span>out_box <span class="ansi-blue-fg">=</span> OutBox<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>mail_box<span class="ansi-blue-fg">)</span>
-
-<span class="ansi-green-fg">~/work/agents-tac/tac/agents/v1/mail.py</span> in <span class="ansi-cyan-fg">__init__</span><span class="ansi-blue-fg">(self, public_key, oef_addr, oef_port)</span>
-<span class="ansi-green-intense-fg ansi-bold">    344</span>         <span class="ansi-blue-fg">:</span><span class="ansi-green-fg">return</span><span class="ansi-blue-fg">:</span> <span class="ansi-green-fg">None</span>
-<span class="ansi-green-intense-fg ansi-bold">    345</span>         &#34;&#34;&#34;
-<span class="ansi-green-fg">--&gt; 346</span><span class="ansi-red-fg">         </span>super<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>__init__<span class="ansi-blue-fg">(</span>public_key<span class="ansi-blue-fg">,</span> oef_addr<span class="ansi-blue-fg">,</span> oef_port<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    347</span>
-<span class="ansi-green-intense-fg ansi-bold">    348</span>     <span class="ansi-green-fg">def</span> on_cfp<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> msg_id<span class="ansi-blue-fg">:</span> int<span class="ansi-blue-fg">,</span> dialogue_id<span class="ansi-blue-fg">:</span> int<span class="ansi-blue-fg">,</span> origin<span class="ansi-blue-fg">:</span> str<span class="ansi-blue-fg">,</span> target<span class="ansi-blue-fg">:</span> int<span class="ansi-blue-fg">,</span> query<span class="ansi-blue-fg">:</span> CFP_TYPES<span class="ansi-blue-fg">)</span> <span class="ansi-blue-fg">-&gt;</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">:</span>
-
-<span class="ansi-green-fg">~/work/agents-tac/tac/agents/v1/mail.py</span> in <span class="ansi-cyan-fg">__init__</span><span class="ansi-blue-fg">(self, public_key, oef_addr, oef_port)</span>
-<span class="ansi-green-intense-fg ansi-bold">    111</span>         &#34;&#34;&#34;
-<span class="ansi-green-intense-fg ansi-bold">    112</span>         super<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>__init__<span class="ansi-blue-fg">(</span>public_key<span class="ansi-blue-fg">,</span> oef_addr<span class="ansi-blue-fg">,</span> oef_port<span class="ansi-blue-fg">,</span> loop<span class="ansi-blue-fg">=</span>asyncio<span class="ansi-blue-fg">.</span>new_event_loop<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-fg">--&gt; 113</span><span class="ansi-red-fg">         </span>self<span class="ansi-blue-fg">.</span>connect<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    114</span>         self<span class="ansi-blue-fg">.</span>in_queue <span class="ansi-blue-fg">=</span> Queue<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    115</span>         self<span class="ansi-blue-fg">.</span>out_queue <span class="ansi-blue-fg">=</span> Queue<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
-
-<span class="ansi-green-fg">~/.local/share/virtualenvs/agents-tac-MNXXfQ0T/lib/python3.7/site-packages/oef/agents.py</span> in <span class="ansi-cyan-fg">connect</span><span class="ansi-blue-fg">(self)</span>
-<span class="ansi-green-intense-fg ansi-bold">    140</span>         <span class="ansi-blue-fg">:</span><span class="ansi-green-fg">return</span><span class="ansi-blue-fg">:</span> <span class="ansi-green-fg">True</span> <span class="ansi-green-fg">if</span> the connection has been established successfully<span class="ansi-blue-fg">,</span> <span class="ansi-green-fg">False</span> otherwise<span class="ansi-blue-fg">.</span>
-<span class="ansi-green-intense-fg ansi-bold">    141</span>         &#34;&#34;&#34;
-<span class="ansi-green-fg">--&gt; 142</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">return</span> self<span class="ansi-blue-fg">.</span>_loop<span class="ansi-blue-fg">.</span>run_until_complete<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>async_connect<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    143</span>
-<span class="ansi-green-intense-fg ansi-bold">    144</span>     <span class="ansi-green-fg">async</span> <span class="ansi-green-fg">def</span> async_connect<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">)</span> <span class="ansi-blue-fg">-&gt;</span> bool<span class="ansi-blue-fg">:</span>
-
-<span class="ansi-green-fg">/usr/local/Cellar/python/3.7.3/Frameworks/Python.framework/Versions/3.7/lib/python3.7/asyncio/base_events.py</span> in <span class="ansi-cyan-fg">run_until_complete</span><span class="ansi-blue-fg">(self, future)</span>
-<span class="ansi-green-intense-fg ansi-bold">    569</span>         future<span class="ansi-blue-fg">.</span>add_done_callback<span class="ansi-blue-fg">(</span>_run_until_complete_cb<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    570</span>         <span class="ansi-green-fg">try</span><span class="ansi-blue-fg">:</span>
-<span class="ansi-green-fg">--&gt; 571</span><span class="ansi-red-fg">             </span>self<span class="ansi-blue-fg">.</span>run_forever<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    572</span>         <span class="ansi-green-fg">except</span><span class="ansi-blue-fg">:</span>
-<span class="ansi-green-intense-fg ansi-bold">    573</span>             <span class="ansi-green-fg">if</span> new_task <span class="ansi-green-fg">and</span> future<span class="ansi-blue-fg">.</span>done<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span> <span class="ansi-green-fg">and</span> <span class="ansi-green-fg">not</span> future<span class="ansi-blue-fg">.</span>cancelled<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
-
-<span class="ansi-green-fg">/usr/local/Cellar/python/3.7.3/Frameworks/Python.framework/Versions/3.7/lib/python3.7/asyncio/base_events.py</span> in <span class="ansi-cyan-fg">run_forever</span><span class="ansi-blue-fg">(self)</span>
-<span class="ansi-green-intense-fg ansi-bold">    527</span>         <span class="ansi-green-fg">if</span> events<span class="ansi-blue-fg">.</span>_get_running_loop<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span> <span class="ansi-green-fg">is</span> <span class="ansi-green-fg">not</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">:</span>
-<span class="ansi-green-intense-fg ansi-bold">    528</span>             raise RuntimeError(
-<span class="ansi-green-fg">--&gt; 529</span><span class="ansi-red-fg">                 &#39;Cannot run the event loop while another loop is running&#39;)
-</span><span class="ansi-green-intense-fg ansi-bold">    530</span>         self<span class="ansi-blue-fg">.</span>_set_coroutine_origin_tracking<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>_debug<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    531</span>         self<span class="ansi-blue-fg">.</span>_thread_id <span class="ansi-blue-fg">=</span> threading<span class="ansi-blue-fg">.</span>get_ident<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
-
-<span class="ansi-red-fg">RuntimeError</span>: Cannot run the event loop while another loop is running
-</pre></div></div>
 </div>
 </div>
 <div class="section" id="Registration">
