@@ -24,12 +24,21 @@ import logging
 import time
 
 from abc import abstractmethod
+from enum import Enum
 from typing import Optional
 
 from tac.agents.v1.mail import MailBox, InBox, OutBox
 from tac.helpers.crypto import Crypto
 
 logger = logging.getLogger(__name__)
+
+
+class AgentState(Enum):
+    """Enumeration for an agent state."""
+
+    INITIATED = "initiated"
+    CONNECTED = "connected"
+    RUNNING = "running"
 
 
 class Liveness:
@@ -84,6 +93,28 @@ class Agent:
         """Get the liveness."""
         return self._liveness
 
+    @property
+    def agent_state(self) -> AgentState:
+        """
+        Get the state of the agent.
+
+        In particular, it can be one of the following states:
+        - AgentState.INITIATED: when the Agent object has been created.
+        - AgentState.CONNECTED: when the agent is connected.
+        - AgentState.RUNNING: when the agent is running.
+
+        :return the agent state.
+        :raises ValueError: if the state does not satisfy any of the foreseen conditions.
+        """
+        if self.mail_box is None or not self.mail_box.is_connected:
+            return AgentState.INITIATED
+        elif self.mail_box.is_connected and self.liveness.is_stopped:
+            return AgentState.CONNECTED
+        elif self.mail_box.is_connected and not self.liveness.is_stopped:
+            return AgentState.RUNNING
+        else:
+            raise ValueError("Agent state not recognized.")
+
     def start(self) -> None:
         """
         Start the agent.
@@ -92,9 +123,9 @@ class Agent:
         """
         self.mail_box.start()
         self.liveness._is_stopped = False
-        self.run_main_loop()
+        self._run_main_loop()
 
-    def run_main_loop(self) -> None:
+    def _run_main_loop(self) -> None:
         """
         Run the main loop of the agent.
 
