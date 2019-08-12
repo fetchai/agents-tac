@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 
 class AgentState(Enum):
     """Enumeration for an agent state."""
+
     INITIATED = "initiated"
     CONNECTED = "connected"
     RUNNING = "running"
@@ -95,7 +96,7 @@ class Agent:
     @property
     def agent_state(self) -> AgentState:
         """
-        The state of the agent.
+        Get the state of the agent.
 
         In particular, it can be one of the following states:
         - AgentState.INITIATED: when the Agent object has been created.
