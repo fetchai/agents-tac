@@ -32,7 +32,7 @@ from docker.models.containers import Container
 logger = logging.getLogger(__name__)
 
 CUR_PATH = inspect.getfile(inspect.currentframe())
-ROOT_DIR = os.path.dirname(CUR_PATH) + "/.."
+ROOT_DIR = os.path.join(os.path.dirname(CUR_PATH), "..")
 
 
 def pytest_addoption(parser):

@@ -13,6 +13,9 @@ A generic :class:`~tac.agents.v1.agent.Agent` can be started via :meth:`~tac.age
 
 The mailbox is responsible for handling incoming and outgoing messages. The :class:`~tac.agents.v1.mail.InBox` enqueues incoming messages on an :attr:`~tac.agents.v1.mail.MailBox.in_queue` for later processing, the :class:`~tac.agents.v1.mail.OutBox` picks messages from the :attr:`~tac.agents.v1.mail.MailBox.out_queue` and sends them to the OEF.
 
+At any moment, the execution state of the agent can be inspected by reading the
+:meth:`~tac.agents.v1.agent.Agent.agent_state` property.
+
 The main loop deals with processing enqueued events/messages. It has the methods :meth:`~tac.agents.v1.agent.Agent.act` and :meth:`~tac.agents.v1.agent.Agent.react` which handle the active and reactive agent behaviours.
 
 
