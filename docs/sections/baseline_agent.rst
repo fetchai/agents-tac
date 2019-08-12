@@ -9,9 +9,15 @@ In this section, we describe the baseline agent v1 :class:`~tac.agents.v1.exampl
 Main Loop and Event Loop
 ------------------------
 
-A generic :class:`~tac.agents.v1.agent.Agent` can be started via :meth:`~tac.agents.v1.agent.Agent.start`. This starts the :class:`~tac.agents.v1.mail.MailBox` and a main loop implemented in :meth:`~tac.agents.v1.agent.Agent.run_main_loop`.
+A generic :class:`~tac.agents.v1.agent.Agent` can be started via :meth:`~tac.agents.v1.agent.Agent.start`. This starts the :class:`~tac.agents.v1.mail.MailBox` and a main loop implemented in :meth:`~tac.agents.v1.agent.Agent._run_main_loop`.
 
 The mailbox is responsible for handling incoming and outgoing messages. The :class:`~tac.agents.v1.mail.InBox` enqueues incoming messages on an :attr:`~tac.agents.v1.mail.MailBox.in_queue` for later processing, the :class:`~tac.agents.v1.mail.OutBox` picks messages from the :attr:`~tac.agents.v1.mail.MailBox.out_queue` and sends them to the OEF.
+
+
+Before the execution of the main loop, the framework will call the user's implementation of the
+:meth:`~tac.agents.v1.agent.Agent.setup` method, to let the initialization of the resources needed to the agent.
+Upon exit, the framework will call the user's implementation of the
+:meth:`~tac.agents.v1.agent.Agent.teardown` method, to let the release of the initialized resources.
 
 At any moment, the execution state of the agent can be inspected by reading the
 :meth:`~tac.agents.v1.agent.Agent.agent_state` property.
