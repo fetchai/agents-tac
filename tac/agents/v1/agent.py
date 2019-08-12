@@ -100,12 +100,18 @@ class Agent:
 
         :return: None
         """
+        logger.debug("[{}]: Calling setup method...".format(self.name))
+        self.setup()
+
         logger.debug("[{}]: Start processing messages...".format(self.name))
         while not self.liveness.is_stopped:
             self.act()
             time.sleep(self._timeout)
             self.react()
             self.update()
+
+        logger.debug("[{}]: Calling teardown method...".format(self.name))
+        self.teardown()
 
         self.stop()
         logger.debug("[{}]: Exiting main loop...".format(self.name))
@@ -119,6 +125,14 @@ class Agent:
         logger.debug("[{}]: Stopping message processing...".format(self.name))
         self.liveness._is_stopped = True
         self.mail_box.stop()
+
+    @abstractmethod
+    def setup(self) -> None:
+        """
+        Set up the agent.
+
+        :return: None
+        """
 
     @abstractmethod
     def act(self) -> None:
@@ -141,4 +155,12 @@ class Agent:
         """Update the current state of the agent.
 
         :return None
+        """
+
+    @abstractmethod
+    def teardown(self) -> None:
+        """
+        Tear down the agent.
+
+        :return: None
         """

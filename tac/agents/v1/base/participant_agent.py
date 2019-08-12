@@ -163,3 +163,9 @@ class ParticipantAgent(Agent):
         logger.debug("Trying to rejoin in 5 seconds...")
         time.sleep(5.0)
         self.start(rejoin=True)
+
+    def setup(self) -> None:
+        """Set up the agent."""
+
+    def teardown(self) -> None:
+        """Tear down the agent."""
