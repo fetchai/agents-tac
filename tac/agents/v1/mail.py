@@ -122,6 +122,16 @@ class MailBox(OEFAgent):
         """Get the mail stats."""
         return self._mail_stats
 
+    @property
+    def is_running(self) -> bool:
+        """Check whether the mailbox is running."""
+        return self._mail_box_thread is None
+
+    @property
+    def is_connected(self) -> bool:
+        """Check whether the mailbox is connected to an OEF node."""
+        return self._oef_proxy.is_connected()
+
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
         """
         Handle a message.
@@ -169,10 +179,6 @@ class MailBox(OEFAgent):
         :return: None
         """
         self.in_queue.put(DialogueErrorMessage(answer_id, dialogue_id, origin))
-
-    def is_running(self) -> bool:
-        """Check whether the mailbox is running."""
-        return self._mail_box_thread is None
 
     def connect(self) -> bool:
         """
