@@ -100,13 +100,14 @@ class MailStats(object):
 class MailBox(OEFAgent):
     """The MailBox enqueues incoming messages, searches and errors from the OEF and sends outgoing messages to the OEF."""
 
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000) -> None:
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000, debug: bool = False) -> None:
         """
         Instantiate the mailbox.
 
         :param public_key: the public key of the agent
         :param oef_addr: TCP/IP address of the OEF Agent
         :param oef_port: TCP/IP port of the OEF Agent
+        :param debug: start the mailbox in debug mode.
 
         :return: None
         """
@@ -115,6 +116,8 @@ class MailBox(OEFAgent):
         self.out_queue = Queue()
         self._mail_box_thread = None  # type: Optional[Thread]
         self._mail_stats = MailStats()
+
+        self.debug = debug
 
     @property
     def mail_stats(self) -> MailStats:
@@ -323,6 +326,11 @@ class OutBox(object):
         logger.debug("Checking for message or search query on out queue...")
         while not self.out_queue.empty():
             out = self.out_queue.get_nowait()
+
+            if self.mail_box.debug:
+                logger.warning("Dropping message of type '{}' from the out queue...".format(type(out.message)))
+                continue
+
             if isinstance(out, OutContainer) and out.message is not None:
                 logger.debug("Outgoing message type: type={}".format(type(out.message)))
                 self.mail_box.send_message(out.message_id, out.dialogue_id, out.destination, out.message)

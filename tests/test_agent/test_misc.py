@@ -19,16 +19,11 @@
 # ------------------------------------------------------------------------------
 
 """Test miscellaneous features for the agent module."""
-import time
-from threading import Thread
-
-import pytest
+from threading import Timer
+from unittest.mock import patch, MagicMock
 
 from tac.agents.v1.agent import Agent
-
-from tac.agents.v1.base.participant_agent import ParticipantAgent
-from tac.agents.v1.examples.strategy import BaselineStrategy
-from tac.agents.v1.mail import FIPAMailBox
+from tac.agents.v1.mail import FIPAMailBox, InBox, OutBox, OutContainer
 
 
 class TestAgent(Agent):
@@ -37,7 +32,9 @@ class TestAgent(Agent):
     def __init__(self, **kwargs):
         """Initialize the test agent."""
         super().__init__("test_agent", "127.0.0.1", 10000, **kwargs)
-        self.mail_box = FIPAMailBox(self.crypto.public_key, "127.0.0.1", 10000)
+        self.mail_box = FIPAMailBox(self.crypto.public_key, "127.0.0.1", 10000, debug=kwargs.get("debug", False))
+        self.in_box = InBox(self.mail_box)
+        self.out_box = OutBox(self.mail_box)
 
     def act(self) -> None:
         """Perform actions."""
@@ -49,15 +46,38 @@ class TestAgent(Agent):
         """Update the current state of the agent."""
 
 
-def test_debug_flag_true():
+def test_that_when_debug_flag_true_we_can_run_main_loop_without_oef():
     """
-    Test that the debug mode works correctly.
+    Test that, in debug mode, the agent's main loop can be run without the OEF running.
 
-    That is, an agent can be initialized without the OEF running.
+    In particular, assert that the methods 'act', 'react' and 'update' are called.
     """
     test_agent = TestAgent(debug=True)
-    job = Thread(target=test_agent.start)
+
+    test_agent.act = MagicMock(test_agent.act)
+    test_agent.react = MagicMock(test_agent.react)
+    test_agent.update = MagicMock(test_agent.update)
+
+    job = Timer(1.0, test_agent.stop)
     job.start()
-    time.sleep(1.0)
-    test_agent.stop()
+    test_agent.start()
     job.join()
+
+    test_agent.act.assert_called()
+    test_agent.react.assert_called()
+    test_agent.update.assert_called()
+
+
+def test_that_when_debug_flag_true_we_drop_out_messages():
+    """Test that, in debug mode, the out messages are dropped and a warning message is logged."""
+    with patch('logging.Logger.warning') as mock:
+        test_agent = TestAgent(debug=True)
+        job = Timer(1.0, test_agent.stop)
+        job.start()
+        msg = OutContainer(b"this is a message.", 0, 0, "destination")
+        test_agent.out_box.out_queue.put_nowait(msg)
+        test_agent.out_box.send_nowait()
+        test_agent.start()
+        job.join()
+
+        mock.assert_called_with("Dropping message of type '<class 'bytes'>' from the out queue...")
