@@ -55,7 +55,8 @@ class ParticipantAgent(Agent):
                  services_interval: int = 10,
                  pending_transaction_timeout: int = 30,
                  dashboard: Optional[AgentDashboard] = None,
-                 private_key_pem: Optional[str] = None):
+                 private_key_pem: Optional[str] = None,
+                 debug: bool = False):
         """
         Initialize a participant agent.
 
@@ -69,8 +70,9 @@ class ParticipantAgent(Agent):
         :param pending_transaction_timeout: the timeout for cleanup of pending negotiations and unconfirmed transactions.
         :param dashboard: a Visdom dashboard to visualize agent statistics during the competition.
         :param private_key_pem: the path to a private key in PEM format.
+        :param debug: if True, run the agent in debug mode.
         """
-        super().__init__(name, oef_addr, oef_port, private_key_pem, agent_timeout)
+        super().__init__(name, oef_addr, oef_port, private_key_pem, agent_timeout, debug=debug)
         self.mail_box = FIPAMailBox(self.crypto.public_key, oef_addr, oef_port)
         self.in_box = InBox(self.mail_box)
         self.out_box = OutBox(self.mail_box)

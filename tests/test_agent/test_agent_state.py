@@ -54,8 +54,8 @@ def test_agent_initiated():
 def test_agent_connected(network_node):
     """Test that when the agent is connected, her state is AgentState.CONNECTED."""
     test_agent = TestAgent()
+    test_agent.mail_box.connect()
     assert test_agent.agent_state == AgentState.CONNECTED
-    test_agent.stop()
 
 
 def test_agent_running(network_node):
