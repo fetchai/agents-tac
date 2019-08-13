@@ -57,7 +57,12 @@ class Liveness:
 class Agent:
     """This class implements a template agent."""
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int = 10000, private_key_pem_path: Optional[str] = None, timeout: Optional[float] = 1.0) -> None:
+    def __init__(self, name: str,
+                 oef_addr: str,
+                 oef_port: int = 10000,
+                 private_key_pem_path: Optional[str] = None,
+                 timeout: Optional[float] = 1.0,
+                 debug: bool = False) -> None:
         """
         Instantiate the agent.
 
@@ -66,6 +71,7 @@ class Agent:
         :param oef_port: TCP/IP port of the OEF Agent
         :param private_key_pem_path: the path to the private key of the agent.
         :param timeout: the time in (fractions of) seconds to time out an agent between act and react
+        :param debug: if True, run the agent in debug mode.
 
         :return: None
         """
@@ -73,6 +79,8 @@ class Agent:
         self._crypto = Crypto(private_key_pem_path=private_key_pem_path)
         self._liveness = Liveness()
         self._timeout = timeout
+
+        self.debug = debug
 
         self.mail_box = None  # type: Optional[MailBox]
         self.in_box = None  # type: Optional[InBox]
@@ -121,7 +129,9 @@ class Agent:
 
         :return: None
         """
-        self.mail_box.start()
+        if not self.debug:
+            self.mail_box.start()
+
         self.liveness._is_stopped = False
         self._run_main_loop()
 

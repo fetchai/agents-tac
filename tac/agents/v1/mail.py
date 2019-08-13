@@ -111,7 +111,6 @@ class MailBox(OEFAgent):
         :return: None
         """
         super().__init__(public_key, oef_addr, oef_port, loop=asyncio.new_event_loop())
-        self.connect()
         self.in_queue = Queue()
         self.out_queue = Queue()
         self._mail_box_thread = None  # type: Optional[Thread]
@@ -204,6 +203,7 @@ class MailBox(OEFAgent):
 
         :return: None
         """
+        self.connect()
         self._mail_box_thread = Thread(target=super().run)
         self._mail_box_thread.start()
 
@@ -358,7 +358,7 @@ class OutBox(object):
 class FIPAMailBox(MailBox):
     """The FIPAMailBox enqueues additionally FIPA specific messages."""
 
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000) -> None:
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000, **kwargs) -> None:
         """
         Instantiate the FIPAMailBox.
 
@@ -368,7 +368,7 @@ class FIPAMailBox(MailBox):
 
         :return: None
         """
-        super().__init__(public_key, oef_addr, oef_port)
+        super().__init__(public_key, oef_addr, oef_port, **kwargs)
 
     def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES) -> None:
         """
