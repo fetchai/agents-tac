@@ -26,7 +26,7 @@ python-dateutil = "*"
 visdom = "*"
 cryptography = "*"
 base58 = "*"
-fetchai-ledger-api = {git = "https://github.com/fetchai/ledger-api-py.git",
+fetchai-ledger-api = {git = "https://github.com/fetchai/ledger-api-py.git"}
 oef = {version="*", index="test-pypi"}
 sphinxcontrib-mermaid = "*"
 sphinxcontrib-apidoc = "*"
