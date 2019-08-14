@@ -25,14 +25,12 @@ import logging
 import pprint
 from typing import Union, List
 
-from oef.messages import CFP, Decline, Propose, Accept
-from oef.uri import Context
-
-from tac.agents.v1.base.game_instance import GameInstance
 from tac.agents.v1.base.dialogues import Dialogue
-from tac.agents.v1.mail import OutContainer
+from tac.agents.v1.base.game_instance import GameInstance
 from tac.agents.v1.base.helpers import generate_transaction_id
 from tac.agents.v1.base.stats_manager import EndState
+from tac.agents.v1.mail.messages import OEFAgentPropose, OEFAgentAccept, OEFAgentDecline, OEFAgentByteMessage, \
+    OEFAgentMessage, OEFAgentCfp
 from tac.helpers.crypto import Crypto
 from tac.platform.protocol import Transaction
 
@@ -73,7 +71,7 @@ class FIPABehaviour:
         """Get the agent name."""
         return self._agent_name
 
-    def on_cfp(self, cfp: CFP, dialogue: Dialogue) -> Union[Propose, Decline]:
+    def on_cfp(self, cfp: OEFAgentCfp, dialogue: Dialogue) -> Union[OEFAgentPropose, OEFAgentDecline]:
         """
         Handle a CFP.
 
@@ -103,7 +101,7 @@ class FIPABehaviour:
                                                                       "origin": cfp.destination,
                                                                       "target": cfp.msg_id
                                                                   })))
-            response = Decline(new_msg_id, cfp.dialogue_id, cfp.destination, cfp.msg_id, Context())
+            response = OEFAgentDecline(new_msg_id, cfp.dialogue_id, cfp.destination, cfp.msg_id)
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_CFP, dialogue.is_self_initiated)
         else:
             transaction_id = generate_transaction_id(self.crypto.public_key, cfp.destination, dialogue.dialogue_label, dialogue.is_seller)
@@ -122,10 +120,10 @@ class FIPABehaviour:
                                                                       "target": cfp.msg_id,
                                                                       "propose": proposal.values
                                                                   })))
-            response = Propose(new_msg_id, cfp.dialogue_id, cfp.destination, cfp.msg_id, [proposal], Context())
+            response = OEFAgentPropose(new_msg_id, cfp.dialogue_id, cfp.destination, cfp.msg_id, [proposal])
         return response
 
-    def on_propose(self, propose: Propose, dialogue: Dialogue) -> Union[Accept, Decline]:
+    def on_propose(self, propose: OEFAgentPropose, dialogue: Dialogue) -> Union[OEFAgentAccept, OEFAgentDecline]:
         """
         Handle a Propose.
 
@@ -135,7 +133,7 @@ class FIPABehaviour:
         :return: an Accept or a Decline
         """
         logger.debug("[{}]: on propose as {}.".format(self.agent_name, dialogue.role))
-        proposal = propose.proposals[0]
+        proposal = propose.proposal[0]
         transaction_id = generate_transaction_id(self.crypto.public_key, propose.destination, dialogue.dialogue_label, dialogue.is_seller)
         transaction = Transaction.from_proposal(proposal=proposal,
                                                 transaction_id=transaction_id,
@@ -150,14 +148,14 @@ class FIPABehaviour:
             logger.debug("[{}]: Accepting propose (as {}).".format(self.agent_name, dialogue.role))
             self.game_instance.transaction_manager.add_locked_tx(transaction, as_seller=dialogue.is_seller)
             self.game_instance.transaction_manager.add_pending_initial_acceptance(dialogue.dialogue_label, new_msg_id, transaction)
-            result = Accept(new_msg_id, propose.dialogue_id, propose.destination, propose.msg_id, Context())
+            result = OEFAgentAccept(new_msg_id, propose.dialogue_id, propose.destination, propose.msg_id)
         else:
             logger.debug("[{}]: Declining propose (as {})".format(self.agent_name, dialogue.role))
-            result = Decline(new_msg_id, propose.dialogue_id, propose.destination, propose.msg_id, Context())
+            result = OEFAgentDecline(new_msg_id, propose.dialogue_id, propose.destination, propose.msg_id)
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_PROPOSE, dialogue.is_self_initiated)
         return result
 
-    def on_decline(self, decline: Decline, dialogue: Dialogue) -> None:
+    def on_decline(self, decline: OEFAgentDecline, dialogue: Dialogue) -> None:
         """
         Handle a Decline.
 
@@ -183,7 +181,7 @@ class FIPABehaviour:
 
         return None
 
-    def on_accept(self, accept: Accept, dialogue: Dialogue) -> Union[List[Decline], List[Union[OutContainer, Accept]], List[OutContainer]]:
+    def on_accept(self, accept: OEFAgentAccept, dialogue: Dialogue) -> Union[List[OEFAgentDecline], List[Union[OEFAgentAccept]], List[OEFAgentByteMessage]]:
         """
         Handle an Accept.
 
@@ -202,7 +200,7 @@ class FIPABehaviour:
             results = self._on_initial_accept(accept, dialogue)
         return results
 
-    def _on_initial_accept(self, accept: Accept, dialogue: Dialogue) -> Union[List[Decline], List[Union[OutContainer, Accept]]]:
+    def _on_initial_accept(self, accept: OEFAgentAccept, dialogue: Dialogue) -> Union[List[OEFAgentDecline], List[Union[OEFAgentByteMessage, OEFAgentAccept]]]:
         """
         Handle an initial Accept.
 
@@ -221,15 +219,15 @@ class FIPABehaviour:
                 self.game_instance.world_state.update_on_initial_accept(transaction)
             logger.debug("[{}]: Locking the current state (as {}).".format(self.agent_name, dialogue.role))
             self.game_instance.transaction_manager.add_locked_tx(transaction, as_seller=dialogue.is_seller)
-            results.append(OutContainer(message=transaction.serialize(), message_id=STARTING_MESSAGE_ID, dialogue_id=accept.dialogue_id, destination=self.game_instance.controller_pbk))
-            results.append(Accept(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id, Context()))
+            results.append(OEFAgentByteMessage(STARTING_MESSAGE_ID, accept.dialogue_id, self.game_instance.controller_pbk, transaction.serialize()))
+            results.append(OEFAgentAccept(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id))
         else:
             logger.debug("[{}]: Decline the accept (as {}).".format(self.agent_name, dialogue.role))
-            results.append(Decline(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id, Context()))
+            results.append(OEFAgentDecline(new_msg_id, accept.dialogue_id, accept.destination, accept.msg_id))
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_ACCEPT, dialogue.is_self_initiated)
         return results
 
-    def _on_match_accept(self, accept: Accept, dialogue: Dialogue) -> List[OutContainer]:
+    def _on_match_accept(self, accept: OEFAgentAccept, dialogue: Dialogue) -> List[OEFAgentMessage]:
         """
         Handle a matching Accept.
 
@@ -241,5 +239,5 @@ class FIPABehaviour:
         logger.debug("[{}]: on match accept".format(self.agent_name))
         results = []
         transaction = self.game_instance.transaction_manager.pop_pending_initial_acceptance(dialogue.dialogue_label, accept.target)
-        results.append(OutContainer(message=transaction.serialize(), message_id=STARTING_MESSAGE_ID, dialogue_id=accept.dialogue_id, destination=self.game_instance.controller_pbk))
+        results.append(OEFAgentByteMessage(STARTING_MESSAGE_ID, accept.dialogue_id, self.game_instance.controller_pbk, transaction.serialize()))
         return results

@@ -20,19 +20,14 @@
 
 """This module contains helper methods for base agent implementations."""
 
-from typing import Union
-
-from oef.messages import Message as SimpleMessage, SearchResult, OEFErrorMessage, DialogueErrorMessage
-
 from tac.agents.v1.base.dialogues import DialogueLabel
+from tac.agents.v1.mail.messages import OEFAgentByteMessage, OEFAgentMessage, OEFMessage, OEFSearchResult, \
+    OEFDialogueError, OEFGenericError
 from tac.helpers.crypto import Crypto
 from tac.platform.protocol import Response
 
-OEFMessage = Union[SearchResult, OEFErrorMessage, DialogueErrorMessage]
-Message = Union[OEFMessage]
 
-
-def is_oef_message(msg: Message) -> bool:
+def is_oef_message(msg: OEFMessage) -> bool:
     """
     Check whether a message is from the oef.
 
@@ -40,10 +35,10 @@ def is_oef_message(msg: Message) -> bool:
     :return: boolean indicating whether or not the message is from the oef
     """
     msg_type = type(msg)
-    return msg_type in {SearchResult, OEFErrorMessage, DialogueErrorMessage}
+    return msg_type in {OEFSearchResult, OEFGenericError, OEFDialogueError}
 
 
-def is_controller_message(msg: Message, crypto: Crypto) -> bool:
+def is_controller_message(msg: OEFMessage, crypto: Crypto) -> bool:
     """
     Check whether a message is from the controller.
 
@@ -51,12 +46,12 @@ def is_controller_message(msg: Message, crypto: Crypto) -> bool:
     :param crypto: the crypto of the agent
     :return: boolean indicating whether or not the message is from the controller
     """
-    if not isinstance(msg, SimpleMessage):
+    if not isinstance(msg, OEFAgentByteMessage):
         return False
 
     try:
-        msg: SimpleMessage
-        byte_content = msg.msg
+        msg: OEFAgentByteMessage
+        byte_content = msg.content
         sender_pbk = msg.destination  # now the origin is the destination!
         Response.from_pb(byte_content, sender_pbk, crypto)
     except Exception:

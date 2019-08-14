@@ -21,20 +21,16 @@
 """This module defines the interfaces which a TAC compatible agent must implement."""
 
 from abc import abstractmethod
-from typing import Union
 
-from oef.messages import CFP, Propose, Accept, Decline, Message as SimpleMessage, SearchResult, OEFErrorMessage, DialogueErrorMessage
-
+from tac.agents.v1.mail.messages import OEFAgentMessage, OEFDialogueError, OEFGenericError, OEFSearchResult
 from tac.platform.protocol import Error, TransactionConfirmation, StateUpdate, GameData
-
-AgentMessage = Union[SimpleMessage, CFP, Propose, Accept, Decline]
 
 
 class ControllerReactionInterface:
     """This interface contains the methods to react to events from the ControllerAgent."""
 
     @abstractmethod
-    def on_dialogue_error(self, dialogue_error_msg: DialogueErrorMessage) -> None:
+    def on_dialogue_error(self, dialogue_error_msg: OEFDialogueError) -> None:
         """
         Handle dialogue error event emitted by the controller.
 
@@ -106,7 +102,7 @@ class OEFSearchReactionInterface:
     """This interface contains the methods to react to events from the OEF."""
 
     @abstractmethod
-    def on_search_result(self, search_result: SearchResult) -> None:
+    def on_search_result(self, search_result: OEFSearchResult) -> None:
         """
         Handle search results.
 
@@ -116,7 +112,7 @@ class OEFSearchReactionInterface:
         """
 
     @abstractmethod
-    def on_oef_error(self, oef_error: OEFErrorMessage) -> None:
+    def on_oef_error(self, oef_error: OEFGenericError) -> None:
         """
         Handle an OEF error message.
 
@@ -126,7 +122,7 @@ class OEFSearchReactionInterface:
         """
 
     @abstractmethod
-    def on_dialogue_error(self, dialogue_error: DialogueErrorMessage) -> None:
+    def on_dialogue_error(self, dialogue_error: OEFDialogueError) -> None:
         """
         Handle a dialogue error message.
 
@@ -184,7 +180,7 @@ class DialogueReactionInterface:
     """This interface contains the methods to react to events from other agents."""
 
     @abstractmethod
-    def on_new_dialogue(self, msg: AgentMessage) -> None:
+    def on_new_dialogue(self, msg: OEFAgentMessage) -> None:
         """
         React to a message for a new dialogue.
 
@@ -198,7 +194,7 @@ class DialogueReactionInterface:
         """
 
     @abstractmethod
-    def on_existing_dialogue(self, msg: AgentMessage) -> None:
+    def on_existing_dialogue(self, msg: OEFAgentMessage) -> None:
         """
         React to a message of an existing dialogue.
 
@@ -208,7 +204,7 @@ class DialogueReactionInterface:
         """
 
     @abstractmethod
-    def on_unidentified_dialogue(self, msg: AgentMessage) -> None:
+    def on_unidentified_dialogue(self, msg: OEFAgentMessage) -> None:
         """
         React to a message of an unidentified dialogue.
 

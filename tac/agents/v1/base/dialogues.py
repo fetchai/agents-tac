@@ -27,18 +27,11 @@ This module contains the classes required for dialogue management.
 """
 
 import logging
-from typing import List, Any, Dict, Union
+from typing import List, Any, Dict
 
-from oef.messages import CFP, Decline, Propose, Accept, Message as ByteMessage, \
-    SearchResult, OEFErrorMessage, DialogueErrorMessage
-from tac.agents.v1.mail import OutContainer
+from tac.agents.v1.mail.messages import OEFAgentMessage, OEFAgentCfp, OEFAgentPropose, OEFAgentAccept, OEFAgentDecline
 
 Action = Any
-OEFMessage = Union[SearchResult, OEFErrorMessage, DialogueErrorMessage]
-ControllerMessage = ByteMessage
-AgentMessage = Union[ByteMessage, CFP, Propose, Accept, Decline, OutContainer]
-Message = Union[OEFMessage, ControllerMessage, AgentMessage]
-
 logger = logging.getLogger(__name__)
 
 STARTING_MESSAGE_ID = 1
@@ -105,9 +98,9 @@ class Dialogue:
         self._is_seller = is_seller
         self._is_self_initiated = dialogue_label.dialogue_opponent_pbk is not dialogue_label.dialogue_starter_pbk
         self._role = 'seller' if is_seller else 'buyer'
-        self._outgoing_messages = []  # type: List[AgentMessage]
-        self._outgoing_messages_controller = []  # type: List[AgentMessage]
-        self._incoming_messages = []  # type: List[AgentMessage]
+        self._outgoing_messages = []  # type: List[OEFAgentMessage]
+        self._outgoing_messages_controller = []  # type: List[OEFAgentMessage]
+        self._incoming_messages = []  # type: List[OEFAgentMessage]
 
     @property
     def dialogue_label(self) -> DialogueLabel:
@@ -129,7 +122,7 @@ class Dialogue:
         """Get role of agent in dialogue."""
         return self._role
 
-    def outgoing_extend(self, messages: List[AgentMessage]) -> None:
+    def outgoing_extend(self, messages: List[OEFAgentMessage]) -> None:
         """
         Extend the list of messages which keeps track of outgoing messages.
 
@@ -137,12 +130,9 @@ class Dialogue:
         :return: None
         """
         for message in messages:
-            if isinstance(message, OutContainer):
-                self._outgoing_messages_controller.extend([message])
-            else:
-                self._outgoing_messages.extend([message])
+            self._outgoing_messages.extend([message])
 
-    def incoming_extend(self, messages: List[AgentMessage]) -> None:
+    def incoming_extend(self, messages: List[OEFAgentMessage]) -> None:
         """
         Extend the list of messages which keeps track of incoming messages.
 
@@ -158,7 +148,7 @@ class Dialogue:
         :return: True if yes, False otherwise.
         """
         last_sent_message = self._outgoing_messages[-1:]
-        result = (last_sent_message is not []) and isinstance(last_sent_message[0], CFP)
+        result = (last_sent_message is not []) and isinstance(last_sent_message[0], OEFAgentCfp)
         return result
 
     def is_expecting_initial_accept(self) -> bool:
@@ -168,7 +158,7 @@ class Dialogue:
         :return: True if yes, False otherwise.
         """
         last_sent_message = self._outgoing_messages[-1:]
-        result = (last_sent_message is not []) and isinstance(last_sent_message[0], Propose)
+        result = (last_sent_message is not []) and isinstance(last_sent_message[0], OEFAgentPropose)
         return result
 
     def is_expecting_matching_accept(self) -> bool:
@@ -178,7 +168,7 @@ class Dialogue:
         :return: True if yes, False otherwise.
         """
         last_sent_message = self._outgoing_messages[-1:]
-        result = (last_sent_message is not []) and isinstance(last_sent_message[0], Accept)
+        result = (last_sent_message is not []) and isinstance(last_sent_message[0], OEFAgentAccept)
         return result
 
     def is_expecting_cfp_decline(self) -> bool:
@@ -188,7 +178,7 @@ class Dialogue:
         :return: True if yes, False otherwise.
         """
         last_sent_message = self._outgoing_messages[-1:]
-        result = (last_sent_message is not []) and isinstance(last_sent_message[0], CFP)
+        result = (last_sent_message is not []) and isinstance(last_sent_message[0], OEFAgentCfp)
         return result
 
     def is_expecting_propose_decline(self) -> bool:
@@ -198,7 +188,7 @@ class Dialogue:
         :return: True if yes, False otherwise.
         """
         last_sent_message = self._outgoing_messages[-1:]
-        result = (last_sent_message is not []) and isinstance(last_sent_message[0], Propose)
+        result = (last_sent_message is not []) and isinstance(last_sent_message[0], OEFAgentPropose)
         return result
 
     def is_expecting_accept_decline(self) -> bool:
@@ -208,7 +198,7 @@ class Dialogue:
         :return: True if yes, False otherwise.
         """
         last_sent_message = self._outgoing_messages[-1:]
-        result = (last_sent_message is not []) and isinstance(last_sent_message[0], Accept)
+        result = (last_sent_message is not []) and isinstance(last_sent_message[0], OEFAgentAccept)
         return result
 
 
@@ -241,7 +231,7 @@ class Dialogues:
         """Get dictionary of dialogues in which the agent acts as a buyer."""
         return self._dialogues_as_buyer
 
-    def is_permitted_for_new_dialogue(self, msg: AgentMessage, known_pbks: List[str]) -> bool:
+    def is_permitted_for_new_dialogue(self, msg: OEFAgentMessage, known_pbks: List[str]) -> bool:
         """
         Check whether an agent message is permitted for a new dialogue.
 
@@ -255,10 +245,10 @@ class Dialogues:
 
         :return: a boolean indicating whether the message is permitted for a new dialogue
         """
-        result = isinstance(msg, CFP) and msg.msg_id == STARTING_MESSAGE_ID and msg.target == STARTING_MESSAGE_TARGET and (msg.destination in known_pbks)
+        result = isinstance(msg, OEFAgentCfp) and msg.msg_id == STARTING_MESSAGE_ID and msg.target == STARTING_MESSAGE_TARGET and (msg.destination in known_pbks)
         return result
 
-    def is_belonging_to_registered_dialogue(self, msg: AgentMessage, agent_pbk: str) -> bool:
+    def is_belonging_to_registered_dialogue(self, msg: OEFAgentMessage, agent_pbk: str) -> bool:
         """
         Check whether an agent message is part of a registered dialogue.
 
@@ -270,17 +260,17 @@ class Dialogues:
         self_initiated_dialogue_label = DialogueLabel(msg.dialogue_id, msg.destination, agent_pbk)
         other_initiated_dialogue_label = DialogueLabel(msg.dialogue_id, msg.destination, msg.destination)
         result = False
-        if isinstance(msg, Propose) and (msg.target == 1) and self_initiated_dialogue_label in self.dialogues:
+        if isinstance(msg, OEFAgentPropose) and (msg.target == 1) and self_initiated_dialogue_label in self.dialogues:
             self_initiated_dialogue = self.dialogues[self_initiated_dialogue_label]
             result = self_initiated_dialogue.is_expecting_propose()
-        elif isinstance(msg, Accept):
+        elif isinstance(msg, OEFAgentAccept):
             if msg.target == 2 and other_initiated_dialogue_label in self.dialogues:
                 other_initiated_dialogue = self.dialogues[other_initiated_dialogue_label]
                 result = other_initiated_dialogue.is_expecting_initial_accept()
             elif msg.target == 3 and self_initiated_dialogue_label in self.dialogues:
                 self_initiated_dialogue = self.dialogues[self_initiated_dialogue_label]
                 result = self_initiated_dialogue.is_expecting_matching_accept()
-        elif isinstance(msg, Decline):
+        elif isinstance(msg, OEFAgentDecline):
             if msg.target == 1 and self_initiated_dialogue_label in self.dialogues:
                 self_initiated_dialogue = self.dialogues[self_initiated_dialogue_label]
                 result = self_initiated_dialogue.is_expecting_cfp_decline()
@@ -292,7 +282,7 @@ class Dialogues:
                 result = self_initiated_dialogue.is_expecting_accept_decline()
         return result
 
-    def get_dialogue(self, msg: AgentMessage, agent_pbk: str) -> Dialogue:
+    def get_dialogue(self, msg: OEFAgentMessage, agent_pbk: str) -> Dialogue:
         """
         Retrieve dialogue.
 
@@ -303,16 +293,16 @@ class Dialogues:
         """
         self_initiated_dialogue_label = DialogueLabel(msg.dialogue_id, msg.destination, agent_pbk)
         other_initiated_dialogue_label = DialogueLabel(msg.dialogue_id, msg.destination, msg.destination)
-        if isinstance(msg, Propose) and (msg.target == 1) and self_initiated_dialogue_label in self.dialogues:
+        if isinstance(msg, OEFAgentPropose) and (msg.target == 1) and self_initiated_dialogue_label in self.dialogues:
             dialogue = self.dialogues[self_initiated_dialogue_label]
-        elif isinstance(msg, Accept):
+        elif isinstance(msg, OEFAgentAccept):
             if msg.target == 2 and other_initiated_dialogue_label in self.dialogues:
                 dialogue = self.dialogues[other_initiated_dialogue_label]
             elif msg.target == 3 and self_initiated_dialogue_label in self.dialogues:
                 dialogue = self.dialogues[self_initiated_dialogue_label]
             else:
                 raise ValueError('Should have found dialogue.')
-        elif isinstance(msg, Decline):
+        elif isinstance(msg, OEFAgentDecline):
             if msg.target == 1 and self_initiated_dialogue_label in self.dialogues:
                 dialogue = self.dialogues[self_initiated_dialogue_label]
             elif msg.target == 2 and other_initiated_dialogue_label in self.dialogues:

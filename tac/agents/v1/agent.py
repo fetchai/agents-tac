@@ -27,7 +27,8 @@ from abc import abstractmethod
 from enum import Enum
 from typing import Optional
 
-from tac.agents.v1.mail import MailBox, InBox, OutBox
+from tac.agents.v1.mail.base import InBox, OutBox, MailBox
+from tac.agents.v1.mail.oef import OEFNetworkMailBox
 from tac.helpers.crypto import Crypto
 
 logger = logging.getLogger(__name__)
@@ -83,8 +84,14 @@ class Agent:
         self.debug = debug
 
         self.mail_box = None  # type: Optional[MailBox]
-        self.in_box = None  # type: Optional[InBox]
-        self.out_box = None  # type: Optional[OutBox]
+
+    @property
+    def in_box(self) -> Optional[InBox]:
+        return self.mail_box.inbox if self.mail_box else None
+
+    @property
+    def out_box(self) -> Optional[OutBox]:
+        return self.mail_box.outbox if self.mail_box else None
 
     @property
     def name(self) -> str:
@@ -129,8 +136,8 @@ class Agent:
 
         :return: None
         """
-        if not self.debug:
-            self.mail_box.start()
+        if not self.mail_box.is_connected:
+            self.mail_box.connect()
 
         self.liveness._is_stopped = False
         self._run_main_loop()
@@ -165,7 +172,8 @@ class Agent:
         """
         logger.debug("[{}]: Stopping message processing...".format(self.name))
         self.liveness._is_stopped = True
-        self.mail_box.stop()
+        if self.mail_box.is_connected:
+            self.mail_box.disconnect()
 
     @abstractmethod
     def setup(self) -> None:

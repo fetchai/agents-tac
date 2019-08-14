@@ -24,7 +24,7 @@ import time
 from threading import Thread
 
 from tac.agents.v1.agent import Agent, AgentState
-from tac.agents.v1.mail import FIPAMailBox
+from tac.agents.v1.mail.oef import OEFNetworkMailBox
 
 
 class TestAgent(Agent):
@@ -33,7 +33,13 @@ class TestAgent(Agent):
     def __init__(self):
         """Initialize the test agent."""
         super().__init__("test_agent", "127.0.0.1", 10000)
-        self.mail_box = FIPAMailBox(self.crypto.public_key, "127.0.0.1", 10000)
+        self.mail_box = OEFNetworkMailBox(self.crypto.public_key, "127.0.0.1", 10000)
+
+    def setup(self) -> None:
+        pass
+
+    def teardown(self) -> None:
+        pass
 
     def act(self) -> None:
         """Perform actions."""
@@ -56,6 +62,7 @@ def test_agent_connected(network_node):
     test_agent = TestAgent()
     test_agent.mail_box.connect()
     assert test_agent.agent_state == AgentState.CONNECTED
+    test_agent.mail_box.disconnect()
 
 
 def test_agent_running(network_node):

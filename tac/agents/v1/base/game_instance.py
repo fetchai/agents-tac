@@ -28,7 +28,7 @@ from typing import List, Optional, Set, Tuple, Dict, Union
 from oef.query import Query
 from oef.schema import Description
 
-from tac.agents.v1.mail import MailStats
+from tac.agents.v1.mail.oef import MailStats
 from tac.agents.v1.base.dialogues import Dialogues, Dialogue
 from tac.agents.v1.base.transaction_manager import TransactionManager
 from tac.agents.v1.base.strategy import Strategy
