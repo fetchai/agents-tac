@@ -136,7 +136,7 @@ class Agent:
 
         :return: None
         """
-        if not self.mail_box.is_connected:
+        if not self.debug and not self.mail_box.is_connected:
             self.mail_box.connect()
 
         self.liveness._is_stopped = False
