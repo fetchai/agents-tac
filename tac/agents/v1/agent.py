@@ -24,12 +24,21 @@ import logging
 import time
 
 from abc import abstractmethod
+from enum import Enum
 from typing import Optional
 
 from tac.agents.v1.mail import MailBox, InBox, OutBox
 from tac.helpers.crypto import Crypto
 
 logger = logging.getLogger(__name__)
+
+
+class AgentState(Enum):
+    """Enumeration for an agent state."""
+
+    INITIATED = "initiated"
+    CONNECTED = "connected"
+    RUNNING = "running"
 
 
 class Liveness:
@@ -48,7 +57,12 @@ class Liveness:
 class Agent:
     """This class implements a template agent."""
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int = 10000, private_key_pem_path: Optional[str] = None, timeout: Optional[float] = 1.0) -> None:
+    def __init__(self, name: str,
+                 oef_addr: str,
+                 oef_port: int = 10000,
+                 private_key_pem_path: Optional[str] = None,
+                 timeout: Optional[float] = 1.0,
+                 debug: bool = False) -> None:
         """
         Instantiate the agent.
 
@@ -57,6 +71,7 @@ class Agent:
         :param oef_port: TCP/IP port of the OEF Agent
         :param private_key_pem_path: the path to the private key of the agent.
         :param timeout: the time in (fractions of) seconds to time out an agent between act and react
+        :param debug: if True, run the agent in debug mode.
 
         :return: None
         """
@@ -64,6 +79,8 @@ class Agent:
         self._crypto = Crypto(private_key_pem_path=private_key_pem_path)
         self._liveness = Liveness()
         self._timeout = timeout
+
+        self.debug = debug
 
         self.mail_box = None  # type: Optional[MailBox]
         self.in_box = None  # type: Optional[InBox]
@@ -84,28 +101,58 @@ class Agent:
         """Get the liveness."""
         return self._liveness
 
+    @property
+    def agent_state(self) -> AgentState:
+        """
+        Get the state of the agent.
+
+        In particular, it can be one of the following states:
+        - AgentState.INITIATED: when the Agent object has been created.
+        - AgentState.CONNECTED: when the agent is connected.
+        - AgentState.RUNNING: when the agent is running.
+
+        :return the agent state.
+        :raises ValueError: if the state does not satisfy any of the foreseen conditions.
+        """
+        if self.mail_box is None or not self.mail_box.is_connected:
+            return AgentState.INITIATED
+        elif self.mail_box.is_connected and self.liveness.is_stopped:
+            return AgentState.CONNECTED
+        elif self.mail_box.is_connected and not self.liveness.is_stopped:
+            return AgentState.RUNNING
+        else:
+            raise ValueError("Agent state not recognized.")
+
     def start(self) -> None:
         """
         Start the agent.
 
         :return: None
         """
-        self.mail_box.start()
-        self.liveness._is_stopped = False
-        self.run_main_loop()
+        if not self.debug:
+            self.mail_box.start()
 
-    def run_main_loop(self) -> None:
+        self.liveness._is_stopped = False
+        self._run_main_loop()
+
+    def _run_main_loop(self) -> None:
         """
         Run the main loop of the agent.
 
         :return: None
         """
+        logger.debug("[{}]: Calling setup method...".format(self.name))
+        self.setup()
+
         logger.debug("[{}]: Start processing messages...".format(self.name))
         while not self.liveness.is_stopped:
             self.act()
             time.sleep(self._timeout)
             self.react()
             self.update()
+
+        logger.debug("[{}]: Calling teardown method...".format(self.name))
+        self.teardown()
 
         self.stop()
         logger.debug("[{}]: Exiting main loop...".format(self.name))
@@ -119,6 +166,14 @@ class Agent:
         logger.debug("[{}]: Stopping message processing...".format(self.name))
         self.liveness._is_stopped = True
         self.mail_box.stop()
+
+    @abstractmethod
+    def setup(self) -> None:
+        """
+        Set up the agent.
+
+        :return: None
+        """
 
     @abstractmethod
     def act(self) -> None:
@@ -141,4 +196,12 @@ class Agent:
         """Update the current state of the agent.
 
         :return None
+        """
+
+    @abstractmethod
+    def teardown(self) -> None:
+        """
+        Tear down the agent.
+
+        :return: None
         """

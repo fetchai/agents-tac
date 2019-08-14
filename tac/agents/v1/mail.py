@@ -100,27 +100,39 @@ class MailStats(object):
 class MailBox(OEFAgent):
     """The MailBox enqueues incoming messages, searches and errors from the OEF and sends outgoing messages to the OEF."""
 
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000) -> None:
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000, debug: bool = False) -> None:
         """
         Instantiate the mailbox.
 
         :param public_key: the public key of the agent
         :param oef_addr: TCP/IP address of the OEF Agent
         :param oef_port: TCP/IP port of the OEF Agent
+        :param debug: start the mailbox in debug mode.
 
         :return: None
         """
         super().__init__(public_key, oef_addr, oef_port, loop=asyncio.new_event_loop())
-        self.connect()
         self.in_queue = Queue()
         self.out_queue = Queue()
         self._mail_box_thread = None  # type: Optional[Thread]
         self._mail_stats = MailStats()
 
+        self.debug = debug
+
     @property
     def mail_stats(self) -> MailStats:
         """Get the mail stats."""
         return self._mail_stats
+
+    @property
+    def is_running(self) -> bool:
+        """Check whether the mailbox is running."""
+        return self._mail_box_thread is None
+
+    @property
+    def is_connected(self) -> bool:
+        """Check whether the mailbox is connected to an OEF node."""
+        return self._oef_proxy.is_connected()
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
         """
@@ -170,10 +182,6 @@ class MailBox(OEFAgent):
         """
         self.in_queue.put(DialogueErrorMessage(answer_id, dialogue_id, origin))
 
-    def is_running(self) -> bool:
-        """Check whether the mailbox is running."""
-        return self._mail_box_thread is None
-
     def connect(self) -> bool:
         """
         Connect to the OEF Node. If it fails, then sleep for 3 seconds and try to reconnect again.
@@ -198,6 +206,7 @@ class MailBox(OEFAgent):
 
         :return: None
         """
+        self.connect()
         self._mail_box_thread = Thread(target=super().run)
         self._mail_box_thread.start()
 
@@ -317,6 +326,11 @@ class OutBox(object):
         logger.debug("Checking for message or search query on out queue...")
         while not self.out_queue.empty():
             out = self.out_queue.get_nowait()
+
+            if self.mail_box.debug:
+                logger.warning("Dropping message of type '{}' from the out queue...".format(type(out.message)))
+                continue
+
             if isinstance(out, OutContainer) and out.message is not None:
                 logger.debug("Outgoing message type: type={}".format(type(out.message)))
                 self.mail_box.send_message(out.message_id, out.dialogue_id, out.destination, out.message)
@@ -352,7 +366,7 @@ class OutBox(object):
 class FIPAMailBox(MailBox):
     """The FIPAMailBox enqueues additionally FIPA specific messages."""
 
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000) -> None:
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000, **kwargs) -> None:
         """
         Instantiate the FIPAMailBox.
 
@@ -362,7 +376,7 @@ class FIPAMailBox(MailBox):
 
         :return: None
         """
-        super().__init__(public_key, oef_addr, oef_port)
+        super().__init__(public_key, oef_addr, oef_port, **kwargs)
 
     def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES) -> None:
         """
