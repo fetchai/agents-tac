@@ -38,6 +38,7 @@ from oef.uri import Context
 from tac.agents.v1.base.dialogues import Dialogue
 from tac.agents.v1.examples.baseline import BaselineAgent
 from tac.agents.v1.examples.strategy import BaselineStrategy
+from tac.agents.v1.mail.messages import OEFAgentCfp
 from tac.platform.protocol import GameData
 
 CUR_PATH = inspect.getfile(inspect.currentframe())
@@ -132,7 +133,7 @@ if __name__ == '__main__':
         starting_message_id = 1
         starting_message_target = 0
         services = agent_one.game_instance.build_services_dict(is_supply=is_seller)  # type: Dict
-        cfp = CFP(starting_message_id, dialogue.dialogue_label.dialogue_id, agent_two.crypto.public_key, starting_message_target, json.dumps(services).encode('utf-8'), Context())
+        cfp = OEFAgentCfp(starting_message_id, dialogue.dialogue_label.dialogue_id, agent_two.crypto.public_key, starting_message_target, json.dumps(services).encode('utf-8'), Context())
         dialogue.outgoing_extend([cfp])
         agent_one.out_box.out_queue.put(cfp)
 

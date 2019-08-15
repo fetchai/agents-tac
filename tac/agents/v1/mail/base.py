@@ -27,11 +27,9 @@ from abc import abstractmethod, ABC
 from queue import Queue
 from typing import Optional
 
+from tac.agents.v1.mail.messages import Message
+
 logger = logging.getLogger(__name__)
-
-
-class Message(ABC):
-    pass
 
 
 class InBox(object):
