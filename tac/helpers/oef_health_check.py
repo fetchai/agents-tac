@@ -52,15 +52,19 @@ class OEFHealthCheck(object):
         try:
             # import pdb; pdb.set_trace()
             pbk = 'check'
+            # import pdb; pdb.set_trace()n
             print("Connecting to {}:{}".format(self.addr, self.port))
             core = AsyncioCore(logger=logger)
             core.run_threaded()
             agent = OEFAgent(pbk, oef_addr=self.addr, oef_port=self.port, core=core)
             agent.connect()
             agent.disconnect()
+            core.stop()
             print("OK!")
             result = True
             return result
         except Exception as e:
             print(str(e))
             return result
+        finally:
+            core.stop()
