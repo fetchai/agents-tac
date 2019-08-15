@@ -27,7 +27,6 @@ This module contains the classes required for message management.
 - OutBox: Temporarily stores and sends messages to the OEF and other agents.
 """
 
-import asyncio
 import datetime
 import logging
 import time
@@ -36,6 +35,7 @@ from threading import Thread
 from typing import List, Optional, Any, Union, Dict
 
 from oef.agents import OEFAgent
+from oef.core import AsyncioCore
 from oef.messages import PROPOSE_TYPES, CFP_TYPES, CFP, Decline, Propose, Accept, Message as ByteMessage, \
     SearchResult, OEFErrorOperation, OEFErrorMessage, DialogueErrorMessage
 from oef.query import Query
@@ -111,7 +111,9 @@ class MailBox(OEFAgent):
 
         :return: None
         """
-        super().__init__(public_key, oef_addr, oef_port, loop=asyncio.new_event_loop())
+        core = AsyncioCore(logger=logger)
+        super().__init__(public_key, oef_addr=oef_addr, oef_port=oef_port, core=core)
+        self.core.run_threaded()
         self.in_queue = Queue()
         self.out_queue = Queue()
         self._mail_box_thread = None  # type: Optional[Thread]
@@ -132,7 +134,7 @@ class MailBox(OEFAgent):
     @property
     def is_connected(self) -> bool:
         """Check whether the mailbox is connected to an OEF node."""
-        return self._oef_proxy.is_connected()
+        return True  # self._oef_proxy.is_connected() TODO!
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
         """
@@ -198,6 +200,7 @@ class MailBox(OEFAgent):
                 success = False
                 time.sleep(3.0)
 
+        logger.debug("Successfully connected to OEF!")
         return success
 
     def start(self) -> None:
@@ -216,9 +219,11 @@ class MailBox(OEFAgent):
 
         :return: None
         """
-        self._loop.call_soon_threadsafe(super().stop)
+        self.core.stop()
+        # self._loop.call_soon_threadsafe(super().stop)
         if self._mail_box_thread is not None:
             self._mail_box_thread.join()
+            self.disconnect()
             self._mail_box_thread = None
 
 

@@ -38,7 +38,7 @@ from tac.agents.v1.agent import Liveness
 from tac.agents.v1.base.dialogues import Dialogue
 from tac.agents.v1.base.game_instance import GameInstance, GamePhase
 from tac.agents.v1.base.helpers import dialogue_label_from_transaction_id
-from tac.agents.v1.base.interfaces import ControllerReactionInterface, OEFSearchReactionInterface, \
+from tac.agents.v1.base.interfaces import ControllerReactionInterface, OEFReactionInterface, \
     DialogueReactionInterface
 from tac.agents.v1.base.negotiation_behaviours import FIPABehaviour
 from tac.agents.v1.base.stats_manager import EndState
@@ -190,7 +190,7 @@ class ControllerReactions(ControllerReactionInterface):
         self.out_box.out_queue.put(OutContainer(message=msg, message_id=0, dialogue_id=0, destination=self.game_instance.controller_pbk))
 
 
-class OEFReactions(OEFSearchReactionInterface):
+class OEFReactions(OEFReactionInterface):
     """The OEFReactions class defines the reactions of an agent towards the OEF."""
 
     def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, out_box: 'OutBox', agent_name: str, rejoin: bool = False) -> None:

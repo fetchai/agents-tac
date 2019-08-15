@@ -21,7 +21,6 @@
 
 """This script waits until the OEF is up and running."""
 
-import argparse
 import logging
 
 from oef.agents import OEFAgent
@@ -29,25 +28,39 @@ from oef.core import AsyncioCore
 
 logger = logging.getLogger(__name__)
 
-parser = argparse.ArgumentParser("oef_healthcheck", description=__doc__)
-parser.add_argument("addr", type=str, help="IP address of the OEF node.")
-parser.add_argument("port", type=int, help="Port of the OEF node.")
 
+class OEFHealthCheck(object):
+    """A health check class."""
 
-if __name__ == '__main__':
-    try:
-        args = parser.parse_args()
-        host = args.addr
-        port = args.port
-        pbk = 'check'
-        print("Connecting to {}:{}".format(host, port))
-        core = AsyncioCore(logger=logger)
-        core.run_threaded()
-        agent = OEFAgent(pbk, oef_addr=host, oef_port=port, core=core)
-        agent.connect()
-        agent.disconnect()
-        print("OK!")
-        exit(0)
-    except Exception as e:
-        print(str(e))
-        exit(1)
+    def __init__(self, addr: str, port: int):
+        """
+        Initialize.
+
+        :param addr: IP address of the OEF node.
+        :param port: Port of the OEF node.
+        """
+        self.addr = addr
+        self.port = port
+
+    def run(self) -> bool:
+        """
+        Run the check.
+
+        :return:
+        """
+        result = False
+        try:
+            # import pdb; pdb.set_trace()
+            pbk = 'check'
+            print("Connecting to {}:{}".format(self.addr, self.port))
+            core = AsyncioCore(logger=logger)
+            core.run_threaded()
+            agent = OEFAgent(pbk, oef_addr=self.addr, oef_port=self.port, core=core)
+            agent.connect()
+            agent.disconnect()
+            print("OK!")
+            result = True
+            return result
+        except Exception as e:
+            print(str(e))
+            return result

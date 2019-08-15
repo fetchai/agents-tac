@@ -33,7 +33,8 @@ from tac.platform.game import Game
 
 from tac.agents.v1.examples.baseline import BaselineAgent as BaselineAgentV1
 
-from tac.platform.controller import ControllerAgent, TACParameters
+from tac.platform.controller.controller_agent import ControllerAgent
+from tac.platform.controller.tac_parameters import TACParameters
 
 
 def _init_baseline_agents(n: int, version: str, oef_addr: str, oef_port: int) -> List[BaselineAgentV1]:

@@ -61,6 +61,7 @@ For a full list, do `python simulation/tac_agent_spawner.py -h`
 - `--visdom-port` is the TCP/IP port of the Visdom server
 - `--dashboard` is a flag to specify that the dashboard is live and expecting an event stream.
 - `--seed` is the seed for the random module.
+- `--fraction-world-modeling` the fraction of world modelling baseline agents.
 
 Example:
 

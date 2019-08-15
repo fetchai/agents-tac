@@ -27,6 +27,7 @@ import platform
 import re
 import subprocess
 import sys
+import time
 
 import docker
 
@@ -69,14 +70,10 @@ class OEFNode:
     def _wait_for_oef(self):
         """Wait for the OEF to come live."""
         print("Waiting for the OEF to be operative...")
-        wait_for_oef = subprocess.Popen([
-            os.path.join("sandbox", "wait-for-oef.sh"),
-            "127.0.0.1",
-            "10000",
-            ":"
-        ], env=os.environ, cwd=ROOT_DIR)
-
-        wait_for_oef.wait(30)
+        for loop in range(0, 30):
+            exit_status = os.system("netstat -nal | grep 10000")
+            if exit_status != 1: break
+            time.sleep(1)
 
     def __enter__(self):
         """Define what the context manager should do at the beginning of the block."""
