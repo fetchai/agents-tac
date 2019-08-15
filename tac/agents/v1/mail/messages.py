@@ -21,12 +21,14 @@
 """Protocol module v2."""
 from copy import deepcopy
 from enum import Enum
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Union
 
+from oef.messages import OEFErrorOperation
 from oef.query import Query
 from oef.schema import Description
 
-from tac.agents.v1.base.dialogues import DialogueLabel
+# from tac.agents.v1.base.dialogues import DialogueLabel
+DialogueLabel = int
 
 Address = str
 ProtocolId = str
@@ -36,8 +38,8 @@ class Message:
 
     def __init__(self, to: Optional[Address] = None,
                  sender: Optional[Address] = None,
-                 body: Optional[Dict[str, Any]] = None,
-                 protocol_id: Optional[ProtocolId] = None):
+                 protocol_id: Optional[ProtocolId] = None,
+                 **body):
         self._to = to
         self._sender = sender
         self._body = deepcopy(body) if body else {}
@@ -91,17 +93,19 @@ class OEFMessage(Message):
         UNREGISTER_AGENT = "unregister_agent"
         SEARCH_SERVICES = "search_services"
         SEARCH_AGENTS = "search_agents"
+        OEF_ERROR = "oef_error"
+        DIALOGUE_ERROR = "dialogue_error"
         BYTES = "bytes"
 
         SEARCH_RESULT = "search_result"
 
-    def __init__(self, to: Address,
-                 sender: Address,
-                 oef_type: Type,
-                 body: Dict[str, Any]):
+    def __init__(self, to: Optional[Address] = None,
+                 sender: Optional[Address] = None,
+                 oef_type: Optional[Type] = None,
+                 **body):
         _body = dict(**body)
         _body["type"] = oef_type
-        super().__init__(to, sender, body=body, protocol_id=self.protocol_id)
+        super().__init__(to=to, sender=sender, protocol_id=self.protocol_id, **_body)
 
     def check_consistency(self) -> bool:
         try:
@@ -109,35 +113,52 @@ class OEFMessage(Message):
             oef_type = OEFMessage.Type(self.get("type"))
             if oef_type == OEFMessage.Type.REGISTER_SERVICE:
                 service_description = self.get("service_description")
-                service_id = self.get("service_id")
                 assert self.is_set("id")
+                assert self.is_set("service_id")
+                service_id = self.get("service_id")
                 assert isinstance(service_description, Description)
                 assert isinstance(service_id, str)
             elif oef_type == OEFMessage.Type.REGISTER_AGENT:
-                agent_description = self.get("agent_description")
                 assert self.is_set("id")
+                assert self.is_set("agent_description")
+                agent_description = self.get("agent_description")
                 assert isinstance(agent_description, Description)
             elif oef_type == OEFMessage.Type.UNREGISTER_SERVICE:
-                service_id = self.get("service_id")
                 assert self.is_set("id")
+                assert self.is_set("service_id")
+                service_id = self.get("service_id")
                 assert isinstance(service_id, str)
             elif oef_type == OEFMessage.Type.UNREGISTER_AGENT:
                 assert self.is_set("id")
             elif oef_type == OEFMessage.Type.SEARCH_SERVICES:
-                query = self.get("query")
                 assert self.is_set("id")
+                assert self.is_set("query")
+                query = self.get("query")
                 assert isinstance(query, Query)
             elif oef_type == OEFMessage.Type.SEARCH_AGENTS:
-                query = self.get("query")
                 assert self.is_set("id")
+                assert self.is_set("query")
+                query = self.get("query")
                 assert isinstance(query, Query)
             elif oef_type == OEFMessage.Type.SEARCH_RESULT:
-                agents = self.get("agents")
                 assert self.is_set("id")
+                assert self.is_set("agents")
+                agents = self.get("agents")
                 assert type(agents) == list and all(type(a) == str for a in agents)
-            elif oef_type == OEFMessage.Type.BYTES:
-                content = self.get("content")
+            elif oef_type == OEFMessage.Type.OEF_ERROR:
+                assert self.is_set("id")
+                assert self.is_set("operation")
+                operation = self.get("operation")
+                assert operation in set(OEFErrorOperation)
+            elif oef_type == OEFMessage.Type.DIALOGUE_ERROR:
+                assert self.is_set("id")
                 assert self.is_set("dialogue_id")
+                assert self.is_set("origin")
+            elif oef_type == OEFMessage.Type.BYTES:
+                assert self.is_set("id")
+                assert self.is_set("dialogue_id")
+                assert self.is_set("content")
+                content = self.get("content")
                 assert type(content) == bytes
             else:
                 raise ValueError("Type not recognized.")
@@ -151,46 +172,47 @@ class ByteMessage(Message):
 
     protocol_id = "bytes"
 
-    def __init__(self, to: Address,
-                 sender: Address,
+    def __init__(self, to: Optional[Address] = None,
+                 sender: Optional[Address] = None,
                  content: bytes = b""):
-        body = dict(content=content)
-        super().__init__(to, sender, body=body, protocol_id=self.protocol_id)
+        super().__init__(to=to, sender=sender, protocol_id=self.protocol_id, content=content)
 
 
 class FIPAMessage(Message):
 
     protocol_id = "fipa"
 
-    class Type(Enum):
+    class Performative(Enum):
         CFP = "cfp"
         PROPOSE = "propose"
         ACCEPT = "accept"
         DECLINE = "decline"
 
-    def __init__(self, to: Address,
-                 sender: Address,
-                 dialogue_id: DialogueLabel,
-                 target: int,
-                 performative: Type,
-                 body: Dict[str, Any]):
+    def __init__(self, to: Optional[Address] = None,
+                 sender: Optional[Address] = None,
+                 msg_id: Optional[int] = None,
+                 dialogue_id: Optional[DialogueLabel] = None,
+                 target: Optional[int] = None,
+                 performative: Optional[Union[str, Performative]] = None,
+                 **body):
         _body = dict(**body)
+        _body["id"] = msg_id
         _body["dialogue_id"] = dialogue_id
         _body["target"] = target
-        _body["performative"] = performative
-        super().__init__(to, sender, body=_body, protocol_id=self.protocol_id)
+        _body["performative"] = FIPAMessage.Performative(performative)
+        super().__init__(to, sender, protocol_id=self.protocol_id, **_body)
 
     def check_consistency(self) -> bool:
         try:
             assert self.is_set("target")
-            performative = FIPAMessage.Type(self.get("performative"))
-            if performative == FIPAMessage.Type.CFP:
+            performative = FIPAMessage.Performative(self.get("performative"))
+            if performative == FIPAMessage.Performative.CFP:
                 query = self.get("query")
-                assert isinstance(query, Query) or query is None
-            elif performative == FIPAMessage.Type.PROPOSE:
+                assert isinstance(query, Query) or isinstance(query, bytes) or query is None
+            elif performative == FIPAMessage.Performative.PROPOSE:
                 proposal = self.get("proposal")
-                assert type(proposal) == list and all(isinstance(d, Description) for d in proposal)
-            elif performative == FIPAMessage.Type.ACCEPT or performative == FIPAMessage.Type.DECLINE:
+                assert type(proposal) == list and all(isinstance(d, Description) or type(d) == bytes for d in proposal)
+            elif performative == FIPAMessage.Performative.ACCEPT or performative == FIPAMessage.Performative.DECLINE:
                 pass
             else:
                 raise ValueError("Performative not recognized.")

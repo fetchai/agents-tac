@@ -32,6 +32,8 @@ from oef.messages import OEFErrorOperation, CFP_TYPES, PROPOSE_TYPES
 from oef.proxy import OEFNetworkProxy
 
 from tac.agents.v1.mail.base import Connection, MailBox
+from tac.agents.v1.mail.messages import OEFMessage, FIPAMessage, Message
+
 logger = logging.getLogger(__name__)
 
 
@@ -92,73 +94,138 @@ class OEFChannel(Agent):
         return self._oef_proxy.is_connected()
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
-        ByteMessage()
-        self.in_queue.put(OEFAgentByteMessage(msg_id, dialogue_id, origin, content))
+        msg = OEFMessage(to=self.public_key,
+                         sender=origin,
+                         msg_id=msg_id,
+                         dialogue_id=dialogue_id,
+                         oef_type=OEFMessage.Type.BYTES,
+                         content=content)
+        self.in_queue.put(msg)
 
     def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES):
-        self.in_queue.put(OEFAgentCfp(msg_id, dialogue_id, origin, target, query))
+        msg = FIPAMessage(to=self.public_key,
+                          sender=origin,
+                          msg_id=msg_id,
+                          dialogue_id=dialogue_id,
+                          target=target,
+                          performative=FIPAMessage.Performative.CFP,
+                          query=query)
+        self.in_queue.put(msg)
 
     def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES):
-        self.in_queue.put(OEFAgentPropose(msg_id, dialogue_id, origin, target, proposals))
+        msg = FIPAMessage(to=self.public_key,
+                          sender=origin,
+                          msg_id=msg_id,
+                          dialogue_id=dialogue_id,
+                          target=target,
+                          performative=FIPAMessage.Performative.PROPOSE,
+                          proposal=proposals)
+        self.in_queue.put(msg)
 
     def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int):
-        self.in_queue.put(OEFAgentAccept(msg_id, dialogue_id, origin, target))
+        msg = FIPAMessage(to=self.public_key,
+                          sender=origin,
+                          msg_id=msg_id,
+                          dialogue_id=dialogue_id,
+                          target=target,
+                          performative=FIPAMessage.Performative.ACCEPT)
+        self.in_queue.put(msg)
 
     def on_decline(self, msg_id: int, dialogue_id: int, origin: str, target: int):
-        self.in_queue.put(OEFAgentDecline(msg_id, dialogue_id, origin, target))
+        msg = FIPAMessage(to=self.public_key,
+                          sender=origin,
+                          msg_id=msg_id,
+                          dialogue_id=dialogue_id,
+                          target=target,
+                          performative=FIPAMessage.Performative.DECLINE)
+        self.in_queue.put(msg)
 
     def on_search_result(self, search_id: int, agents: List[str]):
         self.mail_stats.search_end(search_id, len(agents))
-        self.in_queue.put(OEFSearchResult(search_id, agents))
+        msg = OEFMessage(to=self.public_key,
+                         sender=None,
+                         oef_type=OEFMessage.Type.SEARCH_RESULT,
+                         id=search_id,
+                         agents=agents)
+        self.in_queue.put(msg)
 
     def on_oef_error(self, answer_id: int, operation: OEFErrorOperation):
-        self.in_queue.put(OEFGenericError(answer_id, operation))
+        msg = OEFMessage(to=self.public_key,
+                         sender=None,
+                         oef_type=OEFMessage.Type.OEF_ERROR,
+                         id=answer_id,
+                         operation=operation)
+        self.in_queue.put(msg)
 
     def on_dialogue_error(self, answer_id: int, dialogue_id: int, origin: str):
-        self.in_queue.put(OEFDialogueError(answer_id, dialogue_id, origin))
+        msg = OEFMessage(to=self.public_key,
+                         sender=None,
+                         oef_type=OEFMessage.Type.DIALOGUE_ERROR,
+                         id=answer_id,
+                         dialogue_id=dialogue_id,
+                         origin=origin)
+        self.in_queue.put(msg)
 
-    def send(self, msg: Union[OEFRequest, OEFAgentMessage]):
-        if isinstance(msg, OEFRequest):
-            self.send_oef_request(msg)
-        elif isinstance(msg, OEFAgentMessage):
-            self.send_oef_agent_message(msg)
+    def send(self, msg: Message):
+        if msg.protocol_id == "oef":
+            self.send_oef_message(msg)
+        elif msg.protocol_id == "fipa":
+            self.send_fipa_message(msg)
         else:
             raise ValueError("Cannot send message.")
 
-    def send_oef_request(self, msg: OEFRequest):
-        if isinstance(msg, OEFRegisterServiceRequest):
-            self.register_service(msg.msg_id, msg.agent_description, msg.service_id)
-        elif isinstance(msg, OEFRegisterAgentRequest):
-            self.register_agent(msg.msg_id, msg.agent_description)
-        elif isinstance(msg, OEFUnregisterServiceRequest):
-            self.unregister_service(msg.msg_id, msg.agent_description, msg.service_id)
-        elif isinstance(msg, OEFUnregisterAgentRequest):
-            self.unregister_agent(msg.msg_id)
-        elif isinstance(msg, OEFSearchAgentsRequest):
-            self.search_agents(msg.search_id, msg.query)
-        elif isinstance(msg, OEFSearchServicesRequest):
-            self.mail_stats.search_start(msg.search_id)
-            self.search_services(msg.search_id, msg.query)
+    def send_oef_message(self, msg: Message):
+        oef_type = msg.get("type")
+        if oef_type == OEFMessage.Type.REGISTER_SERVICE:
+            id = msg.get("id")
+            service_description = msg.get("service_description")
+            service_id = msg.get("service_id")
+            self.register_service(id, service_description, service_id)
+        elif oef_type == OEFMessage.Type.REGISTER_AGENT:
+            id = msg.get("id")
+            agent_description = msg.get("agent_description")
+            self.register_agent(id, agent_description)
+        elif oef_type == OEFMessage.Type.UNREGISTER_SERVICE:
+            id = msg.get("id")
+            service_description = msg.get("service_description")
+            service_id = msg.get("service_id")
+            self.unregister_service(id, service_description, service_id)
+        elif oef_type == OEFMessage.Type.UNREGISTER_AGENT:
+            id = msg.get("id")
+            self.unregister_agent(id)
+        elif oef_type == OEFMessage.Type.SEARCH_AGENTS:
+            id = msg.get("id")
+            query = msg.get("query")
+            self.search_agents(id, query)
+        elif oef_type == OEFMessage.Type.SEARCH_SERVICES:
+            id = msg.get("id")
+            query = msg.get("query")
+            self.mail_stats.search_start(id)
+            self.search_services(id, query)
+        elif oef_type == OEFMessage.Type.BYTES:
+            id = msg.get("id")
+            dialogue_id = msg.get("dialogue_id")
+            content = msg.get("content")
+            self.send_message(id, dialogue_id, msg.to, content)
         else:
             raise ValueError("OEF request not recognized.")
 
-    def send_oef_agent_message(self, msg: OEFAgentMessage):
-        if isinstance(msg, OEFAgentByteMessage):
-            self.send_message(msg.msg_id, msg.dialogue_id, msg.destination, msg.content)
-        elif isinstance(msg, OEFAgentFIPAMessage):
-            self.send_fipa_message(msg)
-        else:
-            raise ValueError("OEF Agent message not recognized.")
-
-    def send_fipa_message(self, msg: OEFAgentFIPAMessage):
-        if isinstance(msg, OEFAgentCfp):
-            self.send_cfp(msg.msg_id, msg.dialogue_id, msg.destination, msg.target, msg.query)
-        elif isinstance(msg, OEFAgentPropose):
-            self.send_propose(msg.msg_id, msg.dialogue_id, msg.destination, msg.target, msg.proposal)
-        elif isinstance(msg, OEFAgentAccept):
-            self.send_accept(msg.msg_id, msg.dialogue_id, msg.destination, msg.target)
-        elif isinstance(msg, OEFAgentDecline):
-            self.send_decline(msg.msg_id, msg.dialogue_id, msg.destination, msg.target)
+    def send_fipa_message(self, msg: Message):
+        id = msg.get("id")
+        dialogue_id = msg.get("dialogue_id")
+        destination = msg.to
+        target = msg.get("target")
+        performative = msg.get("performative")
+        if performative == FIPAMessage.Performative.CFP:
+            query = msg.get("query")
+            self.send_cfp(id, dialogue_id, destination, target, query)
+        elif performative == FIPAMessage.Performative.PROPOSE:
+            proposal = msg.get("proposal")
+            self.send_propose(id, dialogue_id, destination, target, proposal)
+        elif performative == FIPAMessage.Performative.ACCEPT:
+            self.send_accept(id, dialogue_id, destination, target)
+        elif performative == FIPAMessage.Performative.DECLINE:
+            self.send_decline(id, dialogue_id, destination, target)
         else:
             raise ValueError("OEF FIPA message not recognized.")
 
@@ -205,7 +272,7 @@ class OEFConnection(Connection):
     def is_established(self) -> bool:
         return self.bridge.is_connected()
 
-    def send(self, msg: Union[OEFRequest, OEFAgentMessage]):
+    def send(self, msg: Message):
         self.bridge.send(msg)
 
 
