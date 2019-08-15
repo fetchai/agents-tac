@@ -32,11 +32,6 @@ from oef.messages import OEFErrorOperation, CFP_TYPES, PROPOSE_TYPES
 from oef.proxy import OEFNetworkProxy
 
 from tac.agents.v1.mail.base import Connection, MailBox
-from tac.agents.v1.mail.messages import OEFRegisterServiceRequest, OEFRegisterAgentRequest, \
-    OEFUnregisterServiceRequest, OEFUnregisterAgentRequest, OEFSearchAgentsRequest, OEFSearchServicesRequest, \
-    OEFRequest, OEFAgentMessage, OEFAgentByteMessage, OEFAgentFIPAMessage, OEFAgentCfp, OEFAgentPropose, OEFAgentAccept, \
-    OEFAgentDecline, OEFSearchResult, OEFGenericError, OEFDialogueError
-
 logger = logging.getLogger(__name__)
 
 
@@ -97,6 +92,7 @@ class OEFChannel(Agent):
         return self._oef_proxy.is_connected()
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
+        ByteMessage()
         self.in_queue.put(OEFAgentByteMessage(msg_id, dialogue_id, origin, content))
 
     def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES):

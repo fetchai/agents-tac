@@ -34,8 +34,8 @@ ProtocolId = str
 
 class Message:
 
-    def __init__(self, to: Address,
-                 sender: Address,
+    def __init__(self, to: Optional[Address] = None,
+                 sender: Optional[Address] = None,
                  body: Optional[Dict[str, Any]] = None,
                  protocol_id: Optional[ProtocolId] = None):
         self._to = to
@@ -91,46 +91,54 @@ class OEFMessage(Message):
         UNREGISTER_AGENT = "unregister_agent"
         SEARCH_SERVICES = "search_services"
         SEARCH_AGENTS = "search_agents"
+        BYTES = "bytes"
 
         SEARCH_RESULT = "search_result"
 
     def __init__(self, to: Address,
                  sender: Address,
-                 message_id: int,
                  oef_type: Type,
                  body: Dict[str, Any]):
         _body = dict(**body)
         _body["type"] = oef_type
-        _body["id"] = message_id
         super().__init__(to, sender, body=body, protocol_id=self.protocol_id)
 
     def check_consistency(self) -> bool:
         try:
-            assert self.is_set("id")
             assert self.is_set("type")
             oef_type = OEFMessage.Type(self.get("type"))
             if oef_type == OEFMessage.Type.REGISTER_SERVICE:
                 service_description = self.get("service_description")
                 service_id = self.get("service_id")
+                assert self.is_set("id")
                 assert isinstance(service_description, Description)
                 assert isinstance(service_id, str)
             elif oef_type == OEFMessage.Type.REGISTER_AGENT:
                 agent_description = self.get("agent_description")
+                assert self.is_set("id")
                 assert isinstance(agent_description, Description)
             elif oef_type == OEFMessage.Type.UNREGISTER_SERVICE:
                 service_id = self.get("service_id")
+                assert self.is_set("id")
                 assert isinstance(service_id, str)
             elif oef_type == OEFMessage.Type.UNREGISTER_AGENT:
-                pass
+                assert self.is_set("id")
             elif oef_type == OEFMessage.Type.SEARCH_SERVICES:
                 query = self.get("query")
+                assert self.is_set("id")
                 assert isinstance(query, Query)
             elif oef_type == OEFMessage.Type.SEARCH_AGENTS:
                 query = self.get("query")
+                assert self.is_set("id")
                 assert isinstance(query, Query)
             elif oef_type == OEFMessage.Type.SEARCH_RESULT:
                 agents = self.get("agents")
+                assert self.is_set("id")
                 assert type(agents) == list and all(type(a) == str for a in agents)
+            elif oef_type == OEFMessage.Type.BYTES:
+                content = self.get("content")
+                assert self.is_set("dialogue_id")
+                assert type(content) == bytes
             else:
                 raise ValueError("Type not recognized.")
         except (AssertionError, ValueError):
@@ -145,9 +153,8 @@ class ByteMessage(Message):
 
     def __init__(self, to: Address,
                  sender: Address,
-                 dialogue_id: DialogueLabel,
                  content: bytes = b""):
-        body = dict(dialogue_id=dialogue_id, content=content)
+        body = dict(content=content)
         super().__init__(to, sender, body=body, protocol_id=self.protocol_id)
 
 
