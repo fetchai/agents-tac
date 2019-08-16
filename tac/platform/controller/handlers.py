@@ -455,8 +455,6 @@ class GameHandler:
         """
         Dump the details of the simulation.
 
-        :param directory: the directory where experiments details are listed.
-        :param experiment_name: the name of the folder where the data about experiment will be saved.
         :return: None.
         """
         experiment_id = str(self.tac_parameters.experiment_id) if self.tac_parameters.experiment_id is not None else str(datetime.datetime.now())

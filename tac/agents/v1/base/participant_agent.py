@@ -66,14 +66,14 @@ class ParticipantAgent(Agent):
         :param debug: if True, run the agent in debug mode.
         """
         super().__init__(name, oef_addr, oef_port, private_key_pem, agent_timeout, debug=debug)
-        self.mail_box = OEFNetworkMailBox(self.crypto.public_key, oef_addr, oef_port)
+        self.mailbox = OEFNetworkMailBox(self.crypto.public_key, oef_addr, oef_port)
 
-        self._game_instance = GameInstance(name, strategy, self.mail_box.mail_stats, services_interval, pending_transaction_timeout, dashboard)  # type: Optional[GameInstance]
+        self._game_instance = GameInstance(name, strategy, self.mailbox.mail_stats, services_interval, pending_transaction_timeout, dashboard)  # type: Optional[GameInstance]
         self.max_reactions = max_reactions
 
-        self.controller_handler = ControllerHandler(self.crypto, self.liveness, self.game_instance, self.mail_box, self.name)
-        self.oef_handler = OEFHandler(self.crypto, self.liveness, self.game_instance, self.mail_box, self.name)
-        self.dialogue_handler = DialogueHandler(self.crypto, self.liveness, self.game_instance, self.mail_box, self.name)
+        self.controller_handler = ControllerHandler(self.crypto, self.liveness, self.game_instance, self.mailbox, self.name)
+        self.oef_handler = OEFHandler(self.crypto, self.liveness, self.game_instance, self.mailbox, self.name)
+        self.dialogue_handler = DialogueHandler(self.crypto, self.liveness, self.game_instance, self.mailbox, self.name)
 
     @property
     def game_instance(self) -> GameInstance:
@@ -101,9 +101,9 @@ class ParticipantAgent(Agent):
         :return: None
         """
         counter = 0
-        while (not self.mail_box.inbox.empty() and counter < self.max_reactions):
+        while (not self.mailbox.inbox.empty() and counter < self.max_reactions):
             counter += 1
-            msg = self.mail_box.inbox.get_nowait()  # type: Optional[Message]
+            msg = self.mailbox.inbox.get_nowait()  # type: Optional[Message]
             logger.debug("processing message of protocol={}".format(msg.protocol_id))
             if msg is not None:
                 if is_oef_message(msg):

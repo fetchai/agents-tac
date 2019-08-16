@@ -49,9 +49,7 @@ class MyAgent(Agent):
     def __init__(self, name: str, oef_addr: str, oef_port: int, agent_timeout: float = 1.0, private_key_pem_path: Optional[str] = None):
         """Agent initialization."""
         super().__init__(name, oef_addr, oef_port, private_key_pem_path, agent_timeout)
-        self.mail_box = FIPAMailBox(self.crypto.public_key, oef_addr, oef_port)
-        self.in_box = InBox(self.mail_box)
-        self.out_box = OutBox(self.mail_box)
+        self.mailbox = FIPAMailBox(self.crypto.public_key, oef_addr, oef_port)
 
         raise NotImplementedError("Your agent must implement the interface defined in Agent.")
 

@@ -83,15 +83,15 @@ class Agent:
 
         self.debug = debug
 
-        self.mail_box = None  # type: Optional[MailBox]
+        self.mailbox = None  # type: Optional[MailBox]
 
     @property
     def in_box(self) -> Optional[InBox]:
-        return self.mail_box.inbox if self.mail_box else None
+        return self.mailbox.inbox if self.mailbox else None
 
     @property
     def out_box(self) -> Optional[OutBox]:
-        return self.mail_box.outbox if self.mail_box else None
+        return self.mailbox.outbox if self.mailbox else None
 
     @property
     def name(self) -> str:
@@ -121,11 +121,11 @@ class Agent:
         :return the agent state.
         :raises ValueError: if the state does not satisfy any of the foreseen conditions.
         """
-        if self.mail_box is None or not self.mail_box.is_connected:
+        if self.mailbox is None or not self.mailbox.is_connected:
             return AgentState.INITIATED
-        elif self.mail_box.is_connected and self.liveness.is_stopped:
+        elif self.mailbox.is_connected and self.liveness.is_stopped:
             return AgentState.CONNECTED
-        elif self.mail_box.is_connected and not self.liveness.is_stopped:
+        elif self.mailbox.is_connected and not self.liveness.is_stopped:
             return AgentState.RUNNING
         else:
             raise ValueError("Agent state not recognized.")
@@ -136,8 +136,8 @@ class Agent:
 
         :return: None
         """
-        if not self.debug and not self.mail_box.is_connected:
-            self.mail_box.connect()
+        if not self.debug and not self.mailbox.is_connected:
+            self.mailbox.connect()
 
         self.liveness._is_stopped = False
         self._run_main_loop()
@@ -172,8 +172,8 @@ class Agent:
         """
         logger.debug("[{}]: Stopping message processing...".format(self.name))
         self.liveness._is_stopped = True
-        if self.mail_box.is_connected:
-            self.mail_box.disconnect()
+        if self.mailbox.is_connected:
+            self.mailbox.disconnect()
 
     @abstractmethod
     def setup(self) -> None:

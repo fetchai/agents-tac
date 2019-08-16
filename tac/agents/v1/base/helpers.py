@@ -19,11 +19,15 @@
 # ------------------------------------------------------------------------------
 
 """This module contains helper methods for base agent implementations."""
+import logging
 
 from tac.agents.v1.base.dialogues import DialogueLabel
 from tac.agents.v1.mail.messages import Message, OEFMessage
 from tac.helpers.crypto import Crypto
 from tac.platform.protocol import Response
+
+
+logger = logging.getLogger(__name__)
 
 
 def is_oef_message(msg: Message) -> bool:
@@ -49,9 +53,10 @@ def is_controller_message(msg: Message, crypto: Crypto) -> bool:
 
     try:
         byte_content = msg.get("content")
-        sender_pbk = msg.sender  # now the origin is the destination!
+        sender_pbk = msg.sender
         Response.from_pb(byte_content, sender_pbk, crypto)
-    except Exception:
+    except Exception as e:
+        logger.debug("Not a Controller message: {}".format(str(e)))
         return False
 
     return True

@@ -145,12 +145,12 @@ class OEFActions(OEFActionInterface):
             logger.debug("[{}]: Updating service directory as seller with goods supplied.".format(self.agent_name))
             goods_supplied_description = self.game_instance.get_service_description(is_supply=True)
             self.game_instance.goods_supplied_description = goods_supplied_description
-            self.mailbox.outbox.put(OEFMessage(to=None, sender=self.crypto.public_key, oef_type=OEFMessage.Type.UNREGISTER_SERVICE, id=1, service_description=self.game_instance.goods_supplied_description, service_id=""))
+            self.mailbox.outbox.put(OEFMessage(to=None, sender=self.crypto.public_key, oef_type=OEFMessage.Type.REGISTER_SERVICE, id=1, service_description=goods_supplied_description, service_id=""))
         if self.game_instance.strategy.is_registering_as_buyer:
             logger.debug("[{}]: Updating service directory as buyer with goods demanded.".format(self.agent_name))
             goods_demanded_description = self.game_instance.get_service_description(is_supply=False)
             self.game_instance.goods_demanded_description = goods_demanded_description
-            self.mailbox.outbox.put(OEFMessage(to=None, sender=self.crypto.public_key, oef_type=OEFMessage.Type.UNREGISTER_SERVICE, id=1, service_description=self.game_instance.goods_demanded_description, service_id=""))
+            self.mailbox.outbox.put(OEFMessage(to=None, sender=self.crypto.public_key, oef_type=OEFMessage.Type.REGISTER_SERVICE, id=1, service_description=goods_demanded_description, service_id=""))
 
     def search_services(self) -> None:
         """
