@@ -136,7 +136,7 @@ class MailBox(OEFAgent):
     @property
     def is_connected(self) -> bool:
         """Check whether the mailbox is connected to an OEF node."""
-        return True  # self._oef_proxy.is_connected() TODO!
+        return self._oef_proxy.is_connected()  # OEF-SDK 0.6.1 TODO!
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
         """
@@ -196,7 +196,6 @@ class MailBox(OEFAgent):
 
         while not success:
             try:
-                print('HERE!')
                 success = super().connect()
             except ConnectionError:
                 logger.error("Problems when connecting to the OEF. Retrying in 3 seconds...")

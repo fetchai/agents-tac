@@ -21,6 +21,7 @@
 
 """This script waits until the OEF is up and running."""
 
+import argparse
 import logging
 
 from oef.agents import OEFAgent
@@ -29,18 +30,23 @@ from oef.agents import OEFAgent
 logger = logging.getLogger(__name__)
 
 
+parser = argparse.ArgumentParser("oef_healthcheck", description=__doc__)
+parser.add_argument("--oef-addr", default="127.0.0.1", type=str, help="TCP/IP address of the OEF Agent")
+parser.add_argument("--oef-port", default=10000, type=int, help="TCP/IP port of the OEF Agent")
+
+
 class OEFHealthCheck(object):
     """A health check class."""
 
-    def __init__(self, addr: str, port: int):
+    def __init__(self, oef_addr: str, oef_port: int):
         """
         Initialize.
 
-        :param addr: IP address of the OEF node.
-        :param port: Port of the OEF node.
+        :param oef_addr: IP address of the OEF node.
+        :param oef_port: Port of the OEF node.
         """
-        self.addr = addr
-        self.port = port
+        self.oef_addr = oef_addr
+        self.oef_port = oef_port
 
     def run(self) -> bool:
         """
@@ -51,11 +57,11 @@ class OEFHealthCheck(object):
         result = False
         try:
             pbk = 'check'
-            print("Connecting to {}:{}".format(self.addr, self.port))
+            print("Connecting to {}:{}".format(self.oef_addr, self.oef_port))
             # core = AsyncioCore(logger=logger)  # OEF-SDK 0.6.1
             # core.run_threaded()  # OEF-SDK 0.6.1
             import asyncio
-            agent = OEFAgent(pbk, oef_addr=self.addr, oef_port=self.port, loop=asyncio.new_event_loop())
+            agent = OEFAgent(pbk, oef_addr=self.oef_addr, oef_port=self.oef_port, loop=asyncio.new_event_loop())
             # agent = OEFAgent(pbk, oef_addr=self.addr, oef_port=self.port, core=core)  # OEF-SDK 0.6.1
             agent.connect()
             agent.disconnect()
@@ -68,3 +74,14 @@ class OEFHealthCheck(object):
             return result
         # finally:
         # core.stop(). # OEF-SDK 0.6.1
+
+
+def main(oef_addr, oef_port):
+    """Launch the health check."""
+    oef_health_check = OEFHealthCheck(oef_addr, oef_port)
+    return oef_health_check.run()
+
+
+if __name__ == "__main__":
+    args = parser.parse_args()
+    main(args.oef_addr, args.oef_port)
