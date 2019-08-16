@@ -31,7 +31,7 @@ import logging
 from oef.query import Query, Constraint, GtEq
 
 from tac.agents.v1.agent import Liveness
-from tac.agents.v1.base.interfaces import ControllerActionInterface, OEFSearchActionInterface, DialogueActionInterface
+from tac.agents.v1.base.interfaces import ControllerActionInterface, OEFActionInterface, DialogueActionInterface
 from tac.agents.v1.base.game_instance import GameInstance
 from tac.agents.v1.mail.base import MailBox
 from tac.agents.v1.mail.messages import ByteMessage, OEFMessage
@@ -73,7 +73,7 @@ class ControllerActions(ControllerActionInterface):
         self.mailbox.outbox.put(message)
 
 
-class OEFActions(OEFSearchActionInterface):
+class OEFActions(OEFActionInterface):
     """The OEFActions class defines the actions of an agent towards the OEF."""
 
     def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, mailbox: MailBox, agent_name: str) -> None:

@@ -23,11 +23,11 @@ from threading import Timer
 from unittest.mock import patch, MagicMock
 
 from tac.agents.v1.agent import Agent
-from tac.agents.v1.mail.messages import OEFAgentByteMessage
+from tac.agents.v1.mail.messages import ByteMessage
 from tac.agents.v1.mail.oef import OEFNetworkMailBox
 
 
-class TestAgent(Agent):
+class TAgent(Agent):
     """A class to implement an agent for testing."""
 
     def __init__(self, **kwargs):
@@ -57,7 +57,7 @@ def test_that_when_debug_flag_true_we_can_run_main_loop_without_oef():
 
     In particular, assert that the methods 'act', 'react' and 'update' are called.
     """
-    test_agent = TestAgent(debug=True)
+    test_agent = TAgent(debug=True)
 
     test_agent.act = MagicMock(test_agent.act)
     test_agent.react = MagicMock(test_agent.react)
@@ -71,3 +71,20 @@ def test_that_when_debug_flag_true_we_can_run_main_loop_without_oef():
     test_agent.act.assert_called()
     test_agent.react.assert_called()
     test_agent.update.assert_called()
+
+
+
+def test_that_when_debug_flag_true_we_drop_out_messages():
+    """Test that, in debug mode, the out messages are dropped and a warning message is logged."""
+    with patch('logging.Logger.warning') as mock:
+        test_agent = TAgent(debug=True)
+        job = Timer(1.0, test_agent.stop)
+        job.start()
+        msg = ByteMessage(to="destination", sender=test_agent.crypto.public_key, message_id=0, dialogue_id=0, content=b"this is a message.")
+        test_agent.out_box.out_queue.put_nowait(msg)
+        test_agent.out_box.send_nowait()
+        test_agent.start()
+        job.join()
+
+        mock.assert_called_with("Dropping message of type '<class 'bytes'>' from the out queue...")
+

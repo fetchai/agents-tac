@@ -98,7 +98,7 @@ class ControllerActionInterface:
         """
 
 
-class OEFSearchReactionInterface:
+class OEFReactionInterface:
     """This interface contains the methods to react to events from the OEF."""
 
     @abstractmethod
@@ -132,7 +132,7 @@ class OEFSearchReactionInterface:
         """
 
 
-class OEFSearchActionInterface:
+class OEFActionInterface:
     """This interface contains the methods to interact with the OEF."""
 
     @abstractmethod

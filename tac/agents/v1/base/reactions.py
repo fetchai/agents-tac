@@ -34,12 +34,12 @@ from tac.agents.v1.agent import Liveness
 from tac.agents.v1.base.dialogues import Dialogue
 from tac.agents.v1.base.game_instance import GameInstance, GamePhase
 from tac.agents.v1.base.helpers import dialogue_label_from_transaction_id
-from tac.agents.v1.base.interfaces import ControllerReactionInterface, OEFSearchReactionInterface, \
+from tac.agents.v1.base.interfaces import ControllerReactionInterface, OEFReactionInterface, \
     DialogueReactionInterface
 from tac.agents.v1.base.negotiation_behaviours import FIPABehaviour
 from tac.agents.v1.base.stats_manager import EndState
 from tac.agents.v1.mail.base import MailBox
-from tac.agents.v1.mail.messages import Message
+from tac.agents.v1.mail.messages import Message, ByteMessage, FIPAMessage
 from tac.helpers.crypto import Crypto
 from tac.helpers.misc import TAC_DEMAND_DATAMODEL_NAME
 from tac.platform.protocol import Error, ErrorCode, GameData, TransactionConfirmation, StateUpdate, Register, \
@@ -183,10 +183,11 @@ class ControllerReactions(ControllerReactionInterface):
         :return: None
         """
         msg = GetStateUpdate(self.crypto.public_key, self.crypto).serialize()
-        self.mailbox.outbox.put(OEFAgentByteMessage(0, 0, self.game_instance.controller_pbk, msg))
+        self.mailbox.outbox.put(ByteMessage(to=self.game_instance.controller_pbk, sender=self.crypto.public_key,
+                                            message_id=0, dialogue_id=0, content=msg))
 
 
-class OEFReactions(OEFSearchReactionInterface):
+class OEFReactions(OEFReactionInterface):
     """The OEFReactions class defines the reactions of an agent towards the OEF."""
 
     def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, mailbox: MailBox, agent_name: str, rejoin: bool = False) -> None:
@@ -230,7 +231,7 @@ class OEFReactions(OEFSearchReactionInterface):
         else:
             logger.debug("[{}]: Unknown search id: search_id={}".format(self.agent_name, search_id))
 
-    def on_oef_error(self, oef_error: OEFGenericError) -> None:
+    def on_oef_error(self, oef_error: Message) -> None:
         """
         Handle an OEF error message.
 
@@ -239,9 +240,9 @@ class OEFReactions(OEFSearchReactionInterface):
         :return: None
         """
         logger.error("[{}]: Received OEF error: answer_id={}, operation={}"
-                     .format(self.agent_name, oef_error.answer_id, oef_error.operation))
+                     .format(self.agent_name, oef_error.get("id"), oef_error.get("operation")))
 
-    def on_dialogue_error(self, dialogue_error: OEFDialogueError) -> None:
+    def on_dialogue_error(self, dialogue_error: Message) -> None:
         """
         Handle a dialogue error message.
 
@@ -250,7 +251,7 @@ class OEFReactions(OEFSearchReactionInterface):
         :return: None
         """
         logger.error("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}"
-                     .format(self.agent_name, dialogue_error.answer_id, dialogue_error.dialogue_id, dialogue_error.origin))
+                     .format(self.agent_name, dialogue_error.get("id"), dialogue_error.get("dialogue_id"), dialogue_error.get("origin")))
 
     def _on_controller_search_result(self, agent_pbks: List[str]) -> None:
         """
@@ -301,9 +302,10 @@ class OEFReactions(OEFSearchReactionInterface):
             return
         for agent_pbk in agent_pbks:
             dialogue = self.game_instance.dialogues.create_self_initiated(agent_pbk, self.crypto.public_key, not is_searching_for_sellers)
-            cfp = OEFAgentCfp(STARTING_MESSAGE_ID, dialogue.dialogue_label.dialogue_id, agent_pbk, STARTING_MESSAGE_TARGET, json.dumps(services).encode('utf-8'))
+            cfp = FIPAMessage(to=agent_pbk, sender=self.crypto.public_key, msg_id=STARTING_MESSAGE_ID, dialogue_id=dialogue.dialogue_label.dialogue_id,
+                              target=STARTING_MESSAGE_TARGET, performative=FIPAMessage.Performative.CFP, query=json.dumps(services).encode('utf-8'))
             logger.debug("[{}]: send_cfp_as_{}: msg_id={}, dialogue_id={}, destination={}, target={}, services={}"
-                         .format(self.agent_name, dialogue.role, cfp.msg_id, cfp.dialogue_id, cfp.destination, cfp.target, services))
+                         .format(self.agent_name, dialogue.role, cfp.get("id"), cfp.get("dialogue_id"), cfp.to, cfp.get("target"), services))
             dialogue.outgoing_extend([cfp])
             self.mailbox.outbox.put(cfp)
 
@@ -318,7 +320,8 @@ class OEFReactions(OEFSearchReactionInterface):
         self.game_instance.controller_pbk = controller_pbk
         self.game_instance._game_phase = GamePhase.GAME_SETUP
         msg = Register(self.crypto.public_key, self.crypto, self.agent_name).serialize()
-        self.mailbox.outbox.put(OEFAgentByteMessage(0, 0, controller_pbk, msg))
+        self.mailbox.outbox.put(ByteMessage(to=self.game_instance.controller_pbk, sender=self.crypto.public_key,
+                                            message_id=0, dialogue_id=0, content=msg))
 
     def _rejoin_tac(self, controller_pbk: str) -> None:
         """
@@ -331,7 +334,8 @@ class OEFReactions(OEFSearchReactionInterface):
         self.game_instance.controller_pbk = controller_pbk
         self.game_instance._game_phase = GamePhase.GAME_SETUP
         msg = GetStateUpdate(self.crypto.public_key, self.crypto).serialize()
-        self.mailbox.outbox.put(OEFAgentByteMessage(0, 0, controller_pbk, msg))
+        self.mailbox.outbox.put(ByteMessage(to=self.game_instance.controller_pbk, sender=self.crypto.public_key,
+                                            message_id=0, dialogue_id=0, content=msg))
 
 
 class DialogueReactions(DialogueReactionInterface):
@@ -357,7 +361,7 @@ class DialogueReactions(DialogueReactionInterface):
         self.dialogues = game_instance.dialogues
         self.negotiation_behaviour = FIPABehaviour(crypto, game_instance, agent_name)
 
-    def on_new_dialogue(self, msg: OEFAgentCfp) -> None:
+    def on_new_dialogue(self, msg: Message) -> None:
         """
         React to a new dialogue.
 
@@ -365,15 +369,16 @@ class DialogueReactions(DialogueReactionInterface):
 
         :return: None
         """
-        services = json.loads(msg.query.decode('utf-8'))
+        assert msg.protocol_id == "fipa" and msg.get("performative") == FIPAMessage.Performative.CFP
+        services = json.loads(msg.get("query").decode('utf-8'))
         is_seller = services['description'] == TAC_DEMAND_DATAMODEL_NAME
-        dialogue = self.dialogues.create_opponent_initiated(msg.destination, msg.dialogue_id, is_seller)
+        dialogue = self.dialogues.create_opponent_initiated(msg.sender, msg.get("dialogue_id"), is_seller)
         logger.debug("[{}]: saving dialogue (as {}): dialogue_id={}".format(self.agent_name, dialogue.role, dialogue.dialogue_label.dialogue_id))
         results = self._handle(msg, dialogue)
         for result in results:
             self.mailbox.outbox.put(result)
 
-    def on_existing_dialogue(self, msg: OEFAgentMessage) -> None:
+    def on_existing_dialogue(self, msg: Message) -> None:
         """
         React to an existing dialogue.
 
@@ -387,7 +392,7 @@ class DialogueReactions(DialogueReactionInterface):
         for result in results:
             self.mailbox.outbox.put(result)
 
-    def on_unidentified_dialogue(self, msg: OEFAgentMessage) -> None:
+    def on_unidentified_dialogue(self, msg: Message) -> None:
         """
         React to an unidentified dialogue.
 
@@ -396,10 +401,11 @@ class DialogueReactions(DialogueReactionInterface):
         :return: None
         """
         logger.debug("[{}]: Unidentified dialogue.".format(self.agent_name))
-        result = OEFAgentByteMessage(msg.msg_id + 1, msg.dialogue_id, msg.destination, b'This message belongs to an unidentified dialogue.')
+        result = ByteMessage(to=msg.sender, sender=self.crypto.public_key, message_id=msg.get("id") + 1,
+                             dialogue_id=msg.get("dialogue_id"),  content=b'This message belongs to an unidentified dialogue.')
         self.mailbox.outbox.put(result)
 
-    def _handle(self, msg: OEFAgentMessage, dialogue: Dialogue) -> List[OEFAgentMessage]:
+    def _handle(self, msg: Message, dialogue: Dialogue) -> List[Message]:
         """
         Handle a message according to the defined behaviour.
 
@@ -409,16 +415,17 @@ class DialogueReactions(DialogueReactionInterface):
         :return: a list of agent messages
         """
         dialogue.incoming_extend([msg])
-        results = []  # type: List[OEFAgentMessage]
-        if isinstance(msg, OEFAgentCfp):
+        results = []  # type: List[Message]
+        performative = msg.get("performative")
+        if performative == FIPAMessage.Performative.CFP:
             result = self.negotiation_behaviour.on_cfp(msg, dialogue)
             results = [result]
-        elif isinstance(msg, OEFAgentPropose):
+        elif performative == FIPAMessage.Performative.PROPOSE:
             result = self.negotiation_behaviour.on_propose(msg, dialogue)
             results = [result]
-        elif isinstance(msg, OEFAgentAccept):
+        elif performative == FIPAMessage.Performative.ACCEPT:
             results = self.negotiation_behaviour.on_accept(msg, dialogue)
-        elif isinstance(msg, OEFAgentDecline):
+        elif performative == FIPAMessage.Performative.DECLINE:
             self.negotiation_behaviour.on_decline(msg, dialogue)
             results = []
 
