@@ -77,9 +77,9 @@ class ControllerAgent(Agent):
         super().__init__(name, oef_addr, oef_port, private_key_pem, agent_timeout, debug=debug)
         self.mail_box = OEFNetworkMailBox(self.crypto.public_key, oef_addr, oef_port)
 
-        self.oef_handler = OEFHandler(self.crypto, self.liveness, self.out_box, self.name)
+        self.oef_handler = OEFHandler(self.crypto, self.liveness, self.mail_box, self.name)
         self.agent_message_dispatcher = AgentMessageDispatcher(self)
-        self.game_handler = GameHandler(name, self.crypto, self.out_box, monitor, tac_parameters)
+        self.game_handler = GameHandler(name, self.crypto, self.mail_box, monitor, tac_parameters)
 
         self.max_reactions = max_reactions
         self.last_activity = datetime.datetime.now()
@@ -104,7 +104,7 @@ class ControllerAgent(Agent):
                          .format(self.name, pprint.pformat(self.game_handler.tac_parameters.__dict__)))
             self.oef_handler.register_tac()
             self.game_handler._game_phase = GamePhase.GAME_SETUP
-        if self.game_handler.game_phase == GamePhase.GAME_SETUP:
+        elif self.game_handler.game_phase == GamePhase.GAME_SETUP:
             now = datetime.datetime.now()
             if now >= self.game_handler.competition_start:
                 logger.debug("[{}]: Checking if we can start the competition.".format(self.name))
@@ -120,7 +120,7 @@ class ControllerAgent(Agent):
                     self.stop()
                     self.teardown()
                     return
-        if self.game_handler.game_phase == GamePhase.GAME:
+        elif self.game_handler.game_phase == GamePhase.GAME:
             current_time = datetime.datetime.now()
             inactivity_duration = current_time - self.last_activity
             if inactivity_duration > self.game_handler.tac_parameters.inactivity_timedelta:
@@ -134,8 +134,6 @@ class ControllerAgent(Agent):
                 self.teardown()
                 return
 
-        self.out_box.send_nowait()
-
     def react(self) -> None:
         """
         React to incoming events.
@@ -143,17 +141,15 @@ class ControllerAgent(Agent):
         :return: None
         """
         counter = 0
-        while (not self.in_box.is_in_queue_empty() and counter < self.max_reactions):
+        while (not self.in_box.empty() and counter < self.max_reactions):
             counter += 1
-            msg = self.in_box.get_no_wait()  # type: Optional[Message]
+            msg = self.in_box.get_nowait()  # type: Optional[Message]
             if msg is not None:
                 if is_oef_message(msg):
                     self.oef_handler.handle_oef_message(msg)
                 else:
                     self.agent_message_dispatcher.handle_agent_message(msg)
                     self.last_activity = datetime.datetime.now()
-
-        self.out_box.send_nowait()
 
     def update(self) -> None:
         """
@@ -171,7 +167,6 @@ class ControllerAgent(Agent):
         logger.debug("[{}]: Stopping myself...".format(self.name))
         if self.game_handler.game_phase == GamePhase.GAME or self.game_handler.game_phase == GamePhase.GAME_SETUP:
             self.game_handler.notify_competition_cancelled()
-            self.out_box.send_nowait()
         super().stop()
 
     def start(self) -> None:

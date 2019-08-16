@@ -80,6 +80,14 @@ class OutBox(object):
         super().__init__()
         self._queue = queue
 
+    def empty(self) -> bool:
+        """
+        Check for a message on the out queue.
+
+        :return: boolean indicating whether there is a message or not
+        """
+        return self._queue.empty()
+
     def put(self, item: Message) -> None:
         """Put an item into the queue."""
         logger.debug("Put a message in the queue...")

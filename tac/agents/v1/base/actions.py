@@ -107,7 +107,7 @@ class OEFActions(OEFActionInterface):
         search_id = self.game_instance.search.get_next_id()
         self.game_instance.search.ids_for_tac.add(search_id)
 
-        message = OEFMessage(to=None, sender=self.crypto.public_key, oef_type=OEFMessage.Type.SEARCH_SERVICES, id=0, query=query)
+        message = OEFMessage(to=None, sender=self.crypto.public_key, oef_type=OEFMessage.Type.SEARCH_SERVICES, id=search_id, query=query)
         self.mailbox.outbox.put(message)
 
     def update_services(self) -> None:

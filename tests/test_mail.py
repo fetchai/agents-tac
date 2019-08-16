@@ -20,7 +20,7 @@
 """This module contains tests for the mail module."""
 import time
 
-from tac.agents.v1.mail.messages import OEFMessage, FIPAMessage
+from tac.agents.v1.mail.messages import OEFMessage, FIPAMessage, ByteMessage
 from tac.agents.v1.mail.oef import OEFNetworkMailBox
 
 
@@ -32,7 +32,7 @@ def test_example(network_node):
     mailbox1.connect()
     mailbox2.connect()
 
-    msg = OEFMessage("mailbox2", "mailbox1", OEFMessage.Type.BYTES, id=0, dialogue_id=0, content=b"hello")
+    msg = ByteMessage("mailbox2", "mailbox1", message_id=0, dialogue_id=0, content=b"hello")
     mailbox1.send(msg)
     msg = FIPAMessage("mailbox2", "mailbox1", 0, 0, 0, FIPAMessage.Performative.CFP, query=None)
     mailbox1.send(msg)
@@ -43,7 +43,8 @@ def test_example(network_node):
     msg = FIPAMessage("mailbox2", "mailbox1", 0, 0, 0, FIPAMessage.Performative.DECLINE)
     mailbox1.send(msg)
 
-    time.sleep(1.0)
+    time.sleep(5.0)
+
     msg = mailbox2.inbox.get(block=True, timeout=1.0)
     assert msg.get("content") == b"hello"
     msg = mailbox2.inbox.get(block=True, timeout=1.0)

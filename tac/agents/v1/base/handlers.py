@@ -105,10 +105,10 @@ class ControllerHandler(ControllerActions, ControllerReactions):
         :return: None
         """
         assert msg.protocol_id == "bytes"
-        response = Response.from_pb(msg.get("content"), msg.to, self.crypto)
+        response = Response.from_pb(msg.get("content"), msg.sender, self.crypto)
         logger.debug("[{}]: Handling controller response. type={}".format(self.agent_name, type(response)))
         try:
-            if msg.to != self.game_instance.controller_pbk:
+            if msg.sender != self.game_instance.controller_pbk:
                 raise ValueError("The sender of the message is not the controller agent we registered with.")
 
             if isinstance(response, Error):

@@ -292,7 +292,7 @@ class AgentMessageDispatcher(object):
         assert msg.protocol_id == "bytes"
         msg_id = msg.get("id")
         dialogue_id = msg.get("dialogue_id")
-        sender = msg.get("sender")
+        sender = msg.sender
         logger.debug("[{}] on_message: msg_id={}, dialogue_id={}, origin={}" .format(self.controller_agent.name, msg.get("id"), dialogue_id, sender))
         request = self.decode(msg.get("content"), sender)
         handle_request = self.handlers.get(type(request), None)  # type: RequestHandler

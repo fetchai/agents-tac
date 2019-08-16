@@ -104,6 +104,7 @@ class ParticipantAgent(Agent):
         while (not self.mail_box.inbox.empty() and counter < self.max_reactions):
             counter += 1
             msg = self.mail_box.inbox.get_nowait()  # type: Optional[Message]
+            logger.debug("processing message of protocol={}".format(msg.protocol_id))
             if msg is not None:
                 if is_oef_message(msg):
                     self.oef_handler.handle_oef_message(msg)

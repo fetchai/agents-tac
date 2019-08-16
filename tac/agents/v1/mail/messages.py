@@ -19,9 +19,9 @@
 # ------------------------------------------------------------------------------
 
 """Protocol module v2."""
-from copy import deepcopy
+from copy import copy
 from enum import Enum
-from typing import Optional, Dict, Any, Union
+from typing import Optional, Any, Union
 
 from oef.messages import OEFErrorOperation
 from oef.query import Query
@@ -43,7 +43,7 @@ class Message:
         self._to = to
         self._sender = sender
         self._protocol_id = protocol_id
-        self._body = deepcopy(body) if body else {}
+        self._body = copy(body) if body else {}
 
     @property
     def to(self) -> Address:

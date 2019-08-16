@@ -33,7 +33,7 @@ def is_oef_message(msg: Message) -> bool:
     :param msg: the message
     :return: boolean indicating whether or not the message is from the oef
     """
-    return msg.protocol_id == "fipa" and msg.get("type") in set(OEFMessage.Type)
+    return msg.protocol_id == "oef" and msg.get("type") in set(OEFMessage.Type)
 
 
 def is_controller_message(msg: Message, crypto: Crypto) -> bool:

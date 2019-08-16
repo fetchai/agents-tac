@@ -32,7 +32,7 @@ from oef.messages import OEFErrorOperation, CFP_TYPES, PROPOSE_TYPES
 from oef.proxy import OEFNetworkProxy
 
 from tac.agents.v1.mail.base import Connection, MailBox
-from tac.agents.v1.mail.messages import OEFMessage, FIPAMessage, Message
+from tac.agents.v1.mail.messages import OEFMessage, FIPAMessage, Message, ByteMessage
 
 logger = logging.getLogger(__name__)
 
@@ -94,12 +94,11 @@ class OEFChannel(Agent):
         return self._oef_proxy.is_connected()
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
-        msg = OEFMessage(to=self.public_key,
-                         sender=origin,
-                         msg_id=msg_id,
-                         dialogue_id=dialogue_id,
-                         oef_type=OEFMessage.Type.BYTES,
-                         content=content)
+        msg = ByteMessage(to=self.public_key,
+                          sender=origin,
+                          message_id=msg_id,
+                          dialogue_id=dialogue_id,
+                          content=content)
         self.in_queue.put(msg)
 
     def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES):
@@ -171,6 +170,10 @@ class OEFChannel(Agent):
             self.send_oef_message(msg)
         elif msg.protocol_id == "fipa":
             self.send_fipa_message(msg)
+        elif msg.protocol_id == "bytes":
+            self.send_message(msg.get("id"), msg.get("dialogue_id"), msg.to, msg.get("content"))
+        elif msg.protocol_id == "default":
+            self.send_message(msg.get("id"), 0, msg.to, msg.get("content"))
         else:
             raise ValueError("Cannot send message.")
 
@@ -263,6 +266,8 @@ class OEFConnection(Connection):
         self._stopped = True
         self.in_thread.join()
         self.out_thread.join()
+        self.in_thread = Thread(target=self.bridge.run)
+        self.out_thread = Thread(target=self._fetch)
         self.bridge.disconnect()
 
     @property
