@@ -81,13 +81,12 @@ class TestSimulation:
                                            start_time=datetime.datetime.now() + datetime.timedelta(0, 2),
                                            registration_timeout=8,
                                            competition_timeout=20,
-                                           inactivity_timeout=10)
+                                           inactivity_timeout=15)
 
-        cls.tac_controller = ControllerAgent('controller', '127.0.0.1', 1000, cls.tac_parameters, loop=asyncio.get_event_loop())
+        cls.tac_controller = ControllerAgent('controller', '127.0.0.1', 10000, cls.tac_parameters)
 
         # run the simulation
         try:
-            # generate task for the controller
             controller_thread = Thread(target=cls.tac_controller.start)
 
             baseline_threads = [Thread(target=_run_baseline_agent, args=[baseline_agent, "v1"])

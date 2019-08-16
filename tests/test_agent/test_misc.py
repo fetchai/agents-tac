@@ -26,7 +26,7 @@ from tac.agents.v1.agent import Agent
 from tac.agents.v1.mail import FIPAMailBox, InBox, OutBox, OutContainer
 
 
-class TestAgent(Agent):
+class TAgent(Agent):
     """A class to implement an agent for testing."""
 
     def __init__(self, **kwargs):
@@ -52,7 +52,7 @@ def test_that_when_debug_flag_true_we_can_run_main_loop_without_oef():
 
     In particular, assert that the methods 'act', 'react' and 'update' are called.
     """
-    test_agent = TestAgent(debug=True)
+    test_agent = TAgent(debug=True)
 
     test_agent.act = MagicMock(test_agent.act)
     test_agent.react = MagicMock(test_agent.react)
@@ -71,7 +71,7 @@ def test_that_when_debug_flag_true_we_can_run_main_loop_without_oef():
 def test_that_when_debug_flag_true_we_drop_out_messages():
     """Test that, in debug mode, the out messages are dropped and a warning message is logged."""
     with patch('logging.Logger.warning') as mock:
-        test_agent = TestAgent(debug=True)
+        test_agent = TAgent(debug=True)
         job = Timer(1.0, test_agent.stop)
         job.start()
         msg = OutContainer(b"this is a message.", 0, 0, "destination")
