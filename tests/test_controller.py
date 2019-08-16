@@ -19,15 +19,19 @@
 
 """This module contains the tests of the controller module."""
 
-import asyncio
 import datetime
+import logging
 from threading import Thread
 
 from oef.agents import OEFAgent
+# from oef.core import AsyncioCore  # OEF-SDK 0.6.1
 
 from tac.helpers.crypto import Crypto
-from tac.platform.controller import ControllerAgent, TACParameters
+from tac.platform.controller.controller_agent import ControllerAgent
+from tac.platform.controller.tac_parameters import TACParameters
 from tac.platform.protocol import Register
+
+logger = logging.getLogger(__name__)
 
 
 class TestController:
@@ -43,7 +47,12 @@ class TestController:
         job.start()
 
         crypto = Crypto()
-        agent1 = OEFAgent(crypto.public_key, "127.0.0.1", 10000, loop=asyncio.new_event_loop())
+
+        # core = AsyncioCore(logger=logger)  # OEF-SDK 0.6.1
+        # core.run_threaded()  # OEF-SDK 0.6.1
+        import asyncio
+        agent1 = OEFAgent(crypto.public_key, oef_addr='127.0.0.1', oef_port=10000, loop=asyncio.new_event_loop())
+        # agent1 = OEFAgent(crypto.public_key, oef_addr='127.0.0.1', oef_port=10000, core=core)  # OEF-SDK 0.6.1
         agent1.connect()
         agent1.send_message(0, 0, controller_agent.public_key, Register(agent1.public_key, crypto, 'agent_name').serialize())
 

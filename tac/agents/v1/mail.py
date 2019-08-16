@@ -27,7 +27,6 @@ This module contains the classes required for message management.
 - OutBox: Temporarily stores and sends messages to the OEF and other agents.
 """
 
-import asyncio
 import datetime
 import logging
 import time
@@ -36,6 +35,7 @@ from threading import Thread
 from typing import List, Optional, Any, Union, Dict
 
 from oef.agents import OEFAgent
+# from oef.core import AsyncioCore  # OEF-SDK 0.6.1
 from oef.messages import PROPOSE_TYPES, CFP_TYPES, CFP, Decline, Propose, Accept, Message as ByteMessage, \
     SearchResult, OEFErrorOperation, OEFErrorMessage, DialogueErrorMessage
 from oef.query import Query
@@ -111,7 +111,11 @@ class MailBox(OEFAgent):
 
         :return: None
         """
-        super().__init__(public_key, oef_addr, oef_port, loop=asyncio.new_event_loop())
+        # core = AsyncioCore(logger=logger)  # OEF-SDK 0.6.1
+        # core.run_threaded()  # OEF-SDK 0.6.1
+        import asyncio
+        super().__init__(public_key, oef_addr=oef_addr, oef_port=oef_port, loop=asyncio.new_event_loop())
+        # super().__init__(public_key, oef_addr=oef_addr, oef_port=oef_port, core=core)  # OEF-SDK 0.6.1
         self.in_queue = Queue()
         self.out_queue = Queue()
         self._mail_box_thread = None  # type: Optional[Thread]
@@ -132,7 +136,7 @@ class MailBox(OEFAgent):
     @property
     def is_connected(self) -> bool:
         """Check whether the mailbox is connected to an OEF node."""
-        return self._oef_proxy.is_connected()
+        return self._oef_proxy.is_connected()  # OEF-SDK 0.6.1 TODO!
 
     def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
         """
@@ -198,6 +202,7 @@ class MailBox(OEFAgent):
                 success = False
                 time.sleep(3.0)
 
+        logger.debug("Successfully connected to OEF!")
         return success
 
     def start(self) -> None:
@@ -216,9 +221,11 @@ class MailBox(OEFAgent):
 
         :return: None
         """
+        # self.core.stop()  # OEF-SDK 0.6.1
         self._loop.call_soon_threadsafe(super().stop)
         if self._mail_box_thread is not None:
             self._mail_box_thread.join()
+            self.disconnect()
             self._mail_box_thread = None
 
 
@@ -335,10 +342,10 @@ class OutBox(object):
                 logger.debug("Outgoing message type: type={}".format(type(out.message)))
                 self.mail_box.send_message(out.message_id, out.dialogue_id, out.destination, out.message)
             elif isinstance(out, OutContainer) and (out.service_description is not None) and (not out.is_unregister):
-                logger.debug("Outgoing register service description: message_id={}".format(type(out.service_description), out.message_id))
+                logger.debug("Outgoing register service description: type={}, message_id={}".format(type(out.service_description), out.message_id))
                 self.mail_box.register_service(out.message_id, out.service_description)
             elif isinstance(out, OutContainer) and out.service_description is not None:
-                logger.debug("Outgoing unregister service description: message_id={}".format(type(out.service_description), out.message_id))
+                logger.debug("Outgoing unregister service description: type={}, message_id={}".format(type(out.service_description), out.message_id))
                 self.mail_box.unregister_service(out.message_id, out.service_description)
             elif isinstance(out, OutContainer) and out.query is not None:
                 logger.debug("Outgoing query: search_id={}".format(out.search_id))
