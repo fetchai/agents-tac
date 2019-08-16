@@ -20,7 +20,7 @@
 # ------------------------------------------------------------------------------
 
 """Start a Visdom server, an OEF node instance, and run the simulation script."""
-
+import importlib
 import inspect
 import os
 import platform
@@ -37,6 +37,7 @@ from tac.helpers.oef_health_check import OEFHealthCheck
 
 CUR_PATH = inspect.getfile(inspect.currentframe())
 ROOT_DIR = os.path.join(os.path.dirname(CUR_PATH), "..")
+stack_tracer = importlib.import_module("stack_tracer", package=CUR_PATH)
 
 
 class VisdomServer:
@@ -109,4 +110,6 @@ if __name__ == '__main__':
     simulation_params = build_simulation_parameters(args)
 
     with VisdomServer(), OEFNode():
+        stack_tracer.start_trace(os.path.join(ROOT_DIR, "data/trace.html"), interval=5, auto=True)
         tac.platform.simulation.run(simulation_params)
+        stack_tracer.stop_trace()
