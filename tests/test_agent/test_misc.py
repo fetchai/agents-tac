@@ -72,19 +72,3 @@ def test_that_when_debug_flag_true_we_can_run_main_loop_without_oef():
     test_agent.react.assert_called()
     test_agent.update.assert_called()
 
-
-
-def test_that_when_debug_flag_true_we_drop_out_messages():
-    """Test that, in debug mode, the out messages are dropped and a warning message is logged."""
-    with patch('logging.Logger.warning') as mock:
-        test_agent = TAgent(debug=True)
-        job = Timer(1.0, test_agent.stop)
-        job.start()
-        msg = ByteMessage(to="destination", sender=test_agent.crypto.public_key, message_id=0, dialogue_id=0, content=b"this is a message.")
-        test_agent.out_box.out_queue.put_nowait(msg)
-        test_agent.out_box.send_nowait()
-        test_agent.start()
-        job.join()
-
-        mock.assert_called_with("Dropping message of type '<class 'bytes'>' from the out queue...")
-
