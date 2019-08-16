@@ -19,7 +19,6 @@
 
 """This module contains the tests of the simulation."""
 
-import asyncio
 import datetime
 from threading import Thread
 from typing import List
