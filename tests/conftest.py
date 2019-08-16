@@ -103,7 +103,7 @@ def network_node(oef_addr, oef_port, pytestconfig):
 
     if pytestconfig.getoption("ci"):
         logger.warning("Skipping creation of OEF Docker image...")
-        success = _wait_for_oef(max_attempts=15, sleep_rate=3.0)
+        success = _wait_for_oef(max_attempts=10, sleep_rate=2.0)
         if not success:
             pytest.fail("OEF doesn't work. Exiting...")
         else:
@@ -115,7 +115,7 @@ def network_node(oef_addr, oef_port, pytestconfig):
 
         # wait for the setup...
         logger.info("Setting up the OEF node...")
-        success = _wait_for_oef(max_attempts=15, sleep_rate=3.0)
+        success = _wait_for_oef(max_attempts=10, sleep_rate=2.0)
 
         if not success:
             c.stop()

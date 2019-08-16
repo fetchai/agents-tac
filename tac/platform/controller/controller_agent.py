@@ -197,7 +197,7 @@ class ControllerAgent(Agent):
             self.stop()
 
         # here only if an error occurred
-        logger.debug("[{}]: Trying to rejoin in 5 seconds...".format(self.name))
+        logger.debug("[{}]: Trying to rejoin in 2 seconds...".format(self.name))
         time.sleep(2.0)
         self.start()
 

@@ -27,7 +27,7 @@ from tac.agents.v1.agent import Agent, AgentState
 from tac.agents.v1.mail import FIPAMailBox
 
 
-class TestAgent(Agent):
+class TAgent(Agent):
     """A class to implement an agent for testing."""
 
     def __init__(self):
@@ -53,14 +53,14 @@ def test_agent_initiated():
 
 def test_agent_connected(network_node):
     """Test that when the agent is connected, her state is AgentState.CONNECTED."""
-    test_agent = TestAgent()
+    test_agent = TAgent()
     test_agent.mail_box.connect()
     assert test_agent.agent_state == AgentState.CONNECTED
 
 
 def test_agent_running(network_node):
     """Test that when the agent is running, her state is AgentState.RUNNING."""
-    test_agent = TestAgent()
+    test_agent = TAgent()
     job = Thread(target=test_agent.start)
     job.start()
     time.sleep(1.0)
