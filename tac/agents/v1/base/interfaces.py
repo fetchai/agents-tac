@@ -22,7 +22,7 @@
 
 from abc import abstractmethod
 
-from tac.agents.v1.mail.messages import OEFAgentMessage, OEFDialogueError, OEFGenericError, OEFSearchResult
+from tac.agents.v1.mail.messages import Message
 from tac.platform.protocol import Error, TransactionConfirmation, StateUpdate, GameData
 
 
@@ -30,7 +30,7 @@ class ControllerReactionInterface:
     """This interface contains the methods to react to events from the ControllerAgent."""
 
     @abstractmethod
-    def on_dialogue_error(self, dialogue_error_msg: OEFDialogueError) -> None:
+    def on_dialogue_error(self, dialogue_error_msg: Message) -> None:
         """
         Handle dialogue error event emitted by the controller.
 
@@ -102,7 +102,7 @@ class OEFSearchReactionInterface:
     """This interface contains the methods to react to events from the OEF."""
 
     @abstractmethod
-    def on_search_result(self, search_result: OEFSearchResult) -> None:
+    def on_search_result(self, search_result: Message) -> None:
         """
         Handle search results.
 
@@ -112,7 +112,7 @@ class OEFSearchReactionInterface:
         """
 
     @abstractmethod
-    def on_oef_error(self, oef_error: OEFGenericError) -> None:
+    def on_oef_error(self, oef_error: Message) -> None:
         """
         Handle an OEF error message.
 
@@ -122,7 +122,7 @@ class OEFSearchReactionInterface:
         """
 
     @abstractmethod
-    def on_dialogue_error(self, dialogue_error: OEFDialogueError) -> None:
+    def on_dialogue_error(self, dialogue_error: Message) -> None:
         """
         Handle a dialogue error message.
 
@@ -180,7 +180,7 @@ class DialogueReactionInterface:
     """This interface contains the methods to react to events from other agents."""
 
     @abstractmethod
-    def on_new_dialogue(self, msg: OEFAgentMessage) -> None:
+    def on_new_dialogue(self, msg: Message) -> None:
         """
         React to a message for a new dialogue.
 
@@ -194,7 +194,7 @@ class DialogueReactionInterface:
         """
 
     @abstractmethod
-    def on_existing_dialogue(self, msg: OEFAgentMessage) -> None:
+    def on_existing_dialogue(self, msg: Message) -> None:
         """
         React to a message of an existing dialogue.
 
@@ -204,7 +204,7 @@ class DialogueReactionInterface:
         """
 
     @abstractmethod
-    def on_unidentified_dialogue(self, msg: OEFAgentMessage) -> None:
+    def on_unidentified_dialogue(self, msg: Message) -> None:
         """
         React to a message of an unidentified dialogue.
 

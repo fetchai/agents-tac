@@ -202,11 +202,6 @@ class OEFChannel(Agent):
             query = msg.get("query")
             self.mail_stats.search_start(id)
             self.search_services(id, query)
-        elif oef_type == OEFMessage.Type.BYTES:
-            id = msg.get("id")
-            dialogue_id = msg.get("dialogue_id")
-            content = msg.get("content")
-            self.send_message(id, dialogue_id, msg.to, content)
         else:
             raise ValueError("OEF request not recognized.")
 
@@ -223,6 +218,8 @@ class OEFChannel(Agent):
             proposal = msg.get("proposal")
             self.send_propose(id, dialogue_id, destination, target, proposal)
         elif performative == FIPAMessage.Performative.ACCEPT:
+            self.send_accept(id, dialogue_id, destination, target)
+        elif performative == FIPAMessage.Performative.MATCH_ACCEPT:
             self.send_accept(id, dialogue_id, destination, target)
         elif performative == FIPAMessage.Performative.DECLINE:
             self.send_decline(id, dialogue_id, destination, target)

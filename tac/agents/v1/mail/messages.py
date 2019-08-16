@@ -42,8 +42,8 @@ class Message:
                  **body):
         self._to = to
         self._sender = sender
-        self._body = deepcopy(body) if body else {}
         self._protocol_id = protocol_id
+        self._body = deepcopy(body) if body else {}
 
     @property
     def to(self) -> Address:
@@ -95,7 +95,6 @@ class OEFMessage(Message):
         SEARCH_AGENTS = "search_agents"
         OEF_ERROR = "oef_error"
         DIALOGUE_ERROR = "dialogue_error"
-        BYTES = "bytes"
 
         SEARCH_RESULT = "search_result"
 
@@ -103,9 +102,7 @@ class OEFMessage(Message):
                  sender: Optional[Address] = None,
                  oef_type: Optional[Type] = None,
                  **body):
-        _body = dict(**body)
-        _body["type"] = oef_type
-        super().__init__(to=to, sender=sender, protocol_id=self.protocol_id, **_body)
+        super().__init__(to=to, sender=sender, protocol_id=self.protocol_id, type=oef_type, **body)
 
     def check_consistency(self) -> bool:
         try:
@@ -154,12 +151,6 @@ class OEFMessage(Message):
                 assert self.is_set("id")
                 assert self.is_set("dialogue_id")
                 assert self.is_set("origin")
-            elif oef_type == OEFMessage.Type.BYTES:
-                assert self.is_set("id")
-                assert self.is_set("dialogue_id")
-                assert self.is_set("content")
-                content = self.get("content")
-                assert type(content) == bytes
             else:
                 raise ValueError("Type not recognized.")
         except (AssertionError, ValueError):
@@ -171,6 +162,18 @@ class OEFMessage(Message):
 class ByteMessage(Message):
 
     protocol_id = "bytes"
+
+    def __init__(self, to: Optional[Address] = None,
+                 sender: Optional[Address] = None,
+                 message_id: Optional[int] = None,
+                 dialogue_id: Optional[int] = None,
+                 content: bytes = b""):
+        super().__init__(to=to, sender=sender, id=message_id, dialogue_id=dialogue_id, content=content)
+
+
+class SimpleByteMessage(Message):
+
+    protocol_id = "default"
 
     def __init__(self, to: Optional[Address] = None,
                  sender: Optional[Address] = None,
@@ -186,6 +189,7 @@ class FIPAMessage(Message):
         CFP = "cfp"
         PROPOSE = "propose"
         ACCEPT = "accept"
+        MATCH_ACCEPT = "match_accept"
         DECLINE = "decline"
 
     def __init__(self, to: Optional[Address] = None,
@@ -195,12 +199,14 @@ class FIPAMessage(Message):
                  target: Optional[int] = None,
                  performative: Optional[Union[str, Performative]] = None,
                  **body):
-        _body = dict(**body)
-        _body["id"] = msg_id
-        _body["dialogue_id"] = dialogue_id
-        _body["target"] = target
-        _body["performative"] = FIPAMessage.Performative(performative)
-        super().__init__(to, sender, protocol_id=self.protocol_id, **_body)
+        super().__init__(to,
+                         sender,
+                         protocol_id=self.protocol_id,
+                         id=msg_id,
+                         dialogue_id=dialogue_id,
+                         target=target,
+                         performative=FIPAMessage.Performative(performative),
+                         **body)
 
     def check_consistency(self) -> bool:
         try:
@@ -212,7 +218,9 @@ class FIPAMessage(Message):
             elif performative == FIPAMessage.Performative.PROPOSE:
                 proposal = self.get("proposal")
                 assert type(proposal) == list and all(isinstance(d, Description) or type(d) == bytes for d in proposal)
-            elif performative == FIPAMessage.Performative.ACCEPT or performative == FIPAMessage.Performative.DECLINE:
+            elif performative == FIPAMessage.Performative.ACCEPT \
+                    or performative == FIPAMessage.Performative.MATCH_ACCEPT \
+                    or performative == FIPAMessage.Performative.DECLINE:
                 pass
             else:
                 raise ValueError("Performative not recognized.")

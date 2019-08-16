@@ -29,17 +29,11 @@ from tac.agents.v1.base.game_instance import GameInstance, GamePhase
 from tac.agents.v1.base.handlers import DialogueHandler, ControllerHandler, OEFHandler
 from tac.agents.v1.base.helpers import is_oef_message, is_controller_message
 from tac.agents.v1.base.strategy import Strategy
-from tac.agents.v1.mail.messages import OEFMessage, OEFResponse, OEFAgentByteMessage, OEFAgentCfp, OEFAgentPropose, \
-    OEFAgentDecline, OEFAgentAccept
+from tac.agents.v1.mail.messages import Message
 from tac.agents.v1.mail.oef import OEFNetworkMailBox
 from tac.gui.dashboards.agent import AgentDashboard
 
 logger = logging.getLogger(__name__)
-
-
-ControllerMessage = OEFAgentByteMessage
-AgentMessage = Union[OEFAgentByteMessage, OEFAgentCfp, OEFAgentPropose, OEFAgentAccept, OEFAgentDecline]
-Message = Union[ControllerMessage, AgentMessage]
 
 
 class ParticipantAgent(Agent):
@@ -109,16 +103,13 @@ class ParticipantAgent(Agent):
         counter = 0
         while (not self.mail_box.inbox.empty() and counter < self.max_reactions):
             counter += 1
-            msg = self.mail_box.inbox.get_nowait()  # type: Optional[OEFMessage]
+            msg = self.mail_box.inbox.get_nowait()  # type: Optional[Message]
             if msg is not None:
                 if is_oef_message(msg):
-                    msg: OEFResponse
                     self.oef_handler.handle_oef_message(msg)
                 elif is_controller_message(msg, self.crypto):
-                    msg: ControllerMessage
                     self.controller_handler.handle_controller_message(msg)
                 else:
-                    msg: AgentMessage
                     self.dialogue_handler.handle_dialogue_message(msg)
 
     def update(self) -> None:

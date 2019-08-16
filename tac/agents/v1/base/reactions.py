@@ -39,8 +39,7 @@ from tac.agents.v1.base.interfaces import ControllerReactionInterface, OEFSearch
 from tac.agents.v1.base.negotiation_behaviours import FIPABehaviour
 from tac.agents.v1.base.stats_manager import EndState
 from tac.agents.v1.mail.base import MailBox
-from tac.agents.v1.mail.messages import OEFAgentByteMessage, OEFAgentCfp, OEFAgentPropose, OEFAgentAccept, \
-    OEFAgentDecline, OEFSearchResult, OEFGenericError, OEFDialogueError, OEFAgentMessage
+from tac.agents.v1.mail.messages import Message
 from tac.helpers.crypto import Crypto
 from tac.helpers.misc import TAC_DEMAND_DATAMODEL_NAME
 from tac.platform.protocol import Error, ErrorCode, GameData, TransactionConfirmation, StateUpdate, Register, \
@@ -73,7 +72,7 @@ class ControllerReactions(ControllerReactionInterface):
         self.mailbox = mailbox
         self.agent_name = agent_name
 
-    def on_dialogue_error(self, dialogue_error_msg: OEFDialogueError) -> None:
+    def on_dialogue_error(self, dialogue_error_msg: Message) -> None:
         """
         Handle dialogue error event emitted by the controller.
 
@@ -81,8 +80,9 @@ class ControllerReactions(ControllerReactionInterface):
 
         :return: None
         """
+        assert dialogue_error_msg.protocol_id == "oef"
         logger.warning("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}"
-                       .format(self.agent_name, dialogue_error_msg.msg_id, dialogue_error_msg.dialogue_id, dialogue_error_msg.origin))
+                       .format(self.agent_name, dialogue_error_msg.get("id"), dialogue_error_msg.get("dialogue_id"), dialogue_error_msg.get("origin")))
 
     def on_start(self, game_data: GameData) -> None:
         """
@@ -209,7 +209,7 @@ class OEFReactions(OEFSearchReactionInterface):
         self.agent_name = agent_name
         self.rejoin = rejoin
 
-    def on_search_result(self, search_result: OEFSearchResult) -> None:
+    def on_search_result(self, search_result: Message) -> None:
         """
         Split the search results from the OEF.
 
@@ -217,14 +217,16 @@ class OEFReactions(OEFSearchReactionInterface):
 
         :return: None
         """
-        search_id = search_result.search_id
-        logger.debug("[{}]: on search result: {} {}".format(self.agent_name, search_id, search_result.agents))
+        assert search_result.protocol_id == "oef"
+        search_id = search_result.get("id")
+        agents = search_result.get("agents")
+        logger.debug("[{}]: on search result: {} {}".format(self.agent_name, search_id, agents))
         if search_id in self.game_instance.search.ids_for_tac:
-            self._on_controller_search_result(search_result.agents)
+            self._on_controller_search_result(agents)
         elif search_id in self.game_instance.search.ids_for_sellers:
-            self._on_services_search_result(search_result.agents, is_searching_for_sellers=True)
+            self._on_services_search_result(agents, is_searching_for_sellers=True)
         elif search_id in self.game_instance.search.ids_for_buyers:
-            self._on_services_search_result(search_result.agents, is_searching_for_sellers=False)
+            self._on_services_search_result(agents, is_searching_for_sellers=False)
         else:
             logger.debug("[{}]: Unknown search id: search_id={}".format(self.agent_name, search_id))
 
