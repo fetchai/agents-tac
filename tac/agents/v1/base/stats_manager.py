@@ -27,7 +27,7 @@ from typing import Dict
 
 import numpy as np
 
-from tac.agents.v1.mail import MailStats
+from tac.agents.v1.mail.oef import MailStats
 
 
 class EndState(Enum):

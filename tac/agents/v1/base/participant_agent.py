@@ -24,23 +24,16 @@ import logging
 import time
 from typing import Optional, Union
 
-from oef.messages import CFP, Decline, Propose, Accept, Message as SimpleMessage, \
-    SearchResult, OEFErrorMessage, DialogueErrorMessage
-
 from tac.agents.v1.agent import Agent
 from tac.agents.v1.base.game_instance import GameInstance, GamePhase
 from tac.agents.v1.base.handlers import DialogueHandler, ControllerHandler, OEFHandler
-from tac.agents.v1.base.helpers import is_oef_message, is_controller_message
+from tac.agents.v1.base.helpers import is_oef_message, is_controller_message, is_fipa_message
 from tac.agents.v1.base.strategy import Strategy
-from tac.agents.v1.mail import FIPAMailBox, InBox, OutBox
+from tac.agents.v1.mail.messages import Message
+from tac.agents.v1.mail.oef import OEFNetworkMailBox
 from tac.gui.dashboards.agent import AgentDashboard
 
 logger = logging.getLogger(__name__)
-
-OEFMessage = Union[SearchResult, OEFErrorMessage, DialogueErrorMessage]
-ControllerMessage = SimpleMessage
-AgentMessage = Union[SimpleMessage, CFP, Propose, Accept, Decline]
-Message = Union[OEFMessage, ControllerMessage, AgentMessage]
 
 
 class ParticipantAgent(Agent):
@@ -73,16 +66,14 @@ class ParticipantAgent(Agent):
         :param debug: if True, run the agent in debug mode.
         """
         super().__init__(name, oef_addr, oef_port, private_key_pem, agent_timeout, debug=debug)
-        self.mail_box = FIPAMailBox(self.crypto.public_key, oef_addr, oef_port)
-        self.in_box = InBox(self.mail_box)
-        self.out_box = OutBox(self.mail_box)
+        self.mailbox = OEFNetworkMailBox(self.crypto.public_key, oef_addr, oef_port)
 
-        self._game_instance = GameInstance(name, strategy, self.mail_box.mail_stats, services_interval, pending_transaction_timeout, dashboard)  # type: Optional[GameInstance]
+        self._game_instance = GameInstance(name, strategy, self.mailbox.mail_stats, services_interval, pending_transaction_timeout, dashboard)  # type: Optional[GameInstance]
         self.max_reactions = max_reactions
 
-        self.controller_handler = ControllerHandler(self.crypto, self.liveness, self.game_instance, self.out_box, self.name)
-        self.oef_handler = OEFHandler(self.crypto, self.liveness, self.game_instance, self.out_box, self.name)
-        self.dialogue_handler = DialogueHandler(self.crypto, self.liveness, self.game_instance, self.out_box, self.name)
+        self.controller_handler = ControllerHandler(self.crypto, self.liveness, self.game_instance, self.mailbox, self.name)
+        self.oef_handler = OEFHandler(self.crypto, self.liveness, self.game_instance, self.mailbox, self.name)
+        self.dialogue_handler = DialogueHandler(self.crypto, self.liveness, self.game_instance, self.mailbox, self.name)
 
     @property
     def game_instance(self) -> GameInstance:
@@ -103,8 +94,6 @@ class ParticipantAgent(Agent):
             if self.game_instance.is_time_to_search_services():
                 self.oef_handler.search_services()
 
-        self.out_box.send_nowait()
-
     def react(self) -> None:
         """
         React to incoming events.
@@ -112,21 +101,19 @@ class ParticipantAgent(Agent):
         :return: None
         """
         counter = 0
-        while (not self.in_box.is_in_queue_empty() and counter < self.max_reactions):
+        while (not self.mailbox.inbox.empty() and counter < self.max_reactions):
             counter += 1
-            msg = self.in_box.get_no_wait()  # type: Optional[Message]
+            msg = self.mailbox.inbox.get_nowait()  # type: Optional[Message]
+            logger.debug("processing message of protocol={}".format(msg.protocol_id))
             if msg is not None:
                 if is_oef_message(msg):
-                    msg: OEFMessage
                     self.oef_handler.handle_oef_message(msg)
                 elif is_controller_message(msg, self.crypto):
-                    msg: ControllerMessage
                     self.controller_handler.handle_controller_message(msg)
-                else:
-                    msg: AgentMessage
+                elif is_fipa_message(msg):
                     self.dialogue_handler.handle_dialogue_message(msg)
-
-        self.out_box.send_nowait()
+                else:
+                    logger.warning("Message type not recognized: sender={}".format(msg.sender))
 
     def update(self) -> None:
         """

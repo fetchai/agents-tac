@@ -27,7 +27,8 @@ from abc import abstractmethod
 from enum import Enum
 from typing import Optional
 
-from tac.agents.v1.mail import MailBox, InBox, OutBox
+from tac.agents.v1.mail.base import InBox, OutBox, MailBox
+from tac.agents.v1.mail.oef import OEFNetworkMailBox
 from tac.helpers.crypto import Crypto
 
 logger = logging.getLogger(__name__)
@@ -82,9 +83,15 @@ class Agent:
 
         self.debug = debug
 
-        self.mail_box = None  # type: Optional[MailBox]
-        self.in_box = None  # type: Optional[InBox]
-        self.out_box = None  # type: Optional[OutBox]
+        self.mailbox = None  # type: Optional[MailBox]
+
+    @property
+    def inbox(self) -> Optional[InBox]:
+        return self.mailbox.inbox if self.mailbox else None
+
+    @property
+    def outbox(self) -> Optional[OutBox]:
+        return self.mailbox.outbox if self.mailbox else None
 
     @property
     def name(self) -> str:
@@ -114,11 +121,11 @@ class Agent:
         :return the agent state.
         :raises ValueError: if the state does not satisfy any of the foreseen conditions.
         """
-        if self.mail_box is None or not self.mail_box.is_connected:
+        if self.mailbox is None or not self.mailbox.is_connected:
             return AgentState.INITIATED
-        elif self.mail_box.is_connected and self.liveness.is_stopped:
+        elif self.mailbox.is_connected and self.liveness.is_stopped:
             return AgentState.CONNECTED
-        elif self.mail_box.is_connected and not self.liveness.is_stopped:
+        elif self.mailbox.is_connected and not self.liveness.is_stopped:
             return AgentState.RUNNING
         else:
             raise ValueError("Agent state not recognized.")
@@ -129,8 +136,8 @@ class Agent:
 
         :return: None
         """
-        if not self.debug:
-            self.mail_box.start()
+        if not self.debug and not self.mailbox.is_connected:
+            self.mailbox.connect()
 
         self.liveness._is_stopped = False
         self._run_main_loop()
@@ -165,7 +172,8 @@ class Agent:
         """
         logger.debug("[{}]: Stopping message processing...".format(self.name))
         self.liveness._is_stopped = True
-        self.mail_box.stop()
+        if self.mailbox.is_connected:
+            self.mailbox.disconnect()
 
     @abstractmethod
     def setup(self) -> None:

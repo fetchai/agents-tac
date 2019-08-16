@@ -26,12 +26,11 @@ This module contains the classes which define the reactions of an agent.
 
 import logging
 
-from oef.messages import Message as OEFErrorMessage, DialogueErrorMessage
-
 from tac.agents.v1.agent import Liveness
-from tac.platform.controller.interfaces import OEFReactionInterface
-from tac.agents.v1.mail import OutBox
+from tac.agents.v1.mail.base import MailBox
+from tac.agents.v1.mail.messages import Message
 from tac.helpers.crypto import Crypto
+from tac.platform.controller.interfaces import OEFReactionInterface
 
 logger = logging.getLogger(__name__)
 
@@ -39,23 +38,23 @@ logger = logging.getLogger(__name__)
 class OEFReactions(OEFReactionInterface):
     """The OEFReactions class defines the reactions of an agent towards the OEF."""
 
-    def __init__(self, crypto: Crypto, liveness: Liveness, out_box: 'OutBox', agent_name: str) -> None:
+    def __init__(self, crypto: Crypto, liveness: Liveness, mailbox: MailBox, agent_name: str) -> None:
         """
         Instantiate the OEFReactions.
 
         :param crypto: the crypto module
         :param liveness: the liveness module
-        :param out_box: the outbox of the agent
+        :param mailbox: the mailbox of the agent
         :param agent_name: the agent name
 
         :return: None
         """
         self.crypto = crypto
         self.liveness = liveness
-        self.out_box = out_box
+        self.mailbox = mailbox
         self.agent_name = agent_name
 
-    def on_oef_error(self, oef_error: OEFErrorMessage) -> None:
+    def on_oef_error(self, oef_error: Message) -> None:
         """
         Handle an OEF error message.
 
@@ -64,9 +63,9 @@ class OEFReactions(OEFReactionInterface):
         :return: None
         """
         logger.error("[{}]: Received OEF error: answer_id={}, operation={}"
-                     .format(self.agent_name, oef_error.msg_id, oef_error.oef_error_operation))
+                     .format(self.agent_name, oef_error.get("id"), oef_error.get("operation")))
 
-    def on_dialogue_error(self, dialogue_error: DialogueErrorMessage) -> None:
+    def on_dialogue_error(self, dialogue_error: Message) -> None:
         """
         Handle a dialogue error message.
 
@@ -75,4 +74,4 @@ class OEFReactions(OEFReactionInterface):
         :return: None
         """
         logger.error("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}"
-                     .format(self.agent_name, dialogue_error.msg_id, dialogue_error.dialogue_id, dialogue_error.origin))
+                     .format(self.agent_name, dialogue_error.get("id"), dialogue_error.get("dialogue_id"), dialogue_error.get("origin")))
