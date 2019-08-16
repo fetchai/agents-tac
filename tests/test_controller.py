@@ -24,7 +24,7 @@ import logging
 from threading import Thread
 
 from oef.agents import OEFAgent
-from oef.core import AsyncioCore
+# from oef.core import AsyncioCore  # OEF-SDK 0.6.1
 
 from tac.helpers.crypto import Crypto
 from tac.platform.controller.controller_agent import ControllerAgent
@@ -48,8 +48,6 @@ class TestController:
 
         crypto = Crypto()
 
-        core = AsyncioCore(logger=logger)
-        core.run_threaded()
         # core = AsyncioCore(logger=logger)  # OEF-SDK 0.6.1
         # core.run_threaded()  # OEF-SDK 0.6.1
         import asyncio

@@ -29,11 +29,11 @@ def make_agent_name(agent_id: int, is_world_modeling: bool, nb_agents: int) -> s
 
     E.g.:
 
-    >>> _make_id(2, False, 10)
+    >>> make_agent_name(2, False, 10)
     'tac_agent_2'
-    >>> _make_id(2, False, 100)
+    >>> make_agent_name(2, False, 100)
     'tac_agent_02'
-    >>> _make_id(2, False, 101)
+    >>> make_agent_name(2, False, 101)
     'tac_agent_002'
 
     :param agent_id: the agent id.

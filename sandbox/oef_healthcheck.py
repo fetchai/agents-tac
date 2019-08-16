@@ -25,7 +25,7 @@ import argparse
 import logging
 
 from oef.agents import OEFAgent
-from oef.core import AsyncioCore
+# from oef.core import AsyncioCore  # OEF-SDK 0.6.1
 
 logger = logging.getLogger(__name__)
 
@@ -41,9 +41,11 @@ if __name__ == '__main__':
         port = args.port
         pbk = 'check'
         print("Connecting to {}:{}".format(host, port))
-        core = AsyncioCore(logger=logger)
-        core.run_threaded()
-        agent = OEFAgent(pbk, oef_addr=host, oef_port=port, core=core)
+        # core = AsyncioCore(logger=logger)  # OEF-SDK 0.6.1
+        # core.run_threaded()  # OEF-SDK 0.6.1
+        # agent = OEFAgent(pbk, oef_addr=host, oef_port=port, core=core)  # OEF-SDK 0.6.1
+        import asyncio
+        agent = OEFAgent(pbk, oef_addr=host, oef_port=port, loop=asyncio.get_event_loop())
         agent.connect()
         agent.disconnect()
         print("OK!")

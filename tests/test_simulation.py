@@ -69,10 +69,6 @@ class TestSimulation:
     @classmethod
     def setup_class(cls):
         """Class setup."""
-        cls.tac_controller = ControllerAgent(loop=asyncio.new_event_loop())
-        cls.tac_controller.connect()
-        cls.tac_controller.register()
-
         cls.baseline_agents = _init_baseline_agents(5, "v1", "127.0.0.1", 10000)
 
         cls.tac_parameters = TACParameters(min_nb_agents=5,
@@ -87,10 +83,12 @@ class TestSimulation:
                                            competition_timeout=20,
                                            inactivity_timeout=10)
 
+        cls.tac_controller = ControllerAgent('controller', '127.0.0.1', 1000, cls.tac_parameters, loop=asyncio.get_event_loop())
+
         # run the simulation
         try:
             # generate task for the controller
-            controller_thread = Thread(target=cls.tac_controller.handle_competition, args=(cls.tac_parameters,))
+            controller_thread = Thread(target=cls.tac_controller.start)
 
             baseline_threads = [Thread(target=_run_baseline_agent, args=[baseline_agent, "v1"])
                                 for baseline_agent in cls.baseline_agents]

@@ -140,7 +140,6 @@ def spawn_controller_agent(params: SimulationParams) -> multiprocessing.Process:
         data_output_dir=params.data_output_dir,
         experiment_id=params.experiment_id,
         seed=params.seed,
-        version=1,
     ))
     process.start()
     return process
