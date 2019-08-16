@@ -35,7 +35,7 @@ from threading import Thread
 from typing import List, Optional, Any, Union, Dict
 
 from oef.agents import OEFAgent
-from oef.core import AsyncioCore
+# from oef.core import AsyncioCore  # OEF-SDK 0.6.1
 from oef.messages import PROPOSE_TYPES, CFP_TYPES, CFP, Decline, Propose, Accept, Message as ByteMessage, \
     SearchResult, OEFErrorOperation, OEFErrorMessage, DialogueErrorMessage
 from oef.query import Query
@@ -111,9 +111,11 @@ class MailBox(OEFAgent):
 
         :return: None
         """
-        core = AsyncioCore(logger=logger)
-        super().__init__(public_key, oef_addr=oef_addr, oef_port=oef_port, core=core)
-        self.core.run_threaded()
+        # core = AsyncioCore(logger=logger)  # OEF-SDK 0.6.1
+        # core.run_threaded()  # OEF-SDK 0.6.1
+        import asyncio
+        super().__init__(public_key, oef_addr=oef_addr, oef_port=oef_port, loop=asyncio.new_event_loop())
+        # super().__init__(public_key, oef_addr=oef_addr, oef_port=oef_port, core=core)  # OEF-SDK 0.6.1
         self.in_queue = Queue()
         self.out_queue = Queue()
         self._mail_box_thread = None  # type: Optional[Thread]
@@ -194,6 +196,7 @@ class MailBox(OEFAgent):
 
         while not success:
             try:
+                print('HERE!')
                 success = super().connect()
             except ConnectionError:
                 logger.error("Problems when connecting to the OEF. Retrying in 3 seconds...")
@@ -219,8 +222,8 @@ class MailBox(OEFAgent):
 
         :return: None
         """
-        self.core.stop()
-        # self._loop.call_soon_threadsafe(super().stop)
+        # self.core.stop()  # OEF-SDK 0.6.1
+        self._loop.call_soon_threadsafe(super().stop)
         if self._mail_box_thread is not None:
             self._mail_box_thread.join()
             self.disconnect()
@@ -340,10 +343,10 @@ class OutBox(object):
                 logger.debug("Outgoing message type: type={}".format(type(out.message)))
                 self.mail_box.send_message(out.message_id, out.dialogue_id, out.destination, out.message)
             elif isinstance(out, OutContainer) and (out.service_description is not None) and (not out.is_unregister):
-                logger.debug("Outgoing register service description: message_id={}".format(type(out.service_description), out.message_id))
+                logger.debug("Outgoing register service description: type={}, message_id={}".format(type(out.service_description), out.message_id))
                 self.mail_box.register_service(out.message_id, out.service_description)
             elif isinstance(out, OutContainer) and out.service_description is not None:
-                logger.debug("Outgoing unregister service description: message_id={}".format(type(out.service_description), out.message_id))
+                logger.debug("Outgoing unregister service description: type={}, message_id={}".format(type(out.service_description), out.message_id))
                 self.mail_box.unregister_service(out.message_id, out.service_description)
             elif isinstance(out, OutContainer) and out.query is not None:
                 logger.debug("Outgoing query: search_id={}".format(out.search_id))

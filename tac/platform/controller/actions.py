@@ -67,4 +67,5 @@ class OEFActions(OEFActionInterface):
         """
         desc = Description({"version": 1}, data_model=CONTROLLER_DATAMODEL)
         logger.debug("[{}]: Registering with {} data model".format(self.agent_name, desc.data_model.name))
-        self.out_box.out_queue.put(OutContainer(service_description=desc, message_id=1))
+        out = OutContainer(message_id=1, service_description=desc)
+        self.out_box.out_queue.put(out)

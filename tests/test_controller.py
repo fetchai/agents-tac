@@ -50,7 +50,11 @@ class TestController:
 
         core = AsyncioCore(logger=logger)
         core.run_threaded()
-        agent1 = OEFAgent(crypto.public_key, oef_addr="127.0.0.1", oef_port=10000, core=core)
+        # core = AsyncioCore(logger=logger)  # OEF-SDK 0.6.1
+        # core.run_threaded()  # OEF-SDK 0.6.1
+        import asyncio
+        agent1 = OEFAgent(crypto.public_key, oef_addr='127.0.0.1', oef_port=10000, loop=asyncio.new_event_loop())
+        # agent1 = OEFAgent(crypto.public_key, oef_addr='127.0.0.1', oef_port=10000, core=core)  # OEF-SDK 0.6.1
         agent1.connect()
         agent1.send_message(0, 0, controller_agent.public_key, Register(agent1.public_key, crypto, 'agent_name').serialize())
 

@@ -186,7 +186,7 @@ def parse_arguments():
     parser.add_argument("--oef-port", default=10000, help="TCP/IP port of the OEF Agent")
     parser.add_argument("--nb-baseline-agents", type=int, default=10, help="Number of baseline agent to run. Defaults to the number of agents of the competition.")
     parser.add_argument("--start-time", default=str(datetime.datetime.now() + datetime.timedelta(0, 10)), type=str, help="The start time for the competition (in UTC format).")
-    parser.add_argument("--registration-timeout", default=10, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
+    parser.add_argument("--registration-timeout", default=20, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
     parser.add_argument("--inactivity-timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
     parser.add_argument("--competition-timeout", default=240, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
     parser.add_argument("--services-interval", default=5, type=int, help="The amount of time (in seconds) the baseline agents wait until it updates services again.")
@@ -199,7 +199,7 @@ def parse_arguments():
     parser.add_argument("--visdom-addr", default="localhost", help="TCP/IP address of the Visdom server")
     parser.add_argument("--visdom-port", default=8097, help="TCP/IP port of the Visdom server")
     parser.add_argument("--seed", default=42, help="The random seed of the simulation.")
-    parser.add_argument("--fraction-world-modeling", default=0.1, type=float, min=0.0, max=1.0, help="The fraction of world modelling baseline agents.")
+    parser.add_argument("--fraction-world-modeling", default=0.1, type=float, choices=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0], help="The fraction of world modelling baseline agents.")
     parser.add_argument("--whitelist-file", nargs="?", default=None, type=str, help="The file that contains the list of agent names to be whitelisted.")
 
     arguments = parser.parse_args()
@@ -263,7 +263,7 @@ def run(params: SimulationParams) -> None:
 
         controller_process = spawn_controller_agent(params)
         # give the time to the controller to connect to the OEF
-        time.sleep(2.0)
+        time.sleep(5.0)
         baseline_processes = spawn_baseline_agents(params)
         controller_process.join()
 

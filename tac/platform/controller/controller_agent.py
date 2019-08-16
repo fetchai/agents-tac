@@ -58,7 +58,7 @@ class ControllerAgent(Agent):
                  oef_addr: str,
                  oef_port: int,
                  tac_parameters: TACParameters,
-                 dashboard: Optional[Monitor] = None,
+                 monitor: Optional[Monitor] = None,
                  agent_timeout: Optional[float] = 1.0,
                  max_reactions: int = 100,
                  private_key_pem: Optional[str] = None,
@@ -73,7 +73,7 @@ class ControllerAgent(Agent):
         :param strategy: the strategy object that specify the behaviour during the competition.
         :param agent_timeout: the time in (fractions of) seconds to time out an agent between act and react.
         :param max_reactions: the maximum number of reactions (messages processed) per call to react.
-        :param dashboard: a Visdom dashboard to visualize agent statistics during the competition.
+        :param monitor: a Visdom dashboard to visualize agent statistics during the competition.
         :param private_key_pem: the path to a private key in PEM format.
         :param debug: if True, run the agent in debug mode.
         """
@@ -84,7 +84,7 @@ class ControllerAgent(Agent):
 
         self.oef_handler = OEFHandler(self.crypto, self.liveness, self.out_box, self.name)
         self.agent_message_dispatcher = AgentMessageDispatcher(self)
-        self.game_handler = GameHandler(name, self.crypto, self.out_box, self.dashboard, tac_parameters)
+        self.game_handler = GameHandler(name, self.crypto, self.out_box, monitor, tac_parameters)
 
         self.max_reactions = max_reactions
         self.last_activity = datetime.datetime.now()
@@ -99,31 +99,32 @@ class ControllerAgent(Agent):
         """
         if self.game_handler.game_phase == GamePhase.PRE_GAME:
             now = datetime.datetime.now()
+            seconds_to_wait = (self.game_handler.tac_parameters.start_time - now).total_seconds()
+            seconds_to_wait = 0.5 if seconds_to_wait < 0 else seconds_to_wait
             logger.debug("[{}]: waiting for starting the competition: start_time={}, current_time={}, timedelta ={}s"
-                         .format(self.name, str(self.tac_parameters.start_time), str(now),
-                                 (self.tac_parameters.start_time - now).total_seconds()))
-
-            seconds_to_wait = (self.tac_parameters.start_time - now).total_seconds()
-            self.game_handler.competition_start = now + seconds_to_wait + self.tac_parameters.registration_timedelta.seconds
-            time.sleep(0.5 if seconds_to_wait < 0 else seconds_to_wait)
+                         .format(self.name, str(self.game_handler.tac_parameters.start_time), str(now), seconds_to_wait))
+            self.game_handler.competition_start = now + datetime.timedelta(seconds=seconds_to_wait + self.game_handler.tac_parameters.registration_timedelta.seconds)
+            time.sleep(seconds_to_wait)
             logger.debug("[{}]: Register competition with parameters: {}"
                          .format(self.name, pprint.pformat(self.game_handler.tac_parameters.__dict__)))
             self.oef_handler.register_tac()
+            self.game_handler._game_phase = GamePhase.GAME_SETUP
         if self.game_handler.game_phase == GamePhase.GAME_SETUP:
             now = datetime.datetime.now()
             if now >= self.game_handler.competition_start:
-                logger.debug("[{}]: Checking if we can start the competition.".format(self.controller_agent.name))
-                min_nb_agents = self.tac_parameters.min_nb_agents
-                nb_reg_agents = len(self.registered_agents)
+                logger.debug("[{}]: Checking if we can start the competition.".format(self.name))
+                min_nb_agents = self.game_handler.tac_parameters.min_nb_agents
+                nb_reg_agents = len(self.game_handler.registered_agents)
                 if nb_reg_agents >= min_nb_agents:
                     logger.debug("[{}]: Start competition. Registered agents: {}, minimum number of agents: {}."
                                  .format(self.name, nb_reg_agents, min_nb_agents))
                     self.game_handler.start_competition()
                 else:
                     logger.debug("[{}]: Not enough agents to start TAC. Registered agents: {}, minimum number of agents: {}."
-                                 .format(self.controller_agent.name, nb_reg_agents, min_nb_agents))
+                                 .format(self.name, nb_reg_agents, min_nb_agents))
                     self.stop()
                     self.teardown()
+                    return
         if self.game_handler.game_phase == GamePhase.GAME:
             current_time = datetime.datetime.now()
             inactivity_duration = current_time - self.last_activity
@@ -136,6 +137,7 @@ class ControllerAgent(Agent):
                 logger.debug("[{}]: Competition timeout expired. Terminating...".format(self.name))
                 self.stop()
                 self.teardown()
+                return
 
         self.out_box.send_nowait()
 
@@ -173,10 +175,11 @@ class ControllerAgent(Agent):
 
         :return: None
         """
-        logger.debug("[{}]: Terminating the controller...".format(self.name))
-        self.game_handler.notify_tac_cancelled()
+        logger.debug("[{}]: Stopping myself...".format(self.name))
+        if self.game_handler.game_phase == GamePhase.GAME or self.game_handler.game_phase == GamePhase.GAME_SETUP:
+            self.game_handler.notify_competition_cancelled()
+            self.out_box.send_nowait()
         super().stop()
-        self.monitor.stop()
 
     def start(self) -> None:
         """
@@ -186,22 +189,24 @@ class ControllerAgent(Agent):
         """
         try:
             super().start()
+            logger.debug("[{}]: Starting myself...".format(self.name))
             return
         except Exception as e:
             logger.exception(e)
-            logger.debug("Stopping the agent...")
+            logger.debug("[{}]: Stopping myself...".format(self.name))
             self.stop()
 
         # here only if an error occurred
-        logger.debug("Trying to rejoin in 5 seconds...")
+        logger.debug("[{}]: Trying to rejoin in 5 seconds...".format(self.name))
         time.sleep(2.0)
-        self.start(rejoin=False)
+        self.start()
 
     def setup(self) -> None:
         """Set up the agent."""
 
     def teardown(self) -> None:
         """Tear down the agent."""
+        self.game_handler.monitor.stop()
         self.game_handler.simulation_dump()
 
 
@@ -218,7 +223,7 @@ def _parse_arguments():
     parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
     parser.add_argument("--oef-port", default=10000, help="TCP/IP port of the OEF Agent")
     parser.add_argument("--start-time", default=str(datetime.datetime.now() + datetime.timedelta(0, 10)), type=str, help="The start time for the competition (in UTC format).")
-    parser.add_argument("--registration-timeout", default=10, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
+    parser.add_argument("--registration-timeout", default=20, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
     parser.add_argument("--inactivity-timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
     parser.add_argument("--competition-timeout", default=240, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
     parser.add_argument("--whitelist-file", default=None, type=str, help="The file that contains the list of agent names to be whitelisted.")
@@ -291,7 +296,6 @@ def main(
                                 oef_port=oef_port,
                                 tac_parameters=tac_parameters,
                                 monitor=monitor)
-        agent.connect()
         agent.start()
 
     except Exception as e:

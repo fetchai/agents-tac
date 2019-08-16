@@ -124,8 +124,8 @@ class RegisterHandler(RequestHandler):
             return Error(request.public_key, self.controller_agent.crypto, ErrorCode.AGENT_NAME_ALREADY_REGISTERED)
 
         try:
-            self.controller_agent.monitor.dashboard.agent_pbk_to_name.update({request.public_key: request.agent_name})
-            self.controller_agent.monitor.update()
+            self.controller_agent.game_handler.monitor.dashboard.agent_pbk_to_name.update({request.public_key: request.agent_name})
+            self.controller_agent.game_handler.monitor.update()
         except Exception as e:
             logger.error(str(e))
 
@@ -214,12 +214,13 @@ class TransactionHandler(RequestHandler):
         self.controller_agent.game_handler.current_game.settle_transaction(tx)
 
         # update the dashboard monitor
-        self.controller_agent.monitor.update()
+        self.controller_agent.game_handler.monitor.update()
 
         # send the transaction confirmation.
         tx_confirmation = TransactionConfirmation(tx.public_key, self.controller_agent.crypto, tx.transaction_id)
-        self.controller_agent.send_message(0, 0, tx.public_key, tx_confirmation.serialize())
-        self.controller_agent.send_message(0, 0, tx.counterparty, tx_confirmation.serialize())
+
+        self.controller_agent.out_box.out_queue.put(OutContainer(message_id=1, dialogue_id=1, destination=tx.public_key, message=tx_confirmation.serialize()))
+        self.controller_agent.out_box.out_queue.put(OutContainer(message_id=1, dialogue_id=1, destination=tx.counterparty, message=tx_confirmation.serialize()))
 
         # log messages
         logger.debug("[{}]: Transaction '{}' settled successfully.".format(self.controller_agent.name, tx.transaction_id))
@@ -293,15 +294,29 @@ class AgentMessageDispatcher(object):
         :param request: the request to handle
         :return: the response.
         """
-        handle_request = self.handlers.get(type(msg), None)  # type: RequestHandler
+        logger.debug("[{}] on_message: msg_id={}, dialogue_id={}, origin={}" .format(self.controller_agent.name, msg.msg_id, msg.dialogue_id, msg.destination))
+        request = self.decode(msg.msg, msg.destination)
+        handle_request = self.handlers.get(type(request), None)  # type: RequestHandler
         if handle_request is None:
-            return Error(msg.public_key, self.controller_agent.crypto, ErrorCode.REQUEST_NOT_VALID)
+            logger.debug("[{}]: Unknown message: msg_id={}, dialogue_id={}, origin={}".format(self.controller_agent.name, msg.msg_id, msg.dialogue_id, msg.destination))
+            return Error(msg.destination, self.controller_agent.crypto, ErrorCode.REQUEST_NOT_VALID)
         try:
-            return handle_request(msg)
+            return handle_request(request)
         except Exception as e:
             logger.debug("[{}]: Error caught: {}".format(self.controller_agent.name, str(e)))
             logger.exception(e)
-            return Error(msg.public_key, self.controller_agent.crypto, ErrorCode.GENERIC_ERROR)
+            return Error(msg.destination, self.controller_agent.crypto, ErrorCode.GENERIC_ERROR)
+
+    def decode(self, msg: bytes, public_key: str) -> Request:
+        """
+        From bytes to a Request message.
+
+        :param msg: the serialized message.
+        :param public_key: the public key of the sender agent.
+        :return: the deserialized Request
+        """
+        request = Request.from_pb(msg, public_key, self.controller_agent.crypto)
+        return request
 
 
 class GameHandler:
@@ -311,8 +326,11 @@ class GameHandler:
         """
         Instantiate a GameHandler.
 
-        :param controller_agent: the controller agent the handler is associated with.
-        :param tac_parameters: the tac parameters
+        :param agent_name: the name of the agent.
+        :param crypto: the crypto module of the agent.
+        :param out_box: the outbox.
+        :param monitor: the monitor.
+        :param tac_parameters: the tac parameters.
         :return: None
         """
         self.agent_name = agent_name
@@ -372,6 +390,7 @@ class GameHandler:
 
         self._send_game_data_to_agents()
 
+        self._game_phase = GamePhase.GAME
         # log messages
         logger.debug("[{}]: Started competition:\n{}".format(self.agent_name, self.current_game.get_holdings_summary()))
         logger.debug("[{}]: Computed equilibrium:\n{}".format(self.agent_name, self.current_game.get_equilibrium_summary()))
@@ -419,16 +438,17 @@ class GameHandler:
                 self.current_game.configuration.good_pbk_to_name
             )
             logger.debug("[{}]: sending GameData to '{}': {}"
-                         .format(self.controller_agent.name, public_key, str(game_data_response)))
+                         .format(self.agent_name, public_key, str(game_data_response)))
 
             self.game_data_per_participant[public_key] = game_data_response
-            self.out_box.put(OutContainer(message_id=1, dialogue_id=1, destination=public_key, message=game_data_response.serialize()))
+            self.out_box.out_queue.put(OutContainer(message_id=1, dialogue_id=1, destination=public_key, message=game_data_response.serialize()))
 
-    def end_competition(self):
+    def notify_competition_cancelled(self):
         """Notify agents that the TAC is cancelled."""
-        logger.debug("[{}]: Notifying agents that TAC is cancelled.".format(self.controller_agent.name))
+        logger.debug("[{}]: Notifying agents that TAC is cancelled.".format(self.agent_name))
         for agent_pbk in self.registered_agents:
-            self.out_box.put(OutContainer(message_id=1, dialogue_id=1, destination=agent_pbk, message=Cancelled(agent_pbk, self.controller_agent.crypto).serialize()))
+            self.out_box.out_queue.put(OutContainer(message_id=1, dialogue_id=1, destination=agent_pbk, message=Cancelled(agent_pbk, self.crypto).serialize()))
+        self._game_phase = GamePhase.POST_GAME
 
     def simulation_dump(self) -> None:
         """
@@ -438,13 +458,14 @@ class GameHandler:
         :param experiment_name: the name of the folder where the data about experiment will be saved.
         :return: None.
         """
-        experiment_dir = self.tac_parameters.data_output_dir + "/" + self.tac_parameters.experiment_id
+        experiment_id = str(self.tac_parameters.experiment_id) if self.tac_parameters.experiment_id is not None else str(datetime.datetime.now())
+        experiment_dir = self.tac_parameters.data_output_dir + "/" + experiment_id
 
-        if self.game_handler is None or not self.game_handler.is_game_running:
-            logger.warning("[{}]: Game not present. Using empty dictionary.".format(self.name))
+        if not self.is_game_running:
+            logger.warning("[{}]: Game not present. Using empty dictionary.".format(self.agent_name))
             game_dict = {}  # type: Dict[str, Any]
         else:
-            game_dict = self.game_handler.current_game.to_dict()
+            game_dict = self.current_game.to_dict()
 
         os.makedirs(experiment_dir, exist_ok=True)
         with open(os.path.join(experiment_dir, "game.json"), "w") as f:

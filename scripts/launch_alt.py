@@ -33,6 +33,7 @@ import docker
 
 import tac
 from tac.platform.simulation import parse_arguments, build_simulation_parameters
+from tac.helpers.oef_health_check import OEFHealthCheck
 
 CUR_PATH = inspect.getfile(inspect.currentframe())
 ROOT_DIR = os.path.join(os.path.dirname(CUR_PATH), "..")
@@ -71,8 +72,11 @@ class OEFNode:
         """Wait for the OEF to come live."""
         print("Waiting for the OEF to be operative...")
         for loop in range(0, 30):
-            exit_status = os.system("netstat -nal | grep 10000")
-            if exit_status != 1: break
+            oef_healthcheck = OEFHealthCheck("127.0.0.1", 10000)
+            is_success = oef_healthcheck.run()
+            # exit_status = os.system("netstat -nal | grep 10000 | grep LISTEN")
+            # if exit_status != 1: break
+            if is_success: break
             time.sleep(1)
 
     def __enter__(self):

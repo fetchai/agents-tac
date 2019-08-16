@@ -122,9 +122,9 @@ class OEFActions(OEFActionInterface):
         :return: None
         """
         if self.game_instance.goods_demanded_description is not None:
-            self.out_box.out_queue.put(OutContainer(message_id=1, service_description=self.game_instance.goods_demanded_description))
+            self.out_box.out_queue.put(OutContainer(message_id=1, service_description=self.game_instance.goods_demanded_description, is_unregister=True))
         if self.game_instance.goods_supplied_description is not None:
-            self.out_box.out_queue.put(OutContainer(message_id=1, service_description=self.game_instance.goods_supplied_description))
+            self.out_box.out_queue.put(OutContainer(message_id=1, service_description=self.game_instance.goods_supplied_description, is_unregister=True))
 
     def register_service(self) -> None:
         """

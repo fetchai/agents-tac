@@ -24,7 +24,7 @@
 import logging
 
 from oef.agents import OEFAgent
-from oef.core import AsyncioCore
+# from oef.core import AsyncioCore  # OEF-SDK 0.6.1
 
 logger = logging.getLogger(__name__)
 
@@ -50,21 +50,21 @@ class OEFHealthCheck(object):
         """
         result = False
         try:
-            # import pdb; pdb.set_trace()
             pbk = 'check'
-            # import pdb; pdb.set_trace()n
             print("Connecting to {}:{}".format(self.addr, self.port))
-            core = AsyncioCore(logger=logger)
-            core.run_threaded()
-            agent = OEFAgent(pbk, oef_addr=self.addr, oef_port=self.port, core=core)
+            # core = AsyncioCore(logger=logger)  # OEF-SDK 0.6.1
+            # core.run_threaded()  # OEF-SDK 0.6.1
+            import asyncio
+            agent = OEFAgent(pbk, oef_addr=self.addr, oef_port=self.port, loop=asyncio.new_event_loop())
+            # agent = OEFAgent(pbk, oef_addr=self.addr, oef_port=self.port, core=core)  # OEF-SDK 0.6.1
             agent.connect()
             agent.disconnect()
-            core.stop()
+            # core.stop()  # OEF-SDK 0.6.1
             print("OK!")
             result = True
             return result
         except Exception as e:
             print(str(e))
             return result
-        finally:
-            core.stop()
+        # finally:
+        # core.stop(). # OEF-SDK 0.6.1

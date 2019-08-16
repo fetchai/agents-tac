@@ -65,7 +65,7 @@ For a full list, do `python simulation/tac_agent_spawner.py -h`
 
 Example:
 
-      python examples/simulation_demo/tac_agent_spawner.py 
+      python simulation/v1/tac_agent_spawner.py 
           --nb-agents 10
           --nb-goods 10
           --nb-baseline-agents 10
