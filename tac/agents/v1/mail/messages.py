@@ -171,14 +171,19 @@ class ByteMessage(Message):
         super().__init__(to=to, sender=sender, id=message_id, dialogue_id=dialogue_id, content=content)
 
 
-class SimpleByteMessage(Message):
+class SimpleMessage(Message):
 
     protocol_id = "default"
 
+    class Type(Enum):
+        BYTES = "bytes"
+        ERROR = "error"
+
     def __init__(self, to: Optional[Address] = None,
                  sender: Optional[Address] = None,
-                 content: bytes = b""):
-        super().__init__(to=to, sender=sender, protocol_id=self.protocol_id, content=content)
+                 type: Optional[Type] = None,
+                 **body):
+        super().__init__(to=to, sender=sender, protocol_id=self.protocol_id, type=type, **body)
 
 
 class FIPAMessage(Message):

@@ -211,11 +211,10 @@ class TransactionHandler(RequestHandler):
 
         # send the transaction confirmation.
         tx_confirmation = TransactionConfirmation(tx.public_key, self.controller_agent.crypto, tx.transaction_id)
-
-        self.controller_agent.out_box.put(ByteMessage(to=tx.public_key, sender=self.controller_agent.crypto.public_key,
-                                                      message_id=1, dialogue_id=1, content=tx_confirmation.serialize()))
-        self.controller_agent.out_box.put(ByteMessage(to=tx.counterparty, sender=self.controller_agent.crypto.public_key,
-                                                      message_id=1, dialogue_id=1, content=tx_confirmation.serialize()))
+        self.controller_agent.outbox.put(ByteMessage(to=tx.public_key, sender=self.controller_agent.crypto.public_key,
+                                                     message_id=1, dialogue_id=1, content=tx_confirmation.serialize()))
+        self.controller_agent.outbox.put(ByteMessage(to=tx.counterparty, sender=self.controller_agent.crypto.public_key,
+                                                     message_id=1, dialogue_id=1, content=tx_confirmation.serialize()))
 
         # log messages
         logger.debug("[{}]: Transaction '{}' settled successfully.".format(self.controller_agent.name, tx.transaction_id))

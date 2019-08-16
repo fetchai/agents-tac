@@ -86,11 +86,11 @@ class Agent:
         self.mailbox = None  # type: Optional[MailBox]
 
     @property
-    def in_box(self) -> Optional[InBox]:
+    def inbox(self) -> Optional[InBox]:
         return self.mailbox.inbox if self.mailbox else None
 
     @property
-    def out_box(self) -> Optional[OutBox]:
+    def outbox(self) -> Optional[OutBox]:
         return self.mailbox.outbox if self.mailbox else None
 
     @property

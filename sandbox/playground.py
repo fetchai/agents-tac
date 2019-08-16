@@ -136,7 +136,7 @@ if __name__ == '__main__':
                           target=starting_message_target, performative=FIPAMessage.Performative.CFP,
                           query=json.dumps(services).encode('utf-8'))
         dialogue.outgoing_extend([cfp])
-        agent_one.out_box.out_queue.put(cfp)
+        agent_one.outbox.out_queue.put(cfp)
 
         # Send the messages in the outbox
         # agent_one.out_box.send_nowait()
@@ -144,14 +144,14 @@ if __name__ == '__main__':
         # Check the message arrived in the inbox of agent_two
         checks = 0
         while checks < 10:
-            if agent_two.in_box.empty():
+            if agent_two.inbox.empty():
                 # Wait a bit
                 print("Sleeping for 1 second ...")
                 time.sleep(1.0)
                 checks += 1
             else:
                 checks = 10
-        msg = agent_two.in_box.get_nowait()  # type: Optional[Message]
+        msg = agent_two.inbox.get_nowait()  # type: Optional[Message]
         print("The msg is a CFP: {}".format(msg.get("performative") == FIPAMessage.Performative.CFP))
 
         # Set the debugger

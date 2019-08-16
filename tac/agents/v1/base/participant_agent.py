@@ -27,7 +27,7 @@ from typing import Optional, Union
 from tac.agents.v1.agent import Agent
 from tac.agents.v1.base.game_instance import GameInstance, GamePhase
 from tac.agents.v1.base.handlers import DialogueHandler, ControllerHandler, OEFHandler
-from tac.agents.v1.base.helpers import is_oef_message, is_controller_message
+from tac.agents.v1.base.helpers import is_oef_message, is_controller_message, is_fipa_message
 from tac.agents.v1.base.strategy import Strategy
 from tac.agents.v1.mail.messages import Message
 from tac.agents.v1.mail.oef import OEFNetworkMailBox
@@ -110,8 +110,10 @@ class ParticipantAgent(Agent):
                     self.oef_handler.handle_oef_message(msg)
                 elif is_controller_message(msg, self.crypto):
                     self.controller_handler.handle_controller_message(msg)
-                else:
+                elif is_fipa_message(msg):
                     self.dialogue_handler.handle_dialogue_message(msg)
+                else:
+                    logger.warning("Message type not recognized: sender={}".format(msg.sender))
 
     def update(self) -> None:
         """

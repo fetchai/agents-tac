@@ -139,9 +139,9 @@ class ControllerAgent(Agent):
         :return: None
         """
         counter = 0
-        while (not self.in_box.empty() and counter < self.max_reactions):
+        while (not self.inbox.empty() and counter < self.max_reactions):
             counter += 1
-            msg = self.in_box.get_nowait()  # type: Optional[Message]
+            msg = self.inbox.get_nowait()  # type: Optional[Message]
             if msg is not None:
                 if is_oef_message(msg):
                     self.oef_handler.handle_oef_message(msg)

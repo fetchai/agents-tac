@@ -26,13 +26,11 @@ This module contains the classes which define the reactions of an agent.
 
 import logging
 
-from oef.messages import Message as OEFErrorMessage, DialogueErrorMessage
-
 from tac.agents.v1.agent import Liveness
 from tac.agents.v1.mail.base import MailBox
 from tac.agents.v1.mail.messages import Message
-from tac.platform.controller.interfaces import OEFReactionInterface
 from tac.helpers.crypto import Crypto
+from tac.platform.controller.interfaces import OEFReactionInterface
 
 logger = logging.getLogger(__name__)
 

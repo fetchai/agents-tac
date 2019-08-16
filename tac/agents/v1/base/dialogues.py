@@ -148,7 +148,7 @@ class Dialogue:
         :return: True if yes, False otherwise.
         """
         last_sent_message = self._outgoing_messages[-1] if len(self._outgoing_messages) > 0 else None  # type: Optional[Message]
-        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.get("type") == FIPAMessage.Performative.CFP
+        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.get("performative") == FIPAMessage.Performative.CFP
         return result
 
     def is_expecting_initial_accept(self) -> bool:
@@ -158,7 +158,7 @@ class Dialogue:
         :return: True if yes, False otherwise.
         """
         last_sent_message = self._outgoing_messages[-1] if len(self._outgoing_messages) > 0 else None  # type: Optional[Message]
-        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.get("type") == FIPAMessage.Performative.PROPOSE
+        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.get("performative") == FIPAMessage.Performative.PROPOSE
         return result
 
     def is_expecting_matching_accept(self) -> bool:
@@ -168,7 +168,7 @@ class Dialogue:
         :return: True if yes, False otherwise.
         """
         last_sent_message = self._outgoing_messages[-1] if len(self._outgoing_messages) > 0 else None  # type: Optional[Message]
-        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.get("type") == FIPAMessage.Performative.ACCEPT
+        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.get("performative") == FIPAMessage.Performative.ACCEPT
         return result
 
     def is_expecting_cfp_decline(self) -> bool:
@@ -178,7 +178,7 @@ class Dialogue:
         :return: True if yes, False otherwise.
         """
         last_sent_message = self._outgoing_messages[-1] if len(self._outgoing_messages) > 0 else None  # type: Optional[Message]
-        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.get("type") == FIPAMessage.Performative.CFP
+        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.get("performative") == FIPAMessage.Performative.CFP
         return result
 
     def is_expecting_propose_decline(self) -> bool:
@@ -188,7 +188,7 @@ class Dialogue:
         :return: True if yes, False otherwise.
         """
         last_sent_message = self._outgoing_messages[-1] if len(self._outgoing_messages) > 0 else None  # type: Optional[Message]
-        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.get("type") == FIPAMessage.Performative.PROPOSE
+        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.get("performative") == FIPAMessage.Performative.PROPOSE
         return result
 
     def is_expecting_accept_decline(self) -> bool:
@@ -198,7 +198,7 @@ class Dialogue:
         :return: True if yes, False otherwise.
         """
         last_sent_message = self._outgoing_messages[-1] if len(self._outgoing_messages) > 0 else None  # type: Optional[Message]
-        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.get("type") == FIPAMessage.Performative.ACCEPT
+        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.get("performative") == FIPAMessage.Performative.ACCEPT
         return result
 
 
@@ -268,7 +268,7 @@ class Dialogues:
         """
         assert msg.protocol_id == "fipa"
         dialogue_id = msg.get("dialogue_id")
-        destination = msg.to
+        destination = msg.sender
         target = msg.get("target")
         performative = msg.get("performative")
         self_initiated_dialogue_label = DialogueLabel(dialogue_id, destination, agent_pbk)

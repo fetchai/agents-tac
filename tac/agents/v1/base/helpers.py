@@ -22,7 +22,7 @@
 import logging
 
 from tac.agents.v1.base.dialogues import DialogueLabel
-from tac.agents.v1.mail.messages import Message, OEFMessage
+from tac.agents.v1.mail.messages import Message, OEFMessage, FIPAMessage
 from tac.helpers.crypto import Crypto
 from tac.platform.protocol import Response
 
@@ -57,9 +57,20 @@ def is_controller_message(msg: Message, crypto: Crypto) -> bool:
         Response.from_pb(byte_content, sender_pbk, crypto)
     except Exception as e:
         logger.debug("Not a Controller message: {}".format(str(e)))
+        try:
+            byte_content = msg.get("content")
+            sender_pbk = msg.sender
+            Response.from_pb(byte_content, sender_pbk, crypto)
+        except:
+            pass
         return False
 
     return True
+
+
+def is_fipa_message(msg: Message) -> bool:
+    """Chcek whether a message is a FIPA message."""
+    return msg.protocol_id == "fipa" and msg.get("performative") in set(FIPAMessage.Performative)
 
 
 def generate_transaction_id(agent_pbk: str, opponent_pbk: str, dialogue_label: DialogueLabel, agent_is_seller: bool) -> str:
