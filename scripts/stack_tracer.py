@@ -37,8 +37,8 @@ import time
 import threading
 import traceback
 from pygments import highlight
-from pygments.lexers import PythonLexer
-from pygments.formatters import HtmlFormatter
+from pygments.formatters.html import HtmlFormatter
+from pygments.lexers.python import PythonLexer
 
 
 def stacktraces() -> str:

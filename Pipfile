@@ -18,6 +18,7 @@ tox-pipenv = "*"
 pytest-cov = "*"
 docker = "*"
 flake8-docstrings = "*"
+pygments = "*"
 
 [packages]
 numpy = "*"
@@ -27,7 +28,7 @@ visdom = "*"
 cryptography = "*"
 base58 = "*"
 fetchai-ledger-api = {git = "https://github.com/fetchai/ledger-api-py.git"}
-oef = {version="==0.6.0", index="test-pypi"}
+oef = {version = "==0.6.0",index = "test-pypi"}
 sphinxcontrib-mermaid = "*"
 sphinxcontrib-apidoc = "*"
 sphinx = "*"
