@@ -22,7 +22,7 @@
 
 import logging
 import time
-from typing import Optional, Union
+from typing import Optional
 
 from tac.agents.v1.agent import Agent
 from tac.agents.v1.base.game_instance import GameInstance, GamePhase

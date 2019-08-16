@@ -36,9 +36,11 @@ class TAgent(Agent):
         self.mailbox = OEFNetworkMailBox(self.crypto.public_key, "127.0.0.1", 10000)
 
     def setup(self) -> None:
+        """Setup."""
         pass
 
     def teardown(self) -> None:
+        """Teardown."""
         pass
 
     def act(self) -> None:

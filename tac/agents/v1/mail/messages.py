@@ -35,11 +35,19 @@ ProtocolId = str
 
 
 class Message:
+    """The message class."""
 
     def __init__(self, to: Optional[Address] = None,
                  sender: Optional[Address] = None,
                  protocol_id: Optional[ProtocolId] = None,
                  **body):
+        """
+        Initialize.
+
+        :param to: the public key of the receiver.
+        :param sender: the public key of the sender.
+        :param protocol_id: the protocol id.
+        """
         self._to = to
         self._sender = sender
         self._protocol_id = protocol_id
@@ -47,46 +55,64 @@ class Message:
 
     @property
     def to(self) -> Address:
+        """Get public key of receiver."""
         return self._to
 
     @to.setter
-    def to(self, to: Address):
+    def to(self, to: Address) -> None:
+        """Set public key of receiver."""
         self._to = to
 
     @property
     def sender(self) -> Address:
+        """Get public key of sender."""
         return self._sender
 
     @sender.setter
-    def sender(self, sender: Address):
+    def sender(self, sender: Address) -> None:
+        """Set public key of sender."""
         self._sender = sender
 
     @property
     def protocol_id(self) -> Optional[ProtocolId]:
+        """Get protocol id."""
         return self._protocol_id
 
     def set(self, key: str, value: Any) -> None:
+        """
+        Set key and value pair.
+
+        :param key: the key.
+        :param value: the value.
+        :return: None
+        """
         self._body[key] = value
 
     def get(self, key: str) -> Optional[Any]:
+        """Get value for key."""
         return self._body.get(key, None)
 
     def unset(self, key: str) -> None:
+        """Unset valye for key."""
         self._body.pop(key, None)
 
     def is_set(self, key: str) -> bool:
+        """Check value is set for key."""
         return key in self._body
 
     def check_consistency(self) -> bool:
-        """Check that the data are consistent."""
+        """Check that the data is consistent."""
         return True
 
 
 class OEFMessage(Message):
+    """The OEF message class."""
 
     protocol_id = "oef"
 
     class Type(Enum):
+        """OEF Message types."""
+
         REGISTER_SERVICE = "register_service"
         REGISTER_AGENT = "register_agent"
         UNREGISTER_SERVICE = "unregister_service"
@@ -95,16 +121,23 @@ class OEFMessage(Message):
         SEARCH_AGENTS = "search_agents"
         OEF_ERROR = "oef_error"
         DIALOGUE_ERROR = "dialogue_error"
-
         SEARCH_RESULT = "search_result"
 
     def __init__(self, to: Optional[Address] = None,
                  sender: Optional[Address] = None,
                  oef_type: Optional[Type] = None,
                  **body):
+        """
+        Initialize.
+
+        :param to: the public key of the receiver.
+        :param sender: the public key of the sender.
+        :param protocol_id: the protocol id.
+        """
         super().__init__(to=to, sender=sender, protocol_id=self.protocol_id, type=oef_type, **body)
 
     def check_consistency(self) -> bool:
+        """Check that the data is consistent."""
         try:
             assert self.is_set("type")
             oef_type = OEFMessage.Type(self.get("type"))
@@ -160,6 +193,7 @@ class OEFMessage(Message):
 
 
 class ByteMessage(Message):
+    """The Byte message class."""
 
     protocol_id = "bytes"
 
@@ -168,14 +202,26 @@ class ByteMessage(Message):
                  message_id: Optional[int] = None,
                  dialogue_id: Optional[int] = None,
                  content: bytes = b""):
+        """
+        Initialize.
+
+        :param to: the public key of the receiver.
+        :param sender: the public key of the sender.
+        :param message_id: the message id.
+        :param dialogue_id: the dialogue id.
+        :param content: the message content.
+        """
         super().__init__(to=to, sender=sender, id=message_id, dialogue_id=dialogue_id, content=content)
 
 
 class SimpleMessage(Message):
+    """The Simple message class."""
 
     protocol_id = "default"
 
     class Type(Enum):
+        """Simple message types."""
+
         BYTES = "bytes"
         ERROR = "error"
 
@@ -183,14 +229,24 @@ class SimpleMessage(Message):
                  sender: Optional[Address] = None,
                  type: Optional[Type] = None,
                  **body):
+        """
+        Initialize.
+
+        :param to: the public key of the receiver.
+        :param sender: the public key of the sender.
+        :param type: the type.
+        """
         super().__init__(to=to, sender=sender, protocol_id=self.protocol_id, type=type, **body)
 
 
 class FIPAMessage(Message):
+    """The FIPA message class."""
 
     protocol_id = "fipa"
 
     class Performative(Enum):
+        """FIPA performatives."""
+
         CFP = "cfp"
         PROPOSE = "propose"
         ACCEPT = "accept"
@@ -199,21 +255,32 @@ class FIPAMessage(Message):
 
     def __init__(self, to: Optional[Address] = None,
                  sender: Optional[Address] = None,
-                 msg_id: Optional[int] = None,
+                 message_id: Optional[int] = None,
                  dialogue_id: Optional[DialogueLabel] = None,
                  target: Optional[int] = None,
                  performative: Optional[Union[str, Performative]] = None,
                  **body):
+        """
+        Initialize.
+
+        :param to: the public key of the receiver.
+        :param sender: the public key of the sender.
+        :param message_id: the message id.
+        :param dialogue_id: the dialogue id.
+        :param target: the message target.
+        :param performative: the message performative.
+        """
         super().__init__(to,
                          sender,
                          protocol_id=self.protocol_id,
-                         id=msg_id,
+                         id=message_id,
                          dialogue_id=dialogue_id,
                          target=target,
                          performative=FIPAMessage.Performative(performative),
                          **body)
 
     def check_consistency(self) -> bool:
+        """Check that the data is consistent."""
         try:
             assert self.is_set("target")
             performative = FIPAMessage.Performative(self.get("performative"))

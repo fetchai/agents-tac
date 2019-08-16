@@ -23,7 +23,7 @@
 import json
 import logging
 import pprint
-from typing import Union, List
+from typing import List
 
 from tac.agents.v1.base.dialogues import Dialogue
 from tac.agents.v1.base.game_instance import GameInstance

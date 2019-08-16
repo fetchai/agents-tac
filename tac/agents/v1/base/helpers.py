@@ -57,12 +57,12 @@ def is_controller_message(msg: Message, crypto: Crypto) -> bool:
         Response.from_pb(byte_content, sender_pbk, crypto)
     except Exception as e:
         logger.debug("Not a Controller message: {}".format(str(e)))
-        try:
-            byte_content = msg.get("content")
-            sender_pbk = msg.sender
-            Response.from_pb(byte_content, sender_pbk, crypto)
-        except:
-            pass
+        # try:
+        #     byte_content = msg.get("content")
+        #     sender_pbk = msg.sender
+        #     Response.from_pb(byte_content, sender_pbk, crypto)
+        # except:
+        #     pass
         return False
 
     return True

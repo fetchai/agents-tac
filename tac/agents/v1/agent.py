@@ -28,7 +28,6 @@ from enum import Enum
 from typing import Optional
 
 from tac.agents.v1.mail.base import InBox, OutBox, MailBox
-from tac.agents.v1.mail.oef import OEFNetworkMailBox
 from tac.helpers.crypto import Crypto
 
 logger = logging.getLogger(__name__)
@@ -87,10 +86,12 @@ class Agent:
 
     @property
     def inbox(self) -> Optional[InBox]:
+        """Get the inbox."""
         return self.mailbox.inbox if self.mailbox else None
 
     @property
     def outbox(self) -> Optional[OutBox]:
+        """Get the outbox."""
         return self.mailbox.outbox if self.mailbox else None
 
     @property

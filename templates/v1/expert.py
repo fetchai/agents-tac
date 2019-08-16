@@ -26,7 +26,7 @@ import logging
 from typing import Optional
 
 from tac.agents.v1.agent import Agent
-from tac.agents.v1.mail import FIPAMailBox, InBox, OutBox
+from tac.agents.v1.mail import FIPAMailBox
 
 logger = logging.getLogger(__name__)
 

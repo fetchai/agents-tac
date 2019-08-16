@@ -20,12 +20,12 @@
 """This module contains tests for the mail module."""
 import time
 
-from tac.agents.v1.mail.messages import OEFMessage, FIPAMessage, ByteMessage
+from tac.agents.v1.mail.messages import FIPAMessage, ByteMessage  # OEFMessage
 from tac.agents.v1.mail.oef import OEFNetworkMailBox
 
 
 def test_example(network_node):
-
+    """Test the mailbox."""
     mailbox1 = OEFNetworkMailBox("mailbox1", "127.0.0.1", 10000)
     mailbox2 = OEFNetworkMailBox("mailbox2", "127.0.0.1", 10000)
 

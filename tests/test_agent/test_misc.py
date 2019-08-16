@@ -20,10 +20,9 @@
 
 """Test miscellaneous features for the agent module."""
 from threading import Timer
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 
 from tac.agents.v1.agent import Agent
-from tac.agents.v1.mail.messages import ByteMessage
 from tac.agents.v1.mail.oef import OEFNetworkMailBox
 
 
@@ -71,4 +70,3 @@ def test_that_when_debug_flag_true_we_can_run_main_loop_without_oef():
     test_agent.act.assert_called()
     test_agent.react.assert_called()
     test_agent.update.assert_called()
-

@@ -61,6 +61,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+
 class RequestHandler(ABC):
     """Abstract class for a request handler."""
 

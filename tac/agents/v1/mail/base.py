@@ -18,12 +18,10 @@
 #
 # ------------------------------------------------------------------------------
 
-"""
-Mail module v2.
-"""
+"""Mail module abstract base classes."""
 
 import logging
-from abc import abstractmethod, ABC
+from abc import abstractmethod
 from queue import Queue
 from typing import Optional
 
@@ -36,7 +34,11 @@ class InBox(object):
     """A queue from where you can only consume messages."""
 
     def __init__(self, queue: Queue):
-        """Initialize the inbox."""
+        """
+        Initialize the inbox.
+
+        :param queue: the queue.
+        """
         super().__init__()
         self._queue = queue
 
@@ -62,7 +64,7 @@ class InBox(object):
         logger.debug("Incoming message type: type={}".format(type(msg)))
         return msg
 
-    def get_nowait(self):
+    def get_nowait(self) -> Optional[Message]:
         """
         Check for a message on the in queue and wait for no time.
 
@@ -76,7 +78,11 @@ class OutBox(object):
     """A queue from where you can only enqueue messages."""
 
     def __init__(self, queue: Queue) -> None:
-        """Initialize the outbox."""
+        """
+        Initialize the outbox.
+
+        :param queue: the queue.
+        """
         super().__init__()
         self._queue = queue
 
@@ -89,14 +95,21 @@ class OutBox(object):
         return self._queue.empty()
 
     def put(self, item: Message) -> None:
-        """Put an item into the queue."""
+        """
+        Put an item into the queue.
+
+        :param item: the message.
+        :return: None
+        """
         logger.debug("Put a message in the queue...")
         self._queue.put(item)
 
 
 class Connection:
+    """Abstract definition of a connection."""
 
     def __init__(self):
+        """Initialize the connection."""
         self.in_queue = Queue()
         self.out_queue = Queue()
 
@@ -133,12 +146,14 @@ class MailBox(object):
         """Check whether the mailbox is processing messages."""
         return self._connection.is_established
 
-    def connect(self):
+    def connect(self) -> None:
+        """Connect."""
         self._connection.connect()
 
-    def disconnect(self):
+    def disconnect(self) -> None:
+        """Disconnect."""
         self._connection.disconnect()
 
-    def send(self, out: Message):
+    def send(self, out: Message) -> None:
+        """Send."""
         self.outbox.put(out)
-

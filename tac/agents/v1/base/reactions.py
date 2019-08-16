@@ -28,7 +28,7 @@ This module contains the classes which define the reactions of an agent.
 
 import json
 import logging
-from typing import List, Union
+from typing import List
 
 from tac.agents.v1.agent import Liveness
 from tac.agents.v1.base.dialogues import Dialogue
@@ -402,7 +402,7 @@ class DialogueReactions(DialogueReactionInterface):
         """
         logger.debug("[{}]: Unidentified dialogue.".format(self.agent_name))
         result = ByteMessage(to=msg.sender, sender=self.crypto.public_key, message_id=msg.get("id") + 1,
-                             dialogue_id=msg.get("dialogue_id"),  content=b'This message belongs to an unidentified dialogue.')
+                             dialogue_id=msg.get("dialogue_id"), content=b'This message belongs to an unidentified dialogue.')
         self.mailbox.outbox.put(result)
 
     def _handle(self, msg: Message, dialogue: Dialogue) -> List[Message]:

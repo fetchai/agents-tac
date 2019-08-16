@@ -24,7 +24,7 @@ import datetime
 import logging
 from queue import Empty, Queue
 from threading import Thread
-from typing import List, Union, Dict
+from typing import List, Dict
 
 from oef.agents import Agent
 from oef.core import OEFProxy
@@ -84,16 +84,37 @@ class MailStats(object):
 
 
 class OEFChannel(Agent):
+    """The OEFChannel connects the OEF Agent with the connection."""
 
     def __init__(self, oef_proxy: OEFProxy, in_queue: Queue):
+        """
+        Initialize.
+
+        :param oef_proxy: the OEFProxy.
+        :param in_queue: the in queue.
+        """
         super().__init__(oef_proxy)
         self.in_queue = in_queue
         self.mail_stats = MailStats()
 
-    def is_connected(self):
+    def is_connected(self) -> bool:
+        """Get connected status."""
         return self._oef_proxy.is_connected()
 
-    def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes):
+    def is_active(self) -> bool:
+        """Get active status."""
+        return self._oef_proxy._active_loop
+
+    def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
+        """
+        On message event handler.
+
+        :param msg_id: the message id.
+        :param dialogue_id: the dialogue id.
+        :param origin: the public key of the sender.
+        :param content: the bytes content.
+        :return: None
+        """
         msg = ByteMessage(to=self.public_key,
                           sender=origin,
                           message_id=msg_id,
@@ -101,7 +122,17 @@ class OEFChannel(Agent):
                           content=content)
         self.in_queue.put(msg)
 
-    def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES):
+    def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES) -> None:
+        """
+        On cfp event handler.
+
+        :param msg_id: the message id.
+        :param dialogue_id: the dialogue id.
+        :param origin: the public key of the sender.
+        :param target: the message target.
+        :param query: the query.
+        :return: None
+        """
         msg = FIPAMessage(to=self.public_key,
                           sender=origin,
                           msg_id=msg_id,
@@ -111,7 +142,17 @@ class OEFChannel(Agent):
                           query=query)
         self.in_queue.put(msg)
 
-    def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES):
+    def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES) -> None:
+        """
+        On propose event handler.
+
+        :param msg_id: the message id.
+        :param dialogue_id: the dialogue id.
+        :param origin: the public key of the sender.
+        :param target: the message target.
+        :param proposals: the proposals.
+        :return: None
+        """
         msg = FIPAMessage(to=self.public_key,
                           sender=origin,
                           msg_id=msg_id,
@@ -121,7 +162,16 @@ class OEFChannel(Agent):
                           proposal=proposals)
         self.in_queue.put(msg)
 
-    def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int):
+    def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
+        """
+        On accept event handler.
+
+        :param msg_id: the message id.
+        :param dialogue_id: the dialogue id.
+        :param origin: the public key of the sender.
+        :param target: the message target.
+        :return: None
+        """
         msg = FIPAMessage(to=self.public_key,
                           sender=origin,
                           msg_id=msg_id,
@@ -130,7 +180,16 @@ class OEFChannel(Agent):
                           performative=FIPAMessage.Performative.ACCEPT)
         self.in_queue.put(msg)
 
-    def on_decline(self, msg_id: int, dialogue_id: int, origin: str, target: int):
+    def on_decline(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
+        """
+        On decline event handler.
+
+        :param msg_id: the message id.
+        :param dialogue_id: the dialogue id.
+        :param origin: the public key of the sender.
+        :param target: the message target.
+        :return: None
+        """
         msg = FIPAMessage(to=self.public_key,
                           sender=origin,
                           msg_id=msg_id,
@@ -139,7 +198,14 @@ class OEFChannel(Agent):
                           performative=FIPAMessage.Performative.DECLINE)
         self.in_queue.put(msg)
 
-    def on_search_result(self, search_id: int, agents: List[str]):
+    def on_search_result(self, search_id: int, agents: List[str]) -> None:
+        """
+        On accept event handler.
+
+        :param search_id: the search id.
+        :param agents: the list of agents.
+        :return: None
+        """
         self.mail_stats.search_end(search_id, len(agents))
         msg = OEFMessage(to=self.public_key,
                          sender=None,
@@ -148,7 +214,14 @@ class OEFChannel(Agent):
                          agents=agents)
         self.in_queue.put(msg)
 
-    def on_oef_error(self, answer_id: int, operation: OEFErrorOperation):
+    def on_oef_error(self, answer_id: int, operation: OEFErrorOperation) -> None:
+        """
+        On oef error event handler.
+
+        :param answer_id: the answer id.
+        :param operation: the error operation.
+        :return: None
+        """
         msg = OEFMessage(to=self.public_key,
                          sender=None,
                          oef_type=OEFMessage.Type.OEF_ERROR,
@@ -156,7 +229,15 @@ class OEFChannel(Agent):
                          operation=operation)
         self.in_queue.put(msg)
 
-    def on_dialogue_error(self, answer_id: int, dialogue_id: int, origin: str):
+    def on_dialogue_error(self, answer_id: int, dialogue_id: int, origin: str) -> None:
+        """
+        On dialogue error event handler.
+
+        :param answer_id: the answer id.
+        :param dialogue_id: the dialogue id.
+        :param origin: the message sender.
+        :return: None
+        """
         msg = OEFMessage(to=self.public_key,
                          sender=None,
                          oef_type=OEFMessage.Type.DIALOGUE_ERROR,
@@ -165,7 +246,13 @@ class OEFChannel(Agent):
                          origin=origin)
         self.in_queue.put(msg)
 
-    def send(self, msg: Message):
+    def send(self, msg: Message) -> None:
+        """
+        Send message handler.
+
+        :param msg: the message.
+        :return: None
+        """
         if msg.protocol_id == "oef":
             self.send_oef_message(msg)
         elif msg.protocol_id == "fipa":
@@ -177,7 +264,13 @@ class OEFChannel(Agent):
         else:
             raise ValueError("Cannot send message.")
 
-    def send_oef_message(self, msg: Message):
+    def send_oef_message(self, msg: Message) -> None:
+        """
+        Send oef message handler.
+
+        :param msg: the message.
+        :return: None
+        """
         oef_type = msg.get("type")
         if oef_type == OEFMessage.Type.REGISTER_SERVICE:
             id = msg.get("id")
@@ -208,7 +301,13 @@ class OEFChannel(Agent):
         else:
             raise ValueError("OEF request not recognized.")
 
-    def send_fipa_message(self, msg: Message):
+    def send_fipa_message(self, msg: Message) -> None:
+        """
+        Send fipa message handler.
+
+        :param msg: the message.
+        :return: None
+        """
         id = msg.get("id")
         dialogue_id = msg.get("dialogue_id")
         destination = msg.to
@@ -229,13 +328,16 @@ class OEFChannel(Agent):
         else:
             raise ValueError("OEF FIPA message not recognized.")
 
-    def is_active(self) -> bool:
-        return self._oef_proxy._active_loop
-
 
 class OEFConnection(Connection):
+    """The OEFConnection connects the to the mailbox."""
 
     def __init__(self, oef_proxy: OEFProxy):
+        """
+        Initialize.
+
+        :param oef_proxy: the OEFProxy
+        """
         super().__init__()
 
         self.bridge = OEFChannel(oef_proxy, self.in_queue)
@@ -244,22 +346,37 @@ class OEFConnection(Connection):
         self.in_thread = Thread(target=self.bridge.run)
         self.out_thread = Thread(target=self._fetch)
 
-    def _fetch(self):
+    def _fetch(self) -> None:
+        """
+        Fetch the messages from the outqueue and send them.
+
+        :return: None
+        """
         while not self._stopped:
             try:
                 msg = self.out_queue.get(block=True, timeout=1.0)
-                self.send(msg)
+                self._send(msg)
             except Empty:
                 pass
 
-    def connect(self):
+    def connect(self) -> None:
+        """
+        Connect to the bridge.
+
+        :return: None
+        """
         if self._stopped:
             self._stopped = False
             self.bridge.connect()
             self.in_thread.start()
             self.out_thread.start()
 
-    def disconnect(self):
+    def disconnect(self) -> None:
+        """
+        Disconnect from the bridge.
+
+        :return: None
+        """
         if self.bridge.is_active():
             self.bridge.stop()
 
@@ -272,24 +389,45 @@ class OEFConnection(Connection):
 
     @property
     def is_established(self) -> bool:
+        """Get the connection status."""
         return self.bridge.is_connected()
 
-    def send(self, msg: Message):
+    def _send(self, msg: Message) -> None:
+        """
+        Send messages.
+
+        :return: None
+        """
         self.bridge.send(msg)
 
 
 class OEFMailBox(MailBox):
+    """The OEF mail box."""
 
-    def __init__(self, proxy: OEFProxy):
-        connection = OEFConnection(proxy)
+    def __init__(self, oef_proxy: OEFProxy):
+        """
+        Initialize.
+
+        :param oef_proxy: the oef proxy.
+        """
+        connection = OEFConnection(oef_proxy)
         super().__init__(connection)
 
     @property
     def mail_stats(self) -> MailStats:
+        """Get the mail stats object."""
         return self._connection.bridge.mail_stats
 
 
 class OEFNetworkMailBox(OEFMailBox):
+    """The OEF network mail box."""
 
-    def __init__(self, public_key: str, oef_addr: str, port: int = 10000):
-        super().__init__(OEFNetworkProxy(public_key, oef_addr, port, loop=asyncio.new_event_loop()))
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000):
+        """
+        Initialize.
+
+        :param public_key: the public key of the agent.
+        :param oef_addr: the OEF address.
+        :param oef_port: the oef port.
+        """
+        super().__init__(OEFNetworkProxy(public_key, oef_addr, oef_port, loop=asyncio.new_event_loop()))

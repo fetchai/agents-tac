@@ -251,10 +251,10 @@ class Dialogues:
         performative = msg.get("performative")
 
         result = protocol == "fipa"\
-                 and performative == FIPAMessage.Performative.CFP \
-                 and msg_id == STARTING_MESSAGE_ID\
-                 and target == STARTING_MESSAGE_TARGET \
-                 and (msg.sender in known_pbks)
+            and performative == FIPAMessage.Performative.CFP \
+            and msg_id == STARTING_MESSAGE_ID\
+            and target == STARTING_MESSAGE_TARGET \
+            and (msg.sender in known_pbks)
         return result
 
     def is_belonging_to_registered_dialogue(self, msg: Message, agent_pbk: str) -> bool:

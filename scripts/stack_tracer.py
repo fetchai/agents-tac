@@ -42,9 +42,7 @@ from pygments.formatters import HtmlFormatter
 
 
 def stacktraces() -> str:
-    """
-    Tracks stack traces.
-    """
+    """Tracks stack traces."""
     print('Stacktraces captured!')
     code = []
     for threadId, stack in sys._current_frames().items():
