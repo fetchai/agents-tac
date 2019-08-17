@@ -28,14 +28,14 @@ It cointains:
 
 from abc import abstractmethod
 
-from oef.messages import Message as OEFErrorMessage, DialogueErrorMessage
+from tac.agents.v1.mail.messages import Message
 
 
 class OEFReactionInterface:
     """This interface contains the methods to react to events from the OEF."""
 
     @abstractmethod
-    def on_oef_error(self, oef_error: OEFErrorMessage) -> None:
+    def on_oef_error(self, oef_error: Message) -> None:
         """
         Handle an OEF error message.
 
@@ -45,7 +45,7 @@ class OEFReactionInterface:
         """
 
     @abstractmethod
-    def on_dialogue_error(self, dialogue_error: DialogueErrorMessage) -> None:
+    def on_dialogue_error(self, dialogue_error: Message) -> None:
         """
         Handle a dialogue error message.
 

@@ -20,10 +20,10 @@
 
 """Test miscellaneous features for the agent module."""
 from threading import Timer
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 
 from tac.agents.v1.agent import Agent
-from tac.agents.v1.mail import FIPAMailBox, InBox, OutBox, OutContainer
+from tac.agents.v1.mail.oef import OEFNetworkMailBox
 
 
 class TAgent(Agent):
@@ -32,9 +32,13 @@ class TAgent(Agent):
     def __init__(self, **kwargs):
         """Initialize the test agent."""
         super().__init__("test_agent", "127.0.0.1", 10000, **kwargs)
-        self.mail_box = FIPAMailBox(self.crypto.public_key, "127.0.0.1", 10000, debug=kwargs.get("debug", False))
-        self.in_box = InBox(self.mail_box)
-        self.out_box = OutBox(self.mail_box)
+        self.mailbox = OEFNetworkMailBox(self.crypto.public_key, "127.0.0.1", 10000)
+
+    def setup(self) -> None:
+        """Set up the agent."""
+
+    def teardown(self) -> None:
+        """Tear down the agent."""
 
     def act(self) -> None:
         """Perform actions."""
@@ -66,18 +70,3 @@ def test_that_when_debug_flag_true_we_can_run_main_loop_without_oef():
     test_agent.act.assert_called()
     test_agent.react.assert_called()
     test_agent.update.assert_called()
-
-
-def test_that_when_debug_flag_true_we_drop_out_messages():
-    """Test that, in debug mode, the out messages are dropped and a warning message is logged."""
-    with patch('logging.Logger.warning') as mock:
-        test_agent = TAgent(debug=True)
-        job = Timer(1.0, test_agent.stop)
-        job.start()
-        msg = OutContainer(b"this is a message.", 0, 0, "destination")
-        test_agent.out_box.out_queue.put_nowait(msg)
-        test_agent.out_box.send_nowait()
-        test_agent.start()
-        job.join()
-
-        mock.assert_called_with("Dropping message of type '<class 'bytes'>' from the out queue...")

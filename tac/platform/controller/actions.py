@@ -29,8 +29,9 @@ import logging
 from oef.schema import Description, DataModel, AttributeSchema
 
 from tac.agents.v1.agent import Liveness
+from tac.agents.v1.mail.base import MailBox
+from tac.agents.v1.mail.messages import OEFMessage
 from tac.platform.controller.interfaces import OEFActionInterface
-from tac.agents.v1.mail import OutBox, OutContainer
 from tac.helpers.crypto import Crypto
 
 logger = logging.getLogger(__name__)
@@ -43,20 +44,20 @@ CONTROLLER_DATAMODEL = DataModel("tac", [
 class OEFActions(OEFActionInterface):
     """The OEFActions class defines the actions of an agent towards the OEF."""
 
-    def __init__(self, crypto: Crypto, liveness: Liveness, out_box: 'OutBox', agent_name: str) -> None:
+    def __init__(self, crypto: Crypto, liveness: Liveness, mailbox: MailBox, agent_name: str) -> None:
         """
         Instantiate the OEFActions.
 
         :param crypto: the crypto module
         :param liveness: the liveness module
-        :param out_box: the outbox of the agent
+        :param mailbox: the mailbox of the agent
         :param agent_name: the agent name
 
         :return: None
         """
         self.crypto = crypto
         self.liveness = liveness
-        self.out_box = out_box
+        self.mailbox = mailbox
         self.agent_name = agent_name
 
     def register_tac(self) -> None:
@@ -67,5 +68,5 @@ class OEFActions(OEFActionInterface):
         """
         desc = Description({"version": 1}, data_model=CONTROLLER_DATAMODEL)
         logger.debug("[{}]: Registering with {} data model".format(self.agent_name, desc.data_model.name))
-        out = OutContainer(message_id=1, service_description=desc)
-        self.out_box.out_queue.put(out)
+        out = OEFMessage(sender=self.crypto.public_key, oef_type=OEFMessage.Type.REGISTER_SERVICE, id=1, service_description=desc, service_id="")
+        self.mailbox.outbox.put(out)

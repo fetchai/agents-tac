@@ -36,36 +36,30 @@ import datetime
 import json
 import logging
 import os
-
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import Any, Dict, Optional, List, Set, Type, Union, TYPE_CHECKING
+from typing import Any, Dict, Optional, List, Set, Type, TYPE_CHECKING
 
-from oef.messages import Message as ByteMessage, DialogueErrorMessage, OEFErrorMessage
-
+from tac.agents.v1.agent import Liveness
+from tac.agents.v1.base.game_instance import GamePhase
+from tac.agents.v1.mail.base import MailBox
+from tac.agents.v1.mail.messages import ByteMessage, Message, OEFMessage
+from tac.gui.monitor import Monitor, NullMonitor
+from tac.helpers.crypto import Crypto
+from tac.helpers.misc import generate_good_pbk_to_name
+from tac.platform.controller.actions import OEFActions
+from tac.platform.controller.reactions import OEFReactions
+from tac.platform.controller.tac_parameters import TACParameters
 from tac.platform.game import Game
 from tac.platform.protocol import Response, Request, Register, Unregister, Error, GameData, \
     Transaction, TransactionConfirmation, ErrorCode, Cancelled, GetStateUpdate, StateUpdate
-from tac.agents.v1.base.game_instance import GamePhase
-from tac.agents.v1.mail import OutContainer, OutBox
-from tac.agents.v1.agent import Liveness
-from tac.gui.monitor import Monitor, NullMonitor
-from tac.helpers.misc import generate_good_pbk_to_name
-from tac.platform.controller.tac_parameters import TACParameters
-from tac.helpers.crypto import Crypto
 # from tac.platform.controller.controller_agent import ControllerAgent
 from tac.platform.stats import GameStats
-from tac.platform.controller.actions import OEFActions
-from tac.platform.controller.reactions import OEFReactions
 
 if TYPE_CHECKING:
     from tac.platform.controller.controller_agent import ControllerAgent
 
 logger = logging.getLogger(__name__)
-
-AgentMessage = Union[ByteMessage, OutContainer]
-OEFMessage = Union[OEFErrorMessage, DialogueErrorMessage]
-Message = Union[AgentMessage, OEFMessage]
 
 
 class RequestHandler(ABC):
@@ -218,9 +212,10 @@ class TransactionHandler(RequestHandler):
 
         # send the transaction confirmation.
         tx_confirmation = TransactionConfirmation(tx.public_key, self.controller_agent.crypto, tx.transaction_id)
-
-        self.controller_agent.out_box.out_queue.put(OutContainer(message_id=1, dialogue_id=1, destination=tx.public_key, message=tx_confirmation.serialize()))
-        self.controller_agent.out_box.out_queue.put(OutContainer(message_id=1, dialogue_id=1, destination=tx.counterparty, message=tx_confirmation.serialize()))
+        self.controller_agent.outbox.put(ByteMessage(to=tx.public_key, sender=self.controller_agent.crypto.public_key,
+                                                     message_id=1, dialogue_id=1, content=tx_confirmation.serialize()))
+        self.controller_agent.outbox.put(ByteMessage(to=tx.counterparty, sender=self.controller_agent.crypto.public_key,
+                                                     message_id=1, dialogue_id=1, content=tx_confirmation.serialize()))
 
         # log messages
         logger.debug("[{}]: Transaction '{}' settled successfully.".format(self.controller_agent.name, tx.transaction_id))
@@ -284,28 +279,32 @@ class AgentMessageDispatcher(object):
             GetStateUpdate: GetStateUpdateHandler(controller_agent),
         }  # type: Dict[Type[Request], RequestHandler]
 
-    def handle_agent_message(self, msg: AgentMessage) -> Response:
+    def handle_agent_message(self, msg: Message) -> Response:
         """
         Dispatch the request to the right handler.
 
         If no handler is found for the provided type of request, return an "invalid request" error.
         If something bad happen, return a "generic" error.
 
-        :param request: the request to handle
+        :param msg: the request to handle
         :return: the response.
         """
-        logger.debug("[{}] on_message: msg_id={}, dialogue_id={}, origin={}" .format(self.controller_agent.name, msg.msg_id, msg.dialogue_id, msg.destination))
-        request = self.decode(msg.msg, msg.destination)
+        assert msg.protocol_id == "bytes"
+        msg_id = msg.get("id")
+        dialogue_id = msg.get("dialogue_id")
+        sender = msg.sender
+        logger.debug("[{}] on_message: msg_id={}, dialogue_id={}, origin={}" .format(self.controller_agent.name, msg.get("id"), dialogue_id, sender))
+        request = self.decode(msg.get("content"), sender)
         handle_request = self.handlers.get(type(request), None)  # type: RequestHandler
         if handle_request is None:
-            logger.debug("[{}]: Unknown message: msg_id={}, dialogue_id={}, origin={}".format(self.controller_agent.name, msg.msg_id, msg.dialogue_id, msg.destination))
-            return Error(msg.destination, self.controller_agent.crypto, ErrorCode.REQUEST_NOT_VALID)
+            logger.debug("[{}]: Unknown message: msg_id={}, dialogue_id={}, origin={}".format(self.controller_agent.name, msg_id, dialogue_id, sender))
+            return Error(msg.sender, self.controller_agent.crypto, ErrorCode.REQUEST_NOT_VALID)
         try:
             return handle_request(request)
         except Exception as e:
             logger.debug("[{}]: Error caught: {}".format(self.controller_agent.name, str(e)))
             logger.exception(e)
-            return Error(msg.destination, self.controller_agent.crypto, ErrorCode.GENERIC_ERROR)
+            return Error(sender, self.controller_agent.crypto, ErrorCode.GENERIC_ERROR)
 
     def decode(self, msg: bytes, public_key: str) -> Request:
         """
@@ -322,20 +321,20 @@ class AgentMessageDispatcher(object):
 class GameHandler:
     """A class to manage a TAC instance."""
 
-    def __init__(self, agent_name: str, crypto: Crypto, out_box: OutBox, monitor: Monitor, tac_parameters: TACParameters) -> None:
+    def __init__(self, agent_name: str, crypto: Crypto, mailbox: MailBox, monitor: Monitor, tac_parameters: TACParameters) -> None:
         """
         Instantiate a GameHandler.
 
         :param agent_name: the name of the agent.
         :param crypto: the crypto module of the agent.
-        :param out_box: the outbox.
+        :param mailbox: the mailbox.
         :param monitor: the monitor.
         :param tac_parameters: the tac parameters.
         :return: None
         """
         self.agent_name = agent_name
         self.crypto = crypto
-        self.out_box = out_box
+        self.mailbox = mailbox
         self.monitor = monitor
         self.tac_parameters = tac_parameters
         self.competition_start = None
@@ -441,21 +440,21 @@ class GameHandler:
                          .format(self.agent_name, public_key, str(game_data_response)))
 
             self.game_data_per_participant[public_key] = game_data_response
-            self.out_box.out_queue.put(OutContainer(message_id=1, dialogue_id=1, destination=public_key, message=game_data_response.serialize()))
+            self.mailbox.outbox.put(ByteMessage(to=public_key, sender=self.crypto.public_key,
+                                                message_id=1, dialogue_id=1, content=game_data_response.serialize()))
 
     def notify_competition_cancelled(self):
         """Notify agents that the TAC is cancelled."""
         logger.debug("[{}]: Notifying agents that TAC is cancelled.".format(self.agent_name))
         for agent_pbk in self.registered_agents:
-            self.out_box.out_queue.put(OutContainer(message_id=1, dialogue_id=1, destination=agent_pbk, message=Cancelled(agent_pbk, self.crypto).serialize()))
+            self.mailbox.outbox.put(ByteMessage(to=agent_pbk, sender=self.crypto.public_key,
+                                                message_id=1, dialogue_id=1, content=Cancelled(agent_pbk, self.crypto).serialize()))
         self._game_phase = GamePhase.POST_GAME
 
     def simulation_dump(self) -> None:
         """
         Dump the details of the simulation.
 
-        :param directory: the directory where experiments details are listed.
-        :param experiment_name: the name of the folder where the data about experiment will be saved.
         :return: None.
         """
         experiment_id = str(self.tac_parameters.experiment_id) if self.tac_parameters.experiment_id is not None else str(datetime.datetime.now())
@@ -475,19 +474,19 @@ class GameHandler:
 class OEFHandler(OEFActions, OEFReactions):
     """Handle the message exchange with the OEF."""
 
-    def __init__(self, crypto: Crypto, liveness: Liveness, out_box: 'OutBox', agent_name: str):
+    def __init__(self, crypto: Crypto, liveness: Liveness, mailbox: MailBox, agent_name: str):
         """
         Instantiate the OEFHandler.
 
         :param crypto: the crypto module
         :param liveness: the liveness module
-        :param out_box: the outbox
+        :param mailbox: the mailbox
         :param agent_name: the agent name
         """
-        OEFActions.__init__(self, crypto, liveness, out_box, agent_name)
-        OEFReactions.__init__(self, crypto, liveness, out_box, agent_name)
+        OEFActions.__init__(self, crypto, liveness, mailbox, agent_name)
+        OEFReactions.__init__(self, crypto, liveness, mailbox, agent_name)
 
-    def handle_oef_message(self, msg: OEFMessage) -> None:
+    def handle_oef_message(self, msg: Message) -> None:
         """
         Handle messages from the oef.
 
@@ -498,9 +497,10 @@ class OEFHandler(OEFActions, OEFReactions):
         :return: None
         """
         logger.debug("[{}]: Handling OEF message. type={}".format(self.agent_name, type(msg)))
-        if isinstance(msg, OEFErrorMessage):
+        assert msg.protocol_id == "oef"
+        if msg.get("type") == OEFMessage.Type.OEF_ERROR:
             self.on_oef_error(msg)
-        elif isinstance(msg, DialogueErrorMessage):
+        elif msg.get("type") == OEFMessage.Type.DIALOGUE_ERROR:
             self.on_dialogue_error(msg)
         else:
             logger.warning("[{}]: OEF Message type not recognized.".format(self.agent_name))

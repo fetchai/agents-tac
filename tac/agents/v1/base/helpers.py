@@ -19,17 +19,15 @@
 # ------------------------------------------------------------------------------
 
 """This module contains helper methods for base agent implementations."""
-
-from typing import Union
-
-from oef.messages import Message as SimpleMessage, SearchResult, OEFErrorMessage, DialogueErrorMessage
+import logging
 
 from tac.agents.v1.base.dialogues import DialogueLabel
+from tac.agents.v1.mail.messages import Message, OEFMessage, FIPAMessage
 from tac.helpers.crypto import Crypto
 from tac.platform.protocol import Response
 
-OEFMessage = Union[SearchResult, OEFErrorMessage, DialogueErrorMessage]
-Message = Union[OEFMessage]
+
+logger = logging.getLogger(__name__)
 
 
 def is_oef_message(msg: Message) -> bool:
@@ -39,8 +37,7 @@ def is_oef_message(msg: Message) -> bool:
     :param msg: the message
     :return: boolean indicating whether or not the message is from the oef
     """
-    msg_type = type(msg)
-    return msg_type in {SearchResult, OEFErrorMessage, DialogueErrorMessage}
+    return msg.protocol_id == "oef" and msg.get("type") in set(OEFMessage.Type)
 
 
 def is_controller_message(msg: Message, crypto: Crypto) -> bool:
@@ -51,18 +48,29 @@ def is_controller_message(msg: Message, crypto: Crypto) -> bool:
     :param crypto: the crypto of the agent
     :return: boolean indicating whether or not the message is from the controller
     """
-    if not isinstance(msg, SimpleMessage):
+    if not msg.protocol_id == "bytes":
         return False
 
     try:
-        msg: SimpleMessage
-        byte_content = msg.msg
-        sender_pbk = msg.destination  # now the origin is the destination!
+        byte_content = msg.get("content")
+        sender_pbk = msg.sender
         Response.from_pb(byte_content, sender_pbk, crypto)
-    except Exception:
+    except Exception as e:
+        logger.debug("Not a Controller message: {}".format(str(e)))
+        # try:
+        #     byte_content = msg.get("content")
+        #     sender_pbk = msg.sender
+        #     Response.from_pb(byte_content, sender_pbk, crypto)
+        # except:
+        #     pass
         return False
 
     return True
+
+
+def is_fipa_message(msg: Message) -> bool:
+    """Chcek whether a message is a FIPA message."""
+    return msg.protocol_id == "fipa" and msg.get("performative") in set(FIPAMessage.Performative)
 
 
 def generate_transaction_id(agent_pbk: str, opponent_pbk: str, dialogue_label: DialogueLabel, agent_is_seller: bool) -> str:

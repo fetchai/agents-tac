@@ -32,12 +32,11 @@ import time
 
 from typing import Dict, Optional
 
-from oef.messages import CFP, Message
-from oef.uri import Context
 
 from tac.agents.v1.base.dialogues import Dialogue
 from tac.agents.v1.examples.baseline import BaselineAgent
 from tac.agents.v1.examples.strategy import BaselineStrategy
+from tac.agents.v1.mail.messages import FIPAMessage, Message
 from tac.platform.protocol import GameData
 
 CUR_PATH = inspect.getfile(inspect.currentframe())
@@ -132,25 +131,28 @@ if __name__ == '__main__':
         starting_message_id = 1
         starting_message_target = 0
         services = agent_one.game_instance.build_services_dict(is_supply=is_seller)  # type: Dict
-        cfp = CFP(starting_message_id, dialogue.dialogue_label.dialogue_id, agent_two.crypto.public_key, starting_message_target, json.dumps(services).encode('utf-8'), Context())
+        cfp = FIPAMessage(agent_two.crypto.public_key,
+                          message_id=starting_message_id, dialogue_id=dialogue.dialogue_label.dialogue_id,
+                          target=starting_message_target, performative=FIPAMessage.Performative.CFP,
+                          query=json.dumps(services).encode('utf-8'))
         dialogue.outgoing_extend([cfp])
-        agent_one.out_box.out_queue.put(cfp)
+        agent_one.outbox.out_queue.put(cfp)
 
         # Send the messages in the outbox
-        agent_one.out_box.send_nowait()
+        # agent_one.out_box.send_nowait()
 
         # Check the message arrived in the inbox of agent_two
         checks = 0
         while checks < 10:
-            if agent_two.in_box.is_in_queue_empty():
+            if agent_two.inbox.empty():
                 # Wait a bit
                 print("Sleeping for 1 second ...")
                 time.sleep(1.0)
                 checks += 1
             else:
                 checks = 10
-        msg = agent_two.in_box.get_no_wait()  # type: Optional[Message]
-        print("The msg is a CFP: {}".format(isinstance(msg, CFP)))
+        msg = agent_two.inbox.get_nowait()  # type: Optional[Message]
+        print("The msg is a CFP: {}".format(msg.get("performative") == FIPAMessage.Performative.CFP))
 
         # Set the debugger
         print("Setting debugger ... To continue enter: c + Enter")

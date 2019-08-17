@@ -77,21 +77,26 @@ class TestCompetitionStopsTooFewAgentRegistered:
         tac_parameters = TACParameters(min_nb_agents=2, start_time=datetime.datetime.now(), registration_timeout=5)
         cls.controller_agent = ControllerAgent('controller', '127.0.0.1', 10000, tac_parameters)
 
-        job = Thread(target=cls.controller_agent.start)
-        job.start()
-
+        import asyncio
         crypto = Crypto()
+        cls.agent1 = TOEFAgent(crypto.public_key, oef_addr='127.0.0.1', oef_port=10000, loop=asyncio.new_event_loop())
+        cls.agent1.connect()
         # core = AsyncioCore(logger=logger)  # OEF-SDK 0.6.1
         # core.run_threaded()  # OEF-SDK 0.6.1
-        import asyncio
-        cls.agent1 = TOEFAgent(crypto.public_key, oef_addr='127.0.0.1', oef_port=10000, loop=asyncio.new_event_loop())
         # agent1 = TestOEFAgent(crypto.public_key, oef_addr='127.0.0.1', oef_port=10000, core=core)  # OEF-SDK 0.6.1
-        cls.agent1.connect()
+
+        job = Thread(target=cls.controller_agent.start)
+        job.start()
+        agent_job = Thread(target=cls.agent1.run)
+        agent_job.start()
+
         cls.agent1.send_message(0, 0, cls.controller_agent.crypto.public_key, Register(crypto.public_key, crypto, 'agent_name').serialize())
 
-        time.sleep(20.0)
+        time.sleep(1.0)
 
         job.join()
+        cls.agent1.stop()
+        agent_job.join()
 
     def test_only_one_agent_registered(self):
         """Test exactly one agent is registered."""
