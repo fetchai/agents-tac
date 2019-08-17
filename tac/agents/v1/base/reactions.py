@@ -302,7 +302,7 @@ class OEFReactions(OEFReactionInterface):
             return
         for agent_pbk in agent_pbks:
             dialogue = self.game_instance.dialogues.create_self_initiated(agent_pbk, self.crypto.public_key, not is_searching_for_sellers)
-            cfp = FIPAMessage(to=agent_pbk, sender=self.crypto.public_key, msg_id=STARTING_MESSAGE_ID, dialogue_id=dialogue.dialogue_label.dialogue_id,
+            cfp = FIPAMessage(to=agent_pbk, sender=self.crypto.public_key, message_id=STARTING_MESSAGE_ID, dialogue_id=dialogue.dialogue_label.dialogue_id,
                               target=STARTING_MESSAGE_TARGET, performative=FIPAMessage.Performative.CFP, query=json.dumps(services).encode('utf-8'))
             logger.debug("[{}]: send_cfp_as_{}: msg_id={}, dialogue_id={}, destination={}, target={}, services={}"
                          .format(self.agent_name, dialogue.role, cfp.get("id"), cfp.get("dialogue_id"), cfp.to, cfp.get("target"), services))
@@ -428,6 +428,8 @@ class DialogueReactions(DialogueReactionInterface):
         elif performative == FIPAMessage.Performative.DECLINE:
             self.negotiation_behaviour.on_decline(msg, dialogue)
             results = []
+        else:
+            raise ValueError("Performative not supported: {}".format(str(performative)))
 
         dialogue.outgoing_extend(results)
         return results

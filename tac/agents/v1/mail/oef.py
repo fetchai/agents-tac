@@ -135,7 +135,7 @@ class OEFChannel(Agent):
         """
         msg = FIPAMessage(to=self.public_key,
                           sender=origin,
-                          msg_id=msg_id,
+                          message_id=msg_id,
                           dialogue_id=dialogue_id,
                           target=target,
                           performative=FIPAMessage.Performative.CFP,
@@ -155,7 +155,7 @@ class OEFChannel(Agent):
         """
         msg = FIPAMessage(to=self.public_key,
                           sender=origin,
-                          msg_id=msg_id,
+                          message_id=msg_id,
                           dialogue_id=dialogue_id,
                           target=target,
                           performative=FIPAMessage.Performative.PROPOSE,
@@ -174,7 +174,7 @@ class OEFChannel(Agent):
         """
         msg = FIPAMessage(to=self.public_key,
                           sender=origin,
-                          msg_id=msg_id,
+                          message_id=msg_id,
                           dialogue_id=dialogue_id,
                           target=target,
                           performative=FIPAMessage.Performative.ACCEPT)
@@ -192,7 +192,7 @@ class OEFChannel(Agent):
         """
         msg = FIPAMessage(to=self.public_key,
                           sender=origin,
-                          msg_id=msg_id,
+                          message_id=msg_id,
                           dialogue_id=dialogue_id,
                           target=target,
                           performative=FIPAMessage.Performative.DECLINE)

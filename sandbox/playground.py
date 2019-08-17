@@ -132,7 +132,7 @@ if __name__ == '__main__':
         starting_message_target = 0
         services = agent_one.game_instance.build_services_dict(is_supply=is_seller)  # type: Dict
         cfp = FIPAMessage(agent_two.crypto.public_key,
-                          msg_id=starting_message_id, dialogue_id=dialogue.dialogue_label.dialogue_id,
+                          message_id=starting_message_id, dialogue_id=dialogue.dialogue_label.dialogue_id,
                           target=starting_message_target, performative=FIPAMessage.Performative.CFP,
                           query=json.dumps(services).encode('utf-8'))
         dialogue.outgoing_extend([cfp])

@@ -101,7 +101,7 @@ class FIPABehaviour:
                                                                       "origin": cfp.sender,
                                                                       "target": cfp.get("target")
                                                                   })))
-            response = FIPAMessage(to=cfp.sender, sender=self.crypto.public_key, msg_id=new_msg_id,
+            response = FIPAMessage(to=cfp.sender, sender=self.crypto.public_key, message_id=new_msg_id,
                                    dialogue_id=cfp.get("dialogue_id"), performative=FIPAMessage.Performative.DECLINE, target=cfp.get("id"))
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_CFP, dialogue.is_self_initiated)
         else:
@@ -122,7 +122,7 @@ class FIPABehaviour:
                                                                       "propose": proposal.values
                                                                   })))
             response = FIPAMessage(to=cfp.sender, sender=self.crypto.public_key, performative=FIPAMessage.Performative.PROPOSE,
-                                   msg_id=new_msg_id, dialogue_id=cfp.get("dialogue_id"), target=cfp.get("id"), proposal=[proposal])
+                                   message_id=new_msg_id, dialogue_id=cfp.get("dialogue_id"), target=cfp.get("id"), proposal=[proposal])
         return response
 
     def on_propose(self, propose: Message, dialogue: Dialogue) -> Message:
@@ -135,7 +135,7 @@ class FIPABehaviour:
         :return: an Accept or a Decline
         """
         logger.debug("[{}]: on propose as {}.".format(self.agent_name, dialogue.role))
-        assert propose.protocol_id == "fipa" and propose.get("type") == FIPAMessage.Performative.PROPOSE
+        assert propose.protocol_id == "fipa" and propose.get("performative") == FIPAMessage.Performative.PROPOSE
         proposal = propose.get("proposal")[0]
         transaction_id = generate_transaction_id(self.crypto.public_key, propose.sender, dialogue.dialogue_label, dialogue.is_seller)
         transaction = Transaction.from_proposal(proposal=proposal,
@@ -151,13 +151,13 @@ class FIPABehaviour:
             logger.debug("[{}]: Accepting propose (as {}).".format(self.agent_name, dialogue.role))
             self.game_instance.transaction_manager.add_locked_tx(transaction, as_seller=dialogue.is_seller)
             self.game_instance.transaction_manager.add_pending_initial_acceptance(dialogue.dialogue_label, new_msg_id, transaction)
-            result = FIPAMessage(to=propose.sender, sender=self.crypto.public_key, msg_id=propose.get("id"),
-                                 dialogue_id=propose.get("dialogue_id"), target=propose.get("target"),
+            result = FIPAMessage(to=propose.sender, sender=self.crypto.public_key, message_id=new_msg_id,
+                                 dialogue_id=propose.get("dialogue_id"), target=propose.get("id"),
                                  performative=FIPAMessage.Performative.ACCEPT)
         else:
             logger.debug("[{}]: Declining propose (as {})".format(self.agent_name, dialogue.role))
-            result = FIPAMessage(to=propose.sender, sender=self.crypto.public_key, msg_id=propose.get("id"),
-                                 dialogue_id=propose.get("dialogue_id"), target=propose.get("target"),
+            result = FIPAMessage(to=propose.sender, sender=self.crypto.public_key, message_id=new_msg_id,
+                                 dialogue_id=propose.get("dialogue_id"), target=propose.get("id"),
                                  performative=FIPAMessage.Performative.ACCEPT)
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_PROPOSE, dialogue.is_self_initiated)
         return result
@@ -171,7 +171,7 @@ class FIPABehaviour:
 
         :return: None
         """
-        assert decline.protocol_id == "fipa" and decline.get("type") == FIPAMessage.Performative.DECLINE
+        assert decline.protocol_id == "fipa" and decline.get("performative") == FIPAMessage.Performative.DECLINE
         logger.debug("[{}]: on_decline: msg_id={}, dialogue_id={}, origin={}, target={}"
                      .format(self.agent_name, decline.get("id"), decline.get("dialogue_id"), decline.sender, decline.get("target")))
         target = decline.get("target")
@@ -179,12 +179,12 @@ class FIPABehaviour:
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_CFP, dialogue.is_self_initiated)
         elif target == 2:
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_PROPOSE, dialogue.is_self_initiated)
-            transaction = self.game_instance.transaction_manager.pop_pending_proposal(dialogue.dialogue_label, decline.target)
+            transaction = self.game_instance.transaction_manager.pop_pending_proposal(dialogue.dialogue_label, target)
             if self.game_instance.strategy.is_world_modeling:
                 self.game_instance.world_state.update_on_declined_propose(transaction)
         elif target == 3:
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_ACCEPT, dialogue.is_self_initiated)
-            transaction = self.game_instance.transaction_manager.pop_pending_initial_acceptance(dialogue.dialogue_label, decline.target)
+            transaction = self.game_instance.transaction_manager.pop_pending_initial_acceptance(dialogue.dialogue_label, target)
             self.game_instance.transaction_manager.pop_locked_tx(transaction.transaction_id)
 
         return None
@@ -196,9 +196,9 @@ class FIPABehaviour:
         :param accept: the accept
         :param dialogue: the dialogue
 
-        :return: a Deline or an Accept and a Transaction (in OutContainer) or a Transaction (in OutContainer)
+        :return: a Decline, or an Accept and a Transaction, or a Transaction (in a Message object)
         """
-        assert accept.protocol_id == "fipa" and accept.get("type") == FIPAMessage.Performative.ACCEPT
+        assert accept.protocol_id == "fipa" and accept.get("performative") == FIPAMessage.Performative.ACCEPT
         logger.debug("[{}]: on_accept: msg_id={}, dialogue_id={}, origin={}, target={}"
                      .format(self.agent_name, accept.get("id"), accept.get("dialogue_id"), accept.sender, accept.get("target")))
 
@@ -217,7 +217,7 @@ class FIPABehaviour:
         :param accept: the accept
         :param dialogue: the dialogue
 
-        :return: a Deline or an Accept and a Transaction (in OutContainer
+        :return: a Decline or an Accept and a Transaction (in OutContainer
         """
         transaction = self.game_instance.transaction_manager.pop_pending_proposal(dialogue.dialogue_label, accept.get("target"))
         new_msg_id = accept.get("id") + 1
@@ -233,12 +233,12 @@ class FIPABehaviour:
                                        message_id=STARTING_MESSAGE_ID, dialogue_id=accept.get("dialogue_id"),
                                        content=transaction.serialize()))
             results.append(FIPAMessage(to=accept.sender, sender=self.crypto.public_key,
-                                       msg_id=new_msg_id, dialogue_id=accept.get("dialogue_id"), target=accept.get("id"),
-                                       performative=FIPAMessage.Performative.MATCH_ACCEPT))
+                                       message_id=new_msg_id, dialogue_id=accept.get("dialogue_id"), target=accept.get("id"),
+                                       performative=FIPAMessage.Performative.ACCEPT))
         else:
             logger.debug("[{}]: Decline the accept (as {}).".format(self.agent_name, dialogue.role))
             results.append(FIPAMessage(to=accept.sender, sender=self.crypto.public_key,
-                                       msg_id=new_msg_id, dialogue_id=accept.get("dialogue_id"),
+                                       message_id=new_msg_id, dialogue_id=accept.get("dialogue_id"),
                                        target=accept.get("id"),
                                        performative=FIPAMessage.Performative.DECLINE))
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_ACCEPT, dialogue.is_self_initiated)

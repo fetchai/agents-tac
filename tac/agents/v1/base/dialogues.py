@@ -268,11 +268,11 @@ class Dialogues:
         """
         assert msg.protocol_id == "fipa"
         dialogue_id = msg.get("dialogue_id")
-        destination = msg.sender
+        opponent = msg.sender
         target = msg.get("target")
         performative = msg.get("performative")
-        self_initiated_dialogue_label = DialogueLabel(dialogue_id, destination, agent_pbk)
-        other_initiated_dialogue_label = DialogueLabel(dialogue_id, destination, destination)
+        self_initiated_dialogue_label = DialogueLabel(dialogue_id, opponent, agent_pbk)
+        other_initiated_dialogue_label = DialogueLabel(dialogue_id, opponent, opponent)
         result = False
         if performative == FIPAMessage.Performative.PROPOSE and target == 1 and self_initiated_dialogue_label in self.dialogues:
             self_initiated_dialogue = self.dialogues[self_initiated_dialogue_label]
@@ -307,11 +307,11 @@ class Dialogues:
         """
         assert msg.protocol_id == "fipa"
         dialogue_id = msg.get("dialogue_id")
-        destination = msg.to
+        opponent = msg.sender
         target = msg.get("target")
         performative = msg.get("performative")
-        self_initiated_dialogue_label = DialogueLabel(dialogue_id, destination, agent_pbk)
-        other_initiated_dialogue_label = DialogueLabel(dialogue_id, destination, destination)
+        self_initiated_dialogue_label = DialogueLabel(dialogue_id, opponent, agent_pbk)
+        other_initiated_dialogue_label = DialogueLabel(dialogue_id, opponent, opponent)
         if performative == FIPAMessage.Performative.PROPOSE and target == 1 and self_initiated_dialogue_label in self.dialogues:
             dialogue = self.dialogues[self_initiated_dialogue_label]
         elif performative == FIPAMessage.Performative.ACCEPT:

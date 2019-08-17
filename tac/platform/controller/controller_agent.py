@@ -192,7 +192,8 @@ class ControllerAgent(Agent):
 
     def teardown(self) -> None:
         """Tear down the agent."""
-        self.game_handler.monitor.stop()
+        if self.game_handler.monitor.is_running:
+            self.game_handler.monitor.stop()
         self.game_handler.simulation_dump()
 
 
