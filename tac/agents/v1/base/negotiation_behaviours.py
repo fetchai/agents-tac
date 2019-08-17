@@ -158,7 +158,7 @@ class FIPABehaviour:
             logger.debug("[{}]: Declining propose (as {})".format(self.agent_name, dialogue.role))
             result = FIPAMessage(to=propose.sender, sender=self.crypto.public_key, message_id=new_msg_id,
                                  dialogue_id=propose.get("dialogue_id"), target=propose.get("id"),
-                                 performative=FIPAMessage.Performative.ACCEPT)
+                                 performative=FIPAMessage.Performative.DECLINE)
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_PROPOSE, dialogue.is_self_initiated)
         return result
 
@@ -234,7 +234,7 @@ class FIPABehaviour:
                                        content=transaction.serialize()))
             results.append(FIPAMessage(to=accept.sender, sender=self.crypto.public_key,
                                        message_id=new_msg_id, dialogue_id=accept.get("dialogue_id"), target=accept.get("id"),
-                                       performative=FIPAMessage.Performative.ACCEPT))
+                                       performative=FIPAMessage.Performative.MATCH_ACCEPT))
         else:
             logger.debug("[{}]: Decline the accept (as {}).".format(self.agent_name, dialogue.role))
             results.append(FIPAMessage(to=accept.sender, sender=self.crypto.public_key,
