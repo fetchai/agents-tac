@@ -21,7 +21,7 @@
 """Protocol module v2."""
 from copy import copy
 from enum import Enum
-from typing import Optional, Any, Union
+from typing import Optional, Any, Union, Dict
 
 from oef.messages import OEFErrorOperation
 from oef.query import Query
@@ -40,18 +40,21 @@ class Message:
     def __init__(self, to: Optional[Address] = None,
                  sender: Optional[Address] = None,
                  protocol_id: Optional[ProtocolId] = None,
-                 **body):
+                 body: Optional[Dict[str, Any]] = None,
+                 **kwargs):
         """
-        Initialize.
+        Initialize a Message object.
 
         :param to: the public key of the receiver.
         :param sender: the public key of the sender.
         :param protocol_id: the protocol id.
+        "param body: a dictionary of
         """
         self._to = to
         self._sender = sender
         self._protocol_id = protocol_id
-        self._body = copy(body) if body else {}
+        self._body = copy(body) if body else {}  # type: Dict[str, Any]
+        self._body.update(kwargs)
 
     @property
     def to(self) -> Address:
@@ -78,6 +81,18 @@ class Message:
         """Get protocol id."""
         return self._protocol_id
 
+    @protocol_id.setter
+    def protocol_id(self, protocol_id: ProtocolId) -> None:
+        self._protocol_id = protocol_id
+
+    @property
+    def body(self):
+        return self.body
+
+    @body.setter
+    def body(self, body: Dict[str, Any]):
+        self._body = body
+
     def set(self, key: str, value: Any) -> None:
         """
         Set key and value pair.
@@ -103,6 +118,13 @@ class Message:
     def check_consistency(self) -> bool:
         """Check that the data is consistent."""
         return True
+
+    def __eq__(self, other):
+        return isinstance(other, Message) \
+               and self.to == other.to \
+               and self.sender == other.sender \
+               and self.protocol_id == other.protocol_id \
+               and self._body == other._body
 
 
 class OEFMessage(Message):
@@ -217,7 +239,7 @@ class ByteMessage(Message):
 class SimpleMessage(Message):
     """The Simple message class."""
 
-    protocol_id = "default"
+    protocol_id = "simple"
 
     class Type(Enum):
         """Simple message types."""

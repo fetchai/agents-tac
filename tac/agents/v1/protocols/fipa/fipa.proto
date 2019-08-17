@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package fetch.aea.fipa;
+
+
+message FIPAMessage{
+    enum Type {
+        CFP = 0;
+        PROPOSE = 1;
+        ACCEPT = 2;
+        MATCH_ACCEPT = 3;
+        DECLINE = 4;
+    }
+    int32 message_id = 1;
+    int32 dialogue_id = 2;
+    int32 target = 3;
+}
