@@ -426,6 +426,8 @@ class DialogueReactions(DialogueReactionInterface):
             results = [result]
         elif performative == FIPAMessage.Performative.ACCEPT:
             results = self.negotiation_behaviour.on_accept(msg, dialogue)
+        elif performative == FIPAMessage.Performative.MATCH_ACCEPT:
+            results = self.negotiation_behaviour.on_match_accept(msg, dialogue)
         elif performative == FIPAMessage.Performative.DECLINE:
             self.negotiation_behaviour.on_decline(msg, dialogue)
             results = []
