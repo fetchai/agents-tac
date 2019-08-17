@@ -281,7 +281,8 @@ class Dialogues:
             if target == 2 and other_initiated_dialogue_label in self.dialogues:
                 other_initiated_dialogue = self.dialogues[other_initiated_dialogue_label]
                 result = other_initiated_dialogue.is_expecting_initial_accept()
-            elif target == 3 and self_initiated_dialogue_label in self.dialogues:
+        elif performative == FIPAMessage.Performative.MATCH_ACCEPT:
+            if target == 3 and self_initiated_dialogue_label in self.dialogues:
                 self_initiated_dialogue = self.dialogues[self_initiated_dialogue_label]
                 result = self_initiated_dialogue.is_expecting_matching_accept()
         elif performative == FIPAMessage.Performative.DECLINE:
@@ -317,7 +318,10 @@ class Dialogues:
         elif performative == FIPAMessage.Performative.ACCEPT:
             if target == 2 and other_initiated_dialogue_label in self.dialogues:
                 dialogue = self.dialogues[other_initiated_dialogue_label]
-            elif target == 3 and self_initiated_dialogue_label in self.dialogues:
+            else:
+                raise ValueError('Should have found dialogue.')
+        elif performative == FIPAMessage.Performative.MATCH_ACCEPT:
+            if target == 3 and self_initiated_dialogue_label in self.dialogues:
                 dialogue = self.dialogues[self_initiated_dialogue_label]
             else:
                 raise ValueError('Should have found dialogue.')

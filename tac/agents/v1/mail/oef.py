@@ -172,12 +172,13 @@ class OEFChannel(Agent):
         :param target: the message target.
         :return: None
         """
+        performative = FIPAMessage.Performative.MATCH_ACCEPT if msg_id == 4 and target == 3 else FIPAMessage.Performative.ACCEPT
         msg = FIPAMessage(to=self.public_key,
                           sender=origin,
                           message_id=msg_id,
                           dialogue_id=dialogue_id,
                           target=target,
-                          performative=FIPAMessage.Performative.ACCEPT)
+                          performative=performative)
         self.in_queue.put(msg)
 
     def on_decline(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:

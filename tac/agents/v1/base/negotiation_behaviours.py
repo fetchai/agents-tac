@@ -198,30 +198,15 @@ class FIPABehaviour:
 
         :return: a Decline, or an Accept and a Transaction, or a Transaction (in a Message object)
         """
-        assert accept.protocol_id == "fipa" and accept.get("performative") == FIPAMessage.Performative.ACCEPT
+        assert accept.protocol_id == "fipa" \
+            and accept.get("performative") == FIPAMessage.Performative.ACCEPT \
+            and dialogue.dialogue_label in self.game_instance.transaction_manager.pending_proposals \
+            and accept.get("target") in self.game_instance.transaction_manager.pending_proposals[dialogue.dialogue_label]
         logger.debug("[{}]: on_accept: msg_id={}, dialogue_id={}, origin={}, target={}"
                      .format(self.agent_name, accept.get("id"), accept.get("dialogue_id"), accept.sender, accept.get("target")))
-
-        target = accept.get("target")
-        if dialogue.dialogue_label in self.game_instance.transaction_manager.pending_initial_acceptances \
-                and target in self.game_instance.transaction_manager.pending_initial_acceptances[dialogue.dialogue_label]:
-            results = self._on_match_accept(accept, dialogue)
-        else:
-            results = self._on_initial_accept(accept, dialogue)
-        return results
-
-    def _on_initial_accept(self, accept: Message, dialogue: Dialogue) -> List[Message]:
-        """
-        Handle an initial Accept.
-
-        :param accept: the accept
-        :param dialogue: the dialogue
-
-        :return: a Decline or an Accept and a Transaction (in OutContainer
-        """
-        transaction = self.game_instance.transaction_manager.pop_pending_proposal(dialogue.dialogue_label, accept.get("target"))
         new_msg_id = accept.get("id") + 1
         results = []
+        transaction = self.game_instance.transaction_manager.pop_pending_proposal(dialogue.dialogue_label, accept.get("target"))
         is_profitable_transaction, message = self.game_instance.is_profitable_transaction(transaction, dialogue)
         logger.debug(message)
         if is_profitable_transaction:
@@ -244,19 +229,24 @@ class FIPABehaviour:
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_ACCEPT, dialogue.is_self_initiated)
         return results
 
-    def _on_match_accept(self, accept: Message, dialogue: Dialogue) -> List[Message]:
+    def on_match_accept(self, match_accept: Message, dialogue: Dialogue) -> List[Message]:
         """
         Handle a matching Accept.
 
-        :param accept: the accept
+        :param match_accept: the match_accept
         :param dialogue: the dialogue
 
         :return: a Transaction
         """
-        logger.debug("[{}]: on match accept".format(self.agent_name))
+        assert match_accept.protocol_id == "fipa" \
+            and match_accept.get("performative") == FIPAMessage.Performative.MATCH_ACCEPT \
+            and dialogue.dialogue_label in self.game_instance.transaction_manager.pending_initial_acceptances \
+            and match_accept.get("target") in self.game_instance.transaction_manager.pending_initial_acceptances[dialogue.dialogue_label]
+        logger.debug("[{}]: on_match_accept: msg_id={}, dialogue_id={}, origin={}, target={}"
+                     .format(self.agent_name, match_accept.get("id"), match_accept.get("dialogue_id"), match_accept.sender, match_accept.get("target")))
         results = []
-        transaction = self.game_instance.transaction_manager.pop_pending_initial_acceptance(dialogue.dialogue_label, accept.get("target"))
+        transaction = self.game_instance.transaction_manager.pop_pending_initial_acceptance(dialogue.dialogue_label, match_accept.get("target"))
         results.append(ByteMessage(to=self.game_instance.controller_pbk, sender=self.crypto.public_key,
-                                   message_id=STARTING_MESSAGE_ID, dialogue_id=accept.get("dialogue_id"),
+                                   message_id=STARTING_MESSAGE_ID, dialogue_id=match_accept.get("dialogue_id"),
                                    content=transaction.serialize()))
         return results
