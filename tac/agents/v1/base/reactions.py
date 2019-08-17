@@ -401,7 +401,8 @@ class DialogueReactions(DialogueReactionInterface):
         :return: None
         """
         logger.debug("[{}]: Unidentified dialogue.".format(self.agent_name))
-        result = ByteMessage(to=msg.sender, sender=self.crypto.public_key, message_id=msg.get("id") + 1,
+        message_id = msg.get("id") if msg.get("id") is not None else 1
+        result = ByteMessage(to=msg.sender, sender=self.crypto.public_key, message_id=message_id + 1,
                              dialogue_id=msg.get("dialogue_id"), content=b'This message belongs to an unidentified dialogue.')
         self.mailbox.outbox.put(result)
 
