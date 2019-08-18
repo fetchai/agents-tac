@@ -40,7 +40,7 @@ class Message:
     def __init__(self, to: Optional[Address] = None,
                  sender: Optional[Address] = None,
                  protocol_id: Optional[ProtocolId] = None,
-                 body: Optional[Dict[str, Any]] = None,
+                 body: Optional[Dict] = None,
                  **kwargs):
         """
         Initialize a Message object.
@@ -124,7 +124,7 @@ class Message:
                and self.to == other.to \
                and self.sender == other.sender \
                and self.protocol_id == other.protocol_id \
-               and self._body == other._body
+               and self.body == other.body
 
 
 class OEFMessage(Message):
@@ -250,7 +250,7 @@ class SimpleMessage(Message):
     def __init__(self, to: Optional[Address] = None,
                  sender: Optional[Address] = None,
                  type: Optional[Type] = None,
-                 **body):
+                 **kwargs):
         """
         Initialize.
 
@@ -258,7 +258,7 @@ class SimpleMessage(Message):
         :param sender: the public key of the sender.
         :param type: the type.
         """
-        super().__init__(to=to, sender=sender, protocol_id=self.protocol_id, type=type, **body)
+        super().__init__(to=to, sender=sender, protocol_id=self.protocol_id, type=type, **kwargs)
 
 
 class FIPAMessage(Message):

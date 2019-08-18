@@ -124,5 +124,9 @@ class Protocol:
         self.serializer = serializer
 
     @abstractmethod
-    def is_valid(self, trace: List[Message]) -> bool:
+    def is_message_valid(self, msg: Message):
+        """Determine whether a message is valid."""
+
+    @abstractmethod
+    def is_trace_valid(self, trace: List[Message]) -> bool:
         """Determine whether a sequence of messages follows the protocol."""

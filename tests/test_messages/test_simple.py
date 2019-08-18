@@ -24,9 +24,9 @@ from tac.agents.v1.mail.messages import Message, SimpleMessage
 from tac.agents.v1.mail.protocol import DefaultProtobufSerializer, DefaultJSONSerializer
 
 
-def test_simple_serialization():
-    """Test that the serialization for the 'simple' protocol."""
-    msg = SimpleMessage(to="receiver", sender="sender", type=SimpleMessage.Type.BYTES, body=dict(content=b"hello"))
+def test_simple_bytes_serialization():
+    """Test that the serialization for the 'simple' protocol works for the BYTES message."""
+    msg = SimpleMessage(to="receiver", sender="sender", type=SimpleMessage.Type.BYTES, content=b"hello")
     msg_bytes = SimpleSerializer().encode(msg)
     actual_msg = SimpleSerializer().decode(msg_bytes)
     expected_msg = msg
@@ -34,9 +34,10 @@ def test_simple_serialization():
     assert expected_msg == actual_msg
 
 
-def test_default_json_serialization():
-    """Test that the default json serialization works."""
-    msg = Message(to="receiver", sender="sender", protocol_id="my_own_protocol", body={"content": "hello"})
+def test_simple_error_serialization():
+    """Test that the serialization for the 'simple' protocol works for the ERROR message."""
+    msg = SimpleMessage(to="receiver", sender="sender", type=SimpleMessage.Type.ERROR,
+                        error_code=-1, error_msg="An error")
     msg_bytes = DefaultJSONSerializer().encode(msg)
     actual_msg = DefaultJSONSerializer().decode(msg_bytes)
     expected_msg = msg
