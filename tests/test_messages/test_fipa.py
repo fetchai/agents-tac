@@ -17,27 +17,20 @@
 #
 # ------------------------------------------------------------------------------
 
-"""This module contains the tests of the messages module."""
-from tac.agents.v1.mail.messages import SimpleMessage
+"""This module contains the tests for the FIPA protocol."""
+from tac.agents.v1.protocols.fipa.serialization import FIPASerializer
 from tac.agents.v1.protocols.simple.serialization import SimpleSerializer
 
-
-def test_simple_bytes_serialization():
-    """Test that the serialization for the 'simple' protocol works for the BYTES message."""
-    msg = SimpleMessage(to="receiver", sender="sender", type=SimpleMessage.Type.BYTES, content=b"hello")
-    msg_bytes = SimpleSerializer().encode(msg)
-    actual_msg = SimpleSerializer().decode(msg_bytes)
-    expected_msg = msg
-
-    assert expected_msg == actual_msg
+from tac.agents.v1.mail.messages import Message, SimpleMessage, FIPAMessage
+from tac.agents.v1.mail.protocol import DefaultProtobufSerializer, DefaultJSONSerializer
 
 
-def test_simple_error_serialization():
-    """Test that the serialization for the 'simple' protocol works for the ERROR message."""
-    msg = SimpleMessage(to="receiver", sender="sender", type=SimpleMessage.Type.ERROR,
-                        error_code=-1, error_msg="An error")
-    msg_bytes = SimpleSerializer().encode(msg)
-    actual_msg = SimpleSerializer().decode(msg_bytes)
+def test_fipa_cfp_serialization():
+    """Test that the serialization for the 'fipa' protocol works.."""
+    msg = FIPAMessage(to="receiver", sender="sender", message_id=0, dialogue_id=0, target=0,
+                      performative=FIPAMessage.Performative.CFP, query={"foo": "bar"})
+    msg_bytes = FIPASerializer().encode(msg)
+    actual_msg = FIPASerializer().decode(msg_bytes)
     expected_msg = msg
 
     assert expected_msg == actual_msg

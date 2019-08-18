@@ -13,16 +13,14 @@ from google.protobuf import descriptor_pb2
 _sym_db = _symbol_database.Default()
 
 
-from google.protobuf import struct_pb2 as google_dot_protobuf_dot_struct__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='base.proto',
   package='fetch.aea',
   syntax='proto3',
-  serialized_pb=_b('\n\nbase.proto\x12\tfetch.aea\x1a\x1cgoogle/protobuf/struct.proto\"a\n\x07Message\x12\n\n\x02to\x18\x01 \x01(\t\x12\x0e\n\x06sender\x18\x02 \x01(\t\x12\x13\n\x0bprotocol_id\x18\x03 \x01(\t\x12%\n\x04\x62ody\x18\x04 \x01(\x0b\x32\x17.google.protobuf.Structb\x06proto3')
-  ,
-  dependencies=[google_dot_protobuf_dot_struct__pb2.DESCRIPTOR,])
+  serialized_pb=_b('\n\nbase.proto\x12\tfetch.aea\"H\n\x07Message\x12\n\n\x02to\x18\x01 \x01(\t\x12\x0e\n\x06sender\x18\x02 \x01(\t\x12\x13\n\x0bprotocol_id\x18\x03 \x01(\t\x12\x0c\n\x04\x62ody\x18\x04 \x01(\x0c\x62\x06proto3')
+)
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
@@ -58,8 +56,8 @@ _MESSAGE = _descriptor.Descriptor(
       options=None),
     _descriptor.FieldDescriptor(
       name='body', full_name='fetch.aea.Message.body', index=3,
-      number=4, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
+      number=4, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b(""),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -75,11 +73,10 @@ _MESSAGE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=55,
-  serialized_end=152,
+  serialized_start=25,
+  serialized_end=97,
 )
 
-_MESSAGE.fields_by_name['body'].message_type = google_dot_protobuf_dot_struct__pb2._STRUCT
 DESCRIPTOR.message_types_by_name['Message'] = _MESSAGE
 
 Message = _reflection.GeneratedProtocolMessageType('Message', (_message.Message,), dict(

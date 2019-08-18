@@ -2,11 +2,9 @@ syntax = "proto3";
 
 package fetch.aea;
 
-import "google/protobuf/struct.proto";
-
 message Message{
     string to = 1;
     string sender = 2;
     string protocol_id = 3;
-    google.protobuf.Struct body = 4;
+    bytes body = 4;
 }

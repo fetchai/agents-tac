@@ -67,6 +67,7 @@ class SimpleSerializer(Serializer):
 
         json_body = json_msg["body"]
         msg_type = SimpleMessage.Type(json_body["type"])
+        body["type"] = msg_type
         if msg_type == SimpleMessage.Type.BYTES:
             content = base58.b58decode(json_body["content"].encode("utf-8"))
             body["content"] = content

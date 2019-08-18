@@ -87,7 +87,7 @@ class Message:
 
     @property
     def body(self):
-        return self.body
+        return self._body
 
     @body.setter
     def body(self, body: Dict[str, Any]):
@@ -281,7 +281,7 @@ class FIPAMessage(Message):
                  dialogue_id: Optional[DialogueLabel] = None,
                  target: Optional[int] = None,
                  performative: Optional[Union[str, Performative]] = None,
-                 **body):
+                 **kwargs):
         """
         Initialize.
 
@@ -299,7 +299,7 @@ class FIPAMessage(Message):
                          dialogue_id=dialogue_id,
                          target=target,
                          performative=FIPAMessage.Performative(performative),
-                         **body)
+                         **kwargs)
 
     def check_consistency(self) -> bool:
         """Check that the data is consistent."""

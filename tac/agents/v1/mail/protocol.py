@@ -71,9 +71,10 @@ class DefaultProtobufSerializer(Serializer):
         msg_pb.to = msg.to
         msg_pb.protocol_id = msg.protocol_id
 
-        json_body = Struct()
-        json_body.update(msg.body)
-        msg_pb.body.CopyFrom(json_body)
+        body_json = Struct()
+        body_json.update(msg.body)
+        body_bytes = body_json.SerializeToString()
+        msg_pb.body = body_bytes
 
         msg_bytes = msg_pb.SerializeToString()
         return msg_bytes
@@ -81,7 +82,10 @@ class DefaultProtobufSerializer(Serializer):
     def decode(self, obj: bytes) -> Message:
         msg_pb = base_pb2.Message()
         msg_pb.ParseFromString(obj)
-        body = dict(msg_pb.body)
+
+        body_json = Struct()
+        body_json.ParseFromString(msg_pb.body)
+        body = dict(body_json)
         msg = Message(to=msg_pb.to, sender=msg_pb.sender, protocol_id=msg_pb.protocol_id, **body)
         return msg
 
