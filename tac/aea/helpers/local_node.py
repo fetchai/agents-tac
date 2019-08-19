@@ -29,12 +29,12 @@ class LocalNode:
         self.services = defaultdict(lambda: [])  # type: Dict[str, List[Description]]
         self._lock = threading.Lock()
 
-        self._loop = asyncio.new_event_loop()
+        self.loop = asyncio.new_event_loop()
         self._task = None  # type: Optional[asyncio.Task]
         self._stopped = True  # type: bool
         self._thread = None  # type: Optional[Thread]
 
-        self._read_queue = Queue(loop=self._loop)  # type: Queue
+        self._read_queue = Queue(loop=self.loop)  # type: Queue
         self._queues = {}  # type: Dict[str, asyncio.Queue]
         self._loops = {}  # type: Dict[str, AbstractEventLoop]
 
@@ -74,6 +74,7 @@ class LocalNode:
                 break
             public_key, msg = data
             assert isinstance(msg, AgentMessage)
+            logger.debug("Processing message from {}: {}".format(public_key, msg))
             self._send_agent_message(public_key, msg)
 
     def run(self) -> None:
@@ -83,8 +84,8 @@ class LocalNode:
         :return: None
         """
         self._stopped = False
-        self._task = asyncio.ensure_future(self._process_messages(), loop=self._loop)
-        self._loop.run_until_complete(self._task)
+        self._task = asyncio.ensure_future(self._process_messages(), loop=self.loop)
+        self.loop.run_until_complete(self._task)
 
     def start(self):
         """Start the node in its own thread."""
@@ -100,7 +101,7 @@ class LocalNode:
         self._stopped = True
 
         if self._task and not self._task.cancelled():
-            self._loop.call_soon_threadsafe(self._task.cancel)
+            self.loop.call_soon_threadsafe(self._task.cancel)
 
         if self._thread:
             self._thread.join()
@@ -234,7 +235,6 @@ class LocalNode:
     def _send(self, public_key: str, msg):
         loop = self._loops[public_key]
         loop.call_soon_threadsafe(self._queues[public_key].put_nowait, msg.SerializeToString())
-        # self._queues[public_key].put_nowait(msg.SerializeToString())
 
 
 class OEFLocalProxy(OEFProxy):
@@ -319,7 +319,7 @@ class OEFLocalProxy(OEFProxy):
     def _send(self, msg: BaseMessage) -> None:
         if not self.is_connected():
             raise OEFConnectionError("Connection not established yet. Please use 'connect()'.")
-        self._write_queue.put_nowait((self.public_key, msg))
+        self.local_node.loop.call_soon_threadsafe(self._write_queue.put_nowait, (self.public_key, msg))
 
     async def stop(self):
         self._connection = None

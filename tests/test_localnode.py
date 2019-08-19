@@ -54,7 +54,7 @@ def test_communication():
         mailbox1.send(FIPAMessage("mailbox2", "mailbox1", 0, 0, 0, FIPAMessage.Performative.ACCEPT))
         mailbox1.send(FIPAMessage("mailbox2", "mailbox1", 0, 0, 0, FIPAMessage.Performative.DECLINE))
 
-        time.sleep(5.0)
+        time.sleep(1.0)
 
         msg = mailbox2.inbox.get(block=True, timeout=1.0)
         assert msg.get("content") == b"hello"
