@@ -23,8 +23,8 @@ import base58
 from google.protobuf.struct_pb2 import Struct
 from oef.schema import Description
 
-from tac.agents.v1.mail.messages import Message, FIPAMessage
-from tac.agents.v1.mail.protocol import Serializer
+from tac.agents.v1.mail.messages import FIPAMessage, Message
+from tac.agents.v1.mail.protocol import Serializer, Envelope
 from tac.agents.v1.protocols import base_pb2
 from tac.agents.v1.protocols.fipa import fipa_pb2
 
@@ -32,12 +32,6 @@ from tac.agents.v1.protocols.fipa import fipa_pb2
 class FIPASerializer(Serializer):
     
     def encode(self, msg: Message) -> bytes:
-        assert msg.protocol_id == "fipa"
-        
-        msg_pb = base_pb2.Message()
-        msg_pb.sender = msg.sender
-        msg_pb.to = msg.to
-        msg_pb.protocol_id = msg.protocol_id
 
         fipa_msg = fipa_pb2.FIPAMessage()
         fipa_msg.message_id = msg.get("id")
@@ -75,23 +69,11 @@ class FIPASerializer(Serializer):
             raise ValueError("Performative not valid: {}".format(performative_id))
 
         fipa_bytes = fipa_msg.SerializeToString()
-        msg_pb.body = fipa_bytes
-
-        msg_bytes = msg_pb.SerializeToString()
-
-        return msg_bytes
+        return fipa_bytes
 
     def decode(self, obj: bytes) -> Message:
-        msg_pb = base_pb2.Message()
-        msg_pb.ParseFromString(obj)
-
-        to = msg_pb.to
-        sender = msg_pb.sender
-        protocol_id = msg_pb.protocol_id
-        body_bytes = msg_pb.body
-
         fipa_pb = fipa_pb2.FIPAMessage()
-        fipa_pb.ParseFromString(body_bytes)
+        fipa_pb.ParseFromString(obj)
         message_id = fipa_pb.message_id
         dialogue_id = fipa_pb.dialogue_id
         target = fipa_pb.target
@@ -113,5 +95,5 @@ class FIPASerializer(Serializer):
         else:
             raise ValueError("Performative not valid.")
 
-        return FIPAMessage(to=to, sender=sender, message_id=message_id, dialogue_id=dialogue_id, target=target,
+        return FIPAMessage(message_id=message_id, dialogue_id=dialogue_id, target=target,
                            performative=performative, **performative_content)

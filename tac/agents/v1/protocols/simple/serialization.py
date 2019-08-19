@@ -23,15 +23,14 @@ import json
 
 import base58
 
-from tac.agents.v1.mail.messages import Message, SimpleMessage
-from tac.agents.v1.mail.protocol import Serializer
+from tac.agents.v1.mail.messages import SimpleMessage, Message
+from tac.agents.v1.mail.protocol import Serializer, Envelope
 
 
 class SimpleSerializer(Serializer):
     """Serializer for the 'simple' protocol."""
 
     def encode(self, msg: Message) -> bytes:
-        assert msg.protocol_id == SimpleMessage.protocol_id
 
         body = {}
 
@@ -47,25 +46,13 @@ class SimpleSerializer(Serializer):
         else:
             raise ValueError("Type not recognized.")
 
-        json_msg = {
-            "to": msg.to,
-            "sender": msg.sender,
-            "protocol_id": msg.protocol_id,
-            "body": body
-        }
-
-        bytes_msg = json.dumps(json_msg).encode("utf-8")
+        bytes_msg = json.dumps(body).encode("utf-8")
         return bytes_msg
 
     def decode(self, obj: bytes) -> Message:
-        json_msg = json.loads(obj.decode("utf-8"))
-
-        to = json_msg["to"]
-        sender = json_msg["sender"]
-        protocol_id = json_msg["protocol_id"]
+        json_body = json.loads(obj.decode("utf-8"))
         body = {}
 
-        json_body = json_msg["body"]
         msg_type = SimpleMessage.Type(json_body["type"])
         body["type"] = msg_type
         if msg_type == SimpleMessage.Type.BYTES:
@@ -77,4 +64,4 @@ class SimpleSerializer(Serializer):
         else:
             raise ValueError("Type not recognized.")
 
-        return Message(to=to, sender=sender, protocol_id=protocol_id, body=body)
+        return Message(body=body)

@@ -19,6 +19,7 @@
 # ------------------------------------------------------------------------------
 
 """Protocol module v2."""
+from abc import abstractmethod
 from copy import copy
 from enum import Enum
 from typing import Optional, Any, Union, Dict
@@ -35,62 +36,34 @@ ProtocolId = str
 
 
 class Message:
-    """The message class."""
 
-    def __init__(self, to: Optional[Address] = None,
-                 sender: Optional[Address] = None,
-                 protocol_id: Optional[ProtocolId] = None,
-                 body: Optional[Dict] = None,
+    protocol_id = "default"
+
+    def __init__(self, body: Optional[Dict] = None,
                  **kwargs):
         """
         Initialize a Message object.
 
-        :param to: the public key of the receiver.
-        :param sender: the public key of the sender.
-        :param protocol_id: the protocol id.
-        "param body: a dictionary of
+        :param body: the dictionary of values to hold.
         """
-        self._to = to
-        self._sender = sender
-        self._protocol_id = protocol_id
         self._body = copy(body) if body else {}  # type: Dict[str, Any]
         self._body.update(kwargs)
 
     @property
-    def to(self) -> Address:
-        """Get public key of receiver."""
-        return self._to
-
-    @to.setter
-    def to(self, to: Address) -> None:
-        """Set public key of receiver."""
-        self._to = to
-
-    @property
-    def sender(self) -> Address:
-        """Get public key of sender."""
-        return self._sender
-
-    @sender.setter
-    def sender(self, sender: Address) -> None:
-        """Set public key of sender."""
-        self._sender = sender
-
-    @property
-    def protocol_id(self) -> Optional[ProtocolId]:
-        """Get protocol id."""
-        return self._protocol_id
-
-    @protocol_id.setter
-    def protocol_id(self, protocol_id: ProtocolId) -> None:
-        self._protocol_id = protocol_id
-
-    @property
-    def body(self):
+    def body(self) -> Dict:
+        """
+        The body of the message (in dictionary form)
+        :return: the body
+        """
         return self._body
 
     @body.setter
-    def body(self, body: Dict[str, Any]):
+    def body(self, body: Dict):
+        """
+
+        :param body:
+        :return:
+        """
         self._body = body
 
     def set(self, key: str, value: Any) -> None:
@@ -121,10 +94,7 @@ class Message:
 
     def __eq__(self, other):
         return isinstance(other, Message) \
-               and self.to == other.to \
-               and self.sender == other.sender \
-               and self.protocol_id == other.protocol_id \
-               and self.body == other.body
+            and self.body == other.body
 
 
 class OEFMessage(Message):
@@ -219,21 +189,17 @@ class ByteMessage(Message):
 
     protocol_id = "bytes"
 
-    def __init__(self, to: Optional[Address] = None,
-                 sender: Optional[Address] = None,
-                 message_id: Optional[int] = None,
+    def __init__(self, message_id: Optional[int] = None,
                  dialogue_id: Optional[int] = None,
                  content: bytes = b""):
         """
         Initialize.
 
-        :param to: the public key of the receiver.
-        :param sender: the public key of the sender.
         :param message_id: the message id.
         :param dialogue_id: the dialogue id.
         :param content: the message content.
         """
-        super().__init__(to=to, sender=sender, id=message_id, dialogue_id=dialogue_id, content=content)
+        super().__init__(id=message_id, dialogue_id=dialogue_id, content=content)
 
 
 class SimpleMessage(Message):
@@ -247,18 +213,14 @@ class SimpleMessage(Message):
         BYTES = "bytes"
         ERROR = "error"
 
-    def __init__(self, to: Optional[Address] = None,
-                 sender: Optional[Address] = None,
-                 type: Optional[Type] = None,
+    def __init__(self, type: Optional[Type] = None,
                  **kwargs):
         """
         Initialize.
 
-        :param to: the public key of the receiver.
-        :param sender: the public key of the sender.
         :param type: the type.
         """
-        super().__init__(to=to, sender=sender, protocol_id=self.protocol_id, type=type, **kwargs)
+        super().__init__(type=type, **kwargs)
 
 
 class FIPAMessage(Message):
@@ -275,9 +237,7 @@ class FIPAMessage(Message):
         MATCH_ACCEPT = "match_accept"
         DECLINE = "decline"
 
-    def __init__(self, to: Optional[Address] = None,
-                 sender: Optional[Address] = None,
-                 message_id: Optional[int] = None,
+    def __init__(self, message_id: Optional[int] = None,
                  dialogue_id: Optional[DialogueLabel] = None,
                  target: Optional[int] = None,
                  performative: Optional[Union[str, Performative]] = None,
@@ -285,17 +245,12 @@ class FIPAMessage(Message):
         """
         Initialize.
 
-        :param to: the public key of the receiver.
-        :param sender: the public key of the sender.
         :param message_id: the message id.
         :param dialogue_id: the dialogue id.
         :param target: the message target.
         :param performative: the message performative.
         """
-        super().__init__(to,
-                         sender,
-                         protocol_id=self.protocol_id,
-                         id=message_id,
+        super().__init__(id=message_id,
                          dialogue_id=dialogue_id,
                          target=target,
                          performative=FIPAMessage.Performative(performative),

@@ -32,7 +32,8 @@ from oef.messages import OEFErrorOperation, CFP_TYPES, PROPOSE_TYPES
 from oef.proxy import OEFNetworkProxy
 
 from tac.agents.v1.mail.base import Connection, MailBox
-from tac.agents.v1.mail.messages import OEFMessage, FIPAMessage, Message, ByteMessage
+from tac.agents.v1.mail.messages import OEFMessage, FIPAMessage, ByteMessage
+from tac.agents.v1.mail.protocol import Envelope
 
 logger = logging.getLogger(__name__)
 
@@ -246,7 +247,7 @@ class OEFChannel(Agent):
                          origin=origin)
         self.in_queue.put(msg)
 
-    def send(self, msg: Message) -> None:
+    def send(self, msg: Envelope) -> None:
         """
         Send message handler.
 
@@ -264,7 +265,7 @@ class OEFChannel(Agent):
         else:
             raise ValueError("Cannot send message.")
 
-    def send_oef_message(self, msg: Message) -> None:
+    def send_oef_message(self, msg: Envelope) -> None:
         """
         Send oef message handler.
 
@@ -301,7 +302,7 @@ class OEFChannel(Agent):
         else:
             raise ValueError("OEF request not recognized.")
 
-    def send_fipa_message(self, msg: Message) -> None:
+    def send_fipa_message(self, msg: Envelope) -> None:
         """
         Send fipa message handler.
 
@@ -392,7 +393,7 @@ class OEFConnection(Connection):
         """Get the connection status."""
         return self.bridge.is_connected()
 
-    def _send(self, msg: Message) -> None:
+    def _send(self, msg: Envelope) -> None:
         """
         Send messages.
 

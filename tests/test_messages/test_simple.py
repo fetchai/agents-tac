@@ -19,17 +19,21 @@
 
 """This module contains the tests of the messages module."""
 from tac.agents.v1.mail.messages import SimpleMessage
+from tac.agents.v1.mail.protocol import Envelope
 from tac.agents.v1.protocols.simple.serialization import SimpleSerializer
 
 
 def test_simple_bytes_serialization():
     """Test that the serialization for the 'simple' protocol works for the BYTES message."""
-    msg = SimpleMessage(to="receiver", sender="sender", type=SimpleMessage.Type.BYTES, content=b"hello")
-    msg_bytes = SimpleSerializer().encode(msg)
-    actual_msg = SimpleSerializer().decode(msg_bytes)
-    expected_msg = msg
+    msg = SimpleMessage(type=SimpleMessage.Type.BYTES, content=b"hello")
+    envelope = Envelope(to="receiver", sender="sender", protocol_id="simple", message=msg)
+    serializer = SimpleSerializer()
 
-    assert expected_msg == actual_msg
+    envelope_bytes = envelope.encode(serializer)
+    actual_envelope = Envelope.decode(envelope_bytes, serializer)
+    expected_envelope = envelope
+
+    assert expected_envelope == actual_envelope
 
 
 def test_simple_error_serialization():

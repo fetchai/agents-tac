@@ -21,11 +21,11 @@
 """Protocol module v2."""
 import json
 from abc import abstractmethod, ABC
-from typing import List
+from typing import List, Optional
 
 from google.protobuf.struct_pb2 import Struct
 
-from tac.agents.v1.mail.messages import Message
+from tac.agents.v1.mail.messages import Message, Address, ProtocolId
 from tac.agents.v1.protocols import base_pb2
 
 
@@ -61,32 +61,20 @@ class DefaultProtobufSerializer(Serializer):
     """
     Default Protobuf serializer.
 
-    It assumes that the Message contains a JSON-serializable body,
-    and uses the Protobuf serialization for the Message objects."""
+    It assumes that the Message contains a JSON-serializable body."""
 
     def encode(self, msg: Message) -> bytes:
-
-        msg_pb = base_pb2.Message()
-        msg_pb.sender = msg.sender
-        msg_pb.to = msg.to
-        msg_pb.protocol_id = msg.protocol_id
-
         body_json = Struct()
         body_json.update(msg.body)
         body_bytes = body_json.SerializeToString()
-        msg_pb.body = body_bytes
-
-        msg_bytes = msg_pb.SerializeToString()
-        return msg_bytes
+        return body_bytes
 
     def decode(self, obj: bytes) -> Message:
-        msg_pb = base_pb2.Message()
-        msg_pb.ParseFromString(obj)
-
         body_json = Struct()
-        body_json.ParseFromString(msg_pb.body)
+        body_json.ParseFromString(obj)
+
         body = dict(body_json)
-        msg = Message(to=msg_pb.to, sender=msg_pb.sender, protocol_id=msg_pb.protocol_id, **body)
+        msg = Message(body=body)
         return msg
 
 
@@ -94,27 +82,106 @@ class DefaultJSONSerializer(Serializer):
     """Default serialization in JSON for the Message object."""
 
     def encode(self, msg: Message) -> bytes:
-        json_msg = {
-            "to": msg.to,
-            "sender": msg.sender,
-            "protocol_id": msg.protocol_id,
-            "body": msg.body
-        }
-
-        bytes_msg = json.dumps(json_msg).encode("utf-8")
+        bytes_msg = json.dumps(msg.body).encode("utf-8")
         return bytes_msg
 
     def decode(self, obj: bytes) -> Message:
         json_msg = json.loads(obj.decode("utf-8"))
+        return Message(json_msg)
 
-        msg = Message(
-            to=json_msg["to"],
-            sender=json_msg["sender"],
-            protocol_id=json_msg["protocol_id"],
-            body=json_msg["body"]
-        )
 
-        return msg
+class Envelope:
+    """The message class."""
+
+    def __init__(self, to: Optional[Address] = None,
+                 sender: Optional[Address] = None,
+                 protocol_id: Optional[ProtocolId] = None,
+                 message: Optional[Message] = None):
+        """
+        Initialize a Message object.
+
+        :param to: the public key of the receiver.
+        :param sender: the public key of the sender.
+        :param protocol_id: the protocol id.
+        :param message: the protocol-specific message
+        """
+        self._to = to
+        self._sender = sender
+        self._protocol_id = protocol_id
+        self._message = message
+
+    @property
+    def to(self) -> Address:
+        """Get public key of receiver."""
+        return self._to
+
+    @to.setter
+    def to(self, to: Address) -> None:
+        """Set public key of receiver."""
+        self._to = to
+
+    @property
+    def sender(self) -> Address:
+        """Get public key of sender."""
+        return self._sender
+
+    @sender.setter
+    def sender(self, sender: Address) -> None:
+        """Set public key of sender."""
+        self._sender = sender
+
+    @property
+    def protocol_id(self) -> Optional[ProtocolId]:
+        """Get protocol id."""
+        return self._protocol_id
+
+    @protocol_id.setter
+    def protocol_id(self, protocol_id: ProtocolId) -> None:
+        """Set the protocol id."""
+        self._protocol_id = protocol_id
+
+    @property
+    def message(self) -> Message:
+        """Get the Message."""
+        return self._message
+
+    @message.setter
+    def message(self, message: Message) -> None:
+        """Set the message."""
+        self._message = message
+
+    def __eq__(self, other):
+        return isinstance(other, Envelope) \
+               and self.to == other.to \
+               and self.sender == other.sender \
+               and self.protocol_id == other.protocol_id \
+               and self._message == other._message
+
+    def encode(self, encoder: Encoder) -> bytes:
+        envelope = self
+        envelope_pb = base_pb2.Envelope()
+        envelope_pb.to = envelope.to
+        envelope_pb.sender = envelope.sender
+        envelope_pb.protocol_id = envelope.protocol_id
+        message_bytes = encoder.encode(envelope.message)
+        envelope_pb.message = message_bytes
+
+        envelope_bytes = envelope_pb.SerializeToString()
+        return envelope_bytes
+
+    @classmethod
+    def decode(cls, envelope_bytes: bytes, decoder: Decoder) -> 'Envelope':
+        envelope_pb = base_pb2.Envelope()
+        envelope_pb.ParseFromString(envelope_bytes)
+
+        to = envelope_pb.to
+        sender = envelope_pb.sender
+        protocol_id = envelope_pb.protocol_id
+        message_bytes = envelope_pb.message
+        message = decoder.decode(message_bytes)
+
+        envelope = Envelope(to=to, sender=sender, protocol_id=protocol_id, message=message)
+        return envelope
 
 
 class Protocol:
@@ -128,9 +195,9 @@ class Protocol:
         self.serializer = serializer
 
     @abstractmethod
-    def is_message_valid(self, msg: Message):
+    def is_message_valid(self, msg: Envelope):
         """Determine whether a message is valid."""
 
     @abstractmethod
-    def is_trace_valid(self, trace: List[Message]) -> bool:
+    def is_trace_valid(self, trace: List[Envelope]) -> bool:
         """Determine whether a sequence of messages follows the protocol."""

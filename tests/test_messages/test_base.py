@@ -19,24 +19,33 @@
 
 """This module contains the tests of the messages module."""
 from tac.agents.v1.mail.messages import Message
-from tac.agents.v1.mail.protocol import DefaultProtobufSerializer, DefaultJSONSerializer
+from tac.agents.v1.mail.protocol import DefaultProtobufSerializer, DefaultJSONSerializer, Envelope
 
 
-def test_default_protobuf_serialization():
-    """Test that the default protobuf serialization works."""
-    msg = Message(to="receiver", sender="sender", protocol_id="my_own_protocol", body={"content": "hello"})
-    msg_bytes = DefaultProtobufSerializer().encode(msg)
-    actual_msg = DefaultProtobufSerializer().decode(msg_bytes)
-    expected_msg = msg
+class TestDefaultSerializations:
 
-    assert expected_msg == actual_msg
+    @classmethod
+    def setup_class(cls):
+        cls.message = Message(content="hello")
+        cls.envelope = Envelope(to="receiver", sender="sender", protocol_id="my_own_protocol", message=cls.message)
 
+    def test_default_protobuf_serialization(self):
+        message = self.message
+        envelope = self.envelope
 
-def test_default_json_serialization():
-    """Test that the default json serialization works."""
-    msg = Message(to="receiver", sender="sender", protocol_id="my_own_protocol", body={"content": "hello"})
-    msg_bytes = DefaultJSONSerializer().encode(msg)
-    actual_msg = DefaultJSONSerializer().decode(msg_bytes)
-    expected_msg = msg
+        serializer = DefaultProtobufSerializer()
+        envelope_bytes = envelope.encode(serializer)
+        actual_envelope = Envelope.decode(envelope_bytes, serializer)
+        expected_envelope = envelope
 
-    assert expected_msg == actual_msg
+        assert expected_envelope == actual_envelope
+
+    def test_default_json_serialization(self):
+        envelope = self.envelope
+
+        serializer = DefaultJSONSerializer()
+        envelope_bytes = envelope.encode(serializer)
+        actual_envelope = Envelope.decode(envelope_bytes, serializer)
+        expected_envelope = envelope
+
+        assert expected_envelope == actual_envelope

@@ -21,16 +21,20 @@
 from tac.agents.v1.protocols.fipa.serialization import FIPASerializer
 from tac.agents.v1.protocols.simple.serialization import SimpleSerializer
 
-from tac.agents.v1.mail.messages import Message, SimpleMessage, FIPAMessage
-from tac.agents.v1.mail.protocol import DefaultProtobufSerializer, DefaultJSONSerializer
+from tac.agents.v1.mail.messages import SimpleMessage, FIPAMessage
+from tac.agents.v1.mail.protocol import DefaultProtobufSerializer, DefaultJSONSerializer, Envelope
 
 
 def test_fipa_cfp_serialization():
     """Test that the serialization for the 'fipa' protocol works.."""
-    msg = FIPAMessage(to="receiver", sender="sender", message_id=0, dialogue_id=0, target=0,
-                      performative=FIPAMessage.Performative.CFP, query={"foo": "bar"})
-    msg_bytes = FIPASerializer().encode(msg)
-    actual_msg = FIPASerializer().decode(msg_bytes)
-    expected_msg = msg
+    msg = FIPAMessage(message_id=0, dialogue_id=0, target=0, performative=FIPAMessage.Performative.CFP,
+                      query={"foo": "bar"})
+    envelope = Envelope(to="receiver", sender="sender", protocol_id=FIPAMessage.protocol_id, message=msg)
+    serializer = FIPASerializer()
 
-    assert expected_msg == actual_msg
+    envelope_bytes = envelope.encode(serializer)
+
+    actual_envelope = Envelope.decode(envelope_bytes, serializer)
+    expected_envelope = envelope
+
+    assert expected_envelope == actual_envelope

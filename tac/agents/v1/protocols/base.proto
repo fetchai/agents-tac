@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package fetch.aea;
 
-message Message{
+message Envelope{
     string to = 1;
     string sender = 2;
     string protocol_id = 3;
-    bytes body = 4;
+    bytes message = 4;
 }

@@ -25,7 +25,7 @@ from abc import abstractmethod
 from queue import Queue
 from typing import Optional
 
-from tac.agents.v1.mail.messages import Message
+from tac.agents.v1.mail.protocol import Envelope
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class InBox(object):
         """
         return self._queue.empty()
 
-    def get(self, block: bool = True, timeout: Optional[float] = None) -> Optional[Message]:
+    def get(self, block: bool = True, timeout: Optional[float] = None) -> Optional[Envelope]:
         """
         Check for a message on the in queue.
 
@@ -64,7 +64,7 @@ class InBox(object):
         logger.debug("Incoming message type: type={}".format(type(msg)))
         return msg
 
-    def get_nowait(self) -> Optional[Message]:
+    def get_nowait(self) -> Optional[Envelope]:
         """
         Check for a message on the in queue and wait for no time.
 
@@ -94,7 +94,7 @@ class OutBox(object):
         """
         return self._queue.empty()
 
-    def put(self, item: Message) -> None:
+    def put(self, item: Envelope) -> None:
         """
         Put an item into the queue.
 
@@ -127,7 +127,7 @@ class Connection:
         """Check if the connection is established."""
 
     @abstractmethod
-    def send(self, msg: Message):
+    def send(self, msg: Envelope):
         """Send a message."""
 
 
@@ -154,6 +154,6 @@ class MailBox(object):
         """Disconnect."""
         self._connection.disconnect()
 
-    def send(self, out: Message) -> None:
+    def send(self, out: Envelope) -> None:
         """Send."""
         self.outbox.put(out)
