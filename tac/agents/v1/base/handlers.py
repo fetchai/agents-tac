@@ -34,7 +34,8 @@ from tac.agents.v1.base.actions import DialogueActions, ControllerActions, OEFAc
 from tac.agents.v1.base.game_instance import GameInstance, GamePhase
 from tac.agents.v1.base.reactions import DialogueReactions, ControllerReactions, OEFReactions
 from tac.agents.v1.mail.base import MailBox
-from tac.agents.v1.mail.messages import Message, OEFMessage
+from tac.agents.v1.mail.messages import OEFMessage
+from tac.agents.v1.mail.protocol import Envelope
 from tac.helpers.crypto import Crypto
 from tac.platform.protocol import Error, TransactionConfirmation, StateUpdate, Response, GameData, Cancelled
 
@@ -59,7 +60,7 @@ class DialogueHandler(DialogueActions, DialogueReactions):
         DialogueActions.__init__(self, crypto, liveness, game_instance, mailbox, agent_name)
         DialogueReactions.__init__(self, crypto, liveness, game_instance, mailbox, agent_name)
 
-    def handle_dialogue_message(self, msg: Message) -> None:
+    def handle_dialogue_message(self, msg: Envelope) -> None:
         """
         Handle messages from the other agents.
 
@@ -94,7 +95,7 @@ class ControllerHandler(ControllerActions, ControllerReactions):
         ControllerActions.__init__(self, crypto, liveness, game_instance, mailbox, agent_name)
         ControllerReactions.__init__(self, crypto, liveness, game_instance, mailbox, agent_name)
 
-    def handle_controller_message(self, msg: Message) -> None:
+    def handle_controller_message(self, msg: Envelope) -> None:
         """
         Handle messages from the controller.
 
@@ -105,7 +106,7 @@ class ControllerHandler(ControllerActions, ControllerReactions):
         :return: None
         """
         assert msg.protocol_id == "bytes"
-        response = Response.from_pb(msg.get("content"), msg.sender, self.crypto)
+        response = Response.from_pb(msg.message.get("content"), msg.sender, self.crypto)
         logger.debug("[{}]: Handling controller response. type={}".format(self.agent_name, type(response)))
         try:
             if msg.sender != self.game_instance.controller_pbk:
@@ -150,7 +151,7 @@ class OEFHandler(OEFActions, OEFReactions):
         OEFActions.__init__(self, crypto, liveness, game_instance, mailbox, agent_name)
         OEFReactions.__init__(self, crypto, liveness, game_instance, mailbox, agent_name, rejoin)
 
-    def handle_oef_message(self, msg: Message) -> None:
+    def handle_oef_message(self, msg: Envelope) -> None:
         """
         Handle messages from the oef.
 
@@ -162,7 +163,7 @@ class OEFHandler(OEFActions, OEFReactions):
         """
         logger.debug("[{}]: Handling OEF message. type={}".format(self.agent_name, type(msg)))
         assert msg.protocol_id == "oef"
-        oef_type = msg.get("type")
+        oef_type = msg.message.get("type")
         if oef_type == OEFMessage.Type.SEARCH_RESULT:
             self.on_search_result(msg)
         elif oef_type == OEFMessage.Type.OEF_ERROR:

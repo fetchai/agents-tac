@@ -22,7 +22,8 @@
 import logging
 
 from tac.agents.v1.base.dialogues import DialogueLabel
-from tac.agents.v1.mail.messages import Message, OEFMessage, FIPAMessage
+from tac.agents.v1.mail.messages import OEFMessage, FIPAMessage
+from tac.agents.v1.mail.protocol import Envelope
 from tac.helpers.crypto import Crypto
 from tac.platform.protocol import Response
 
@@ -30,17 +31,17 @@ from tac.platform.protocol import Response
 logger = logging.getLogger(__name__)
 
 
-def is_oef_message(msg: Message) -> bool:
+def is_oef_message(msg: Envelope) -> bool:
     """
     Check whether a message is from the oef.
 
     :param msg: the message
     :return: boolean indicating whether or not the message is from the oef
     """
-    return msg.protocol_id == "oef" and msg.get("type") in set(OEFMessage.Type)
+    return msg.protocol_id == "oef" and msg.message.get("type") in set(OEFMessage.Type)
 
 
-def is_controller_message(msg: Message, crypto: Crypto) -> bool:
+def is_controller_message(msg: Envelope, crypto: Crypto) -> bool:
     """
     Check whether a message is from the controller.
 
@@ -52,7 +53,7 @@ def is_controller_message(msg: Message, crypto: Crypto) -> bool:
         return False
 
     try:
-        byte_content = msg.get("content")
+        byte_content = msg.message.get("content")
         sender_pbk = msg.sender
         Response.from_pb(byte_content, sender_pbk, crypto)
     except Exception as e:
@@ -68,9 +69,9 @@ def is_controller_message(msg: Message, crypto: Crypto) -> bool:
     return True
 
 
-def is_fipa_message(msg: Message) -> bool:
+def is_fipa_message(msg: Envelope) -> bool:
     """Chcek whether a message is a FIPA message."""
-    return msg.protocol_id == "fipa" and msg.get("performative") in set(FIPAMessage.Performative)
+    return msg.protocol_id == "fipa" and msg.message.get("performative") in set(FIPAMessage.Performative)
 
 
 def generate_transaction_id(agent_pbk: str, opponent_pbk: str, dialogue_label: DialogueLabel, agent_is_seller: bool) -> str:

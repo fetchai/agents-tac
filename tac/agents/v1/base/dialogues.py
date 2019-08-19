@@ -29,7 +29,8 @@ This module contains the classes required for dialogue management.
 import logging
 from typing import List, Any, Dict, Optional
 
-from tac.agents.v1.mail.messages import Message, FIPAMessage
+from tac.agents.v1.mail.messages import FIPAMessage
+from tac.agents.v1.mail.protocol import Envelope
 
 Action = Any
 logger = logging.getLogger(__name__)
@@ -98,9 +99,9 @@ class Dialogue:
         self._is_seller = is_seller
         self._is_self_initiated = dialogue_label.dialogue_opponent_pbk is not dialogue_label.dialogue_starter_pbk
         self._role = 'seller' if is_seller else 'buyer'
-        self._outgoing_messages = []  # type: List[Message]
-        self._outgoing_messages_controller = []  # type: List[Message]
-        self._incoming_messages = []  # type: List[Message]
+        self._outgoing_messages = []  # type: List[Envelope]
+        self._outgoing_messages_controller = []  # type: List[Envelope]
+        self._incoming_messages = []  # type: List[Envelope]
 
     @property
     def dialogue_label(self) -> DialogueLabel:
@@ -122,7 +123,7 @@ class Dialogue:
         """Get role of agent in dialogue."""
         return self._role
 
-    def outgoing_extend(self, messages: List[Message]) -> None:
+    def outgoing_extend(self, messages: List[Envelope]) -> None:
         """
         Extend the list of messages which keeps track of outgoing messages.
 
@@ -132,7 +133,7 @@ class Dialogue:
         for message in messages:
             self._outgoing_messages.extend([message])
 
-    def incoming_extend(self, messages: List[Message]) -> None:
+    def incoming_extend(self, messages: List[Envelope]) -> None:
         """
         Extend the list of messages which keeps track of incoming messages.
 
@@ -147,8 +148,8 @@ class Dialogue:
 
         :return: True if yes, False otherwise.
         """
-        last_sent_message = self._outgoing_messages[-1] if len(self._outgoing_messages) > 0 else None  # type: Optional[Message]
-        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.get("performative") == FIPAMessage.Performative.CFP
+        last_sent_message = self._outgoing_messages[-1] if len(self._outgoing_messages) > 0 else None  # type: Optional[Envelope]
+        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.message.get("performative") == FIPAMessage.Performative.CFP
         return result
 
     def is_expecting_initial_accept(self) -> bool:
@@ -157,8 +158,8 @@ class Dialogue:
 
         :return: True if yes, False otherwise.
         """
-        last_sent_message = self._outgoing_messages[-1] if len(self._outgoing_messages) > 0 else None  # type: Optional[Message]
-        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.get("performative") == FIPAMessage.Performative.PROPOSE
+        last_sent_message = self._outgoing_messages[-1] if len(self._outgoing_messages) > 0 else None  # type: Optional[Envelope]
+        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.message.get("performative") == FIPAMessage.Performative.PROPOSE
         return result
 
     def is_expecting_matching_accept(self) -> bool:
@@ -167,8 +168,8 @@ class Dialogue:
 
         :return: True if yes, False otherwise.
         """
-        last_sent_message = self._outgoing_messages[-1] if len(self._outgoing_messages) > 0 else None  # type: Optional[Message]
-        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.get("performative") == FIPAMessage.Performative.ACCEPT
+        last_sent_message = self._outgoing_messages[-1] if len(self._outgoing_messages) > 0 else None  # type: Optional[Envelope]
+        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.message.get("performative") == FIPAMessage.Performative.ACCEPT
         return result
 
     def is_expecting_cfp_decline(self) -> bool:
@@ -177,8 +178,8 @@ class Dialogue:
 
         :return: True if yes, False otherwise.
         """
-        last_sent_message = self._outgoing_messages[-1] if len(self._outgoing_messages) > 0 else None  # type: Optional[Message]
-        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.get("performative") == FIPAMessage.Performative.CFP
+        last_sent_message = self._outgoing_messages[-1] if len(self._outgoing_messages) > 0 else None  # type: Optional[Envelope]
+        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.message.get("performative") == FIPAMessage.Performative.CFP
         return result
 
     def is_expecting_propose_decline(self) -> bool:
@@ -187,8 +188,8 @@ class Dialogue:
 
         :return: True if yes, False otherwise.
         """
-        last_sent_message = self._outgoing_messages[-1] if len(self._outgoing_messages) > 0 else None  # type: Optional[Message]
-        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.get("performative") == FIPAMessage.Performative.PROPOSE
+        last_sent_message = self._outgoing_messages[-1] if len(self._outgoing_messages) > 0 else None  # type: Optional[Envelope]
+        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.message.get("performative") == FIPAMessage.Performative.PROPOSE
         return result
 
     def is_expecting_accept_decline(self) -> bool:
@@ -197,8 +198,8 @@ class Dialogue:
 
         :return: True if yes, False otherwise.
         """
-        last_sent_message = self._outgoing_messages[-1] if len(self._outgoing_messages) > 0 else None  # type: Optional[Message]
-        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.get("performative") == FIPAMessage.Performative.ACCEPT
+        last_sent_message = self._outgoing_messages[-1] if len(self._outgoing_messages) > 0 else None  # type: Optional[Envelope]
+        result = (last_sent_message is not None) and last_sent_message.protocol_id == "fipa" and last_sent_message.message.get("performative") == FIPAMessage.Performative.ACCEPT
         return result
 
 
@@ -231,7 +232,7 @@ class Dialogues:
         """Get dictionary of dialogues in which the agent acts as a buyer."""
         return self._dialogues_as_buyer
 
-    def is_permitted_for_new_dialogue(self, msg: Message, known_pbks: List[str]) -> bool:
+    def is_permitted_for_new_dialogue(self, msg: Envelope, known_pbks: List[str]) -> bool:
         """
         Check whether an agent message is permitted for a new dialogue.
 
@@ -246,9 +247,9 @@ class Dialogues:
         :return: a boolean indicating whether the message is permitted for a new dialogue
         """
         protocol = msg.protocol_id
-        msg_id = msg.get("id")
-        target = msg.get("target")
-        performative = msg.get("performative")
+        msg_id = msg.message.get("id")
+        target = msg.message.get("target")
+        performative = msg.message.get("performative")
 
         result = protocol == "fipa"\
             and performative == FIPAMessage.Performative.CFP \
@@ -257,7 +258,7 @@ class Dialogues:
             and (msg.sender in known_pbks)
         return result
 
-    def is_belonging_to_registered_dialogue(self, msg: Message, agent_pbk: str) -> bool:
+    def is_belonging_to_registered_dialogue(self, msg: Envelope, agent_pbk: str) -> bool:
         """
         Check whether an agent message is part of a registered dialogue.
 
@@ -267,10 +268,10 @@ class Dialogues:
         :return: boolean indicating whether the message belongs to a registered dialogue
         """
         assert msg.protocol_id == "fipa"
-        dialogue_id = msg.get("dialogue_id")
+        dialogue_id = msg.message.get("dialogue_id")
         opponent = msg.sender
-        target = msg.get("target")
-        performative = msg.get("performative")
+        target = msg.message.get("target")
+        performative = msg.message.get("performative")
         self_initiated_dialogue_label = DialogueLabel(dialogue_id, opponent, agent_pbk)
         other_initiated_dialogue_label = DialogueLabel(dialogue_id, opponent, opponent)
         result = False
@@ -296,7 +297,7 @@ class Dialogues:
                 result = self_initiated_dialogue.is_expecting_accept_decline()
         return result
 
-    def get_dialogue(self, msg: Message, agent_pbk: str) -> Dialogue:
+    def get_dialogue(self, msg: Envelope, agent_pbk: str) -> Dialogue:
         """
         Retrieve dialogue.
 
@@ -306,10 +307,10 @@ class Dialogues:
         :return: the dialogue
         """
         assert msg.protocol_id == "fipa"
-        dialogue_id = msg.get("dialogue_id")
+        dialogue_id = msg.message.get("dialogue_id")
         opponent = msg.sender
-        target = msg.get("target")
-        performative = msg.get("performative")
+        target = msg.message.get("target")
+        performative = msg.message.get("performative")
         self_initiated_dialogue_label = DialogueLabel(dialogue_id, opponent, agent_pbk)
         other_initiated_dialogue_label = DialogueLabel(dialogue_id, opponent, opponent)
         if performative == FIPAMessage.Performative.PROPOSE and target == 1 and self_initiated_dialogue_label in self.dialogues:

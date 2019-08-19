@@ -29,7 +29,7 @@ from tac.agents.v1.base.game_instance import GameInstance, GamePhase
 from tac.agents.v1.base.handlers import DialogueHandler, ControllerHandler, OEFHandler
 from tac.agents.v1.base.helpers import is_oef_message, is_controller_message, is_fipa_message
 from tac.agents.v1.base.strategy import Strategy
-from tac.agents.v1.mail.messages import Message
+from tac.agents.v1.mail.protocol import Envelope
 from tac.agents.v1.mail.oef import OEFNetworkMailBox
 from tac.gui.dashboards.agent import AgentDashboard
 
@@ -103,7 +103,7 @@ class ParticipantAgent(Agent):
         counter = 0
         while (not self.mailbox.inbox.empty() and counter < self.max_reactions):
             counter += 1
-            msg = self.mailbox.inbox.get_nowait()  # type: Optional[Message]
+            msg = self.mailbox.inbox.get_nowait()  # type: Optional[Envelope]
             logger.debug("processing message of protocol={}".format(msg.protocol_id))
             if msg is not None:
                 if is_oef_message(msg):
