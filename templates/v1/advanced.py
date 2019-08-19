@@ -27,10 +27,10 @@ from typing import List, Optional, Set
 
 from oef.schema import Description
 
+from tac.aea.state.base import WorldState
+from tac.agents.participant.base.strategy import RegisterAs, SearchFor, Strategy
+from tac.agents.participant.examples.baseline import BaselineAgent
 from tac.gui.dashboards.agent import AgentDashboard
-from tac.platform.game import WorldState
-from tac.agents.v1.base.strategy import Strategy, RegisterAs, SearchFor
-from tac.agents.v1.examples.baseline import BaselineAgent
 
 logger = logging.getLogger(__name__)
 

@@ -54,7 +54,7 @@ class Dialogue(BaseDialogue):
 
         :return: None
         """
-        BaseDialogue.__init__(self, dialogue_label=DialogueLabel)
+        BaseDialogue.__init__(self, dialogue_label=dialogue_label)
         self._is_seller = is_seller
         self._role = 'seller' if is_seller else 'buyer'
 
