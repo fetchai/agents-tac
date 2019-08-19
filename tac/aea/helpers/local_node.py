@@ -1,5 +1,8 @@
 import asyncio
 import logging
+import queue
+import threading
+from asyncio import AbstractEventLoop, Queue
 from collections import defaultdict
 from threading import Thread
 from typing import Dict, List, Tuple, Optional
@@ -12,34 +15,37 @@ from oef.proxy import OEFConnectionError
 from oef.query import Query
 from oef.schema import Description
 
-Envelope = None
-
 logger = logging.getLogger(__name__)
 
 
 class LocalNode:
     """A light-weight local implementation of a OEF Node."""
 
-    def __init__(self, loop=None):
+    def __init__(self):
         """
         Initialize a local (i.e. non-networked) implementation of an OEF Node
         """
         self.agents = dict()  # type: Dict[str, Description]
         self.services = defaultdict(lambda: [])  # type: Dict[str, List[Description]]
-        self.loop = asyncio.get_event_loop() if loop is None else loop
-        self._lock = asyncio.Lock()
-        self._thread = Thread(target=self.run)
+        self._lock = threading.Lock()
 
-        self._read_queue = asyncio.Queue()  # type: asyncio.Queue
+        self._loop = asyncio.new_event_loop()
+        self._task = None  # type: Optional[asyncio.Task]
+        self._stopped = True  # type: bool
+        self._thread = None  # type: Optional[Thread]
+
+        self._read_queue = Queue(loop=self._loop)  # type: Queue
         self._queues = {}  # type: Dict[str, asyncio.Queue]
+        self._loops = {}  # type: Dict[str, AbstractEventLoop]
 
     def __enter__(self):
-        self._thread.start()
+        self.start()
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.stop()
 
-    def connect(self, public_key: str) -> Optional[Tuple[asyncio.Queue, asyncio.Queue]]:
+    def connect(self, public_key: str, loop: AbstractEventLoop) -> Optional[Tuple[Queue, Queue]]:
         """
         Connect a public key to the node.
 
@@ -49,23 +55,23 @@ class LocalNode:
         if public_key in self._queues:
             return None
 
-        queue = asyncio.Queue()
-        self._queues[public_key] = queue
-        return self._read_queue, queue
+        q = Queue(loop=loop)
+        self._queues[public_key] = q
+        self._loops[public_key] = loop
+        return self._read_queue, q
 
-    def _process_messages(self) -> None:
+    async def _process_messages(self) -> None:
         """
         Main event loop to process the incoming messages.
 
-        :return: ``None``
+        :return: None
         """
-        while True:
+        while not self._stopped:
             try:
                 data = await self._read_queue.get()  # type: Tuple[str, BaseMessage]
             except asyncio.CancelledError:
                 logger.debug("Local Node: loop cancelled.")
                 break
-
             public_key, msg = data
             assert isinstance(msg, AgentMessage)
             self._send_agent_message(public_key, msg)
@@ -74,17 +80,30 @@ class LocalNode:
         """
         Run the node, i.e. start processing the messages.
 
-        :return: ``None``
+        :return: None
         """
-        self._process_messages()
+        self._stopped = False
+        self._task = asyncio.ensure_future(self._process_messages(), loop=self._loop)
+        self._loop.run_until_complete(self._task)
+
+    def start(self):
+        """Start the node in its own thread."""
+        self._thread = Thread(target=self.run)
+        self._thread.start()
 
     def stop(self) -> None:
         """
         Stop the execution of the node.
 
-        :return: ``None``
+        :return: None
         """
-        pass
+        self._stopped = True
+
+        if self._task and not self._task.cancelled():
+            self._loop.call_soon_threadsafe(self._task.cancel)
+
+        if self._thread:
+            self._thread.join()
 
     def register_agent(self, public_key: str, agent_description: Description) -> None:
         """
@@ -92,11 +111,10 @@ class LocalNode:
 
         :param public_key: the public key of the agent to be registered.
         :param agent_description: the description of the agent to be registered.
-        :return: ``None``
+        :return: None
         """
-        self.loop.run_until_complete(self._lock.acquire())
-        self.agents[public_key] = agent_description
-        self._lock.release()
+        with self._lock:
+            self.agents[public_key] = agent_description
 
     def register_service(self, public_key: str, service_description: Description):
         """
@@ -104,14 +122,13 @@ class LocalNode:
 
         :param public_key: the public key of the service agent to be registered.
         :param service_description: the description of the service agent to be registered.
-        :return: ``None``
+        :return: None
         """
-        self.loop.run_until_complete(self._lock.acquire())
-        self.services[public_key].append(service_description)
-        self._lock.release()
+        with self._lock:
+            self.services[public_key].append(service_description)
 
     def register_service_wide(self, public_key: str, service_description: Description):
-        self.register_service(public_key, service_description)
+        raise NotImplementedError
 
     def unregister_agent(self, public_key: str, msg_id: int) -> None:
         """
@@ -119,15 +136,14 @@ class LocalNode:
 
         :param public_key: the public key of the agent to be unregistered.
         :param msg_id: the message id of the request.
-        :return: ``None``
+        :return: None
         """
-        self.loop.run_until_complete(self._lock.acquire())
-        if public_key not in self.agents:
-            msg = OEFErrorMessage(msg_id, OEFErrorOperation.UNREGISTER_DESCRIPTION)
-            self._send(public_key, msg.to_pb())
-        else:
-            self.agents.pop(public_key)
-        self._lock.release()
+        with self._lock:
+            if public_key not in self.agents:
+                msg = OEFErrorMessage(msg_id, OEFErrorOperation.UNREGISTER_DESCRIPTION)
+                self._send(public_key, msg.to_pb())
+            else:
+                self.agents.pop(public_key)
 
     def unregister_service(self, public_key: str, msg_id: int, service_description: Description) -> None:
         """
@@ -136,18 +152,16 @@ class LocalNode:
         :param public_key: the public key of the service agent to be unregistered.
         :param msg_id: the message id of the request.
         :param service_description: the description of the service agent to be unregistered.
-        :return: ``None``
+        :return: None
         """
-        self.loop.run_until_complete(self._lock.acquire())
-
-        if public_key not in self.services:
-            msg = OEFErrorMessage(msg_id, OEFErrorOperation.UNREGISTER_SERVICE)
-            self._send(public_key, msg.to_pb())
-        else:
-            self.services[public_key].remove(service_description)
-            if len(self.services[public_key]) == 0:
-                self.services.pop(public_key)
-        self._lock.release()
+        with self._lock:
+            if public_key not in self.services:
+                msg = OEFErrorMessage(msg_id, OEFErrorOperation.UNREGISTER_SERVICE)
+                self._send(public_key, msg.to_pb())
+            else:
+                self.services[public_key].remove(service_description)
+                if len(self.services[public_key]) == 0:
+                    self.services.pop(public_key)
 
     def search_agents(self, public_key: str, search_id: int, query: Query) -> None:
         """
@@ -157,7 +171,7 @@ class LocalNode:
         :param public_key: the source of the search request.
         :param search_id: the search identifier associated with the search request.
         :param query: the query that constitutes the search.
-        :return: ``None``
+        :return: None
         """
 
         result = []
@@ -176,7 +190,7 @@ class LocalNode:
         :param public_key: the source of the search request.
         :param search_id: the search identifier associated with the search request.
         :param query: the query that constitutes the search.
-        :return: ``None``
+        :return: None
         """
 
         result = []
@@ -194,7 +208,7 @@ class LocalNode:
 
         :param origin: the public key of the sender agent.
         :param msg: the message.
-        :return: ``None``
+        :return: None
         """
         e = msg.to_pb()
         destination = e.send_message.destination
@@ -215,10 +229,12 @@ class LocalNode:
         elif payload == "fipa":
             new_msg.content.fipa.CopyFrom(e.send_message.fipa)
 
-        self._queues[destination].put_nowait(new_msg.SerializeToString())
+        self._send(destination, new_msg)
 
     def _send(self, public_key: str, msg):
-        self._queues[public_key].put_nowait(msg.SerializeToString())
+        loop = self._loops[public_key]
+        loop.call_soon_threadsafe(self._queues[public_key].put_nowait, msg.SerializeToString())
+        # self._queues[public_key].put_nowait(msg.SerializeToString())
 
 
 class OEFLocalProxy(OEFProxy):
@@ -239,9 +255,9 @@ class OEFLocalProxy(OEFProxy):
 
         super().__init__(public_key, loop)
         self.local_node = local_node
-        self._connection = None
-        self._read_queue = None
-        self._write_queue = None
+        self._connection = None  # type: Optional[Tuple[queue.Queue, queue.Queue]]
+        self._read_queue = None  # type: Optional[Queue]
+        self._write_queue = None  # type: Optional[Queue]
 
     def register_agent(self, msg_id: int, agent_description: Description) -> None:
         self.local_node.register_agent(self.public_key, agent_description)
@@ -264,8 +280,8 @@ class OEFLocalProxy(OEFProxy):
     def unregister_service(self, msg_id: int, service_description: Description, service_id: str = "") -> None:
         self.local_node.unregister_service(self.public_key, msg_id, service_description)
 
-    def send_message(self, msg_id: int, dialogue_id: int, destination: str, msg: bytes):
-        msg = Message(msg_id, dialogue_id, destination, msg, uri.Context())
+    def send_message(self, msg_id: int, dialogue_id: int, destination: str, msg: bytes, context=uri.Context()):
+        msg = Message(msg_id, dialogue_id, destination, msg, context)
         self._send(msg)
 
     def send_cfp(self, msg_id: int, dialogue_id: int, destination: str, target: int, query: CFP_TYPES, context=uri.Context()) -> None:
@@ -288,7 +304,7 @@ class OEFLocalProxy(OEFProxy):
         if self._connection is not None:
             return True
 
-        self._connection = self.local_node.connect(self.public_key)
+        self._connection = self.local_node.connect(self.public_key, self._loop)
         if self._connection is None:
             return False
         self._write_queue, self._read_queue = self._connection
