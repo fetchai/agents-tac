@@ -38,10 +38,12 @@ def test_simple_bytes_serialization():
 
 def test_simple_error_serialization():
     """Test that the serialization for the 'simple' protocol works for the ERROR message."""
-    msg = SimpleMessage(to="receiver", sender="sender", type=SimpleMessage.Type.ERROR,
-                        error_code=-1, error_msg="An error")
-    msg_bytes = SimpleSerializer().encode(msg)
-    actual_msg = SimpleSerializer().decode(msg_bytes)
-    expected_msg = msg
+    msg = SimpleMessage(type=SimpleMessage.Type.ERROR, error_code=-1, error_msg="An error")
+    envelope = Envelope(to="receiver", sender="sender", protocol_id="simple", message=msg)
+    serializer = SimpleSerializer()
 
-    assert expected_msg == actual_msg
+    envelope_bytes = envelope.encode(serializer)
+    actual_envelope = Envelope.decode(envelope_bytes, serializer)
+    expected_envelope = envelope
+
+    assert expected_envelope == actual_envelope
