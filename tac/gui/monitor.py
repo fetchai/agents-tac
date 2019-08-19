@@ -25,7 +25,7 @@ from typing import Optional
 
 from tac.gui.dashboards.controller import ControllerDashboard
 
-from tac.platform.stats import GameStats
+from tac.platform.game.stats import GameStats
 
 
 class Monitor(ABC):

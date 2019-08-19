@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 # ------------------------------------------------------------------------------
 #
 #   Copyright 2018-2019 Fetch.AI Limited
@@ -7,7 +8,7 @@
 #   you may not use this file except in compliance with the License.
 #   You may obtain a copy of the License at
 #
-#       http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 #   Unless required by applicable law or agreed to in writing, software
 #   distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,19 +18,18 @@
 #
 # ------------------------------------------------------------------------------
 
-"""This module contains miscellaneous tests."""
-
-# from tac.agents.participant.base.helpers import generate_transaction_id
+"""This module contains the classes which define the states of an agent."""
 
 
-# def test_generate_transaction_id():
-#     """Test that the transaction id is correctly generated."""
-#     expected_result = "buyer_pbk_seller_pbk_12345"
-#     actual_result = generate_transaction_id("buyer_pbk", "seller_pbk", 12345, False)
+class AgentState:
+    """Represent the state of an agent during the game."""
 
-#     assert actual_result == expected_result
+    def __init__(self):
+        """Initialize."""
 
-#     expected_result = "seller_pbk_buyer_pbk_12345"
-#     actual_result = generate_transaction_id("buyer_pbk", "seller_pbk", 12345, True)
 
-#     assert actual_result == expected_result
+class WorldState:
+    """Represent the state of an agent during the game."""
+
+    def __init__(self):
+        """Initialize."""

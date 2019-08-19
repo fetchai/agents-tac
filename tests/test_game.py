@@ -21,9 +21,11 @@
 
 import pytest
 
-from tac.platform.game import GameConfiguration, GameInitialization, Game, AgentState, GoodState
+from tac.aea.crypto.base import Crypto
+from tac.agents.controller.base.states import GameInitialization, Game
+from tac.agents.participant.base.states import AgentState
+from tac.platform.game.base import GameConfiguration, GoodState
 from tac.platform.protocol import Transaction
-from tac.helpers.crypto import Crypto
 
 
 class TestGameConfiguration:

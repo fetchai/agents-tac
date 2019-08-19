@@ -29,7 +29,7 @@ from typing import Optional
 
 import docker
 
-import tac.agents.v1.examples.baseline
+from tac.agents.participant.examples.baseline import main as participant_agent_main
 
 CUR_PATH = inspect.getfile(inspect.currentframe())
 ROOT_DIR = os.path.join(os.path.dirname(CUR_PATH), "..")
@@ -87,4 +87,4 @@ if __name__ == '__main__':
 
     with Sandbox():
         wait_for_oef()
-        tac.agents.v1.examples.baseline.main(name="my_agent", dashboard=True)
+        participant_agent_main(name="my_agent", dashboard=True)

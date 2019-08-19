@@ -29,9 +29,9 @@ from threading import Thread
 from .common import TOEFAgent
 # from oef.core import AsyncioCore  # OEF-SDK 0.6.1
 
-from tac.helpers.crypto import Crypto
-from tac.platform.controller.controller_agent import ControllerAgent
-from tac.platform.controller.tac_parameters import TACParameters
+from tac.aea.crypto.base import Crypto
+from tac.agents.controller.agent import ControllerAgent
+from tac.agents.controller.base.tac_parameters import TACParameters
 from tac.platform.protocol import Register
 
 logger = logging.getLogger(__name__)

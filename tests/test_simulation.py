@@ -26,14 +26,12 @@ from typing import List
 import numpy as np
 import pytest
 
-from tac.agents.v1.base.strategy import SearchFor, RegisterAs
-from tac.agents.v1.examples.strategy import BaselineStrategy
-from tac.platform.game import Game
-
-from tac.agents.v1.examples.baseline import BaselineAgent as BaselineAgentV1
-
-from tac.platform.controller.controller_agent import ControllerAgent
-from tac.platform.controller.tac_parameters import TACParameters
+from tac.agents.controller.agent import ControllerAgent
+from tac.agents.controller.base.states import Game
+from tac.agents.controller.base.tac_parameters import TACParameters
+from tac.agents.participant.base.strategy import SearchFor, RegisterAs
+from tac.agents.participant.examples.baseline import BaselineAgent as BaselineAgentV1
+from tac.agents.participant.examples.strategy import BaselineStrategy
 
 
 def _init_baseline_agents(n: int, version: str, oef_addr: str, oef_port: int) -> List[BaselineAgentV1]:
