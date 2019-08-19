@@ -48,8 +48,7 @@ from typing import Optional
 
 from google.protobuf.message import DecodeError
 
-from tac.helpers.crypto import Crypto
-from tac.helpers.misc import TacError
+from tac.aea.crypto.base import Crypto
 import tac.tac_pb2 as tac_pb2
 
 from oef.schema import Description
@@ -85,6 +84,10 @@ def _make_str_str_pair(key: str, value: str) -> tac_pb2.StrStrPair:
     pair.first = key
     pair.second = value
     return pair
+
+
+class TacError(Exception):
+    """General purpose exception to detect exception associated with the logic of the TAC application."""
 
 
 class ErrorCode(Enum):

@@ -33,10 +33,10 @@ import time
 from typing import Dict, Optional
 
 
-from tac.agents.v1.base.dialogues import Dialogue
-from tac.agents.v1.examples.baseline import BaselineAgent
-from tac.agents.v1.examples.strategy import BaselineStrategy
-from tac.agents.v1.mail.messages import FIPAMessage, Message
+from tac.aea.mail.messages import FIPAMessage, Message
+from tac.agents.participant.base.dialogues import Dialogue
+from tac.agents.participant.examples.baseline import BaselineAgent
+from tac.agents.participant.examples.strategy import BaselineStrategy
 from tac.platform.protocol import GameData
 
 CUR_PATH = inspect.getfile(inspect.currentframe())
