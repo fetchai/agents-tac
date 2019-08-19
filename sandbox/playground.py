@@ -36,7 +36,8 @@ from typing import Dict, Optional
 from tac.agents.v1.base.dialogues import Dialogue
 from tac.agents.v1.examples.baseline import BaselineAgent
 from tac.agents.v1.examples.strategy import BaselineStrategy
-from tac.agents.v1.mail.messages import FIPAMessage, Message
+from tac.agents.v1.mail.messages import FIPAMessage
+from tac.agents.v1.mail.protocol import Envelope
 from tac.platform.protocol import GameData
 
 CUR_PATH = inspect.getfile(inspect.currentframe())
@@ -131,12 +132,13 @@ if __name__ == '__main__':
         starting_message_id = 1
         starting_message_target = 0
         services = agent_one.game_instance.build_services_dict(is_supply=is_seller)  # type: Dict
-        cfp = FIPAMessage(agent_two.crypto.public_key,
-                          message_id=starting_message_id, dialogue_id=dialogue.dialogue_label.dialogue_id,
+        cfp = FIPAMessage(message_id=starting_message_id, dialogue_id=dialogue.dialogue_label.dialogue_id,
                           target=starting_message_target, performative=FIPAMessage.Performative.CFP,
                           query=json.dumps(services).encode('utf-8'))
-        dialogue.outgoing_extend([cfp])
-        agent_one.outbox.out_queue.put(cfp)
+        envelope = Envelope(to=agent_two.crypto.public_key, sender=agent_one.crypto.public_key, protocol_id=FIPAMessage.protocol_id,
+                            message=cfp)
+        dialogue.outgoing_extend([envelope])
+        agent_one.outbox.out_queue.put(envelope)
 
         # Send the messages in the outbox
         # agent_one.out_box.send_nowait()
@@ -151,7 +153,7 @@ if __name__ == '__main__':
                 checks += 1
             else:
                 checks = 10
-        msg = agent_two.inbox.get_nowait()  # type: Optional[Message]
+        msg = agent_two.inbox.get_nowait()  # type: Optional[Envelope]
         print("The msg is a CFP: {}".format(msg.get("performative") == FIPAMessage.Performative.CFP))
 
         # Set the debugger

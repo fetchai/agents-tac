@@ -92,7 +92,7 @@ class TestCompetitionStopsTooFewAgentRegistered:
 
         cls.agent1.send_message(0, 0, cls.controller_agent.crypto.public_key, Register(crypto.public_key, crypto, 'agent_name').serialize())
 
-        time.sleep(1.0)
+        time.sleep(5.0)
 
         job.join()
         cls.agent1.stop()

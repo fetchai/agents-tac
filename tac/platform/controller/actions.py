@@ -68,5 +68,5 @@ class OEFActions(OEFActionInterface):
         """
         desc = Description({"version": 1}, data_model=CONTROLLER_DATAMODEL)
         logger.debug("[{}]: Registering with {} data model".format(self.agent_name, desc.data_model.name))
-        out = OEFMessage(sender=self.crypto.public_key, oef_type=OEFMessage.Type.REGISTER_SERVICE, id=1, service_description=desc, service_id="")
-        self.mailbox.outbox.put(out)
+        out = OEFMessage(oef_type=OEFMessage.Type.REGISTER_SERVICE, id=1, service_description=desc, service_id="")
+        self.mailbox.outbox.put_message(to=None, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=out)

@@ -307,7 +307,7 @@ class OEFReactions(OEFReactionInterface):
                               target=STARTING_MESSAGE_TARGET, performative=FIPAMessage.Performative.CFP, query=json.dumps(services).encode('utf-8'))
             envelope = Envelope(to=agent_pbk, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id, message=cfp)
             logger.debug("[{}]: send_cfp_as_{}: msg_id={}, dialogue_id={}, destination={}, target={}, services={}"
-                         .format(self.agent_name, dialogue.role, cfp.get("id"), cfp.get("dialogue_id"), cfp.to, cfp.get("target"), services))
+                         .format(self.agent_name, dialogue.role, cfp.get("id"), cfp.get("dialogue_id"), envelope.to, cfp.get("target"), services))
             dialogue.outgoing_extend([envelope])
             self.mailbox.outbox.put(envelope)
 

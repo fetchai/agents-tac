@@ -170,13 +170,12 @@ class OEFChannel(Agent):
         :param target: the message target.
         :return: None
         """
-        msg = FIPAMessage(to=self.public_key,
-                          sender=origin,
-                          message_id=msg_id,
+        msg = FIPAMessage(message_id=msg_id,
                           dialogue_id=dialogue_id,
                           target=target,
                           performative=FIPAMessage.Performative.ACCEPT)
-        self.in_queue.put(msg)
+        envelope = Envelope(to=self.public_key, sender=origin, protocol_id=FIPAMessage.protocol_id, message=msg)
+        self.in_queue.put(envelope)
 
     def on_decline(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
         """
@@ -188,13 +187,12 @@ class OEFChannel(Agent):
         :param target: the message target.
         :return: None
         """
-        msg = FIPAMessage(to=self.public_key,
-                          sender=origin,
-                          message_id=msg_id,
+        msg = FIPAMessage(message_id=msg_id,
                           dialogue_id=dialogue_id,
                           target=target,
                           performative=FIPAMessage.Performative.DECLINE)
-        self.in_queue.put(msg)
+        envelope = Envelope(to=self.public_key, sender=origin, protocol_id=FIPAMessage.protocol_id, message=msg)
+        self.in_queue.put(envelope)
 
     def on_search_result(self, search_id: int, agents: List[str]) -> None:
         """

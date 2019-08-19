@@ -239,10 +239,8 @@ class FIPABehaviour:
                                     message=FIPAMessage(message_id=new_msg_id, dialogue_id=accept.get("dialogue_id"), target=accept.get("id"), performative=FIPAMessage.Performative.MATCH_ACCEPT)))
         else:
             logger.debug("[{}]: Decline the accept (as {}).".format(self.agent_name, dialogue.role))
-            results.append(FIPAMessage(to=envelope.sender, sender=self.crypto.public_key,
-                                       message_id=new_msg_id, dialogue_id=accept.get("dialogue_id"),
-                                       target=accept.get("id"),
-                                       performative=FIPAMessage.Performative.DECLINE))
+            results.append(Envelope(to=envelope.sender, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id,
+                                    message=FIPAMessage(message_id=new_msg_id, dialogue_id=accept.get("dialogue_id"), target=accept.get("id"), performative=FIPAMessage.Performative.DECLINE)))
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_ACCEPT, dialogue.is_self_initiated)
         return results
 
