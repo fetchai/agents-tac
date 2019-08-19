@@ -34,7 +34,7 @@ import dateutil
 from tac.agents.v1.agent import Agent
 from tac.agents.v1.base.game_instance import GamePhase
 from tac.agents.v1.base.helpers import is_oef_message
-from tac.agents.v1.mail.messages import Message
+from tac.agents.v1.mail.protocol import Envelope
 from tac.agents.v1.mail.oef import OEFNetworkMailBox
 from tac.gui.monitor import Monitor, NullMonitor, VisdomMonitor
 from tac.platform.controller.handlers import OEFHandler, GameHandler, AgentMessageDispatcher
@@ -141,7 +141,7 @@ class ControllerAgent(Agent):
         counter = 0
         while (not self.inbox.empty() and counter < self.max_reactions):
             counter += 1
-            msg = self.inbox.get_nowait()  # type: Optional[Message]
+            msg = self.inbox.get_nowait()  # type: Optional[Envelope]
             if msg is not None:
                 if is_oef_message(msg):
                     self.oef_handler.handle_oef_message(msg)
