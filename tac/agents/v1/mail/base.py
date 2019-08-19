@@ -25,6 +25,7 @@ from abc import abstractmethod
 from queue import Queue
 from typing import Optional
 
+from tac.agents.v1.mail.messages import Address, ProtocolId, Message
 from tac.agents.v1.mail.protocol import Envelope
 
 logger = logging.getLogger(__name__)
@@ -103,6 +104,20 @@ class OutBox(object):
         """
         logger.debug("Put a message in the queue...")
         self._queue.put(item)
+
+    def put_message(self, to: Optional[Address] = None, sender: Optional[Address] = None,
+                    protocol_id: Optional[ProtocolId] = None, message: Optional[Message] = None) -> None:
+        """
+        Put a message in the outbox.
+
+        :param to: the recipient of the message.
+        :param sender: the sender of the message.
+        :param protocol_id: the protocol id.
+        :param message: the content of the message.
+        :return: None
+        """
+        envelope = Envelope(to=to, sender=sender, protocol_id=protocol_id, message=message)
+        self._queue.put(envelope)
 
 
 class Connection:

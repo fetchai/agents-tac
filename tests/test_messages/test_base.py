@@ -30,7 +30,6 @@ class TestDefaultSerializations:
         cls.envelope = Envelope(to="receiver", sender="sender", protocol_id="my_own_protocol", message=cls.message)
 
     def test_default_protobuf_serialization(self):
-        message = self.message
         envelope = self.envelope
 
         serializer = DefaultProtobufSerializer()

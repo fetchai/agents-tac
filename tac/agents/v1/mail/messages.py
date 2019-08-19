@@ -115,18 +115,14 @@ class OEFMessage(Message):
         DIALOGUE_ERROR = "dialogue_error"
         SEARCH_RESULT = "search_result"
 
-    def __init__(self, to: Optional[Address] = None,
-                 sender: Optional[Address] = None,
-                 oef_type: Optional[Type] = None,
-                 **body):
+    def __init__(self, oef_type: Optional[Type] = None,
+                 **kwargs):
         """
         Initialize.
 
-        :param to: the public key of the receiver.
-        :param sender: the public key of the sender.
-        :param protocol_id: the protocol id.
+        :param oef_type: the type of OEF message.
         """
-        super().__init__(to=to, sender=sender, protocol_id=self.protocol_id, type=oef_type, **body)
+        super().__init__(type=oef_type, **kwargs)
 
     def check_consistency(self) -> bool:
         """Check that the data is consistent."""

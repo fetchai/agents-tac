@@ -116,12 +116,11 @@ class OEFChannel(Agent):
         :param content: the bytes content.
         :return: None
         """
-        msg = ByteMessage(to=self.public_key,
-                          sender=origin,
-                          message_id=msg_id,
+        msg = ByteMessage(message_id=msg_id,
                           dialogue_id=dialogue_id,
                           content=content)
-        self.in_queue.put(msg)
+        envelope = Envelope(to=self.public_key, sender=origin, protocol_id=ByteMessage.protocol_id, message=msg)
+        self.in_queue.put(envelope)
 
     def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES) -> None:
         """
@@ -134,14 +133,13 @@ class OEFChannel(Agent):
         :param query: the query.
         :return: None
         """
-        msg = FIPAMessage(to=self.public_key,
-                          sender=origin,
-                          message_id=msg_id,
+        msg = FIPAMessage(message_id=msg_id,
                           dialogue_id=dialogue_id,
                           target=target,
                           performative=FIPAMessage.Performative.CFP,
                           query=query)
-        self.in_queue.put(msg)
+        envelope = Envelope(to=self.public_key, sender=origin, protocol_id=FIPAMessage.protocol_id, message=msg)
+        self.in_queue.put(envelope)
 
     def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES) -> None:
         """
@@ -154,14 +152,13 @@ class OEFChannel(Agent):
         :param proposals: the proposals.
         :return: None
         """
-        msg = FIPAMessage(to=self.public_key,
-                          sender=origin,
-                          message_id=msg_id,
+        msg = FIPAMessage(message_id=msg_id,
                           dialogue_id=dialogue_id,
                           target=target,
                           performative=FIPAMessage.Performative.PROPOSE,
                           proposal=proposals)
-        self.in_queue.put(msg)
+        envelope = Envelope(to=self.public_key, sender=origin, protocol_id=FIPAMessage.protocol_id, message=msg)
+        self.in_queue.put(envelope)
 
     def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
         """
@@ -208,12 +205,9 @@ class OEFChannel(Agent):
         :return: None
         """
         self.mail_stats.search_end(search_id, len(agents))
-        msg = OEFMessage(to=self.public_key,
-                         sender=None,
-                         oef_type=OEFMessage.Type.SEARCH_RESULT,
-                         id=search_id,
-                         agents=agents)
-        self.in_queue.put(msg)
+        msg = OEFMessage(oef_type=OEFMessage.Type.SEARCH_RESULT, id=search_id, agents=agents)
+        envelope = Envelope(to=self.public_key, sender=None, protocol_id=OEFMessage.protocol_id, message=msg)
+        self.in_queue.put(envelope)
 
     def on_oef_error(self, answer_id: int, operation: OEFErrorOperation) -> None:
         """
@@ -223,12 +217,11 @@ class OEFChannel(Agent):
         :param operation: the error operation.
         :return: None
         """
-        msg = OEFMessage(to=self.public_key,
-                         sender=None,
-                         oef_type=OEFMessage.Type.OEF_ERROR,
+        msg = OEFMessage(oef_type=OEFMessage.Type.OEF_ERROR,
                          id=answer_id,
                          operation=operation)
-        self.in_queue.put(msg)
+        envelope = Envelope(to=self.public_key, sender=None, protocol_id=OEFMessage.protocol_id, message=msg)
+        self.in_queue.put(envelope)
 
     def on_dialogue_error(self, answer_id: int, dialogue_id: int, origin: str) -> None:
         """
@@ -239,86 +232,91 @@ class OEFChannel(Agent):
         :param origin: the message sender.
         :return: None
         """
-        msg = OEFMessage(to=self.public_key,
-                         sender=None,
-                         oef_type=OEFMessage.Type.DIALOGUE_ERROR,
+        msg = OEFMessage(oef_type=OEFMessage.Type.DIALOGUE_ERROR,
                          id=answer_id,
                          dialogue_id=dialogue_id,
                          origin=origin)
-        self.in_queue.put(msg)
+        envelope = Envelope(to=self.public_key, sender=None, protocol_id=OEFMessage.protocol_id, message=msg)
+        self.in_queue.put(envelope)
 
-    def send(self, msg: Envelope) -> None:
+    def send(self, envelope: Envelope) -> None:
         """
         Send message handler.
 
-        :param msg: the message.
+        :param envelope: the message.
         :return: None
         """
-        if msg.protocol_id == "oef":
-            self.send_oef_message(msg)
-        elif msg.protocol_id == "fipa":
-            self.send_fipa_message(msg)
-        elif msg.protocol_id == "bytes":
-            self.send_message(msg.get("id"), msg.get("dialogue_id"), msg.to, msg.get("content"))
-        elif msg.protocol_id == "default":
-            self.send_message(msg.get("id"), 0, msg.to, msg.get("content"))
+        if envelope.protocol_id == "oef":
+            self.send_oef_message(envelope)
+        elif envelope.protocol_id == "fipa":
+            self.send_fipa_message(envelope)
+        elif envelope.protocol_id == "bytes":
+            message_id = envelope.message.get("id")
+            dialogue_id = envelope.message.get("dialogue_id")
+            content = envelope.message.get("content")
+            self.send_message(message_id, dialogue_id, envelope.to, content)
+        elif envelope.protocol_id == "default":
+            message_id = envelope.message.get("id")
+            dialogue_id = 0
+            content = envelope.message.get("content")
+            self.send_message(message_id, dialogue_id, envelope.to, content)
         else:
             raise ValueError("Cannot send message.")
 
-    def send_oef_message(self, msg: Envelope) -> None:
+    def send_oef_message(self, envelope: Envelope) -> None:
         """
         Send oef message handler.
 
-        :param msg: the message.
+        :param envelope: the message.
         :return: None
         """
-        oef_type = msg.get("type")
+        oef_type = envelope.message.get("type")
         if oef_type == OEFMessage.Type.REGISTER_SERVICE:
-            id = msg.get("id")
-            service_description = msg.get("service_description")
-            service_id = msg.get("service_id")
+            id = envelope.message.get("id")
+            service_description = envelope.message.get("service_description")
+            service_id = envelope.message.get("service_id")
             self.register_service(id, service_description, service_id)
         elif oef_type == OEFMessage.Type.REGISTER_AGENT:
-            id = msg.get("id")
-            agent_description = msg.get("agent_description")
+            id = envelope.message.get("id")
+            agent_description = envelope.message.get("agent_description")
             self.register_agent(id, agent_description)
         elif oef_type == OEFMessage.Type.UNREGISTER_SERVICE:
-            id = msg.get("id")
-            service_description = msg.get("service_description")
-            service_id = msg.get("service_id")
+            id = envelope.message.get("id")
+            service_description = envelope.message.get("service_description")
+            service_id = envelope.message.get("service_id")
             self.unregister_service(id, service_description, service_id)
         elif oef_type == OEFMessage.Type.UNREGISTER_AGENT:
-            id = msg.get("id")
+            id = envelope.message.get("id")
             self.unregister_agent(id)
         elif oef_type == OEFMessage.Type.SEARCH_AGENTS:
-            id = msg.get("id")
-            query = msg.get("query")
+            id = envelope.message.get("id")
+            query = envelope.message.get("query")
             self.search_agents(id, query)
         elif oef_type == OEFMessage.Type.SEARCH_SERVICES:
-            id = msg.get("id")
-            query = msg.get("query")
+            id = envelope.message.get("id")
+            query = envelope.message.get("query")
             self.mail_stats.search_start(id)
             self.search_services(id, query)
         else:
             raise ValueError("OEF request not recognized.")
 
-    def send_fipa_message(self, msg: Envelope) -> None:
+    def send_fipa_message(self, envelope: Envelope) -> None:
         """
         Send fipa message handler.
 
-        :param msg: the message.
+        :param envelope: the message.
         :return: None
         """
-        id = msg.get("id")
-        dialogue_id = msg.get("dialogue_id")
-        destination = msg.to
-        target = msg.get("target")
-        performative = msg.get("performative")
+        id = envelope.message.get("id")
+        dialogue_id = envelope.message.get("dialogue_id")
+        destination = envelope.to
+        target = envelope.message.get("target")
+        performative = envelope.message.get("performative")
         if performative == FIPAMessage.Performative.CFP:
-            query = msg.get("query")
+            query = envelope.message.get("query")
             self.send_cfp(id, dialogue_id, destination, target, query)
         elif performative == FIPAMessage.Performative.PROPOSE:
-            proposal = msg.get("proposal")
+            proposal = envelope.message.get("proposal")
             self.send_propose(id, dialogue_id, destination, target, proposal)
         elif performative == FIPAMessage.Performative.ACCEPT:
             self.send_accept(id, dialogue_id, destination, target)
@@ -356,7 +354,7 @@ class OEFConnection(Connection):
         while not self._stopped:
             try:
                 msg = self.out_queue.get(block=True, timeout=1.0)
-                self._send(msg)
+                self.send(msg)
             except Empty:
                 pass
 
@@ -393,7 +391,7 @@ class OEFConnection(Connection):
         """Get the connection status."""
         return self.bridge.is_connected()
 
-    def _send(self, msg: Envelope) -> None:
+    def send(self, msg: Envelope):
         """
         Send messages.
 
