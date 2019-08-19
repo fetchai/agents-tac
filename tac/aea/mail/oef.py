@@ -99,6 +99,7 @@ class OEFChannel(Agent):
 
     @property
     def loop(self) -> asyncio.AbstractEventLoop:
+        """Get the event loop."""
         return self._loop
 
     def is_connected(self) -> bool:
