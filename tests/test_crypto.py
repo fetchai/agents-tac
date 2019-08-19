@@ -23,7 +23,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat, \
     load_pem_private_key
 
-from tac.helpers.crypto import Crypto
+from tac.aea.crypto.base import Crypto
 from .conftest import ROOT_DIR
 
 

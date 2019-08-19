@@ -23,8 +23,8 @@
 import time
 from threading import Thread
 
-from tac.agents.v1.agent import Agent, AgentState
-from tac.agents.v1.mail.oef import OEFNetworkMailBox
+from tac.aea.agent import Agent, AgentState
+from tac.aea.mail.oef import OEFNetworkMailBox
 
 
 class TAgent(Agent):

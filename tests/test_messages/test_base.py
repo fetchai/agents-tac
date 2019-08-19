@@ -18,18 +18,21 @@
 # ------------------------------------------------------------------------------
 
 """This module contains the tests of the messages module."""
-from tac.agents.v1.mail.messages import Message
-from tac.agents.v1.mail.protocol import DefaultProtobufSerializer, DefaultJSONSerializer, Envelope
+from tac.aea.mail.messages import Message
+from tac.aea.mail.protocol import DefaultProtobufSerializer, DefaultJSONSerializer, Envelope
 
 
 class TestDefaultSerializations:
+    """Test that the default serializations work."""
 
     @classmethod
     def setup_class(cls):
+        """Set up the use case."""
         cls.message = Message(content="hello")
         cls.envelope = Envelope(to="receiver", sender="sender", protocol_id="my_own_protocol", message=cls.message)
 
     def test_default_protobuf_serialization(self):
+        """Test that the default Protobuf serialization works."""
         envelope = self.envelope
 
         serializer = DefaultProtobufSerializer()
@@ -40,6 +43,7 @@ class TestDefaultSerializations:
         assert expected_envelope == actual_envelope
 
     def test_default_json_serialization(self):
+        """Test that the default JSON serialization works."""
         envelope = self.envelope
 
         serializer = DefaultJSONSerializer()

@@ -26,11 +26,11 @@ from typing import Optional
 
 import numpy as np
 
+from tac.agents.participant.base.states import AgentState
+from tac.agents.participant.base.stats_manager import StatsManager
 from tac.gui.dashboards.base import Dashboard
-from tac.helpers.misc import generate_html_table_from_dict, escape_html
-from tac.platform.game import AgentState
+from tac.gui.dashboards.helpers import generate_html_table_from_dict, escape_html
 from tac.platform.protocol import Transaction
-from tac.agents.v1.base.stats_manager import StatsManager
 
 CUR_PATH = inspect.getfile(inspect.currentframe())
 CUR_DIR = os.path.dirname(CUR_PATH)

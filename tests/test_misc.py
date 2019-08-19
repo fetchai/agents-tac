@@ -19,17 +19,17 @@
 
 """This module contains miscellaneous tests."""
 
-from tac.helpers.misc import generate_transaction_id
+# from tac.agents.participant.base.helpers import generate_transaction_id
 
 
-def test_generate_transaction_id():
-    """Test that the transaction id is correctly generated."""
-    expected_result = "buyer_pbk_seller_pbk_12345"
-    actual_result = generate_transaction_id("buyer_pbk", "seller_pbk", 12345, False)
+# def test_generate_transaction_id():
+#     """Test that the transaction id is correctly generated."""
+#     expected_result = "buyer_pbk_seller_pbk_12345"
+#     actual_result = generate_transaction_id("buyer_pbk", "seller_pbk", 12345, False)
 
-    assert actual_result == expected_result
+#     assert actual_result == expected_result
 
-    expected_result = "seller_pbk_buyer_pbk_12345"
-    actual_result = generate_transaction_id("buyer_pbk", "seller_pbk", 12345, True)
+#     expected_result = "seller_pbk_buyer_pbk_12345"
+#     actual_result = generate_transaction_id("buyer_pbk", "seller_pbk", 12345, True)
 
-    assert actual_result == expected_result
+#     assert actual_result == expected_result

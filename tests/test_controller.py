@@ -29,9 +29,9 @@ from threading import Thread
 from .common import TOEFAgent
 # from oef.core import AsyncioCore  # OEF-SDK 0.6.1
 
-from tac.helpers.crypto import Crypto
-from tac.platform.controller.controller_agent import ControllerAgent
-from tac.platform.controller.tac_parameters import TACParameters
+from tac.aea.crypto.base import Crypto
+from tac.agents.controller.agent import ControllerAgent
+from tac.agents.controller.base.tac_parameters import TACParameters
 from tac.platform.protocol import Register
 
 logger = logging.getLogger(__name__)
@@ -92,7 +92,7 @@ class TestCompetitionStopsTooFewAgentRegistered:
 
         cls.agent1.send_message(0, 0, cls.controller_agent.crypto.public_key, Register(crypto.public_key, crypto, 'agent_name').serialize())
 
-        time.sleep(5.0)
+        time.sleep(10.0)
 
         job.join()
         cls.agent1.stop()

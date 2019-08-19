@@ -32,8 +32,8 @@ import time
 import docker
 
 import tac
+from tac.platform.oef_health_check import OEFHealthCheck
 from tac.platform.simulation import parse_arguments, build_simulation_parameters
-from tac.helpers.oef_health_check import OEFHealthCheck
 
 CUR_PATH = inspect.getfile(inspect.currentframe())
 ROOT_DIR = os.path.join(os.path.dirname(CUR_PATH), "..")

@@ -18,9 +18,9 @@
 # ------------------------------------------------------------------------------
 
 """This module contains the tests of the messages module."""
-from tac.agents.v1.mail.messages import SimpleMessage
-from tac.agents.v1.mail.protocol import Envelope
-from tac.agents.v1.protocols.simple.serialization import SimpleSerializer
+from tac.aea.mail.messages import SimpleMessage
+from tac.aea.mail.protocol import Envelope
+from tac.aea.protocols.simple.serialization import SimpleSerializer
 
 
 def test_simple_bytes_serialization():

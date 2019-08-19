@@ -21,23 +21,22 @@
 
 """Play ground to spin up an agent and interact with it."""
 
-import docker
 import inspect
 import json
-import pdb
 import os
+import pdb
 import re
 import subprocess
 import time
-
 from typing import Dict, Optional
 
+import docker
 
-from tac.agents.v1.base.dialogues import Dialogue
-from tac.agents.v1.examples.baseline import BaselineAgent
-from tac.agents.v1.examples.strategy import BaselineStrategy
-from tac.agents.v1.mail.messages import FIPAMessage
-from tac.agents.v1.mail.protocol import Envelope
+from tac.aea.mail.messages import FIPAMessage
+from tac.aea.mail.protocol import Envelope
+from tac.agents.participant.base.dialogues import Dialogue
+from tac.agents.participant.examples.baseline import BaselineAgent
+from tac.agents.participant.examples.strategy import BaselineStrategy
 from tac.platform.protocol import GameData
 
 CUR_PATH = inspect.getfile(inspect.currentframe())

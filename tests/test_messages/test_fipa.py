@@ -18,11 +18,10 @@
 # ------------------------------------------------------------------------------
 
 """This module contains the tests for the FIPA protocol."""
-from tac.agents.v1.protocols.fipa.serialization import FIPASerializer
-from tac.agents.v1.protocols.simple.serialization import SimpleSerializer
+from tac.aea.mail.messages import FIPAMessage
+from tac.aea.protocols.fipa.serialization import FIPASerializer
 
-from tac.agents.v1.mail.messages import SimpleMessage, FIPAMessage
-from tac.agents.v1.mail.protocol import DefaultProtobufSerializer, DefaultJSONSerializer, Envelope
+from tac.aea.mail.protocol import Envelope
 
 
 def test_fipa_cfp_serialization():
