@@ -51,7 +51,7 @@ class AgentState(BaseAgentState):
         :param endowment: the endowment for every good.
         :param utility_params: the utility params for every good.
         """
-        super().__init__()
+        BaseAgentState.__init__(self)
         assert len(endowment) == len(utility_params)
         self.balance = money
         self._utility_params = copy.copy(utility_params)
@@ -178,7 +178,7 @@ class WorldState(BaseWorldState):
         :param agent_state: the initial state of the agent
         :return: None
         """
-        super().__init__()
+        BaseWorldState.__init__(self)
         self.opponent_states = dict(
             (agent_pbk,
                 AgentState(

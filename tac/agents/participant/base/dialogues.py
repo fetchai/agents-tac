@@ -54,7 +54,7 @@ class Dialogue(BaseDialogue):
 
         :return: None
         """
-        super().__init__(dialogue_label=DialogueLabel)
+        BaseDialogue.__init__(self, dialogue_label=DialogueLabel)
         self._is_seller = is_seller
         self._role = 'seller' if is_seller else 'buyer'
 
@@ -138,7 +138,7 @@ class Dialogues(BaseDialogues):
 
         :return: None
         """
-        super().__init__()
+        BaseDialogues.__init__(self)
         self._dialogues_as_seller = {}  # type: Dict[DialogueLabel, Dialogue]
         self._dialogues_as_buyer = {}  # type: Dict[DialogueLabel, Dialogue]
 

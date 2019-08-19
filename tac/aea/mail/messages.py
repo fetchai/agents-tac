@@ -27,7 +27,7 @@ from oef.messages import OEFErrorOperation
 from oef.query import Query
 from oef.schema import Description
 
-from tac.aea.dialogue.base import DialogueLabel
+# from tac.aea.dialogue.base import DialogueLabel
 
 Address = str
 ProtocolId = str
@@ -255,7 +255,7 @@ class FIPAMessage(Message):
     def __init__(self, to: Optional[Address] = None,
                  sender: Optional[Address] = None,
                  message_id: Optional[int] = None,
-                 dialogue_id: Optional[DialogueLabel] = None,
+                 dialogue_id: Optional[int] = None,
                  target: Optional[int] = None,
                  performative: Optional[Union[str, Performative]] = None,
                  **body):
