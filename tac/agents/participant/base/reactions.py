@@ -72,17 +72,18 @@ class ControllerReactions(ControllerReactionInterface):
         self.mailbox = mailbox
         self.agent_name = agent_name
 
-    def on_dialogue_error(self, dialogue_error_msg: Envelope) -> None:
+    def on_dialogue_error(self, envelope: Envelope) -> None:
         """
         Handle dialogue error event emitted by the controller.
 
-        :param dialogue_error_msg: the dialogue error message
+        :param envelope: the dialogue error message
 
         :return: None
         """
-        assert dialogue_error_msg.protocol_id == "oef"
+        assert envelope.protocol_id == "oef"
+        dialogue_error = envelope.message
         logger.warning("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}"
-                       .format(self.agent_name, dialogue_error_msg.get("id"), dialogue_error_msg.get("dialogue_id"), dialogue_error_msg.get("origin")))
+                       .format(self.agent_name, dialogue_error.get("id"), dialogue_error.get("dialogue_id"), dialogue_error.get("origin")))
 
     def on_start(self, game_data: GameData) -> None:
         """
@@ -362,75 +363,75 @@ class DialogueReactions(DialogueReactionInterface):
         self.dialogues = game_instance.dialogues
         self.negotiation_behaviour = FIPABehaviour(crypto, game_instance, agent_name)
 
-    def on_new_dialogue(self, msg: Envelope) -> None:
+    def on_new_dialogue(self, envelope: Envelope) -> None:
         """
         React to a new dialogue.
 
-        :param msg: the agent message
+        :param envelope: the agent message
 
         :return: None
         """
-        assert msg.protocol_id == "fipa" and msg.message.get("performative") == FIPAMessage.Performative.CFP
-        services = json.loads(msg.message.get("query").decode('utf-8'))
+        assert envelope.protocol_id == "fipa" and envelope.message.get("performative") == FIPAMessage.Performative.CFP
+        services = json.loads(envelope.message.get("query").decode('utf-8'))
         is_seller = services['description'] == TAC_DEMAND_DATAMODEL_NAME
-        dialogue = self.dialogues.create_opponent_initiated(msg.sender, msg.message.get("dialogue_id"), is_seller)
+        dialogue = self.dialogues.create_opponent_initiated(envelope.sender, envelope.message.get("dialogue_id"), is_seller)
         logger.debug("[{}]: saving dialogue (as {}): dialogue_id={}".format(self.agent_name, dialogue.role, dialogue.dialogue_label.dialogue_id))
-        results = self._handle(msg, dialogue)
+        results = self._handle(envelope, dialogue)
         for result in results:
             self.mailbox.outbox.put(result)
 
-    def on_existing_dialogue(self, msg: Envelope) -> None:
+    def on_existing_dialogue(self, envelope: Envelope) -> None:
         """
         React to an existing dialogue.
 
-        :param msg: the agent message
+        :param envelope: the agent message
 
         :return: None
         """
-        dialogue = self.dialogues.get_dialogue(msg, self.crypto.public_key)
+        dialogue = self.dialogues.get_dialogue(envelope, self.crypto.public_key)
 
-        results = self._handle(msg, dialogue)
+        results = self._handle(envelope, dialogue)
         for result in results:
             self.mailbox.outbox.put(result)
 
-    def on_unidentified_dialogue(self, msg: Envelope) -> None:
+    def on_unidentified_dialogue(self, envelope: Envelope) -> None:
         """
         React to an unidentified dialogue.
 
-        :param msg: agent message
+        :param envelope: agent message
 
         :return: None
         """
         logger.debug("[{}]: Unidentified dialogue.".format(self.agent_name))
-        message_id = msg.message.get("id") if msg.message.get("id") is not None else 1
-        dialogue_id = msg.message.get("dialogue_id") if msg.message.get("dialogue_id") is not None else 1
+        message_id = envelope.message.get("id") if envelope.message.get("id") is not None else 1
+        dialogue_id = envelope.message.get("dialogue_id") if envelope.message.get("dialogue_id") is not None else 1
         result = ByteMessage(message_id=message_id + 1, dialogue_id=dialogue_id, content=b'This message belongs to an unidentified dialogue.')
-        self.mailbox.outbox.put_message(to=msg.sender, sender=self.crypto.public_key, protocol_id=ByteMessage.protocol_id, message=result)
+        self.mailbox.outbox.put_message(to=envelope.sender, sender=self.crypto.public_key, protocol_id=ByteMessage.protocol_id, message=result)
 
-    def _handle(self, msg: Envelope, dialogue: Dialogue) -> List[Envelope]:
+    def _handle(self, envelope: Envelope, dialogue: Dialogue) -> List[Envelope]:
         """
         Handle a message according to the defined behaviour.
 
-        :param msg: the agent message
+        :param envelope: the agent message
         :param dialogue: the dialogue
 
         :return: a list of agent messages
         """
-        dialogue.incoming_extend([msg])
+        dialogue.incoming_extend([envelope])
         results = []  # type: List[Envelope]
-        performative = msg.message.get("performative")
+        performative = envelope.message.get("performative")
         if performative == FIPAMessage.Performative.CFP:
-            result = self.negotiation_behaviour.on_cfp(msg, dialogue)
+            result = self.negotiation_behaviour.on_cfp(envelope, dialogue)
             results = [result]
         elif performative == FIPAMessage.Performative.PROPOSE:
-            result = self.negotiation_behaviour.on_propose(msg, dialogue)
+            result = self.negotiation_behaviour.on_propose(envelope, dialogue)
             results = [result]
         elif performative == FIPAMessage.Performative.ACCEPT:
-            results = self.negotiation_behaviour.on_accept(msg, dialogue)
+            results = self.negotiation_behaviour.on_accept(envelope, dialogue)
         elif performative == FIPAMessage.Performative.MATCH_ACCEPT:
-            results = self.negotiation_behaviour.on_match_accept(msg, dialogue)
+            results = self.negotiation_behaviour.on_match_accept(envelope, dialogue)
         elif performative == FIPAMessage.Performative.DECLINE:
-            self.negotiation_behaviour.on_decline(msg, dialogue)
+            self.negotiation_behaviour.on_decline(envelope, dialogue)
             results = []
         else:
             raise ValueError("Performative not supported: {}".format(str(performative)))

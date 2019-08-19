@@ -39,30 +39,30 @@ TAC_DEMAND_DATAMODEL_NAME = "tac_demand"
 QUANTITY_SHIFT = 1  # Any non-negative integer is fine.
 
 
-def is_oef_message(msg: Envelope) -> bool:
+def is_oef_message(envelope: Envelope) -> bool:
     """
     Check whether a message is from the oef.
 
-    :param msg: the message
+    :param envelope: the message
     :return: boolean indicating whether or not the message is from the oef
     """
-    return msg.protocol_id == "oef" and msg.message.get("type") in set(OEFMessage.Type)
+    return envelope.protocol_id == "oef" and envelope.message.get("type") in set(OEFMessage.Type)
 
 
-def is_controller_message(msg: Envelope, crypto: Crypto) -> bool:
+def is_controller_message(envelope: Envelope, crypto: Crypto) -> bool:
     """
     Check whether a message is from the controller.
 
-    :param msg: the message
+    :param envelope: the message
     :param crypto: the crypto of the agent
     :return: boolean indicating whether or not the message is from the controller
     """
-    if not msg.protocol_id == "bytes":
+    if not envelope.protocol_id == "bytes":
         return False
 
     try:
-        byte_content = msg.message.get("content")
-        sender_pbk = msg.sender
+        byte_content = envelope.message.get("content")
+        sender_pbk = envelope.sender
         Response.from_pb(byte_content, sender_pbk, crypto)
     except Exception as e:
         logger.debug("Not a Controller message: {}".format(str(e)))
@@ -77,9 +77,9 @@ def is_controller_message(msg: Envelope, crypto: Crypto) -> bool:
     return True
 
 
-def is_fipa_message(msg: Envelope) -> bool:
+def is_fipa_message(envelope: Envelope) -> bool:
     """Chcek whether a message is a FIPA message."""
-    return msg.protocol_id == "fipa" and msg.message.get("performative") in set(FIPAMessage.Performative)
+    return envelope.protocol_id == "fipa" and envelope.message.get("performative") in set(FIPAMessage.Performative)
 
 
 def generate_transaction_id(agent_pbk: str, opponent_pbk: str, dialogue_label: DialogueLabel, agent_is_seller: bool) -> str:

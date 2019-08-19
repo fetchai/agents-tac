@@ -279,26 +279,26 @@ class AgentMessageDispatcher(object):
             GetStateUpdate: GetStateUpdateHandler(controller_agent),
         }  # type: Dict[Type[Request], RequestHandler]
 
-    def handle_agent_message(self, msg: Envelope) -> Response:
+    def handle_agent_message(self, envelope: Envelope) -> Response:
         """
         Dispatch the request to the right handler.
 
         If no handler is found for the provided type of request, return an "invalid request" error.
         If something bad happen, return a "generic" error.
 
-        :param msg: the request to handle
+        :param envelope: the request to handle
         :return: the response.
         """
-        assert msg.protocol_id == "bytes"
-        msg_id = msg.message.get("id")
-        dialogue_id = msg.message.get("dialogue_id")
-        sender = msg.sender
-        logger.debug("[{}] on_message: msg_id={}, dialogue_id={}, origin={}" .format(self.controller_agent.name, msg.message.get("id"), dialogue_id, sender))
-        request = self.decode(msg.message.get("content"), sender)
+        assert envelope.protocol_id == "bytes"
+        msg_id = envelope.message.get("id")
+        dialogue_id = envelope.message.get("dialogue_id")
+        sender = envelope.sender
+        logger.debug("[{}] on_message: msg_id={}, dialogue_id={}, origin={}" .format(self.controller_agent.name, envelope.message.get("id"), dialogue_id, sender))
+        request = self.decode(envelope.message.get("content"), sender)
         handle_request = self.handlers.get(type(request), None)  # type: RequestHandler
         if handle_request is None:
             logger.debug("[{}]: Unknown message: msg_id={}, dialogue_id={}, origin={}".format(self.controller_agent.name, msg_id, dialogue_id, sender))
-            return Error(msg.sender, self.controller_agent.crypto, ErrorCode.REQUEST_NOT_VALID)
+            return Error(envelope.sender, self.controller_agent.crypto, ErrorCode.REQUEST_NOT_VALID)
         try:
             return handle_request(request)
         except Exception as e:
@@ -486,21 +486,21 @@ class OEFHandler(OEFActions, OEFReactions):
         OEFActions.__init__(self, crypto, liveness, mailbox, agent_name)
         OEFReactions.__init__(self, crypto, liveness, mailbox, agent_name)
 
-    def handle_oef_message(self, msg: Envelope) -> None:
+    def handle_oef_message(self, envelope: Envelope) -> None:
         """
         Handle messages from the oef.
 
         The oef does not expect a response for any of these messages.
 
-        :param msg: the OEF message
+        :param envelope: the OEF message
 
         :return: None
         """
-        logger.debug("[{}]: Handling OEF message. type={}".format(self.agent_name, type(msg)))
-        assert msg.protocol_id == "oef"
-        if msg.message.get("type") == OEFMessage.Type.OEF_ERROR:
-            self.on_oef_error(msg)
-        elif msg.message.get("type") == OEFMessage.Type.DIALOGUE_ERROR:
-            self.on_dialogue_error(msg)
+        logger.debug("[{}]: Handling OEF message. type={}".format(self.agent_name, type(envelope)))
+        assert envelope.protocol_id == "oef"
+        if envelope.message.get("type") == OEFMessage.Type.OEF_ERROR:
+            self.on_oef_error(envelope)
+        elif envelope.message.get("type") == OEFMessage.Type.DIALOGUE_ERROR:
+            self.on_dialogue_error(envelope)
         else:
             logger.warning("[{}]: OEF Message type not recognized.".format(self.agent_name))

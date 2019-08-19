@@ -391,13 +391,13 @@ class OEFConnection(Connection):
         """Get the connection status."""
         return self.bridge.is_connected()
 
-    def send(self, msg: Envelope):
+    def send(self, envelope: Envelope):
         """
         Send messages.
 
         :return: None
         """
-        self.bridge.send(msg)
+        self.bridge.send(envelope)
 
 
 class OEFMailBox(MailBox):

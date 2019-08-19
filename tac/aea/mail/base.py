@@ -143,7 +143,7 @@ class Connection:
         """Check if the connection is established."""
 
     @abstractmethod
-    def send(self, msg: Envelope):
+    def send(self, envelope: Envelope):
         """Send a message."""
 
 

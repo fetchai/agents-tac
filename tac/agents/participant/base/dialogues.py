@@ -84,8 +84,7 @@ class Dialogue(BaseDialogue):
         :param messages: a list of messages to be added
         :return: None
         """
-        for message in messages:
-            self._outgoing_messages.extend([message])
+        self._outgoing_messages.extend(messages)
 
     def incoming_extend(self, messages: List[Envelope]) -> None:
         """
@@ -180,7 +179,7 @@ class Dialogues(BaseDialogues):
         """Get dictionary of dialogues in which the agent acts as a buyer."""
         return self._dialogues_as_buyer
 
-    def is_permitted_for_new_dialogue(self, msg: Envelope, known_pbks: List[str]) -> bool:
+    def is_permitted_for_new_dialogue(self, envelope: Envelope, known_pbks: List[str]) -> bool:
         """
         Check whether an agent message is permitted for a new dialogue.
 
@@ -189,37 +188,37 @@ class Dialogues(BaseDialogues):
         - have the correct msg id and message target, and
         - be from a known public key.
 
-        :param msg: the agent message
+        :param envelope: the agent message
         :param known_pbks: the list of known public keys
 
         :return: a boolean indicating whether the message is permitted for a new dialogue
         """
-        protocol = msg.protocol_id
-        msg_id = msg.message.get("id")
-        target = msg.message.get("target")
-        performative = msg.message.get("performative")
+        protocol = envelope.protocol_id
+        msg_id = envelope.message.get("id")
+        target = envelope.message.get("target")
+        performative = envelope.message.get("performative")
 
         result = protocol == "fipa"\
             and performative == FIPAMessage.Performative.CFP \
             and msg_id == STARTING_MESSAGE_ID\
             and target == STARTING_MESSAGE_TARGET \
-            and (msg.sender in known_pbks)
+            and (envelope.sender in known_pbks)
         return result
 
-    def is_belonging_to_registered_dialogue(self, msg: Envelope, agent_pbk: str) -> bool:
+    def is_belonging_to_registered_dialogue(self, envelope: Envelope, agent_pbk: str) -> bool:
         """
         Check whether an agent message is part of a registered dialogue.
 
-        :param msg: the agent message
+        :param envelope: the agent message
         :param agent_pbk: the public key of the agent
 
         :return: boolean indicating whether the message belongs to a registered dialogue
         """
-        assert msg.protocol_id == "fipa"
-        dialogue_id = msg.message.get("dialogue_id")
-        opponent = msg.sender
-        target = msg.message.get("target")
-        performative = msg.message.get("performative")
+        assert envelope.protocol_id == "fipa"
+        dialogue_id = envelope.message.get("dialogue_id")
+        opponent = envelope.sender
+        target = envelope.message.get("target")
+        performative = envelope.message.get("performative")
         self_initiated_dialogue_label = DialogueLabel(dialogue_id, opponent, agent_pbk)
         other_initiated_dialogue_label = DialogueLabel(dialogue_id, opponent, opponent)
         result = False
@@ -246,20 +245,20 @@ class Dialogues(BaseDialogues):
                 result = self_initiated_dialogue.is_expecting_accept_decline()
         return result
 
-    def get_dialogue(self, msg: Envelope, agent_pbk: str) -> Dialogue:
+    def get_dialogue(self, envelope: Envelope, agent_pbk: str) -> Dialogue:
         """
         Retrieve dialogue.
 
-        :param msg: the agent message
+        :param envelope: the agent message
         :param agent_pbk: the public key of the agent
 
         :return: the dialogue
         """
-        assert msg.protocol_id == "fipa"
-        dialogue_id = msg.message.get("dialogue_id")
-        opponent = msg.sender
-        target = msg.message.get("target")
-        performative = msg.message.get("performative")
+        assert envelope.protocol_id == "fipa"
+        dialogue_id = envelope.message.get("dialogue_id")
+        opponent = envelope.sender
+        target = envelope.message.get("target")
+        performative = envelope.message.get("performative")
         self_initiated_dialogue_label = DialogueLabel(dialogue_id, opponent, agent_pbk)
         other_initiated_dialogue_label = DialogueLabel(dialogue_id, opponent, opponent)
         if performative == FIPAMessage.Performative.PROPOSE and target == 1 and self_initiated_dialogue_label in self.dialogues:

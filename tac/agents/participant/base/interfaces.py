@@ -30,11 +30,11 @@ class ControllerReactionInterface:
     """This interface contains the methods to react to events from the ControllerAgent."""
 
     @abstractmethod
-    def on_dialogue_error(self, dialogue_error_msg: Envelope) -> None:
+    def on_dialogue_error(self, envelope: Envelope) -> None:
         """
         Handle dialogue error event emitted by the controller.
 
-        :param dialogue_error_msg: the dialogue error message
+        :param envelope: the dialogue error message
 
         :return: None
         """
@@ -180,7 +180,7 @@ class DialogueReactionInterface:
     """This interface contains the methods to react to events from other agents."""
 
     @abstractmethod
-    def on_new_dialogue(self, msg: Envelope) -> None:
+    def on_new_dialogue(self, envelope: Envelope) -> None:
         """
         React to a message for a new dialogue.
 
@@ -188,27 +188,27 @@ class DialogueReactionInterface:
         - the protocol rules that messages must follow;
         - how the agent behaves in this dialogue.
 
-        :param msg: the agent message
+        :param envelope: the agent message
 
         :return: None
         """
 
     @abstractmethod
-    def on_existing_dialogue(self, msg: Envelope) -> None:
+    def on_existing_dialogue(self, envelope: Envelope) -> None:
         """
         React to a message of an existing dialogue.
 
-        :param msg: the agent message
+        :param envelope: the agent message
 
         :return: None
         """
 
     @abstractmethod
-    def on_unidentified_dialogue(self, msg: Envelope) -> None:
+    def on_unidentified_dialogue(self, envelope: Envelope) -> None:
         """
         React to a message of an unidentified dialogue.
 
-        :param msg: the agent message
+        :param envelope: the agent message
 
         :return: None
         """

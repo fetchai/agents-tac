@@ -227,7 +227,7 @@ class Protocol:
         self.serializer = serializer
 
     @abstractmethod
-    def is_message_valid(self, msg: Envelope):
+    def is_message_valid(self, envelope: Envelope):
         """Determine whether a message is valid."""
 
     @abstractmethod
