@@ -36,8 +36,6 @@ ProtocolId = str
 class Message:
     """This class implements a message."""
 
-    protocol_id = "default"
-
     def __init__(self, body: Optional[Dict] = None,
                  **kwargs):
         """
@@ -117,6 +115,9 @@ class OEFMessage(Message):
         DIALOGUE_ERROR = "dialogue_error"
         SEARCH_RESULT = "search_result"
 
+        def __str__(self):
+            return self.value
+
     def __init__(self, oef_type: Optional[Type] = None,
                  **kwargs):
         """
@@ -124,7 +125,7 @@ class OEFMessage(Message):
 
         :param oef_type: the type of OEF message.
         """
-        super().__init__(type=oef_type, **kwargs)
+        super().__init__(type=str(oef_type), **kwargs)
 
     def check_consistency(self) -> bool:
         """Check that the data is consistent."""
@@ -203,7 +204,7 @@ class ByteMessage(Message):
 class SimpleMessage(Message):
     """The Simple message class."""
 
-    protocol_id = "simple"
+    protocol_id = "default"
 
     class Type(Enum):
         """Simple message types."""
@@ -234,6 +235,9 @@ class FIPAMessage(Message):
         ACCEPT = "accept"
         MATCH_ACCEPT = "match_accept"
         DECLINE = "decline"
+
+        def __str__(self):
+            return self.value
 
     def __init__(self, message_id: Optional[int] = None,
                  dialogue_id: Optional[int] = None,

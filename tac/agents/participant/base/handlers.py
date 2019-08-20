@@ -29,11 +29,13 @@ This module contains the message handler classes.
 import logging
 from typing import Any
 
-from tac.aea.mail.protocol import Envelope
+from tac.aea.mail.protocol import Envelope, DefaultJSONSerializer
 from tac.aea.agent import Liveness
 from tac.aea.crypto.base import Crypto
 from tac.aea.mail.base import MailBox
-from tac.aea.mail.messages import OEFMessage
+from tac.aea.mail.messages import OEFMessage, Message, Address
+from tac.aea.protocols.default.serialization import SimpleSerializer
+from tac.aea.protocols.oef.serialization import OEFSerializer
 from tac.agents.participant.base.actions import DialogueActions, ControllerActions, OEFActions
 from tac.agents.participant.base.game_instance import GameInstance, GamePhase
 from tac.agents.participant.base.reactions import DialogueReactions, ControllerReactions, OEFReactions
@@ -60,23 +62,24 @@ class DialogueHandler(DialogueActions, DialogueReactions):
         DialogueActions.__init__(self, crypto, liveness, game_instance, mailbox, agent_name)
         DialogueReactions.__init__(self, crypto, liveness, game_instance, mailbox, agent_name)
 
-    def handle_dialogue_message(self, envelope: Envelope) -> None:
+    def handle_dialogue_message(self, message: Message, sender: Address) -> None:
         """
         Handle messages from the other agents.
 
         The agents expect a response.
 
-        :param envelope: the agent message
+        :param message: the agent message.
+        :param sender: the sender.
 
         :return: None
         """
-        logger.debug("Handling Dialogue message. type={}".format(type(envelope)))
-        if self.dialogues.is_belonging_to_registered_dialogue(envelope, self.crypto.public_key):
-            self.on_existing_dialogue(envelope)
-        elif self.dialogues.is_permitted_for_new_dialogue(envelope, self.game_instance.game_configuration.agent_pbks):
-            self.on_new_dialogue(envelope)
+        logger.debug("Handling Dialogue message. type={}".format(type(message.get("performative"))))
+        if self.dialogues.is_belonging_to_registered_dialogue(message, self.crypto.public_key, sender):
+            self.on_existing_dialogue(message, sender)
+        elif self.dialogues.is_permitted_for_new_dialogue(message, self.game_instance.game_configuration.agent_pbks, sender):
+            self.on_new_dialogue(message, sender)
         else:
-            self.on_unidentified_dialogue(envelope)
+            self.on_unidentified_dialogue(message, sender)
 
 
 class ControllerHandler(ControllerActions, ControllerReactions):
@@ -105,8 +108,9 @@ class ControllerHandler(ControllerActions, ControllerReactions):
 
         :return: None
         """
-        assert envelope.protocol_id == "bytes"
-        response = Response.from_pb(envelope.message.get("content"), envelope.sender, self.crypto)
+        assert envelope.protocol_id == "default"
+        msg = SimpleSerializer().decode(envelope.message)
+        response = Response.from_pb(msg.get("content"), envelope.sender, self.crypto)
         logger.debug("[{}]: Handling controller response. type={}".format(self.agent_name, type(response)))
         try:
             if envelope.sender != self.game_instance.controller_pbk:
@@ -163,12 +167,13 @@ class OEFHandler(OEFActions, OEFReactions):
         """
         logger.debug("[{}]: Handling OEF message. type={}".format(self.agent_name, type(envelope)))
         assert envelope.protocol_id == "oef"
-        oef_type = envelope.message.get("type")
+        oef_message = OEFSerializer().decode(envelope.message)
+        oef_type = oef_message.get("type")
         if oef_type == OEFMessage.Type.SEARCH_RESULT:
-            self.on_search_result(envelope)
+            self.on_search_result(oef_message)
         elif oef_type == OEFMessage.Type.OEF_ERROR:
-            self.on_oef_error(envelope)
+            self.on_oef_error(oef_message)
         elif oef_type == OEFMessage.Type.DIALOGUE_ERROR:
-            self.on_dialogue_error(envelope)
+            self.on_dialogue_error(oef_message)
         else:
-            logger.warning("[{}]: OEF Message type not recognized.".format(self.agent_name))
+            logger.warning("[{}]: OEF Message type not recognized: {}.".format(self.agent_name, oef_type))

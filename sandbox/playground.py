@@ -34,6 +34,7 @@ import docker
 
 from tac.aea.mail.messages import FIPAMessage
 from tac.aea.mail.protocol import Envelope
+from tac.aea.protocols.fipa.serialization import FIPASerializer
 from tac.agents.participant.base.dialogues import Dialogue
 from tac.agents.participant.examples.baseline import BaselineAgent
 from tac.agents.participant.examples.strategy import BaselineStrategy
@@ -134,9 +135,9 @@ if __name__ == '__main__':
         cfp = FIPAMessage(message_id=starting_message_id, dialogue_id=dialogue.dialogue_label.dialogue_id,
                           target=starting_message_target, performative=FIPAMessage.Performative.CFP,
                           query=json.dumps(services).encode('utf-8'))
-        envelope = Envelope(to=agent_two.crypto.public_key, sender=agent_one.crypto.public_key, protocol_id=FIPAMessage.protocol_id,
-                            message=cfp)
-        dialogue.outgoing_extend([envelope])
+        cfp_bytes = FIPASerializer().encode(cfp)
+        envelope = Envelope(to=agent_two.crypto.public_key, sender=agent_one.crypto.public_key, protocol_id=FIPAMessage.protocol_id, message=cfp_bytes)
+        dialogue.outgoing_extend([cfp])
         agent_one.outbox.out_queue.put(envelope)
 
         # Send the messages in the outbox

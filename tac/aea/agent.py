@@ -25,7 +25,9 @@ import time
 
 from abc import abstractmethod
 from enum import Enum
-from typing import Optional
+from typing import Optional, Dict
+
+from tac.aea.mail.messages import ProtocolId
 
 from tac.aea.mail.base import InBox, OutBox, MailBox
 from tac.aea.crypto.base import Crypto
@@ -83,6 +85,8 @@ class Agent:
         self.debug = debug
 
         self.mailbox = None  # type: Optional[MailBox]
+        self._handlers = {}  # type: Dict[ProtocolId, Handler]
+        self.behaviours = {}
 
     @property
     def inbox(self) -> Optional[InBox]:

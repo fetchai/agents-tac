@@ -32,6 +32,8 @@ from tac.aea.agent import Liveness
 from tac.aea.crypto.base import Crypto
 from tac.aea.mail.base import MailBox
 from tac.aea.mail.messages import OEFMessage
+from tac.aea.mail.protocol import DefaultJSONSerializer
+from tac.aea.protocols.oef.serialization import OEFSerializer
 from tac.agents.controller.base.interfaces import OEFActionInterface
 
 logger = logging.getLogger(__name__)
@@ -69,4 +71,5 @@ class OEFActions(OEFActionInterface):
         desc = Description({"version": 1}, data_model=CONTROLLER_DATAMODEL)
         logger.debug("[{}]: Registering with {} data model".format(self.agent_name, desc.data_model.name))
         out = OEFMessage(oef_type=OEFMessage.Type.REGISTER_SERVICE, id=1, service_description=desc, service_id="")
-        self.mailbox.outbox.put_message(to=None, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=out)
+        out_bytes = OEFSerializer().encode(out)
+        self.mailbox.outbox.put_message(to=None, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=out_bytes)

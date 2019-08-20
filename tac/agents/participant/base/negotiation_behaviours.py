@@ -26,8 +26,10 @@ import pprint
 from typing import List
 
 from tac.aea.crypto.base import Crypto
-from tac.aea.mail.messages import FIPAMessage, ByteMessage
+from tac.aea.mail.messages import FIPAMessage, Message, SimpleMessage
 from tac.aea.mail.protocol import Envelope
+from tac.aea.protocols.default.serialization import SimpleSerializer
+from tac.aea.protocols.fipa.serialization import FIPASerializer
 from tac.agents.participant.base.dialogues import Dialogue
 from tac.agents.participant.base.game_instance import GameInstance
 from tac.agents.participant.base.helpers import generate_transaction_id
@@ -71,17 +73,16 @@ class FIPABehaviour:
         """Get the agent name."""
         return self._agent_name
 
-    def on_cfp(self, envelope: Envelope, dialogue: Dialogue) -> Envelope:
+    def on_cfp(self, cfp: Message, dialogue: Dialogue) -> Envelope:
         """
         Handle a CFP.
 
-        :param envelope: the envelope containing the CFP
+        :param cfp: the message containing the CFP
         :param dialogue: the dialogue
 
         :return: a Propose or a Decline
         """
-        cfp = envelope.message
-        assert cfp.protocol_id == "fipa" and cfp.get("performative") == FIPAMessage.Performative.CFP
+        assert cfp.get("performative") == FIPAMessage.Performative.CFP
         goods_description = self.game_instance.get_service_description(is_supply=dialogue.is_seller)
         new_msg_id = cfp.get("id") + 1
         decline = False
@@ -96,86 +97,93 @@ class FIPABehaviour:
                 logger.debug("[{}]: Current strategy does not generate proposal that satisfies CFP query.".format(self.agent_name))
 
         if decline:
-            logger.debug("[{}]: sending to {} a Decline{}".format(self.agent_name, envelope.sender,
+            logger.debug("[{}]: sending to {} a Decline{}".format(self.agent_name, dialogue.dialogue_label.dialogue_opponent_pbk,
                                                                   pprint.pformat({
                                                                       "msg_id": new_msg_id,
                                                                       "dialogue_id": cfp.get("dialogue_id"),
-                                                                      "origin": envelope.sender,
+                                                                      "origin": dialogue.dialogue_label.dialogue_opponent_pbk,
                                                                       "target": cfp.get("target")
                                                                   })))
-            response = Envelope(to=envelope.sender, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id,
-                                message=FIPAMessage(message_id=new_msg_id, dialogue_id=cfp.get("dialogue_id"), performative=FIPAMessage.Performative.DECLINE, target=cfp.get("id")))
+            msg = FIPAMessage(message_id=new_msg_id, dialogue_id=cfp.get("dialogue_id"), performative=FIPAMessage.Performative.DECLINE, target=cfp.get("id"))
+            dialogue.outgoing_extend([msg])
+            msg_bytes = FIPASerializer().encode(msg)
+            response = Envelope(to=dialogue.dialogue_label.dialogue_opponent_pbk, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id, message=msg_bytes)
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_CFP, dialogue.is_self_initiated)
         else:
-            transaction_id = generate_transaction_id(self.crypto.public_key, envelope.sender, dialogue.dialogue_label, dialogue.is_seller)
+            transaction_id = generate_transaction_id(self.crypto.public_key, dialogue.dialogue_label.dialogue_opponent_pbk, dialogue.dialogue_label, dialogue.is_seller)
             transaction = Transaction.from_proposal(proposal=proposal,
                                                     transaction_id=transaction_id,
                                                     is_sender_buyer=not dialogue.is_seller,
-                                                    counterparty=envelope.sender,
+                                                    counterparty=dialogue.dialogue_label.dialogue_opponent_pbk,
                                                     sender=self.crypto.public_key,
                                                     crypto=self.crypto)
             self.game_instance.transaction_manager.add_pending_proposal(dialogue.dialogue_label, new_msg_id, transaction)
-            logger.debug("[{}]: sending to {} a Propose{}".format(self.agent_name, envelope.sender,
+            logger.debug("[{}]: sending to {} a Propose{}".format(self.agent_name, dialogue.dialogue_label.dialogue_opponent_pbk,
                                                                   pprint.pformat({
                                                                       "msg_id": new_msg_id,
                                                                       "dialogue_id": cfp.get("dialogue_id"),
-                                                                      "origin": envelope.sender,
+                                                                      "origin": dialogue.dialogue_label.dialogue_opponent_pbk,
                                                                       "target": cfp.get("id"),
                                                                       "propose": proposal.values
                                                                   })))
-            response = Envelope(to=envelope.sender, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id,
-                                message=FIPAMessage(performative=FIPAMessage.Performative.PROPOSE, message_id=new_msg_id, dialogue_id=cfp.get("dialogue_id"), target=cfp.get("id"), proposal=[proposal]))
+            msg = FIPAMessage(performative=FIPAMessage.Performative.PROPOSE, message_id=new_msg_id, dialogue_id=cfp.get("dialogue_id"), target=cfp.get("id"), proposal=[proposal])
+            dialogue.outgoing_extend([msg])
+            dialogue.outgoing_extend([msg])
+            msg_bytes = FIPASerializer().encode(msg)
+            response = Envelope(to=dialogue.dialogue_label.dialogue_opponent_pbk, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id, message=msg_bytes)
         return response
 
-    def on_propose(self, envelope: Envelope, dialogue: Dialogue) -> Envelope:
+    def on_propose(self, propose: Message, dialogue: Dialogue) -> Envelope:
         """
         Handle a Propose.
 
-        :param envelope: the envelope containing the Propose
+        :param propose: the message containing the Propose
         :param dialogue: the dialogue
 
         :return: an Accept or a Decline
         """
-        propose = envelope.message
         logger.debug("[{}]: on propose as {}.".format(self.agent_name, dialogue.role))
-        assert propose.protocol_id == "fipa" and propose.get("performative") == FIPAMessage.Performative.PROPOSE
+        assert propose.get("performative") == FIPAMessage.Performative.PROPOSE
         proposal = propose.get("proposal")[0]
-        transaction_id = generate_transaction_id(self.crypto.public_key, envelope.sender, dialogue.dialogue_label, dialogue.is_seller)
+        transaction_id = generate_transaction_id(self.crypto.public_key, dialogue.dialogue_label.dialogue_opponent_pbk, dialogue.dialogue_label, dialogue.is_seller)
         transaction = Transaction.from_proposal(proposal=proposal,
                                                 transaction_id=transaction_id,
                                                 is_sender_buyer=not dialogue.is_seller,
-                                                counterparty=envelope.sender,
+                                                counterparty=dialogue.dialogue_label.dialogue_opponent_pbk,
                                                 sender=self.crypto.public_key,
                                                 crypto=self.crypto)
         new_msg_id = propose.get("id") + 1
-        is_profitable_transaction, message = self.game_instance.is_profitable_transaction(transaction, dialogue)
-        logger.debug(message)
+        is_profitable_transaction, propose_log_msg = self.game_instance.is_profitable_transaction(transaction, dialogue)
+        logger.debug(propose_log_msg)
         if is_profitable_transaction:
             logger.debug("[{}]: Accepting propose (as {}).".format(self.agent_name, dialogue.role))
             self.game_instance.transaction_manager.add_locked_tx(transaction, as_seller=dialogue.is_seller)
             self.game_instance.transaction_manager.add_pending_initial_acceptance(dialogue.dialogue_label, new_msg_id, transaction)
-            result = Envelope(to=envelope.sender, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id,
-                              message=FIPAMessage(message_id=new_msg_id, dialogue_id=propose.get("dialogue_id"), target=propose.get("id"), performative=FIPAMessage.Performative.ACCEPT))
+            msg = FIPAMessage(message_id=new_msg_id, dialogue_id=propose.get("dialogue_id"), target=propose.get("id"), performative=FIPAMessage.Performative.ACCEPT)
+            dialogue.outgoing_extend([msg])
+            msg_bytes = FIPASerializer().encode(msg)
+            result = Envelope(to=dialogue.dialogue_label.dialogue_opponent_pbk, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id, message=msg_bytes)
         else:
             logger.debug("[{}]: Declining propose (as {})".format(self.agent_name, dialogue.role))
-            result = Envelope(to=envelope.sender, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id,
-                              message=FIPAMessage(message_id=new_msg_id, dialogue_id=propose.get("dialogue_id"), target=propose.get("id"), performative=FIPAMessage.Performative.DECLINE))
+            msg = FIPAMessage(message_id=new_msg_id, dialogue_id=propose.get("dialogue_id"), target=propose.get("id"), performative=FIPAMessage.Performative.DECLINE)
+            dialogue.outgoing_extend([msg])
+            msg_bytes = FIPASerializer().encode(msg)
+            result = Envelope(to=dialogue.dialogue_label.dialogue_opponent_pbk, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id, message=msg_bytes)
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_PROPOSE, dialogue.is_self_initiated)
         return result
 
-    def on_decline(self, envelope: Envelope, dialogue: Dialogue) -> None:
+    def on_decline(self, decline: Message, dialogue: Dialogue) -> None:
         """
         Handle a Decline.
 
-        :param envelope: the envelope containing the Decline
+        :param decline: the message  containing the Decline
         :param dialogue: the dialogue
 
         :return: None
         """
-        decline = envelope.message
-        assert decline.protocol_id == "fipa" and decline.get("performative") == FIPAMessage.Performative.DECLINE
+        assert decline.get("performative") == FIPAMessage.Performative.DECLINE
         logger.debug("[{}]: on_decline: msg_id={}, dialogue_id={}, origin={}, target={}"
-                     .format(self.agent_name, decline.get("id"), decline.get("dialogue_id"), envelope.sender, decline.get("target")))
+                     .format(self.agent_name, decline.get("id"), decline.get("dialogue_id"), dialogue.dialogue_label.dialogue_opponent_pbk, decline.get("target")))
         target = decline.get("target")
         if target == 1:
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_CFP, dialogue.is_self_initiated)
@@ -191,59 +199,66 @@ class FIPABehaviour:
 
         return None
 
-    def on_accept(self, envelope: Envelope, dialogue: Dialogue) -> List[Envelope]:
+    def on_accept(self, accept: Message, dialogue: Dialogue) -> List[Envelope]:
         """
         Handle an Accept.
 
-        :param envelope: the envelope containing the Accept
+        :param accept: the message containing the Accept
         :param dialogue: the dialogue
         :return: a Decline, or an Accept and a Transaction, or a Transaction (in a Message object)
         """
-        accept = envelope.message
-        assert envelope.protocol_id == "fipa" \
-            and accept.get("performative") == FIPAMessage.Performative.ACCEPT \
-            and dialogue.dialogue_label in self.game_instance.transaction_manager.pending_proposals \
-            and accept.get("target") in self.game_instance.transaction_manager.pending_proposals[dialogue.dialogue_label]
+        assert accept.get("performative") == FIPAMessage.Performative.ACCEPT \
+               and dialogue.dialogue_label in self.game_instance.transaction_manager.pending_proposals \
+               and accept.get("target") in self.game_instance.transaction_manager.pending_proposals[dialogue.dialogue_label]
         logger.debug("[{}]: on_accept: msg_id={}, dialogue_id={}, origin={}, target={}"
-                     .format(self.agent_name, accept.get("id"), accept.get("dialogue_id"), envelope.sender, accept.get("target")))
+                     .format(self.agent_name, accept.get("id"), accept.get("dialogue_id"), dialogue.dialogue_label.dialogue_opponent_pbk, accept.get("target")))
         new_msg_id = accept.get("id") + 1
         results = []
         transaction = self.game_instance.transaction_manager.pop_pending_proposal(dialogue.dialogue_label, accept.get("target"))
-        is_profitable_transaction, message = self.game_instance.is_profitable_transaction(transaction, dialogue)
-        logger.debug(message)
+        is_profitable_transaction, accept_log_msg = self.game_instance.is_profitable_transaction(transaction, dialogue)
+        logger.debug(accept_log_msg)
         if is_profitable_transaction:
             if self.game_instance.strategy.is_world_modeling:
                 self.game_instance.world_state.update_on_initial_accept(transaction)
             logger.debug("[{}]: Locking the current state (as {}).".format(self.agent_name, dialogue.role))
             self.game_instance.transaction_manager.add_locked_tx(transaction, as_seller=dialogue.is_seller)
-            results.append(Envelope(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=ByteMessage.protocol_id,
-                                    message=ByteMessage(message_id=STARTING_MESSAGE_ID, dialogue_id=accept.get("dialogue_id"), content=transaction.serialize())))
-            results.append(Envelope(to=envelope.sender, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id,
-                                    message=FIPAMessage(message_id=new_msg_id, dialogue_id=accept.get("dialogue_id"), target=accept.get("id"), performative=FIPAMessage.Performative.MATCH_ACCEPT)))
+
+            msg = SimpleMessage(type=SimpleMessage.Type.BYTES, content=transaction.serialize())
+            msg_bytes = SimpleSerializer().encode(msg)
+            results.append(Envelope(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=SimpleMessage.protocol_id, message=msg_bytes))
+            dialogue.outgoing_extend([msg])
+
+            msg = FIPAMessage(message_id=new_msg_id, dialogue_id=accept.get("dialogue_id"), target=accept.get("id"), performative=FIPAMessage.Performative.MATCH_ACCEPT)
+            dialogue.outgoing_extend([msg])
+            msg_bytes = FIPASerializer().encode(msg)
+            results.append(Envelope(to=dialogue.dialogue_label.dialogue_opponent_pbk, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id, message=msg_bytes))
         else:
             logger.debug("[{}]: Decline the accept (as {}).".format(self.agent_name, dialogue.role))
-            results.append(Envelope(to=envelope.sender, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id,
-                                    message=FIPAMessage(message_id=new_msg_id, dialogue_id=accept.get("dialogue_id"), target=accept.get("id"), performative=FIPAMessage.Performative.DECLINE)))
+
+            msg = FIPAMessage(message_id=new_msg_id, dialogue_id=accept.get("dialogue_id"), target=accept.get("id"), performative=FIPAMessage.Performative.DECLINE)
+            dialogue.outgoing_extend([msg])
+            msg_bytes = FIPASerializer().encode(msg)
+            results.append(Envelope(to=dialogue.dialogue_label.dialogue_opponent_pbk, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id, message=msg_bytes))
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_ACCEPT, dialogue.is_self_initiated)
         return results
 
-    def on_match_accept(self, envelope: Envelope, dialogue: Dialogue) -> List[Envelope]:
+    def on_match_accept(self, match_accept: Message, dialogue: Dialogue) -> List[Envelope]:
         """
         Handle a matching Accept.
 
-        :param envelope: the envelope containing the MatchAccept
+        :param match_accept: the envelope containing the MatchAccept
         :param dialogue: the dialogue
         :return: a Transaction
         """
-        match_accept = envelope.message
-        assert envelope.protocol_id == "fipa" \
-            and match_accept.get("performative") == FIPAMessage.Performative.MATCH_ACCEPT \
-            and dialogue.dialogue_label in self.game_instance.transaction_manager.pending_initial_acceptances \
-            and match_accept.get("target") in self.game_instance.transaction_manager.pending_initial_acceptances[dialogue.dialogue_label]
+        assert match_accept.get("performative") == FIPAMessage.Performative.MATCH_ACCEPT \
+               and dialogue.dialogue_label in self.game_instance.transaction_manager.pending_initial_acceptances \
+               and match_accept.get("target") in self.game_instance.transaction_manager.pending_initial_acceptances[dialogue.dialogue_label]
         logger.debug("[{}]: on_match_accept: msg_id={}, dialogue_id={}, origin={}, target={}"
-                     .format(self.agent_name, match_accept.get("id"), match_accept.get("dialogue_id"), envelope.sender, match_accept.get("target")))
+                     .format(self.agent_name, match_accept.get("id"), match_accept.get("dialogue_id"), dialogue.dialogue_label.dialogue_opponent_pbk, match_accept.get("target")))
         results = []
         transaction = self.game_instance.transaction_manager.pop_pending_initial_acceptance(dialogue.dialogue_label, match_accept.get("target"))
-        results.append(Envelope(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=ByteMessage.protocol_id,
-                       message=ByteMessage(message_id=STARTING_MESSAGE_ID, dialogue_id=match_accept.get("dialogue_id"), content=transaction.serialize())))
+        msg = SimpleMessage(type=SimpleMessage.Type.BYTES, content=transaction.serialize())
+        msg_bytes = SimpleSerializer().encode(msg)
+        results.append(Envelope(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=SimpleMessage.protocol_id, message=msg_bytes))
+        dialogue.outgoing_extend([msg])
         return results
