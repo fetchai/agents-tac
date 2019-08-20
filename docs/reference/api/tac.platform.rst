@@ -1,21 +1,20 @@
 tac.platform package
 ====================
 
+Subpackages
+-----------
+
+.. toctree::
+
+   tac.platform.game
+
 Submodules
 ----------
 
-tac.platform.controller module
-------------------------------
+tac.platform.oef\_health\_check module
+--------------------------------------
 
-.. automodule:: tac.platform.controller
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-tac.platform.game module
-------------------------
-
-.. automodule:: tac.platform.game
+.. automodule:: tac.platform.oef_health_check
    :members:
    :undoc-members:
    :show-inheritance:
@@ -32,14 +31,6 @@ tac.platform.simulation module
 ------------------------------
 
 .. automodule:: tac.platform.simulation
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-tac.platform.stats module
--------------------------
-
-.. automodule:: tac.platform.stats
    :members:
    :undoc-members:
    :show-inheritance:

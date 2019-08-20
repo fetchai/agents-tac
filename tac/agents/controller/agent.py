@@ -36,7 +36,7 @@ from tac.aea.mail.oef import OEFNetworkMailBox
 from tac.aea.mail.protocol import Envelope
 from tac.agents.controller.base.handlers import OEFHandler, GameHandler, AgentMessageDispatcher
 from tac.agents.controller.base.tac_parameters import TACParameters
-from tac.agents.participant.base.helpers import is_oef_message
+from tac.agents.participant.v1.base.helpers import is_oef_message
 from tac.platform.game.base import GamePhase
 from tac.gui.monitor import Monitor, NullMonitor, VisdomMonitor
 

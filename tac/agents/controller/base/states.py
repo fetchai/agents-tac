@@ -30,7 +30,7 @@ import logging
 from typing import List, Dict, Any
 
 from tac.aea.crypto.base import Crypto
-from tac.agents.participant.base.states import AgentState
+from tac.agents.participant.v1.base.states import AgentState
 from tac.platform.game.base import GameConfiguration, GoodState
 from tac.platform.game.helpers import generate_money_endowments, generate_good_endowments, generate_utility_params, \
     generate_equilibrium_prices_and_holdings, determine_scaling_factor

@@ -24,9 +24,9 @@ from typing import List, Optional, Set
 
 from oef.schema import Description
 
-from tac.agents.participant.base.helpers import get_goods_quantities_description
-from tac.agents.participant.base.states import WorldState
-from tac.agents.participant.base.strategy import RegisterAs, SearchFor, Strategy
+from tac.agents.participant.v1.base.helpers import get_goods_quantities_description
+from tac.agents.participant.v1.base.states import WorldState
+from tac.agents.participant.v1.base.strategy import RegisterAs, SearchFor, Strategy
 from tac.platform.game.helpers import marginal_utility
 
 

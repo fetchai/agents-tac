@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # ------------------------------------------------------------------------------
@@ -18,4 +19,4 @@
 #
 # ------------------------------------------------------------------------------
 
-"""Contains the TAC participant packages."""
+"""This module contains the fipa_negotiation skill."""

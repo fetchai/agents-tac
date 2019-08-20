@@ -34,8 +34,8 @@ from tac.aea.agent import Liveness
 from tac.aea.crypto.base import Crypto
 from tac.aea.mail.base import MailBox
 from tac.aea.mail.messages import ByteMessage, OEFMessage
-from tac.agents.participant.base.interfaces import ControllerActionInterface, OEFActionInterface, DialogueActionInterface
-from tac.agents.participant.base.game_instance import GameInstance
+from tac.agents.participant.v1.base.interfaces import ControllerActionInterface, OEFActionInterface, DialogueActionInterface
+from tac.agents.participant.v1.base.game_instance import GameInstance
 
 from tac.platform.protocol import GetStateUpdate
 

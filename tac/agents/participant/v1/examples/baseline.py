@@ -25,9 +25,9 @@ import argparse
 import logging
 from typing import Optional
 
-from tac.agents.participant.agent import ParticipantAgent
-from tac.agents.participant.base.strategy import Strategy, RegisterAs, SearchFor
-from tac.agents.participant.examples.strategy import BaselineStrategy
+from tac.agents.participant.v1.agent import ParticipantAgent
+from tac.agents.participant.v1.base.strategy import Strategy, RegisterAs, SearchFor
+from tac.agents.participant.v1.examples.strategy import BaselineStrategy
 from tac.gui.dashboards.agent import AgentDashboard
 
 logger = logging.getLogger(__name__)

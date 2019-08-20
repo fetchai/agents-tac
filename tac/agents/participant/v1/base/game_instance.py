@@ -28,12 +28,12 @@ from oef.query import Query
 from oef.schema import Description
 
 from tac.aea.mail.oef import MailStats
-from tac.agents.participant.base.dialogues import Dialogues, Dialogue
-from tac.agents.participant.base.helpers import build_dict, build_query, get_goods_quantities_description
-from tac.agents.participant.base.states import AgentState, WorldState
-from tac.agents.participant.base.stats_manager import StatsManager
-from tac.agents.participant.base.strategy import Strategy
-from tac.agents.participant.base.transaction_manager import TransactionManager
+from tac.agents.participant.v1.base.dialogues import Dialogues, Dialogue
+from tac.agents.participant.v1.base.helpers import build_dict, build_query, get_goods_quantities_description
+from tac.agents.participant.v1.base.states import AgentState, WorldState
+from tac.agents.participant.v1.base.stats_manager import StatsManager
+from tac.agents.participant.v1.base.strategy import Strategy
+from tac.agents.participant.v1.base.transaction_manager import TransactionManager
 from tac.gui.dashboards.agent import AgentDashboard
 from tac.platform.game.base import GamePhase, GameConfiguration
 from tac.platform.protocol import GameData, StateUpdate, Transaction

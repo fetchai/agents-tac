@@ -29,7 +29,7 @@ import pylab as plt
 
 from tac.aea.crypto.base import Crypto
 from tac.agents.controller.base.states import Game
-from tac.agents.participant.base.states import AgentState
+from tac.agents.participant.v1.base.states import AgentState
 
 matplotlib.use('agg')
 

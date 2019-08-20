@@ -25,7 +25,7 @@ import time
 
 from abc import abstractmethod
 from enum import Enum
-from typing import Optional
+from typing import Dict, Optional
 
 from tac.aea.mail.base import InBox, OutBox, MailBox
 from tac.aea.crypto.base import Crypto
@@ -80,6 +80,9 @@ class Agent:
         self._liveness = Liveness()
         self._timeout = timeout
 
+        self._handlers = {}
+        self._behaviours = {}
+
         self.debug = debug
 
         self.mailbox = None  # type: Optional[MailBox]
@@ -108,6 +111,16 @@ class Agent:
     def liveness(self) -> Liveness:
         """Get the liveness."""
         return self._liveness
+
+    @property
+    def handlers(self) -> Dict[str, object]:
+        """Get the registered handlers."""
+        return self._behaviours
+
+    @property
+    def behaviours(self) -> Dict[str, object]:
+        """Get the registered behaviours."""
+        return self._behaviours
 
     @property
     def agent_state(self) -> AgentState:
