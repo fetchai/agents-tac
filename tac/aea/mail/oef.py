@@ -99,6 +99,11 @@ class OEFChannel(Agent):
         self.in_queue = in_queue
         self.mail_stats = MailStats()
 
+    @property
+    def loop(self) -> asyncio.AbstractEventLoop:
+        """Get the event loop."""
+        return self._loop
+
     def is_connected(self) -> bool:
         """Get connected status."""
         return self._oef_proxy.is_connected()
@@ -376,10 +381,10 @@ class OEFConnection(Connection):
 
         :return: None
         """
-        if self.bridge.is_active():
-            self.bridge.stop()
-
         self._stopped = True
+        if self.bridge.is_active():
+            self.bridge.loop.call_soon_threadsafe(self.bridge.stop)
+
         self.in_thread.join()
         self.out_thread.join()
         self.in_thread = Thread(target=self.bridge.run)
