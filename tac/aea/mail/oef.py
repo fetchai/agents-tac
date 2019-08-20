@@ -31,7 +31,7 @@ from oef.core import OEFProxy
 from oef.messages import OEFErrorOperation, CFP_TYPES, PROPOSE_TYPES
 from oef.proxy import OEFNetworkProxy
 
-
+from tac.aea.helpers.local_node import LocalNode, OEFLocalProxy
 from tac.aea.mail.protocol import Envelope
 from tac.aea.mail.base import Connection, MailBox
 from tac.aea.mail.messages import OEFMessage, FIPAMessage, ByteMessage
@@ -435,3 +435,17 @@ class OEFNetworkMailBox(OEFMailBox):
         :param oef_port: the oef port.
         """
         super().__init__(OEFNetworkProxy(public_key, oef_addr, oef_port, loop=asyncio.new_event_loop()))
+
+
+class OEFLocalMailBox(OEFMailBox):
+    """The OEF local mail box."""
+
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000):
+        """
+        Initialize.
+
+        :param public_key: the public key of the agent.
+        :param oef_addr: the OEF address.
+        :param oef_port: the oef port.
+        """
+        super().__init__(OEFLocalProxy(public_key, LocalNode(), loop=asyncio.new_event_loop()))
