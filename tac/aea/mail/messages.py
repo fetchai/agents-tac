@@ -36,8 +36,6 @@ ProtocolId = str
 class Message:
     """This class implements a message."""
 
-    protocol_id = "default"
-
     def __init__(self, body: Optional[Dict] = None,
                  **kwargs):
         """

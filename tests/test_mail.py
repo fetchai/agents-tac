@@ -20,6 +20,8 @@
 """This module contains tests for the mail module."""
 import time
 
+from tac.aea.crypto.base import Crypto
+
 from tac.aea.mail.messages import FIPAMessage, ByteMessage  # OEFMessage
 from tac.aea.mail.oef import OEFNetworkMailBox
 from tac.aea.mail.protocol import Envelope
@@ -27,22 +29,28 @@ from tac.aea.mail.protocol import Envelope
 
 def test_example(network_node):
     """Test the mailbox."""
-    mailbox1 = OEFNetworkMailBox("mailbox1", "127.0.0.1", 10000)
-    mailbox2 = OEFNetworkMailBox("mailbox2", "127.0.0.1", 10000)
+    crypto1 = Crypto()
+    crypto2 = Crypto()
+
+    pbk1 = crypto1.public_key
+    pbk2 = crypto2.public_key
+
+    mailbox1 = OEFNetworkMailBox(crypto1, "127.0.0.1", 10000)
+    mailbox2 = OEFNetworkMailBox(crypto2, "127.0.0.1", 10000)
 
     mailbox1.connect()
     mailbox2.connect()
 
     msg = ByteMessage(message_id=0, dialogue_id=0, content=b"hello")
-    mailbox1.outbox.put(Envelope(to="mailbox2", sender="mailbox1", protocol_id=ByteMessage.protocol_id, message=msg))
+    mailbox1.outbox.put(Envelope(to=pbk1, sender=pbk2, protocol_id=ByteMessage.protocol_id, message=msg))
     msg = FIPAMessage(0, 0, 0, FIPAMessage.Performative.CFP, query=None)
-    mailbox1.outbox.put(Envelope(to="mailbox2", sender="mailbox1", protocol_id=FIPAMessage.protocol_id, message=msg))
+    mailbox1.outbox.put(Envelope(to=pbk1, sender=pbk2, protocol_id=FIPAMessage.protocol_id, message=msg))
     msg = FIPAMessage(0, 0, 0, FIPAMessage.Performative.PROPOSE, proposal=[])
-    mailbox1.outbox.put(Envelope(to="mailbox2", sender="mailbox1", protocol_id=FIPAMessage.protocol_id, message=msg))
+    mailbox1.outbox.put(Envelope(to=pbk1, sender=pbk2, protocol_id=FIPAMessage.protocol_id, message=msg))
     msg = FIPAMessage(0, 0, 0, FIPAMessage.Performative.ACCEPT)
-    mailbox1.outbox.put(Envelope(to="mailbox2", sender="mailbox1", protocol_id=FIPAMessage.protocol_id, message=msg))
+    mailbox1.outbox.put(Envelope(to=pbk1, sender=pbk2, protocol_id=FIPAMessage.protocol_id, message=msg))
     msg = FIPAMessage(0, 0, 0, FIPAMessage.Performative.DECLINE)
-    mailbox1.outbox.put(Envelope(to="mailbox2", sender="mailbox1", protocol_id=FIPAMessage.protocol_id, message=msg))
+    mailbox1.outbox.put(Envelope(to=pbk1, sender=pbk2, protocol_id=FIPAMessage.protocol_id, message=msg))
 
     time.sleep(10.0)
 

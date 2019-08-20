@@ -24,17 +24,18 @@ import datetime
 import logging
 from queue import Empty, Queue
 from threading import Thread
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from oef.agents import Agent
 from oef.core import OEFProxy
 from oef.messages import OEFErrorOperation, CFP_TYPES, PROPOSE_TYPES
 from oef.proxy import OEFNetworkProxy
-
+from tac.aea.crypto.base import Crypto
 
 from tac.aea.mail.protocol import Envelope, DefaultProtobufSerializer
 from tac.aea.mail.base import Connection, MailBox
 from tac.aea.mail.messages import OEFMessage, FIPAMessage, ByteMessage
+from tac.platform.protocol import TacSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +89,7 @@ class MailStats(object):
 class OEFChannel(Agent):
     """The OEFChannel connects the OEF Agent with the connection."""
 
-    def __init__(self, oef_proxy: OEFProxy, in_queue: Queue):
+    def __init__(self, oef_proxy: OEFProxy, in_queue: Queue, crypto: Optional[Crypto] = None):
         """
         Initialize.
 
@@ -98,6 +99,7 @@ class OEFChannel(Agent):
         super().__init__(oef_proxy)
         self.in_queue = in_queue
         self.mail_stats = MailStats()
+        self.crypto = crypto
 
     def is_connected(self) -> bool:
         """Get connected status."""
@@ -258,6 +260,9 @@ class OEFChannel(Agent):
             dialogue_id = 0
             content = envelope.message.get("content")
             self.send_message(0, 0, envelope.to, content)
+        elif envelope.protocol_id == "tac":
+            envelope_bytes = envelope.encode(TacSerializer(self.public_key, self.crypto))
+            self.send_message(0, 0, envelope.to, envelope_bytes)
         else:
             raise ValueError("Cannot send message.")
 
@@ -329,7 +334,7 @@ class OEFChannel(Agent):
 class OEFConnection(Connection):
     """The OEFConnection connects the to the mailbox."""
 
-    def __init__(self, oef_proxy: OEFProxy):
+    def __init__(self, oef_proxy: OEFProxy, crypto: Optional[Crypto] = None):
         """
         Initialize.
 
@@ -337,7 +342,7 @@ class OEFConnection(Connection):
         """
         super().__init__()
 
-        self.bridge = OEFChannel(oef_proxy, self.in_queue)
+        self.bridge = OEFChannel(oef_proxy, self.in_queue, crypto=crypto)
 
         self._stopped = True
         self.in_thread = Thread(target=self.bridge.run)
@@ -401,13 +406,14 @@ class OEFConnection(Connection):
 class OEFMailBox(MailBox):
     """The OEF mail box."""
 
-    def __init__(self, oef_proxy: OEFProxy):
+    def __init__(self, oef_proxy: OEFProxy, crypto: Optional[Crypto] = None):
         """
         Initialize.
 
         :param oef_proxy: the oef proxy.
         """
-        connection = OEFConnection(oef_proxy)
+        self._crypto = crypto
+        connection = OEFConnection(oef_proxy, crypto=crypto)
         super().__init__(connection)
 
     @property
@@ -419,12 +425,12 @@ class OEFMailBox(MailBox):
 class OEFNetworkMailBox(OEFMailBox):
     """The OEF network mail box."""
 
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000):
+    def __init__(self, crypto: Crypto, oef_addr: str, oef_port: int = 10000):
         """
         Initialize.
 
-        :param public_key: the public key of the agent.
+        :param crypto: the Crypto object.
         :param oef_addr: the OEF address.
         :param oef_port: the oef port.
         """
-        super().__init__(OEFNetworkProxy(public_key, oef_addr, oef_port, loop=asyncio.new_event_loop()))
+        super().__init__(OEFNetworkProxy(crypto.public_key, oef_addr, oef_port, loop=asyncio.new_event_loop()), crypto=crypto)

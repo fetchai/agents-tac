@@ -779,6 +779,9 @@ class StateUpdate(Response):
 
 
 class TacMessage(Message):
+
+    protocol_id = "tac"
+
     class Type(Enum):
         REGISTER = "register"
         UNREGISTER = "unregister"
@@ -830,7 +833,14 @@ class TacSerializer(Serializer):
         return tac_bytes
 
     def decode(self, obj: bytes) -> Message:
-        tac_message = BaseMessage.from_pb(obj, self.public_key, self.crypto)
+        try:
+            tac_message = Response.from_pb(obj, self.public_key, self.crypto)
+        except:
+            try:
+                tac_message = Request.from_pb(obj, self.public_key, self.crypto)
+            except:
+                raise ValueError("Not able to decode.")
+
         tac_type = TacMessage.mapping[type(tac_message)]
         message = Message(type=tac_type, tac_message=tac_message)
         return message
