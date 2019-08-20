@@ -33,12 +33,13 @@ from typing import List
 from tac.aea.agent import Liveness
 from tac.aea.crypto.base import Crypto
 from tac.aea.mail.base import MailBox
-from tac.aea.mail.messages import Message, ByteMessage, FIPAMessage
+from tac.aea.mail.messages import ByteMessage, FIPAMessage
 from tac.agents.participant.base.dialogues import Dialogue
 from tac.agents.participant.base.game_instance import GameInstance, GamePhase
 from tac.agents.participant.base.helpers import dialogue_label_from_transaction_id, TAC_DEMAND_DATAMODEL_NAME
 from tac.agents.participant.base.interfaces import ControllerReactionInterface, OEFReactionInterface, \
     DialogueReactionInterface
+from tac.aea.mail.protocol import Envelope
 from tac.agents.participant.base.negotiation_behaviours import FIPABehaviour
 from tac.agents.participant.base.stats_manager import EndState
 from tac.platform.protocol import Error, ErrorCode, GameData, TransactionConfirmation, StateUpdate, Register, \
@@ -71,17 +72,18 @@ class ControllerReactions(ControllerReactionInterface):
         self.mailbox = mailbox
         self.agent_name = agent_name
 
-    def on_dialogue_error(self, dialogue_error_msg: Message) -> None:
+    def on_dialogue_error(self, envelope: Envelope) -> None:
         """
         Handle dialogue error event emitted by the controller.
 
-        :param dialogue_error_msg: the dialogue error message
+        :param envelope: the dialogue error message
 
         :return: None
         """
-        assert dialogue_error_msg.protocol_id == "oef"
+        assert envelope.protocol_id == "oef"
+        dialogue_error = envelope.message
         logger.warning("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}"
-                       .format(self.agent_name, dialogue_error_msg.get("id"), dialogue_error_msg.get("dialogue_id"), dialogue_error_msg.get("origin")))
+                       .format(self.agent_name, dialogue_error.get("id"), dialogue_error.get("dialogue_id"), dialogue_error.get("origin")))
 
     def on_start(self, game_data: GameData) -> None:
         """
@@ -182,8 +184,8 @@ class ControllerReactions(ControllerReactionInterface):
         :return: None
         """
         msg = GetStateUpdate(self.crypto.public_key, self.crypto).serialize()
-        self.mailbox.outbox.put(ByteMessage(to=self.game_instance.controller_pbk, sender=self.crypto.public_key,
-                                            message_id=0, dialogue_id=0, content=msg))
+        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=ByteMessage.protocol_id,
+                                        message=ByteMessage(message_id=0, dialogue_id=0, content=msg))
 
 
 class OEFReactions(OEFReactionInterface):
@@ -209,7 +211,7 @@ class OEFReactions(OEFReactionInterface):
         self.agent_name = agent_name
         self.rejoin = rejoin
 
-    def on_search_result(self, search_result: Message) -> None:
+    def on_search_result(self, search_result: Envelope) -> None:
         """
         Split the search results from the OEF.
 
@@ -218,8 +220,8 @@ class OEFReactions(OEFReactionInterface):
         :return: None
         """
         assert search_result.protocol_id == "oef"
-        search_id = search_result.get("id")
-        agents = search_result.get("agents")
+        search_id = search_result.message.get("id")
+        agents = search_result.message.get("agents")
         logger.debug("[{}]: on search result: {} {}".format(self.agent_name, search_id, agents))
         if search_id in self.game_instance.search.ids_for_tac:
             self._on_controller_search_result(agents)
@@ -230,7 +232,7 @@ class OEFReactions(OEFReactionInterface):
         else:
             logger.debug("[{}]: Unknown search id: search_id={}".format(self.agent_name, search_id))
 
-    def on_oef_error(self, oef_error: Message) -> None:
+    def on_oef_error(self, oef_error: Envelope) -> None:
         """
         Handle an OEF error message.
 
@@ -239,9 +241,9 @@ class OEFReactions(OEFReactionInterface):
         :return: None
         """
         logger.error("[{}]: Received OEF error: answer_id={}, operation={}"
-                     .format(self.agent_name, oef_error.get("id"), oef_error.get("operation")))
+                     .format(self.agent_name, oef_error.message.get("id"), oef_error.message.get("operation")))
 
-    def on_dialogue_error(self, dialogue_error: Message) -> None:
+    def on_dialogue_error(self, dialogue_error: Envelope) -> None:
         """
         Handle a dialogue error message.
 
@@ -250,7 +252,7 @@ class OEFReactions(OEFReactionInterface):
         :return: None
         """
         logger.error("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}"
-                     .format(self.agent_name, dialogue_error.get("id"), dialogue_error.get("dialogue_id"), dialogue_error.get("origin")))
+                     .format(self.agent_name, dialogue_error.message.get("id"), dialogue_error.message.get("dialogue_id"), dialogue_error.message.get("origin")))
 
     def _on_controller_search_result(self, agent_pbks: List[str]) -> None:
         """
@@ -301,12 +303,13 @@ class OEFReactions(OEFReactionInterface):
             return
         for agent_pbk in agent_pbks:
             dialogue = self.game_instance.dialogues.create_self_initiated(agent_pbk, self.crypto.public_key, not is_searching_for_sellers)
-            cfp = FIPAMessage(to=agent_pbk, sender=self.crypto.public_key, message_id=STARTING_MESSAGE_ID, dialogue_id=dialogue.dialogue_label.dialogue_id,
+            cfp = FIPAMessage(message_id=STARTING_MESSAGE_ID, dialogue_id=dialogue.dialogue_label.dialogue_id,
                               target=STARTING_MESSAGE_TARGET, performative=FIPAMessage.Performative.CFP, query=json.dumps(services).encode('utf-8'))
+            envelope = Envelope(to=agent_pbk, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id, message=cfp)
             logger.debug("[{}]: send_cfp_as_{}: msg_id={}, dialogue_id={}, destination={}, target={}, services={}"
-                         .format(self.agent_name, dialogue.role, cfp.get("id"), cfp.get("dialogue_id"), cfp.to, cfp.get("target"), services))
-            dialogue.outgoing_extend([cfp])
-            self.mailbox.outbox.put(cfp)
+                         .format(self.agent_name, dialogue.role, cfp.get("id"), cfp.get("dialogue_id"), envelope.to, cfp.get("target"), services))
+            dialogue.outgoing_extend([envelope])
+            self.mailbox.outbox.put(envelope)
 
     def _register_to_tac(self, controller_pbk: str) -> None:
         """
@@ -319,8 +322,8 @@ class OEFReactions(OEFReactionInterface):
         self.game_instance.controller_pbk = controller_pbk
         self.game_instance._game_phase = GamePhase.GAME_SETUP
         msg = Register(self.crypto.public_key, self.crypto, self.agent_name).serialize()
-        self.mailbox.outbox.put(ByteMessage(to=self.game_instance.controller_pbk, sender=self.crypto.public_key,
-                                            message_id=0, dialogue_id=0, content=msg))
+        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=ByteMessage.protocol_id,
+                                        message=ByteMessage(message_id=0, dialogue_id=0, content=msg))
 
     def _rejoin_tac(self, controller_pbk: str) -> None:
         """
@@ -333,8 +336,8 @@ class OEFReactions(OEFReactionInterface):
         self.game_instance.controller_pbk = controller_pbk
         self.game_instance._game_phase = GamePhase.GAME_SETUP
         msg = GetStateUpdate(self.crypto.public_key, self.crypto).serialize()
-        self.mailbox.outbox.put(ByteMessage(to=self.game_instance.controller_pbk, sender=self.crypto.public_key,
-                                            message_id=0, dialogue_id=0, content=msg))
+        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=ByteMessage.protocol_id,
+                                        message=ByteMessage(message_id=0, dialogue_id=0, content=msg))
 
 
 class DialogueReactions(DialogueReactionInterface):
@@ -360,75 +363,75 @@ class DialogueReactions(DialogueReactionInterface):
         self.dialogues = game_instance.dialogues
         self.negotiation_behaviour = FIPABehaviour(crypto, game_instance, agent_name)
 
-    def on_new_dialogue(self, msg: Message) -> None:
+    def on_new_dialogue(self, envelope: Envelope) -> None:
         """
         React to a new dialogue.
 
-        :param msg: the agent message
+        :param envelope: the agent message
 
         :return: None
         """
-        assert msg.protocol_id == "fipa" and msg.get("performative") == FIPAMessage.Performative.CFP
-        services = json.loads(msg.get("query").decode('utf-8'))
+        assert envelope.protocol_id == "fipa" and envelope.message.get("performative") == FIPAMessage.Performative.CFP
+        services = json.loads(envelope.message.get("query").decode('utf-8'))
         is_seller = services['description'] == TAC_DEMAND_DATAMODEL_NAME
-        dialogue = self.dialogues.create_opponent_initiated(msg.sender, msg.get("dialogue_id"), is_seller)
+        dialogue = self.dialogues.create_opponent_initiated(envelope.sender, envelope.message.get("dialogue_id"), is_seller)
         logger.debug("[{}]: saving dialogue (as {}): dialogue_id={}".format(self.agent_name, dialogue.role, dialogue.dialogue_label.dialogue_id))
-        results = self._handle(msg, dialogue)
+        results = self._handle(envelope, dialogue)
         for result in results:
             self.mailbox.outbox.put(result)
 
-    def on_existing_dialogue(self, msg: Message) -> None:
+    def on_existing_dialogue(self, envelope: Envelope) -> None:
         """
         React to an existing dialogue.
 
-        :param msg: the agent message
+        :param envelope: the agent message
 
         :return: None
         """
-        dialogue = self.dialogues.get_dialogue(msg, self.crypto.public_key)
+        dialogue = self.dialogues.get_dialogue(envelope, self.crypto.public_key)
 
-        results = self._handle(msg, dialogue)
+        results = self._handle(envelope, dialogue)
         for result in results:
             self.mailbox.outbox.put(result)
 
-    def on_unidentified_dialogue(self, msg: Message) -> None:
+    def on_unidentified_dialogue(self, envelope: Envelope) -> None:
         """
         React to an unidentified dialogue.
 
-        :param msg: agent message
+        :param envelope: agent message
 
         :return: None
         """
         logger.debug("[{}]: Unidentified dialogue.".format(self.agent_name))
-        message_id = msg.get("id") if msg.get("id") is not None else 1
-        result = ByteMessage(to=msg.sender, sender=self.crypto.public_key, message_id=message_id + 1,
-                             dialogue_id=msg.get("dialogue_id"), content=b'This message belongs to an unidentified dialogue.')
-        self.mailbox.outbox.put(result)
+        message_id = envelope.message.get("id") if envelope.message.get("id") is not None else 1
+        dialogue_id = envelope.message.get("dialogue_id") if envelope.message.get("dialogue_id") is not None else 1
+        result = ByteMessage(message_id=message_id + 1, dialogue_id=dialogue_id, content=b'This message belongs to an unidentified dialogue.')
+        self.mailbox.outbox.put_message(to=envelope.sender, sender=self.crypto.public_key, protocol_id=ByteMessage.protocol_id, message=result)
 
-    def _handle(self, msg: Message, dialogue: Dialogue) -> List[Message]:
+    def _handle(self, envelope: Envelope, dialogue: Dialogue) -> List[Envelope]:
         """
         Handle a message according to the defined behaviour.
 
-        :param msg: the agent message
+        :param envelope: the agent message
         :param dialogue: the dialogue
 
         :return: a list of agent messages
         """
-        dialogue.incoming_extend([msg])
-        results = []  # type: List[Message]
-        performative = msg.get("performative")
+        dialogue.incoming_extend([envelope])
+        results = []  # type: List[Envelope]
+        performative = envelope.message.get("performative")
         if performative == FIPAMessage.Performative.CFP:
-            result = self.negotiation_behaviour.on_cfp(msg, dialogue)
+            result = self.negotiation_behaviour.on_cfp(envelope, dialogue)
             results = [result]
         elif performative == FIPAMessage.Performative.PROPOSE:
-            result = self.negotiation_behaviour.on_propose(msg, dialogue)
+            result = self.negotiation_behaviour.on_propose(envelope, dialogue)
             results = [result]
         elif performative == FIPAMessage.Performative.ACCEPT:
-            results = self.negotiation_behaviour.on_accept(msg, dialogue)
+            results = self.negotiation_behaviour.on_accept(envelope, dialogue)
         elif performative == FIPAMessage.Performative.MATCH_ACCEPT:
-            results = self.negotiation_behaviour.on_match_accept(msg, dialogue)
+            results = self.negotiation_behaviour.on_match_accept(envelope, dialogue)
         elif performative == FIPAMessage.Performative.DECLINE:
-            self.negotiation_behaviour.on_decline(msg, dialogue)
+            self.negotiation_behaviour.on_decline(envelope, dialogue)
             results = []
         else:
             raise ValueError("Performative not supported: {}".format(str(performative)))

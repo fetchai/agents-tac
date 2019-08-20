@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package fetch.aea.oef;
+
+
+message OEFMessage{
+    int32 message_id = 1;
+    int32 dialogue_id = 2;
+
+}

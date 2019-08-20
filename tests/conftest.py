@@ -28,6 +28,7 @@ import time
 import docker
 import pytest
 from docker.models.containers import Container
+
 from tac.platform.oef_health_check import OEFHealthCheck
 
 logger = logging.getLogger(__name__)

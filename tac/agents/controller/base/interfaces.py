@@ -28,14 +28,14 @@ It cointains:
 
 from abc import abstractmethod
 
-from tac.aea.mail.messages import Message
+from tac.aea.mail.protocol import Envelope
 
 
 class OEFReactionInterface:
     """This interface contains the methods to react to events from the OEF."""
 
     @abstractmethod
-    def on_oef_error(self, oef_error: Message) -> None:
+    def on_oef_error(self, oef_error: Envelope) -> None:
         """
         Handle an OEF error message.
 
@@ -45,7 +45,7 @@ class OEFReactionInterface:
         """
 
     @abstractmethod
-    def on_dialogue_error(self, dialogue_error: Message) -> None:
+    def on_dialogue_error(self, dialogue_error: Envelope) -> None:
         """
         Handle a dialogue error message.
 

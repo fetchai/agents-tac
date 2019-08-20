@@ -29,10 +29,11 @@ This module contains the message handler classes.
 import logging
 from typing import Any
 
+from tac.aea.mail.protocol import Envelope
 from tac.aea.agent import Liveness
 from tac.aea.crypto.base import Crypto
 from tac.aea.mail.base import MailBox
-from tac.aea.mail.messages import Message, OEFMessage
+from tac.aea.mail.messages import OEFMessage
 from tac.agents.participant.base.actions import DialogueActions, ControllerActions, OEFActions
 from tac.agents.participant.base.game_instance import GameInstance, GamePhase
 from tac.agents.participant.base.reactions import DialogueReactions, ControllerReactions, OEFReactions
@@ -59,23 +60,23 @@ class DialogueHandler(DialogueActions, DialogueReactions):
         DialogueActions.__init__(self, crypto, liveness, game_instance, mailbox, agent_name)
         DialogueReactions.__init__(self, crypto, liveness, game_instance, mailbox, agent_name)
 
-    def handle_dialogue_message(self, msg: Message) -> None:
+    def handle_dialogue_message(self, envelope: Envelope) -> None:
         """
         Handle messages from the other agents.
 
         The agents expect a response.
 
-        :param msg: the agent message
+        :param envelope: the agent message
 
         :return: None
         """
-        logger.debug("Handling Dialogue message. type={}".format(type(msg)))
-        if self.dialogues.is_belonging_to_registered_dialogue(msg, self.crypto.public_key):
-            self.on_existing_dialogue(msg)
-        elif self.dialogues.is_permitted_for_new_dialogue(msg, self.game_instance.game_configuration.agent_pbks):
-            self.on_new_dialogue(msg)
+        logger.debug("Handling Dialogue message. type={}".format(type(envelope)))
+        if self.dialogues.is_belonging_to_registered_dialogue(envelope, self.crypto.public_key):
+            self.on_existing_dialogue(envelope)
+        elif self.dialogues.is_permitted_for_new_dialogue(envelope, self.game_instance.game_configuration.agent_pbks):
+            self.on_new_dialogue(envelope)
         else:
-            self.on_unidentified_dialogue(msg)
+            self.on_unidentified_dialogue(envelope)
 
 
 class ControllerHandler(ControllerActions, ControllerReactions):
@@ -94,21 +95,21 @@ class ControllerHandler(ControllerActions, ControllerReactions):
         ControllerActions.__init__(self, crypto, liveness, game_instance, mailbox, agent_name)
         ControllerReactions.__init__(self, crypto, liveness, game_instance, mailbox, agent_name)
 
-    def handle_controller_message(self, msg: Message) -> None:
+    def handle_controller_message(self, envelope: Envelope) -> None:
         """
         Handle messages from the controller.
 
         The controller does not expect a response for any of these messages.
 
-        :param msg: the controller message
+        :param envelope: the controller message
 
         :return: None
         """
-        assert msg.protocol_id == "bytes"
-        response = Response.from_pb(msg.get("content"), msg.sender, self.crypto)
+        assert envelope.protocol_id == "bytes"
+        response = Response.from_pb(envelope.message.get("content"), envelope.sender, self.crypto)
         logger.debug("[{}]: Handling controller response. type={}".format(self.agent_name, type(response)))
         try:
-            if msg.sender != self.game_instance.controller_pbk:
+            if envelope.sender != self.game_instance.controller_pbk:
                 raise ValueError("The sender of the message is not the controller agent we registered with.")
 
             if isinstance(response, Error):
@@ -150,24 +151,24 @@ class OEFHandler(OEFActions, OEFReactions):
         OEFActions.__init__(self, crypto, liveness, game_instance, mailbox, agent_name)
         OEFReactions.__init__(self, crypto, liveness, game_instance, mailbox, agent_name, rejoin)
 
-    def handle_oef_message(self, msg: Message) -> None:
+    def handle_oef_message(self, envelope: Envelope) -> None:
         """
         Handle messages from the oef.
 
         The oef does not expect a response for any of these messages.
 
-        :param msg: the OEF message
+        :param envelope: the OEF message
 
         :return: None
         """
-        logger.debug("[{}]: Handling OEF message. type={}".format(self.agent_name, type(msg)))
-        assert msg.protocol_id == "oef"
-        oef_type = msg.get("type")
+        logger.debug("[{}]: Handling OEF message. type={}".format(self.agent_name, type(envelope)))
+        assert envelope.protocol_id == "oef"
+        oef_type = envelope.message.get("type")
         if oef_type == OEFMessage.Type.SEARCH_RESULT:
-            self.on_search_result(msg)
+            self.on_search_result(envelope)
         elif oef_type == OEFMessage.Type.OEF_ERROR:
-            self.on_oef_error(msg)
+            self.on_oef_error(envelope)
         elif oef_type == OEFMessage.Type.DIALOGUE_ERROR:
-            self.on_dialogue_error(msg)
+            self.on_dialogue_error(envelope)
         else:
             logger.warning("[{}]: OEF Message type not recognized.".format(self.agent_name))

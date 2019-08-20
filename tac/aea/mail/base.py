@@ -25,7 +25,9 @@ from abc import abstractmethod
 from queue import Queue
 from typing import Optional
 
-from tac.aea.mail.messages import Message
+from tac.aea.mail.messages import Address, ProtocolId, Message
+from tac.aea.mail.protocol import Envelope
+
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +52,7 @@ class InBox(object):
         """
         return self._queue.empty()
 
-    def get(self, block: bool = True, timeout: Optional[float] = None) -> Optional[Message]:
+    def get(self, block: bool = True, timeout: Optional[float] = None) -> Optional[Envelope]:
         """
         Check for a message on the in queue.
 
@@ -64,7 +66,7 @@ class InBox(object):
         logger.debug("Incoming message type: type={}".format(type(msg)))
         return msg
 
-    def get_nowait(self) -> Optional[Message]:
+    def get_nowait(self) -> Optional[Envelope]:
         """
         Check for a message on the in queue and wait for no time.
 
@@ -94,7 +96,7 @@ class OutBox(object):
         """
         return self._queue.empty()
 
-    def put(self, item: Message) -> None:
+    def put(self, item: Envelope) -> None:
         """
         Put an item into the queue.
 
@@ -103,6 +105,20 @@ class OutBox(object):
         """
         logger.debug("Put a message in the queue...")
         self._queue.put(item)
+
+    def put_message(self, to: Optional[Address] = None, sender: Optional[Address] = None,
+                    protocol_id: Optional[ProtocolId] = None, message: Optional[Message] = None) -> None:
+        """
+        Put a message in the outbox.
+
+        :param to: the recipient of the message.
+        :param sender: the sender of the message.
+        :param protocol_id: the protocol id.
+        :param message: the content of the message.
+        :return: None
+        """
+        envelope = Envelope(to=to, sender=sender, protocol_id=protocol_id, message=message)
+        self._queue.put(envelope)
 
 
 class Connection:
@@ -127,7 +143,7 @@ class Connection:
         """Check if the connection is established."""
 
     @abstractmethod
-    def send(self, msg: Message):
+    def send(self, envelope: Envelope):
         """Send a message."""
 
 
@@ -154,6 +170,6 @@ class MailBox(object):
         """Disconnect."""
         self._connection.disconnect()
 
-    def send(self, out: Message) -> None:
+    def send(self, out: Envelope) -> None:
         """Send."""
         self.outbox.put(out)

@@ -43,7 +43,8 @@ from typing import Any, Dict, Optional, List, Set, Type, TYPE_CHECKING
 from tac.aea.agent import Liveness
 from tac.aea.crypto.base import Crypto
 from tac.aea.mail.base import MailBox
-from tac.aea.mail.messages import ByteMessage, Message, OEFMessage
+from tac.aea.mail.messages import ByteMessage, OEFMessage
+from tac.aea.mail.protocol import Envelope
 from tac.agents.controller.base.actions import OEFActions
 from tac.agents.controller.base.helpers import generate_good_pbk_to_name
 from tac.agents.controller.base.reactions import OEFReactions
@@ -211,10 +212,10 @@ class TransactionHandler(RequestHandler):
 
         # send the transaction confirmation.
         tx_confirmation = TransactionConfirmation(tx.public_key, self.controller_agent.crypto, tx.transaction_id)
-        self.controller_agent.outbox.put(ByteMessage(to=tx.public_key, sender=self.controller_agent.crypto.public_key,
-                                                     message_id=1, dialogue_id=1, content=tx_confirmation.serialize()))
-        self.controller_agent.outbox.put(ByteMessage(to=tx.counterparty, sender=self.controller_agent.crypto.public_key,
-                                                     message_id=1, dialogue_id=1, content=tx_confirmation.serialize()))
+        self.controller_agent.outbox.put_message(to=tx.public_key, sender=self.controller_agent.crypto.public_key, protocol_id=ByteMessage.protocol_id,
+                                                 message=ByteMessage(message_id=1, dialogue_id=1, content=tx_confirmation.serialize()))
+        self.controller_agent.outbox.put_message(to=tx.counterparty, sender=self.controller_agent.crypto.public_key, protocol_id=ByteMessage.protocol_id,
+                                                 message=ByteMessage(message_id=1, dialogue_id=1, content=tx_confirmation.serialize()))
 
         # log messages
         logger.debug("[{}]: Transaction '{}' settled successfully.".format(self.controller_agent.name, tx.transaction_id))
@@ -278,26 +279,26 @@ class AgentMessageDispatcher(object):
             GetStateUpdate: GetStateUpdateHandler(controller_agent),
         }  # type: Dict[Type[Request], RequestHandler]
 
-    def handle_agent_message(self, msg: Message) -> Response:
+    def handle_agent_message(self, envelope: Envelope) -> Response:
         """
         Dispatch the request to the right handler.
 
         If no handler is found for the provided type of request, return an "invalid request" error.
         If something bad happen, return a "generic" error.
 
-        :param msg: the request to handle
+        :param envelope: the request to handle
         :return: the response.
         """
-        assert msg.protocol_id == "bytes"
-        msg_id = msg.get("id")
-        dialogue_id = msg.get("dialogue_id")
-        sender = msg.sender
-        logger.debug("[{}] on_message: msg_id={}, dialogue_id={}, origin={}" .format(self.controller_agent.name, msg.get("id"), dialogue_id, sender))
-        request = self.decode(msg.get("content"), sender)
+        assert envelope.protocol_id == "bytes"
+        msg_id = envelope.message.get("id")
+        dialogue_id = envelope.message.get("dialogue_id")
+        sender = envelope.sender
+        logger.debug("[{}] on_message: msg_id={}, dialogue_id={}, origin={}" .format(self.controller_agent.name, envelope.message.get("id"), dialogue_id, sender))
+        request = self.decode(envelope.message.get("content"), sender)
         handle_request = self.handlers.get(type(request), None)  # type: RequestHandler
         if handle_request is None:
             logger.debug("[{}]: Unknown message: msg_id={}, dialogue_id={}, origin={}".format(self.controller_agent.name, msg_id, dialogue_id, sender))
-            return Error(msg.sender, self.controller_agent.crypto, ErrorCode.REQUEST_NOT_VALID)
+            return Error(envelope.sender, self.controller_agent.crypto, ErrorCode.REQUEST_NOT_VALID)
         try:
             return handle_request(request)
         except Exception as e:
@@ -439,15 +440,15 @@ class GameHandler:
                          .format(self.agent_name, public_key, str(game_data_response)))
 
             self.game_data_per_participant[public_key] = game_data_response
-            self.mailbox.outbox.put(ByteMessage(to=public_key, sender=self.crypto.public_key,
-                                                message_id=1, dialogue_id=1, content=game_data_response.serialize()))
+            self.mailbox.outbox.put_message(to=public_key, sender=self.crypto.public_key, protocol_id=ByteMessage.protocol_id,
+                                            message=ByteMessage(message_id=1, dialogue_id=1, content=game_data_response.serialize()))
 
     def notify_competition_cancelled(self):
         """Notify agents that the TAC is cancelled."""
         logger.debug("[{}]: Notifying agents that TAC is cancelled.".format(self.agent_name))
         for agent_pbk in self.registered_agents:
-            self.mailbox.outbox.put(ByteMessage(to=agent_pbk, sender=self.crypto.public_key,
-                                                message_id=1, dialogue_id=1, content=Cancelled(agent_pbk, self.crypto).serialize()))
+            self.mailbox.outbox.put_message(to=agent_pbk, sender=self.crypto.public_key, protocol_id=ByteMessage.protocol_id,
+                                            message=ByteMessage(message_id=1, dialogue_id=1, content=Cancelled(agent_pbk, self.crypto).serialize()))
         self._game_phase = GamePhase.POST_GAME
 
     def simulation_dump(self) -> None:
@@ -485,21 +486,21 @@ class OEFHandler(OEFActions, OEFReactions):
         OEFActions.__init__(self, crypto, liveness, mailbox, agent_name)
         OEFReactions.__init__(self, crypto, liveness, mailbox, agent_name)
 
-    def handle_oef_message(self, msg: Message) -> None:
+    def handle_oef_message(self, envelope: Envelope) -> None:
         """
         Handle messages from the oef.
 
         The oef does not expect a response for any of these messages.
 
-        :param msg: the OEF message
+        :param envelope: the OEF message
 
         :return: None
         """
-        logger.debug("[{}]: Handling OEF message. type={}".format(self.agent_name, type(msg)))
-        assert msg.protocol_id == "oef"
-        if msg.get("type") == OEFMessage.Type.OEF_ERROR:
-            self.on_oef_error(msg)
-        elif msg.get("type") == OEFMessage.Type.DIALOGUE_ERROR:
-            self.on_dialogue_error(msg)
+        logger.debug("[{}]: Handling OEF message. type={}".format(self.agent_name, type(envelope)))
+        assert envelope.protocol_id == "oef"
+        if envelope.message.get("type") == OEFMessage.Type.OEF_ERROR:
+            self.on_oef_error(envelope)
+        elif envelope.message.get("type") == OEFMessage.Type.DIALOGUE_ERROR:
+            self.on_dialogue_error(envelope)
         else:
             logger.warning("[{}]: OEF Message type not recognized.".format(self.agent_name))

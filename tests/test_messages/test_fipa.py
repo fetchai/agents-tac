@@ -1,6 +1,4 @@
-# /usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 # ------------------------------------------------------------------------------
 #
 #   Copyright 2018-2019 Fetch.AI Limited
@@ -19,26 +17,23 @@
 #
 # ------------------------------------------------------------------------------
 
-"""
-Generate a private key to be used for the Trading Agent Competition.
+"""This module contains the tests for the FIPA protocol."""
+from tac.aea.mail.messages import FIPAMessage
+from tac.aea.protocols.fipa.serialization import FIPASerializer
 
-It prints the key in PEM format to the specified file.
-"""
+from tac.aea.mail.protocol import Envelope
 
-from cryptography.hazmat.primitives.serialization import Encoding, PrivateFormat, NoEncryption
 
-import argparse
+def test_fipa_cfp_serialization():
+    """Test that the serialization for the 'fipa' protocol works.."""
+    msg = FIPAMessage(message_id=0, dialogue_id=0, target=0, performative=FIPAMessage.Performative.CFP,
+                      query={"foo": "bar"})
+    envelope = Envelope(to="receiver", sender="sender", protocol_id=FIPAMessage.protocol_id, message=msg)
+    serializer = FIPASerializer()
 
-from tac.aea.crypto.base import Crypto
+    envelope_bytes = envelope.encode(serializer)
 
-parser = argparse.ArgumentParser("generate_private_key", description=__doc__)
-parser.add_argument("out_file", type=str, help="Where to save the private key.")
+    actual_envelope = Envelope.decode(envelope_bytes, serializer)
+    expected_envelope = envelope
 
-if __name__ == '__main__':
-    args = parser.parse_args()
-
-    crypto = Crypto()
-    pem = crypto._private_key.private_bytes(Encoding.PEM, PrivateFormat.TraditionalOpenSSL, NoEncryption())
-    file = open(args.out_file, "wb")
-    file.write(pem)
-    file.close()
+    assert expected_envelope == actual_envelope

@@ -32,8 +32,8 @@ from typing import Union, Optional
 import dateutil
 
 from tac.aea.agent import Agent
-from tac.aea.mail.messages import Message
 from tac.aea.mail.oef import OEFNetworkMailBox
+from tac.aea.mail.protocol import Envelope
 from tac.agents.controller.base.handlers import OEFHandler, GameHandler, AgentMessageDispatcher
 from tac.agents.controller.base.tac_parameters import TACParameters
 from tac.agents.participant.base.helpers import is_oef_message
@@ -141,7 +141,7 @@ class ControllerAgent(Agent):
         counter = 0
         while (not self.inbox.empty() and counter < self.max_reactions):
             counter += 1
-            msg = self.inbox.get_nowait()  # type: Optional[Message]
+            msg = self.inbox.get_nowait()  # type: Optional[Envelope]
             if msg is not None:
                 if is_oef_message(msg):
                     self.oef_handler.handle_oef_message(msg)

@@ -70,8 +70,9 @@ class ControllerActions(ControllerActionInterface):
         :return: None
         """
         msg = GetStateUpdate(self.crypto.public_key, self.crypto).serialize()
-        message = ByteMessage(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, message_id=0, dialogue_id=0, content=msg)
-        self.mailbox.outbox.put(message)
+        message = ByteMessage(message_id=0, dialogue_id=0, content=msg)
+        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key,
+                                        protocol_id=ByteMessage.protocol_id, message=message)
 
 
 class OEFActions(OEFActionInterface):
@@ -108,8 +109,8 @@ class OEFActions(OEFActionInterface):
         search_id = self.game_instance.search.get_next_id()
         self.game_instance.search.ids_for_tac.add(search_id)
 
-        message = OEFMessage(to=None, sender=self.crypto.public_key, oef_type=OEFMessage.Type.SEARCH_SERVICES, id=search_id, query=query)
-        self.mailbox.outbox.put(message)
+        message = OEFMessage(oef_type=OEFMessage.Type.SEARCH_SERVICES, id=search_id, query=query)
+        self.mailbox.outbox.put_message(to=None, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=message)
 
     def update_services(self) -> None:
         """
@@ -127,9 +128,9 @@ class OEFActions(OEFActionInterface):
         :return: None
         """
         if self.game_instance.goods_demanded_description is not None:
-            self.mailbox.outbox.put(OEFMessage(to=None, sender=self.crypto.public_key, oef_type=OEFMessage.Type.UNREGISTER_SERVICE, id=1, service_description=self.game_instance.goods_demanded_description, service_id=""))
+            self.mailbox.outbox.put_message(to=None, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=OEFMessage(oef_type=OEFMessage.Type.UNREGISTER_SERVICE, id=1, service_description=self.game_instance.goods_demanded_description, service_id=""))
         if self.game_instance.goods_supplied_description is not None:
-            self.mailbox.outbox.put(OEFMessage(to=None, sender=self.crypto.public_key, oef_type=OEFMessage.Type.UNREGISTER_SERVICE, id=1, service_description=self.game_instance.goods_supplied_description, service_id=""))
+            self.mailbox.outbox.put_message(to=None, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=OEFMessage(oef_type=OEFMessage.Type.UNREGISTER_SERVICE, id=1, service_description=self.game_instance.goods_supplied_description, service_id=""))
 
     def register_service(self) -> None:
         """
@@ -146,12 +147,14 @@ class OEFActions(OEFActionInterface):
             logger.debug("[{}]: Updating service directory as seller with goods supplied.".format(self.agent_name))
             goods_supplied_description = self.game_instance.get_service_description(is_supply=True)
             self.game_instance.goods_supplied_description = goods_supplied_description
-            self.mailbox.outbox.put(OEFMessage(to=None, sender=self.crypto.public_key, oef_type=OEFMessage.Type.REGISTER_SERVICE, id=1, service_description=goods_supplied_description, service_id=""))
+            self.mailbox.outbox.put_message(to=None, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id,
+                                            message=OEFMessage(oef_type=OEFMessage.Type.REGISTER_SERVICE, id=1, service_description=goods_supplied_description, service_id=""))
         if self.game_instance.strategy.is_registering_as_buyer:
             logger.debug("[{}]: Updating service directory as buyer with goods demanded.".format(self.agent_name))
             goods_demanded_description = self.game_instance.get_service_description(is_supply=False)
             self.game_instance.goods_demanded_description = goods_demanded_description
-            self.mailbox.outbox.put(OEFMessage(to=None, sender=self.crypto.public_key, oef_type=OEFMessage.Type.REGISTER_SERVICE, id=1, service_description=goods_demanded_description, service_id=""))
+            self.mailbox.outbox.put_message(to=None, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id,
+                                            message=OEFMessage(oef_type=OEFMessage.Type.REGISTER_SERVICE, id=1, service_description=goods_demanded_description, service_id=""))
 
     def search_services(self) -> None:
         """
@@ -173,7 +176,7 @@ class OEFActions(OEFActionInterface):
                 logger.debug("[{}]: Searching for sellers which match the demand of the agent.".format(self.agent_name))
                 search_id = self.game_instance.search.get_next_id()
                 self.game_instance.search.ids_for_sellers.add(search_id)
-                self.mailbox.outbox.put(OEFMessage(to=None, sender=self.crypto.public_key, oef_type=OEFMessage.Type.SEARCH_SERVICES, id=search_id, query=query))
+                self.mailbox.outbox.put_message(to=None, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=OEFMessage(oef_type=OEFMessage.Type.SEARCH_SERVICES, id=search_id, query=query))
         if self.game_instance.strategy.is_searching_for_buyers:
             query = self.game_instance.build_services_query(is_searching_for_sellers=False)
             if query is None:
@@ -183,7 +186,7 @@ class OEFActions(OEFActionInterface):
                 logger.debug("[{}]: Searching for buyers which match the supply of the agent.".format(self.agent_name))
                 search_id = self.game_instance.search.get_next_id()
                 self.game_instance.search.ids_for_buyers.add(search_id)
-                self.mailbox.outbox.put(OEFMessage(to=None, sender=self.crypto.public_key, oef_type=OEFMessage.Type.SEARCH_SERVICES, id=search_id, query=query))
+                self.mailbox.outbox.put_message(to=None, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=OEFMessage(oef_type=OEFMessage.Type.SEARCH_SERVICES, id=search_id, query=query))
 
 
 class DialogueActions(DialogueActionInterface):

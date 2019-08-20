@@ -1,4 +1,3 @@
-# /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # ------------------------------------------------------------------------------
@@ -19,26 +18,4 @@
 #
 # ------------------------------------------------------------------------------
 
-"""
-Generate a private key to be used for the Trading Agent Competition.
-
-It prints the key in PEM format to the specified file.
-"""
-
-from cryptography.hazmat.primitives.serialization import Encoding, PrivateFormat, NoEncryption
-
-import argparse
-
-from tac.aea.crypto.base import Crypto
-
-parser = argparse.ArgumentParser("generate_private_key", description=__doc__)
-parser.add_argument("out_file", type=str, help="Where to save the private key.")
-
-if __name__ == '__main__':
-    args = parser.parse_args()
-
-    crypto = Crypto()
-    pem = crypto._private_key.private_bytes(Encoding.PEM, PrivateFormat.TraditionalOpenSSL, NoEncryption())
-    file = open(args.out_file, "wb")
-    file.write(pem)
-    file.close()
+"""This module contains the support resources for the 'simple' protocol."""

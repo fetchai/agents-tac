@@ -29,7 +29,7 @@ import logging
 from tac.aea.agent import Liveness
 from tac.aea.crypto.base import Crypto
 from tac.aea.mail.base import MailBox
-from tac.aea.mail.messages import Message
+from tac.aea.mail.protocol import Envelope
 from tac.agents.controller.base.interfaces import OEFReactionInterface
 
 logger = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ class OEFReactions(OEFReactionInterface):
         self.mailbox = mailbox
         self.agent_name = agent_name
 
-    def on_oef_error(self, oef_error: Message) -> None:
+    def on_oef_error(self, oef_error: Envelope) -> None:
         """
         Handle an OEF error message.
 
@@ -63,9 +63,9 @@ class OEFReactions(OEFReactionInterface):
         :return: None
         """
         logger.error("[{}]: Received OEF error: answer_id={}, operation={}"
-                     .format(self.agent_name, oef_error.get("id"), oef_error.get("operation")))
+                     .format(self.agent_name, oef_error.message.get("id"), oef_error.message.get("operation")))
 
-    def on_dialogue_error(self, dialogue_error: Message) -> None:
+    def on_dialogue_error(self, dialogue_error: Envelope) -> None:
         """
         Handle a dialogue error message.
 
@@ -74,4 +74,4 @@ class OEFReactions(OEFReactionInterface):
         :return: None
         """
         logger.error("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}"
-                     .format(self.agent_name, dialogue_error.get("id"), dialogue_error.get("dialogue_id"), dialogue_error.get("origin")))
+                     .format(self.agent_name, dialogue_error.message.get("id"), dialogue_error.message.get("dialogue_id"), dialogue_error.message.get("origin")))

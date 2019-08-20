@@ -33,9 +33,10 @@ stacktracer.stop_trace()
 
 import os
 import sys
-import time
 import threading
+import time
 import traceback
+
 from pygments import highlight
 from pygments.formatters.html import HtmlFormatter
 from pygments.lexers.python import PythonLexer

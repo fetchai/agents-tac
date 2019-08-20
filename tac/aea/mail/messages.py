@@ -18,10 +18,10 @@
 #
 # ------------------------------------------------------------------------------
 
-"""Protocol module v2."""
+"""This module contains the messages definitions."""
 from copy import copy
 from enum import Enum
-from typing import Optional, Any, Union
+from typing import Optional, Any, Union, Dict
 
 from oef.messages import OEFErrorOperation
 from oef.query import Query
@@ -34,48 +34,38 @@ ProtocolId = str
 
 
 class Message:
-    """The message class."""
+    """This class implements a message."""
 
-    def __init__(self, to: Optional[Address] = None,
-                 sender: Optional[Address] = None,
-                 protocol_id: Optional[ProtocolId] = None,
-                 **body):
+    protocol_id = "default"
+
+    def __init__(self, body: Optional[Dict] = None,
+                 **kwargs):
         """
-        Initialize.
+        Initialize a Message object.
 
-        :param to: the public key of the receiver.
-        :param sender: the public key of the sender.
-        :param protocol_id: the protocol id.
+        :param body: the dictionary of values to hold.
         """
-        self._to = to
-        self._sender = sender
-        self._protocol_id = protocol_id
-        self._body = copy(body) if body else {}
+        self._body = copy(body) if body else {}  # type: Dict[str, Any]
+        self._body.update(kwargs)
 
     @property
-    def to(self) -> Address:
-        """Get public key of receiver."""
-        return self._to
+    def body(self) -> Dict:
+        """
+        Get the body of the message (in dictionary form).
 
-    @to.setter
-    def to(self, to: Address) -> None:
-        """Set public key of receiver."""
-        self._to = to
+        :return: the body
+        """
+        return self._body
 
-    @property
-    def sender(self) -> Address:
-        """Get public key of sender."""
-        return self._sender
+    @body.setter
+    def body(self, body: Dict) -> None:
+        """
+        Set the body of hte message.
 
-    @sender.setter
-    def sender(self, sender: Address) -> None:
-        """Set public key of sender."""
-        self._sender = sender
-
-    @property
-    def protocol_id(self) -> Optional[ProtocolId]:
-        """Get protocol id."""
-        return self._protocol_id
+        :param body: the body.
+        :return: None
+        """
+        self._body = body
 
     def set(self, key: str, value: Any) -> None:
         """
@@ -103,6 +93,11 @@ class Message:
         """Check that the data is consistent."""
         return True
 
+    def __eq__(self, other):
+        """Compare with another object."""
+        return isinstance(other, Message) \
+            and self.body == other.body
+
 
 class OEFMessage(Message):
     """The OEF message class."""
@@ -122,18 +117,14 @@ class OEFMessage(Message):
         DIALOGUE_ERROR = "dialogue_error"
         SEARCH_RESULT = "search_result"
 
-    def __init__(self, to: Optional[Address] = None,
-                 sender: Optional[Address] = None,
-                 oef_type: Optional[Type] = None,
-                 **body):
+    def __init__(self, oef_type: Optional[Type] = None,
+                 **kwargs):
         """
         Initialize.
 
-        :param to: the public key of the receiver.
-        :param sender: the public key of the sender.
-        :param protocol_id: the protocol id.
+        :param oef_type: the type of OEF message.
         """
-        super().__init__(to=to, sender=sender, protocol_id=self.protocol_id, type=oef_type, **body)
+        super().__init__(type=oef_type, **kwargs)
 
     def check_consistency(self) -> bool:
         """Check that the data is consistent."""
@@ -196,27 +187,23 @@ class ByteMessage(Message):
 
     protocol_id = "bytes"
 
-    def __init__(self, to: Optional[Address] = None,
-                 sender: Optional[Address] = None,
-                 message_id: Optional[int] = None,
+    def __init__(self, message_id: Optional[int] = None,
                  dialogue_id: Optional[int] = None,
                  content: bytes = b""):
         """
         Initialize.
 
-        :param to: the public key of the receiver.
-        :param sender: the public key of the sender.
         :param message_id: the message id.
         :param dialogue_id: the dialogue id.
         :param content: the message content.
         """
-        super().__init__(to=to, sender=sender, id=message_id, dialogue_id=dialogue_id, content=content)
+        super().__init__(id=message_id, dialogue_id=dialogue_id, content=content)
 
 
 class SimpleMessage(Message):
     """The Simple message class."""
 
-    protocol_id = "default"
+    protocol_id = "simple"
 
     class Type(Enum):
         """Simple message types."""
@@ -224,18 +211,14 @@ class SimpleMessage(Message):
         BYTES = "bytes"
         ERROR = "error"
 
-    def __init__(self, to: Optional[Address] = None,
-                 sender: Optional[Address] = None,
-                 type: Optional[Type] = None,
-                 **body):
+    def __init__(self, type: Optional[Type] = None,
+                 **kwargs):
         """
         Initialize.
 
-        :param to: the public key of the receiver.
-        :param sender: the public key of the sender.
         :param type: the type.
         """
-        super().__init__(to=to, sender=sender, protocol_id=self.protocol_id, type=type, **body)
+        super().__init__(type=type, **kwargs)
 
 
 class FIPAMessage(Message):
@@ -252,31 +235,24 @@ class FIPAMessage(Message):
         MATCH_ACCEPT = "match_accept"
         DECLINE = "decline"
 
-    def __init__(self, to: Optional[Address] = None,
-                 sender: Optional[Address] = None,
-                 message_id: Optional[int] = None,
+    def __init__(self, message_id: Optional[int] = None,
                  dialogue_id: Optional[int] = None,
                  target: Optional[int] = None,
                  performative: Optional[Union[str, Performative]] = None,
-                 **body):
+                 **kwargs):
         """
         Initialize.
 
-        :param to: the public key of the receiver.
-        :param sender: the public key of the sender.
         :param message_id: the message id.
         :param dialogue_id: the dialogue id.
         :param target: the message target.
         :param performative: the message performative.
         """
-        super().__init__(to,
-                         sender,
-                         protocol_id=self.protocol_id,
-                         id=message_id,
+        super().__init__(id=message_id,
                          dialogue_id=dialogue_id,
                          target=target,
                          performative=FIPAMessage.Performative(performative),
-                         **body)
+                         **kwargs)
 
     def check_consistency(self) -> bool:
         """Check that the data is consistent."""

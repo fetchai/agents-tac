@@ -25,8 +25,8 @@ import time
 from typing import Optional
 
 from tac.aea.agent import Agent
-from tac.aea.mail.messages import Message
 from tac.aea.mail.oef import OEFNetworkMailBox
+from tac.aea.mail.protocol import Envelope
 from tac.agents.participant.base.game_instance import GameInstance, GamePhase
 from tac.agents.participant.base.handlers import DialogueHandler, ControllerHandler, OEFHandler
 from tac.agents.participant.base.helpers import is_oef_message, is_controller_message, is_fipa_message
@@ -103,7 +103,7 @@ class ParticipantAgent(Agent):
         counter = 0
         while (not self.mailbox.inbox.empty() and counter < self.max_reactions):
             counter += 1
-            msg = self.mailbox.inbox.get_nowait()  # type: Optional[Message]
+            msg = self.mailbox.inbox.get_nowait()  # type: Optional[Envelope]
             logger.debug("processing message of protocol={}".format(msg.protocol_id))
             if msg is not None:
                 if is_oef_message(msg):
