@@ -203,7 +203,7 @@ class ByteMessage(Message):
 class SimpleMessage(Message):
     """The Simple message class."""
 
-    protocol_id = "simple"
+    protocol_id = "default"
 
     class Type(Enum):
         """Simple message types."""

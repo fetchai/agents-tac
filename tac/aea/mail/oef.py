@@ -32,7 +32,7 @@ from oef.messages import OEFErrorOperation, CFP_TYPES, PROPOSE_TYPES
 from oef.proxy import OEFNetworkProxy
 
 
-from tac.aea.mail.protocol import Envelope
+from tac.aea.mail.protocol import Envelope, DefaultProtobufSerializer
 from tac.aea.mail.base import Connection, MailBox
 from tac.aea.mail.messages import OEFMessage, FIPAMessage, ByteMessage
 
@@ -251,15 +251,13 @@ class OEFChannel(Agent):
         elif envelope.protocol_id == "fipa":
             self.send_fipa_message(envelope)
         elif envelope.protocol_id == "bytes":
-            message_id = envelope.message.get("id")
-            dialogue_id = envelope.message.get("dialogue_id")
-            content = envelope.message.get("content")
-            self.send_message(message_id, dialogue_id, envelope.to, content)
+            content = envelope.encode(DefaultProtobufSerializer())
+            self.send_message(0, 0, envelope.to, content)
         elif envelope.protocol_id == "default":
             message_id = envelope.message.get("id")
             dialogue_id = 0
             content = envelope.message.get("content")
-            self.send_message(message_id, dialogue_id, envelope.to, content)
+            self.send_message(0, 0, envelope.to, content)
         else:
             raise ValueError("Cannot send message.")
 

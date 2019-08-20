@@ -23,10 +23,10 @@ from tac.aea.mail.protocol import Envelope
 from tac.aea.protocols.simple.serialization import SimpleSerializer
 
 
-def test_simple_bytes_serialization():
+def test_default_bytes_serialization():
     """Test that the serialization for the 'simple' protocol works for the BYTES message."""
     msg = SimpleMessage(type=SimpleMessage.Type.BYTES, content=b"hello")
-    envelope = Envelope(to="receiver", sender="sender", protocol_id="simple", message=msg)
+    envelope = Envelope(to="receiver", sender="sender", protocol_id=SimpleMessage.protocol_id, message=msg)
     serializer = SimpleSerializer()
 
     envelope_bytes = envelope.encode(serializer)
@@ -36,10 +36,10 @@ def test_simple_bytes_serialization():
     assert expected_envelope == actual_envelope
 
 
-def test_simple_error_serialization():
+def test_default_error_serialization():
     """Test that the serialization for the 'simple' protocol works for the ERROR message."""
     msg = SimpleMessage(type=SimpleMessage.Type.ERROR, error_code=-1, error_msg="An error")
-    envelope = Envelope(to="receiver", sender="sender", protocol_id="simple", message=msg)
+    envelope = Envelope(to="receiver", sender="sender", protocol_id=SimpleMessage.protocol_id, message=msg)
     serializer = SimpleSerializer()
 
     envelope_bytes = envelope.encode(serializer)
