@@ -8,7 +8,7 @@
 #   you may not use this file except in compliance with the License.
 #   You may obtain a copy of the License at
 #
-#       http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 #   Unless required by applicable law or agreed to in writing, software
 #   distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,4 +18,11 @@
 #
 # ------------------------------------------------------------------------------
 
-"""Contains the TAC participant packages."""
+"""Specifies the version of the skill."""
+
+__title__ = 'fipa_negotiation_v1'
+__description__ = 'FIPA Negotiation'
+__version__ = '0.0.1'
+__author__ = 'Fetch.AI Limited'
+__license__ = 'Apache 2.0'
+__copyright__ = '2019 Fetch.AI Limited'

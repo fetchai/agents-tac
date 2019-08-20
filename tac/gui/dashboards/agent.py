@@ -26,8 +26,8 @@ from typing import Optional
 
 import numpy as np
 
-from tac.agents.participant.base.states import AgentState
-from tac.agents.participant.base.stats_manager import StatsManager
+from tac.agents.participant.v1.base.states import AgentState
+from tac.agents.participant.v1.base.stats_manager import StatsManager
 from tac.gui.dashboards.base import Dashboard
 from tac.gui.dashboards.helpers import generate_html_table_from_dict, escape_html
 from tac.platform.protocol import Transaction

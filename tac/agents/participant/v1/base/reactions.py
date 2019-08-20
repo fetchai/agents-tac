@@ -34,14 +34,14 @@ from tac.aea.agent import Liveness
 from tac.aea.crypto.base import Crypto
 from tac.aea.mail.base import MailBox
 from tac.aea.mail.messages import ByteMessage, FIPAMessage
-from tac.agents.participant.base.dialogues import Dialogue
-from tac.agents.participant.base.game_instance import GameInstance, GamePhase
-from tac.agents.participant.base.helpers import dialogue_label_from_transaction_id, TAC_DEMAND_DATAMODEL_NAME
-from tac.agents.participant.base.interfaces import ControllerReactionInterface, OEFReactionInterface, \
+from tac.agents.participant.v1.base.dialogues import Dialogue
+from tac.agents.participant.v1.base.game_instance import GameInstance, GamePhase
+from tac.agents.participant.v1.base.helpers import dialogue_label_from_transaction_id, TAC_DEMAND_DATAMODEL_NAME
+from tac.agents.participant.v1.base.interfaces import ControllerReactionInterface, OEFReactionInterface, \
     DialogueReactionInterface
 from tac.aea.mail.protocol import Envelope
-from tac.agents.participant.base.negotiation_behaviours import FIPABehaviour
-from tac.agents.participant.base.stats_manager import EndState
+from tac.agents.participant.v1.base.negotiation_behaviours import FIPABehaviour
+from tac.agents.participant.v1.base.stats_manager import EndState
 from tac.platform.protocol import Error, ErrorCode, GameData, TransactionConfirmation, StateUpdate, Register, \
     GetStateUpdate
 

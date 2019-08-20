@@ -26,7 +26,7 @@ from typing import List, Set, Optional
 
 from oef.schema import Description
 
-from tac.agents.participant.base.states import WorldState
+from tac.agents.participant.v1.base.states import WorldState
 
 
 class RegisterAs(Enum):

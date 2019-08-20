@@ -1,23 +1,23 @@
-tac package
-===========
+tac.aea package
+===============
 
 Subpackages
 -----------
 
 .. toctree::
 
-   tac.aea
-   tac.agents
-   tac.gui
-   tac.platform
+   tac.aea.crypto
+   tac.aea.dialogue
+   tac.aea.mail
+   tac.aea.state
 
 Submodules
 ----------
 
-tac.tac\_pb2 module
--------------------
+tac.aea.agent module
+--------------------
 
-.. automodule:: tac.tac_pb2
+.. automodule:: tac.aea.agent
    :members:
    :undoc-members:
    :show-inheritance:
@@ -26,7 +26,7 @@ tac.tac\_pb2 module
 Module contents
 ---------------
 
-.. automodule:: tac
+.. automodule:: tac.aea
    :members:
    :undoc-members:
    :show-inheritance:

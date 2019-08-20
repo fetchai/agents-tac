@@ -18,4 +18,4 @@
 #
 # ------------------------------------------------------------------------------
 
-"""Contains the TAC participant packages."""
+"""Classes defining handlers."""

@@ -29,7 +29,7 @@ from typing import Optional
 
 import docker
 
-from tac.agents.participant.examples.baseline import main as participant_agent_main
+from tac.agents.participant.v1.examples.baseline import main as participant_agent_main
 
 CUR_PATH = inspect.getfile(inspect.currentframe())
 ROOT_DIR = os.path.join(os.path.dirname(CUR_PATH), "..")

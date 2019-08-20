@@ -45,8 +45,8 @@ import dateutil
 
 from tac.agents.controller.agent import main as controller_main
 from tac.agents.controller.base.tac_parameters import TACParameters
-from tac.agents.participant.base.strategy import RegisterAs, SearchFor
-from tac.agents.participant.examples.baseline import main as baseline_main
+from tac.agents.participant.v1.base.strategy import RegisterAs, SearchFor
+from tac.agents.participant.v1.examples.baseline import main as baseline_main
 from tac.platform.game.helpers import make_agent_name
 
 logger = logging.getLogger(__name__)
