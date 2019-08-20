@@ -43,7 +43,7 @@ from tac.aea.mail.protocol import Envelope
 from tac.agents.participant.base.negotiation_behaviours import FIPABehaviour
 from tac.agents.participant.base.stats_manager import EndState
 from tac.platform.protocol import Error, ErrorCode, GameData, TransactionConfirmation, StateUpdate, Register, \
-    GetStateUpdate
+    GetStateUpdate, TacMessage
 
 logger = logging.getLogger(__name__)
 
@@ -183,9 +183,9 @@ class ControllerReactions(ControllerReactionInterface):
 
         :return: None
         """
-        msg = GetStateUpdate(self.crypto.public_key, self.crypto).serialize()
-        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=ByteMessage.protocol_id,
-                                        message=ByteMessage(message_id=0, dialogue_id=0, content=msg))
+        msg = GetStateUpdate(self.crypto.public_key, self.crypto)
+        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=TacMessage.protocol_id,
+                                        message=TacMessage(tac_message=msg))
 
 
 class OEFReactions(OEFReactionInterface):
@@ -321,9 +321,9 @@ class OEFReactions(OEFReactionInterface):
         """
         self.game_instance.controller_pbk = controller_pbk
         self.game_instance._game_phase = GamePhase.GAME_SETUP
-        msg = Register(self.crypto.public_key, self.crypto, self.agent_name).serialize()
-        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=ByteMessage.protocol_id,
-                                        message=ByteMessage(message_id=0, dialogue_id=0, content=msg))
+        msg = Register(self.crypto.public_key, self.crypto, self.agent_name)
+        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=TacMessage.protocol_id,
+                                        message=TacMessage(tac_message=msg))
 
     def _rejoin_tac(self, controller_pbk: str) -> None:
         """
@@ -335,9 +335,9 @@ class OEFReactions(OEFReactionInterface):
         """
         self.game_instance.controller_pbk = controller_pbk
         self.game_instance._game_phase = GamePhase.GAME_SETUP
-        msg = GetStateUpdate(self.crypto.public_key, self.crypto).serialize()
-        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=ByteMessage.protocol_id,
-                                        message=ByteMessage(message_id=0, dialogue_id=0, content=msg))
+        msg = GetStateUpdate(self.crypto.public_key, self.crypto)
+        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=TacMessage.protocol_id,
+                                        message=TacMessage(tac_message=msg))
 
 
 class DialogueReactions(DialogueReactionInterface):

@@ -54,7 +54,7 @@ from tac.gui.monitor import Monitor, NullMonitor
 from tac.platform.game.base import GamePhase
 from tac.platform.game.stats import GameStats
 from tac.platform.protocol import Response, Request, Register, Unregister, Error, GameData, \
-    Transaction, TransactionConfirmation, ErrorCode, Cancelled, GetStateUpdate, StateUpdate
+    Transaction, TransactionConfirmation, ErrorCode, Cancelled, GetStateUpdate, StateUpdate, TacMessage
 
 if TYPE_CHECKING:
     from tac.platform.controller.controller_agent import ControllerAgent
@@ -212,11 +212,10 @@ class TransactionHandler(RequestHandler):
 
         # send the transaction confirmation.
         tx_confirmation = TransactionConfirmation(tx.public_key, self.controller_agent.crypto, tx.transaction_id)
-        self.controller_agent.outbox.put_message(to=tx.public_key, sender=self.controller_agent.crypto.public_key, protocol_id=ByteMessage.protocol_id,
-                                                 message=ByteMessage(message_id=1, dialogue_id=1, content=tx_confirmation.serialize()))
-        self.controller_agent.outbox.put_message(to=tx.counterparty, sender=self.controller_agent.crypto.public_key, protocol_id=ByteMessage.protocol_id,
-                                                 message=ByteMessage(message_id=1, dialogue_id=1, content=tx_confirmation.serialize()))
-
+        self.controller_agent.outbox.put_message(to=tx.public_key, sender=self.controller_agent.crypto.public_key, protocol_id=TacMessage.protocol_id,
+                                                 message=TacMessage(tac_message=tx_confirmation))
+        self.controller_agent.outbox.put_message(to=tx.counterparty, sender=self.controller_agent.crypto.public_key, protocol_id=TacMessage.protocol_id,
+                                                 message=TacMessage(tac_message=tx_confirmation))
         # log messages
         logger.debug("[{}]: Transaction '{}' settled successfully.".format(self.controller_agent.name, tx.transaction_id))
         holdings_summary = self.controller_agent.game_handler.current_game.get_holdings_summary()
@@ -440,15 +439,15 @@ class GameHandler:
                          .format(self.agent_name, public_key, str(game_data_response)))
 
             self.game_data_per_participant[public_key] = game_data_response
-            self.mailbox.outbox.put_message(to=public_key, sender=self.crypto.public_key, protocol_id=ByteMessage.protocol_id,
-                                            message=ByteMessage(message_id=1, dialogue_id=1, content=game_data_response.serialize()))
+            self.mailbox.outbox.put_message(to=public_key, sender=self.crypto.public_key, protocol_id=TacMessage.protocol_id,
+                                            message=TacMessage(tac_message=game_data_response))
 
     def notify_competition_cancelled(self):
         """Notify agents that the TAC is cancelled."""
         logger.debug("[{}]: Notifying agents that TAC is cancelled.".format(self.agent_name))
         for agent_pbk in self.registered_agents:
-            self.mailbox.outbox.put_message(to=agent_pbk, sender=self.crypto.public_key, protocol_id=ByteMessage.protocol_id,
-                                            message=ByteMessage(message_id=1, dialogue_id=1, content=Cancelled(agent_pbk, self.crypto).serialize()))
+            self.mailbox.outbox.put_message(to=agent_pbk, sender=self.crypto.public_key, protocol_id=TacMessage.protocol_id,
+                                            message=TacMessage(tac_message=Cancelled(agent_pbk, self.crypto)))
         self._game_phase = GamePhase.POST_GAME
 
     def simulation_dump(self) -> None:

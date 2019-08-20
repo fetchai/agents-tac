@@ -32,7 +32,7 @@ from tac.agents.participant.base.dialogues import Dialogue
 from tac.agents.participant.base.game_instance import GameInstance
 from tac.agents.participant.base.helpers import generate_transaction_id
 from tac.agents.participant.base.stats_manager import EndState
-from tac.platform.protocol import Transaction
+from tac.platform.protocol import Transaction, TacMessage
 
 logger = logging.getLogger(__name__)
 
@@ -216,8 +216,8 @@ class FIPABehaviour:
                 self.game_instance.world_state.update_on_initial_accept(transaction)
             logger.debug("[{}]: Locking the current state (as {}).".format(self.agent_name, dialogue.role))
             self.game_instance.transaction_manager.add_locked_tx(transaction, as_seller=dialogue.is_seller)
-            results.append(Envelope(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=ByteMessage.protocol_id,
-                                    message=ByteMessage(message_id=STARTING_MESSAGE_ID, dialogue_id=accept.get("dialogue_id"), content=transaction.serialize())))
+            results.append(Envelope(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=TacMessage.protocol_id,
+                                    message=TacMessage(tac_message=transaction)))
             results.append(Envelope(to=envelope.sender, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id,
                                     message=FIPAMessage(message_id=new_msg_id, dialogue_id=accept.get("dialogue_id"), target=accept.get("id"), performative=FIPAMessage.Performative.MATCH_ACCEPT)))
         else:
@@ -244,6 +244,6 @@ class FIPABehaviour:
                      .format(self.agent_name, match_accept.get("id"), match_accept.get("dialogue_id"), envelope.sender, match_accept.get("target")))
         results = []
         transaction = self.game_instance.transaction_manager.pop_pending_initial_acceptance(dialogue.dialogue_label, match_accept.get("target"))
-        results.append(Envelope(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=ByteMessage.protocol_id,
-                       message=ByteMessage(message_id=STARTING_MESSAGE_ID, dialogue_id=match_accept.get("dialogue_id"), content=transaction.serialize())))
+        results.append(Envelope(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=TacMessage.protocol_id,
+                       message=TacMessage(tac_message=transaction)))
         return results

@@ -53,6 +53,9 @@ import tac.tac_pb2 as tac_pb2
 
 from oef.schema import Description
 
+from tac.aea.mail.protocol import Serializer
+from tac.aea.mail.messages import Message
+
 logger = logging.getLogger(__name__)
 
 
@@ -117,7 +120,7 @@ _from_ec_to_msg = {
 }  # type: Dict[ErrorCode, str]
 
 
-class Message(ABC):
+class BaseMessage(ABC):
     """Abstract class representing a message between TAC agents and TAC controller."""
 
     def __init__(self, public_key: str, crypto: Crypto) -> None:
@@ -134,7 +137,7 @@ class Message(ABC):
 
     @classmethod
     @abstractmethod
-    def from_pb(cls, obj, public_key: str):
+    def from_pb(cls, obj, public_key: str, crypto: Crypto):
         """From Protobuf to :class:`~tac.protocol.Message` object."""
 
     @abstractmethod
@@ -169,7 +172,7 @@ class Message(ABC):
         return self._build_str()
 
 
-class Request(Message, ABC):
+class Request(BaseMessage, ABC):
     """Message from client to controller."""
 
     @classmethod
@@ -444,7 +447,7 @@ class GetStateUpdate(Request):
         return envelope
 
 
-class Response(Message):
+class Response(BaseMessage):
     """Message from controller to clients."""
 
     @classmethod
@@ -773,3 +776,62 @@ class StateUpdate(Response):
             self.crypto == other.crypto and \
             self.initial_state == other.initial_state and \
             self.transactions == other.transactions
+
+
+class TacMessage(Message):
+    class Type(Enum):
+        REGISTER = "register"
+        UNREGISTER = "unregister"
+        TRANSACTION = "transaction"
+        GET_STATE_UPDATE = "get_state_update"
+
+        CANCELLED = "cancelled"
+        CONTROLLER_ERROR = "error"
+        GAME_DATA = "game_data"
+        TRANSACTION_CONFIRMATION = "transaction_confirmation"
+        STATE_UPDATE = "state_update"
+
+    mapping = {
+        Type.REGISTER: Register,
+        Type.UNREGISTER: Unregister,
+        Type.TRANSACTION: Transaction,
+        Type.GET_STATE_UPDATE: GetStateUpdate,
+        Type.CANCELLED: Cancelled,
+        Type.CONTROLLER_ERROR: Error,
+        Type.GAME_DATA: GameData,
+        Type.TRANSACTION_CONFIRMATION: TransactionConfirmation,
+        Type.STATE_UPDATE: StateUpdate,
+
+        Register: Type.REGISTER,
+        Unregister: Type.UNREGISTER,
+        Transaction: Type.TRANSACTION,
+        GetStateUpdate: Type.GET_STATE_UPDATE,
+        Cancelled: Type.CANCELLED,
+        Error: Type.CONTROLLER_ERROR,
+        GameData: Type.GAME_DATA,
+        TransactionConfirmation: Type.TRANSACTION_CONFIRMATION,
+        StateUpdate: Type.STATE_UPDATE,
+    }
+
+    def __init__(self, tac_message: BaseMessage):
+        tac_type = self.mapping[type(tac_message)]
+        super().__init__(type=tac_type, tac_message=tac_message)
+
+
+class TacSerializer(Serializer):
+
+    def __init__(self, public_key: str, crypto: Crypto):
+        self.public_key = public_key
+        self.crypto = crypto
+
+    def encode(self, msg: Message) -> bytes:
+        tac_message = msg.get("tac_message")  # type: BaseMessage
+        tac_bytes = tac_message.serialize()
+        return tac_bytes
+
+    def decode(self, obj: bytes) -> Message:
+        tac_message = BaseMessage.from_pb(obj, self.public_key, self.crypto)
+        tac_type = TacMessage.mapping[type(tac_message)]
+        message = Message(type=tac_type, tac_message=tac_message)
+        return message
+
