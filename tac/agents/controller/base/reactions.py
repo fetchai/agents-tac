@@ -30,6 +30,7 @@ from tac.aea.agent import Liveness
 from tac.aea.crypto.base import Crypto
 from tac.aea.mail.base import MailBox
 from tac.aea.mail.protocol import Envelope
+from tac.aea.protocols.oef.serialization import OEFSerializer
 from tac.agents.controller.base.interfaces import OEFReactionInterface
 
 logger = logging.getLogger(__name__)
@@ -54,24 +55,26 @@ class OEFReactions(OEFReactionInterface):
         self.mailbox = mailbox
         self.agent_name = agent_name
 
-    def on_oef_error(self, oef_error: Envelope) -> None:
+    def on_oef_error(self, envelope: Envelope) -> None:
         """
         Handle an OEF error message.
 
-        :param oef_error: the oef error
+        :param envelope: the oef error
 
         :return: None
         """
+        oef_error = OEFSerializer().decode(envelope.message)
         logger.error("[{}]: Received OEF error: answer_id={}, operation={}"
-                     .format(self.agent_name, oef_error.message.get("id"), oef_error.message.get("operation")))
+                     .format(self.agent_name, oef_error.get("id"), oef_error.get("operation")))
 
-    def on_dialogue_error(self, dialogue_error: Envelope) -> None:
+    def on_dialogue_error(self, envelope: Envelope) -> None:
         """
         Handle a dialogue error message.
 
-        :param dialogue_error: the dialogue error message
+        :param envelope: the dialogue error message
 
         :return: None
         """
+        dialogue_error = OEFSerializer().decode(envelope.message)
         logger.error("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}"
-                     .format(self.agent_name, dialogue_error.message.get("id"), dialogue_error.message.get("dialogue_id"), dialogue_error.message.get("origin")))
+                     .format(self.agent_name, dialogue_error.get("id"), dialogue_error.get("dialogue_id"), dialogue_error.get("origin")))
