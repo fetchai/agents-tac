@@ -184,31 +184,13 @@ class OEFMessage(Message):
         return True
 
 
-class ByteMessage(Message):
-    """The Byte message class."""
-
-    protocol_id = "bytes"
-
-    def __init__(self, message_id: Optional[int] = None,
-                 dialogue_id: Optional[int] = None,
-                 content: bytes = b""):
-        """
-        Initialize.
-
-        :param message_id: the message id.
-        :param dialogue_id: the dialogue id.
-        :param content: the message content.
-        """
-        super().__init__(id=message_id, dialogue_id=dialogue_id, content=content)
-
-
 class DefaultMessage(Message):
-    """The Simple message class."""
+    """The Default message class."""
 
     protocol_id = "default"
 
     class Type(Enum):
-        """Simple message types."""
+        """Default message types."""
 
         BYTES = "bytes"
         ERROR = "error"

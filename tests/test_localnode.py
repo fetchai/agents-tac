@@ -22,7 +22,7 @@ import asyncio
 import time
 
 from tac.aea.helpers.local_node import LocalNode, OEFLocalProxy
-from tac.aea.mail.messages import ByteMessage, FIPAMessage
+from tac.aea.mail.messages import DefaultMessage, FIPAMessage
 from tac.aea.mail.oef import OEFMailBox
 
 
@@ -48,7 +48,7 @@ def test_communication():
         mailbox1.connect()
         mailbox2.connect()
 
-        mailbox1.send(ByteMessage("mailbox2", "mailbox1", message_id=0, dialogue_id=0, content=b"hello"))
+        mailbox1.send(DefaultMessage("mailbox2", "mailbox1", type=DefaultMessage.Type.BYTES, content=b"hello"))
         mailbox1.send(FIPAMessage("mailbox2", "mailbox1", 0, 0, 0, FIPAMessage.Performative.CFP, query=None))
         mailbox1.send(FIPAMessage("mailbox2", "mailbox1", 0, 0, 0, FIPAMessage.Performative.PROPOSE, proposal=[]))
         mailbox1.send(FIPAMessage("mailbox2", "mailbox1", 0, 0, 0, FIPAMessage.Performative.ACCEPT))
