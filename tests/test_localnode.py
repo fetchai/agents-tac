@@ -21,9 +21,9 @@
 import asyncio
 import time
 
-from tac.aea.mail.base import Envelope
-from tac.aea.channel.oef import OEFMailBox
-from tac.aea.helpers.local_node import LocalNode, OEFLocalProxy
+from tac.aea.mail.base import Envelope, MailBox
+from tac.aea.channel.oef import OEFLocalConnection
+from tac.aea.helpers.local_node import LocalNode
 from tac.aea.protocols.default.message import DefaultMessage
 from tac.aea.protocols.default.serialization import DefaultSerializer
 from tac.aea.protocols.fipa.message import FIPAMessage
@@ -33,8 +33,8 @@ from tac.aea.protocols.fipa.serialization import FIPASerializer
 def test_connection():
     """Test that two mailbox can connect to the node."""
     with LocalNode() as node:
-        mailbox1 = OEFMailBox(OEFLocalProxy("mailbox1", node, loop=asyncio.new_event_loop()))
-        mailbox2 = OEFMailBox(OEFLocalProxy("mailbox2", node, loop=asyncio.new_event_loop()))
+        mailbox1 = MailBox(OEFLocalConnection("mailbox1", node, loop=asyncio.new_event_loop()))
+        mailbox2 = MailBox(OEFLocalConnection("mailbox2", node, loop=asyncio.new_event_loop()))
 
         mailbox1.connect()
         mailbox2.connect()
@@ -46,8 +46,8 @@ def test_connection():
 def test_communication():
     """Test that two mailbox can communicate through the node."""
     with LocalNode() as node:
-        mailbox1 = OEFMailBox(OEFLocalProxy("mailbox1", node, loop=asyncio.new_event_loop()))
-        mailbox2 = OEFMailBox(OEFLocalProxy("mailbox2", node, loop=asyncio.new_event_loop()))
+        mailbox1 = MailBox(OEFLocalConnection("mailbox1", node, loop=asyncio.new_event_loop()))
+        mailbox2 = MailBox(OEFLocalConnection("mailbox2", node, loop=asyncio.new_event_loop()))
 
         mailbox1.connect()
         mailbox2.connect()
@@ -77,7 +77,7 @@ def test_communication():
         envelope = Envelope(to="mailbox2", sender="mailbox1", protocol_id=FIPAMessage.protocol_id, message=msg_bytes)
         mailbox1.send(envelope)
 
-        time.sleep(1.0)
+        time.sleep(5.0)
 
         envelope = mailbox2.inbox.get(block=True, timeout=1.0)
         msg = DefaultSerializer().decode(envelope.message)
