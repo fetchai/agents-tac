@@ -81,14 +81,12 @@ class Agent:
         self._liveness = Liveness()
         self._timeout = timeout
 
-        self._handlers = {}
-        self._behaviours = {}
+        self._handlers = {} # type: Dict[ProtocolId, Handler]
+        self._behaviours = {} # type: Dict[ProtocolId, Behaviour]
 
         self.debug = debug
 
         self.mailbox = None  # type: Optional[MailBox]
-        self._handlers = {}  # type: Dict[ProtocolId, Handler]
-        self.behaviours = {}
 
     @property
     def inbox(self) -> Optional[InBox]:
