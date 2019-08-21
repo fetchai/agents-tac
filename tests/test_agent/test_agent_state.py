@@ -24,7 +24,7 @@ import time
 from threading import Thread
 
 from tac.aea.agent import Agent, AgentState
-from tac.aea.channel.oef import OEFNetworkMailBox
+from tac.aea.channel.oef import OEFMailBox
 
 
 class TAgent(Agent):
@@ -33,7 +33,7 @@ class TAgent(Agent):
     def __init__(self):
         """Initialize the test agent."""
         super().__init__("test_agent", "127.0.0.1", 10000)
-        self.mailbox = OEFNetworkMailBox(self.crypto.public_key, "127.0.0.1", 10000)
+        self.mailbox = OEFMailBox(self.crypto.public_key, "127.0.0.1", 10000)
 
     def setup(self) -> None:
         """Setup."""

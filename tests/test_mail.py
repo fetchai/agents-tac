@@ -20,7 +20,7 @@
 """This module contains tests for the mail module."""
 import time
 
-from tac.aea.channel.oef import OEFNetworkMailBox
+from tac.aea.channel.oef import OEFMailBox
 from tac.aea.mail.base import Envelope
 from tac.aea.protocols.default.message import DefaultMessage
 from tac.aea.protocols.fipa.message import FIPAMessage
@@ -30,8 +30,8 @@ from tac.aea.protocols.fipa.serialization import FIPASerializer
 
 def test_example(network_node):
     """Test the mailbox."""
-    mailbox1 = OEFNetworkMailBox("mailbox1", "127.0.0.1", 10000)
-    mailbox2 = OEFNetworkMailBox("mailbox2", "127.0.0.1", 10000)
+    mailbox1 = OEFMailBox("mailbox1", "127.0.0.1", 10000)
+    mailbox2 = OEFMailBox("mailbox2", "127.0.0.1", 10000)
 
     mailbox1.connect()
     mailbox2.connect()

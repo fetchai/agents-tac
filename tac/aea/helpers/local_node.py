@@ -24,18 +24,19 @@ import asyncio
 import logging
 import queue
 import threading
-from asyncio import AbstractEventLoop, Queue
 from collections import defaultdict
+from queue import Queue
 from threading import Thread
 from typing import Dict, List, Tuple, Optional
 
-from oef import agent_pb2, uri
-from oef.core import OEFProxy
-from oef.messages import BaseMessage, AgentMessage, OEFErrorOperation, OEFErrorMessage, SearchResult, \
-    DialogueErrorMessage, PROPOSE_TYPES, Message, CFP, Propose, Accept, Decline, CFP_TYPES
-from oef.proxy import OEFConnectionError
 from oef.query import Query
 from oef.schema import Description
+
+from tac.aea.mail.base import Connection
+from tac.aea.mail.messages import OEFMessage
+from tac.aea.mail.oef import STUB_DIALOGUE_ID
+from tac.aea.mail.protocol import Envelope
+from tac.aea.protocols.oef.serialization import OEFSerializer, DEFAULT_OEF, OEFErrorOperation
 
 logger = logging.getLogger(__name__)
 
@@ -49,14 +50,12 @@ class LocalNode:
         self.services = defaultdict(lambda: [])  # type: Dict[str, List[Description]]
         self._lock = threading.Lock()
 
-        self.loop = asyncio.new_event_loop()
         self._task = None  # type: Optional[asyncio.Task]
         self._stopped = True  # type: bool
         self._thread = None  # type: Optional[Thread]
 
-        self._read_queue = Queue(loop=self.loop)  # type: Queue
-        self._queues = {}  # type: Dict[str, asyncio.Queue]
-        self._loops = {}  # type: Dict[str, AbstractEventLoop]
+        self._read_queue = Queue()
+        self._queues = {}  # type: Dict[str, Queue]
 
     def __enter__(self):
         """Start the OEF Node."""
@@ -67,7 +66,7 @@ class LocalNode:
         """Stop the OEF Node."""
         self.stop()
 
-    def connect(self, public_key: str, loop: AbstractEventLoop) -> Optional[Tuple[Queue, Queue]]:
+    def connect(self, public_key: str) -> Optional[Tuple[Queue, Queue]]:
         """
         Connect a public key to the node.
 
@@ -77,9 +76,8 @@ class LocalNode:
         if public_key in self._queues:
             return None
 
-        q = Queue(loop=loop)
+        q = Queue()
         self._queues[public_key] = q
-        self._loops[public_key] = loop
         return self._read_queue, q
 
     async def _process_messages(self) -> None:
@@ -90,14 +88,73 @@ class LocalNode:
         """
         while not self._stopped:
             try:
-                data = await self._read_queue.get()  # type: Tuple[str, BaseMessage]
+                envelope = await self._read_queue.get()  # type: Envelope
             except asyncio.CancelledError:
                 logger.debug("Local Node: loop cancelled.")
                 break
-            public_key, msg = data
-            assert isinstance(msg, AgentMessage)
-            logger.debug("Processing message from {}: {}".format(public_key, msg))
-            self._send_agent_message(public_key, msg)
+
+            sender = envelope.sender
+            assert isinstance(envelope, Envelope)
+            logger.debug("Processing message from {}: {}".format(sender, envelope))
+
+            self._decode_envelope(envelope)
+
+    def _decode_envelope(self, envelope: Envelope) -> None:
+        """
+        Decode the envelope.
+
+        :param envelope: the envelope
+        :return: None
+        """
+        if envelope.protocol_id == "oef":
+            self.handle_oef_message(envelope)
+        else:
+            self.handle_agent_message(envelope)
+
+    def handle_oef_message(self, envelope: Envelope) -> None:
+        """
+        Handle oef messages.
+
+        :param envelope: the envelope
+        :return: None
+        """
+        oef_message = OEFSerializer().decode(envelope.message)
+        sender = envelope.sender
+        request_id = oef_message.get("id")
+        oef_type = OEFMessage.Type(oef_message.get("type"))
+        if oef_type == OEFMessage.Type.REGISTER_SERVICE:
+            self.register_service(sender, oef_message.get("service_description"))
+        elif oef_type == OEFMessage.Type.REGISTER_AGENT:
+            self.register_agent(sender, oef_message.get("agent_description"))
+        elif oef_type == OEFMessage.Type.UNREGISTER_SERVICE:
+            self.unregister_service(sender, request_id, oef_message.get("service_description"))
+        elif oef_type == OEFMessage.Type.UNREGISTER_AGENT:
+            self.unregister_agent(sender, request_id)
+        elif oef_type == OEFMessage.Type.SEARCH_AGENTS:
+            self.search_agents(sender, request_id, oef_message.get("query"))
+        elif oef_type == OEFMessage.Type.SEARCH_SERVICES:
+            self.search_services(sender, request_id, oef_message.get("query"))
+        else:
+            # request not recognized
+            pass
+
+    def handle_agent_message(self, envelope: Envelope) -> None:
+        """
+        Forward an envelope to the right agent.
+
+        :param envelope: the envelope
+        :return: None
+        """
+        destination = envelope.to
+
+        if destination not in self._queues:
+            msg = OEFMessage(type=OEFMessage.Type.DIALOGUE_ERROR, id=STUB_DIALOGUE_ID, dialogue_id=STUB_DIALOGUE_ID, origin=destination)
+            msg_bytes = OEFSerializer().encode(msg)
+            error_envelope = Envelope(to=destination, sender=envelope.sender, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
+            self._send(error_envelope)
+            return
+        else:
+            self._send(envelope)
 
     def run(self) -> None:
         """
@@ -164,8 +221,10 @@ class LocalNode:
         """
         with self._lock:
             if public_key not in self.agents:
-                msg = OEFErrorMessage(msg_id, OEFErrorOperation.UNREGISTER_DESCRIPTION)
-                self._send(public_key, msg.to_pb())
+                msg = OEFMessage(type=OEFMessage.Type.OEF_ERROR, id=msg_id, operation=OEFErrorOperation.UNREGISTER_DESCRIPTION)
+                msg_bytes = OEFSerializer().encode(msg)
+                envelope = Envelope(to=public_key, sender=DEFAULT_OEF, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
+                self._send(envelope)
             else:
                 self.agents.pop(public_key)
 
@@ -180,8 +239,10 @@ class LocalNode:
         """
         with self._lock:
             if public_key not in self.services:
-                msg = OEFErrorMessage(msg_id, OEFErrorOperation.UNREGISTER_SERVICE)
-                self._send(public_key, msg.to_pb())
+                msg = OEFMessage(type=OEFMessage.Type.OEF_ERROR, id=msg_id, operation=OEFErrorOperation.UNREGISTER_SERVICE)
+                msg_bytes = OEFSerializer().encode(msg)
+                envelope = Envelope(to=public_key, sender=DEFAULT_OEF, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
+                self._send(envelope)
             else:
                 self.services[public_key].remove(service_description)
                 if len(self.services[public_key]) == 0:
@@ -203,8 +264,10 @@ class LocalNode:
             if query.check(description):
                 result.append(agent_public_key)
 
-        msg = SearchResult(search_id, sorted(set(result)))
-        self._send(public_key, msg.to_pb())
+        msg = OEFMessage(type=OEFMessage.Type.SEARCH_RESULT, id=search_id, agents=sorted(set(result)))
+        msg_bytes = OEFSerializer().encode(msg)
+        envelope = Envelope(to=public_key, sender=DEFAULT_OEF, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
+        self._send(envelope)
 
     def search_services(self, public_key: str, search_id: int, query: Query) -> None:
         """
@@ -223,44 +286,31 @@ class LocalNode:
                 if query.check(description):
                     result.append(agent_public_key)
 
-        msg = SearchResult(search_id, sorted(set(result)))
-        self._send(public_key, msg.to_pb())
+        msg = OEFMessage(type=OEFMessage.Type.SEARCH_RESULT, id=search_id, agents=sorted(set(result)))
+        msg_bytes = OEFSerializer().encode(msg)
+        envelope = Envelope(to=public_key, sender=DEFAULT_OEF, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
+        self._send(envelope)
 
-    def _send_agent_message(self, origin: str, msg: AgentMessage) -> None:
+    def _send(self, envelope: Envelope):
+        destination = envelope.to
+        loop = self._loops[destination]
+        loop.call_soon_threadsafe(self._queues[destination].put_nowait, envelope)
+
+    def disconnect(self, public_key: str) -> None:
         """
-        Send an :class:`~oef.messages.AgentMessage`.
+        Disconnect.
 
-        :param origin: the public key of the sender agent.
-        :param msg: the message.
+        :param public_key: the public key
         :return: None
         """
-        e = msg.to_pb()
-        destination = e.send_message.destination
-
-        if destination not in self._queues:
-            msg = DialogueErrorMessage(msg.msg_id, e.send_message.dialogue_id, destination)
-            self._send(origin, msg.to_pb())
-            return
-
-        new_msg = agent_pb2.Server.AgentMessage()
-        new_msg.answer_id = msg.msg_id
-        new_msg.content.origin = origin
-        new_msg.content.dialogue_id = e.send_message.dialogue_id
-
-        payload = e.send_message.WhichOneof("payload")
-        if payload == "content":
-            new_msg.content.content = e.send_message.content
-        elif payload == "fipa":
-            new_msg.content.fipa.CopyFrom(e.send_message.fipa)
-
-        self._send(destination, new_msg)
-
-    def _send(self, public_key: str, msg):
-        loop = self._loops[public_key]
-        loop.call_soon_threadsafe(self._queues[public_key].put_nowait, msg.SerializeToString())
+        with self._lock:
+            self._loops.pop(public_key, None)
+            self._queues.pop(public_key, None)
+            self.services.pop(public_key, None)
+            self.agents.pop(public_key, None)
 
 
-class OEFLocalProxy(OEFProxy):
+class OEFLocalConnection(Connection):
     """
     Proxy to the functionality of the OEF.
 
@@ -276,95 +326,73 @@ class OEFLocalProxy(OEFProxy):
         :param local_node: the Local OEF Node object. This reference must be the same across the agents of interest.
         :param loop: the event loop.
         """
-        super().__init__(public_key, loop)
+        super().__init__()
+        self.public_key = public_key
         self.local_node = local_node
+        self._loop = loop if loop is not None else asyncio.new_event_loop()
+
         self._connection = None  # type: Optional[Tuple[queue.Queue, queue.Queue]]
         self._read_queue = None  # type: Optional[Queue]
         self._write_queue = None  # type: Optional[Queue]
 
-    def register_agent(self, msg_id: int, agent_description: Description) -> None:
-        """Register an agent."""
-        self.local_node.register_agent(self.public_key, agent_description)
+        self._stopped = True
+        self.in_thread = None
+        self.out_thread = None
 
-    def register_service(self, msg_id: int, service_description: Description, service_id: str = "") -> None:
-        """Register a service."""
-        self.local_node.register_service(self.public_key, service_description)
+    def _fetch(self) -> None:
+        """
+        Fetch the messages from the outqueue and send them.
 
-    def search_agents(self, search_id: int, query: Query) -> None:
-        """Search agents."""
-        self.local_node.search_agents(self.public_key, search_id, query)
+        :return: None
+        """
+        while not self._stopped:
+            try:
+                msg = self.out_queue.get(block=True, timeout=1.0)
+                self.send(msg)
+            except queue.Empty:
+                pass
 
-    def search_services(self, search_id: int, query: Query) -> None:
-        """Search services."""
-        self.local_node.search_services(self.public_key, search_id, query)
+    async def _receive_loop(self):
+        """Receive messages."""
+        while not self._stopped:
+            data = await self._read_queue.get()
+            self.in_queue.put_nowait(data)
 
-    def search_services_wide(self, msg_id: int, query: Query) -> None:
-        """Search wide."""
-        raise NotImplementedError
+    @property
+    def is_established(self) -> bool:
+        """Return True if the connection has been established, False otherwise."""
+        return self._connection is not None
 
-    def unregister_agent(self, msg_id: int) -> None:
-        """Unregister an agent."""
-        self.local_node.unregister_agent(self.public_key, msg_id)
+    def connect(self):
+        """Connect to the local OEF Node."""
+        if self._stopped:
+            self._stopped = False
+            self._connection = self.local_node.connect(self.public_key, self._loop)
+            self._write_queue, self._read_queue = self._connection
+            self.in_thread = Thread(target=self._receive_loop)
+            self.out_thread = Thread(target=self._fetch)
+            self.in_thread.start()
+            self.out_thread.start()
 
-    def unregister_service(self, msg_id: int, service_description: Description, service_id: str = "") -> None:
-        """Unregister a service."""
-        self.local_node.unregister_service(self.public_key, msg_id, service_description)
+    def disconnect(self):
+        """Disconnect from the local OEF Node."""
+        if not self._stopped:
+            self._stopped = True
+            self.in_thread.join()
+            self.out_thread.join()
+            self.in_thread = None
+            self.out_thread = None
+            self.local_node.disconnect(self.public_key)
+            self.stop()
 
-    def send_message(self, msg_id: int, dialogue_id: int, destination: str, msg: bytes, context=uri.Context()):
-        """Send a simple message."""
-        msg = Message(msg_id, dialogue_id, destination, msg, context)
-        self._send(msg)
-
-    def send_cfp(self, msg_id: int, dialogue_id: int, destination: str, target: int, query: CFP_TYPES, context=uri.Context()) -> None:
-        """Send a CFP."""
-        msg = CFP(msg_id, dialogue_id, destination, target, query, context)
-        self._send(msg)
-
-    def send_propose(self, msg_id: int, dialogue_id: int, destination: str, target: int, proposals: PROPOSE_TYPES, context=uri.Context()) -> None:
-        """Send a propose."""
-        msg = Propose(msg_id, dialogue_id, destination, target, proposals, context)
-        self._send(msg)
-
-    def send_accept(self, msg_id: int, dialogue_id: int, destination: str, target: int, context=uri.Context()) -> None:
-        """Send an accept."""
-        msg = Accept(msg_id, dialogue_id, destination, target, context)
-        self._send(msg)
-
-    def send_decline(self, msg_id: int, dialogue_id: int, destination: str, target: int, context=uri.Context()) -> None:
-        """Send a decline."""
-        msg = Decline(msg_id, dialogue_id, destination, target, context)
-        self._send(msg)
-
-    async def connect(self) -> bool:
-        """Connect the proxy."""
-        if self._connection is not None:
-            return True
-
-        self._connection = self.local_node.connect(self.public_key, self._loop)
-        if self._connection is None:
-            return False
-        self._write_queue, self._read_queue = self._connection
-        return True
-
-    async def _receive(self) -> bytes:
-        """Receive a message."""
-        if not self.is_connected():
-            raise OEFConnectionError("Connection not established yet. Please use 'connect()'.")
-        data = await self._read_queue.get()
-        return data
-
-    def _send(self, msg: BaseMessage) -> None:
+    def send(self, envelope: Envelope):
         """Send a message."""
-        if not self.is_connected():
-            raise OEFConnectionError("Connection not established yet. Please use 'connect()'.")
-        self.local_node.loop.call_soon_threadsafe(self._write_queue.put_nowait, (self.public_key, msg))
+        if not self.is_established:
+            raise ConnectionError("Connection not established yet. Please use 'connect()'.")
+        self.local_node.loop.call_soon_threadsafe(self._write_queue.put_nowait, envelope)
 
-    async def stop(self):
+    def stop(self):
         """Tear down the connection."""
         self._connection = None
         self._read_queue = None
         self._write_queue = None
-
-    def is_connected(self) -> bool:
-        """Return True if the proxy is connected, False otherwise."""
-        return self._connection is not None
