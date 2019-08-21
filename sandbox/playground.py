@@ -35,9 +35,8 @@ import docker
 from tac.aea.mail.messages import FIPAMessage
 from tac.aea.mail.protocol import Envelope
 from tac.aea.protocols.fipa.serialization import FIPASerializer
-from tac.agents.participant.base.dialogues import Dialogue
-from tac.agents.participant.examples.baseline import BaselineAgent
-from tac.agents.participant.examples.strategy import BaselineStrategy
+from tac.agents.participant.v1.examples.baseline import BaselineAgent
+from tac.agents.participant.v1.examples.strategy import BaselineStrategy
 from tac.platform.protocol import GameData
 
 CUR_PATH = inspect.getfile(inspect.currentframe())

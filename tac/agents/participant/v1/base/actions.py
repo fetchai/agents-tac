@@ -36,8 +36,8 @@ from tac.aea.mail.base import MailBox
 from tac.aea.mail.messages import OEFMessage, DefaultMessage
 from tac.aea.protocols.default.serialization import DefaultSerializer
 from tac.aea.protocols.oef.serialization import OEFSerializer, DEFAULT_OEF
-from tac.agents.participant.base.game_instance import GameInstance
-from tac.agents.participant.base.interfaces import ControllerActionInterface, OEFActionInterface, \
+from tac.agents.participant.v1.base.game_instance import GameInstance
+from tac.agents.participant.v1.base.interfaces import ControllerActionInterface, OEFActionInterface, \
     DialogueActionInterface
 from tac.platform.protocol import GetStateUpdate
 
