@@ -35,6 +35,7 @@ from tac.aea.crypto.base import Crypto
 from tac.aea.mail.base import MailBox
 from tac.aea.mail.messages import OEFMessage, Message, Address
 from tac.aea.protocols.default.serialization import DefaultSerializer
+from tac.aea.protocols.fipa.serialization import FIPASerializer
 from tac.aea.protocols.oef.serialization import OEFSerializer
 from tac.agents.participant.base.actions import DialogueActions, ControllerActions, OEFActions
 from tac.agents.participant.base.game_instance import GameInstance, GamePhase
@@ -62,24 +63,24 @@ class DialogueHandler(DialogueActions, DialogueReactions):
         DialogueActions.__init__(self, crypto, liveness, game_instance, mailbox, agent_name)
         DialogueReactions.__init__(self, crypto, liveness, game_instance, mailbox, agent_name)
 
-    def handle_dialogue_message(self, message: Message, sender: Address) -> None:
+    def handle_dialogue_message(self, envelope: Envelope) -> None:
         """
         Handle messages from the other agents.
 
         The agents expect a response.
 
-        :param message: the agent message.
-        :param sender: the sender.
+        :param envelope: the envelope.
 
         :return: None
         """
+        message = FIPASerializer().decode(envelope.message)  # type: # Message
         logger.debug("Handling Dialogue message. type={}".format(type(message.get("performative"))))
-        if self.dialogues.is_belonging_to_registered_dialogue(message, self.crypto.public_key, sender):
-            self.on_existing_dialogue(message, sender)
-        elif self.dialogues.is_permitted_for_new_dialogue(message, self.game_instance.game_configuration.agent_pbks, sender):
-            self.on_new_dialogue(message, sender)
+        if self.dialogues.is_belonging_to_registered_dialogue(message, self.crypto.public_key, envelope.sender):
+            self.on_existing_dialogue(message, envelope.sender)
+        elif self.dialogues.is_permitted_for_new_dialogue(message, self.game_instance.game_configuration.agent_pbks, envelope.sender):
+            self.on_new_dialogue(message, envelope.sender)
         else:
-            self.on_unidentified_dialogue(message, sender)
+            self.on_unidentified_dialogue(message, envelope.sender)
 
 
 class ControllerHandler(ControllerActions, ControllerReactions):

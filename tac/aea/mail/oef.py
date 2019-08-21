@@ -128,6 +128,8 @@ class OEFChannel(Agent):
         :param content: the bytes content.
         :return: None
         """
+        # We are not using the 'origin' parameter because 'content' contains a serialized instance of 'Envelope',
+        # hence it already contains the address of the sender.
         envelope = Envelope.decode(content)
         self.in_queue.put(envelope)
 

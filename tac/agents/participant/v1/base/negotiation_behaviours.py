@@ -224,9 +224,9 @@ class FIPABehaviour:
             self.game_instance.transaction_manager.add_locked_tx(transaction, as_seller=dialogue.is_seller)
 
             msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=transaction.serialize())
+            dialogue.outgoing_extend([msg])
             msg_bytes = DefaultSerializer().encode(msg)
             results.append(Envelope(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=DefaultMessage.protocol_id, message=msg_bytes))
-            dialogue.outgoing_extend([msg])
 
             msg = FIPAMessage(message_id=new_msg_id, dialogue_id=accept.get("dialogue_id"), target=accept.get("id"), performative=FIPAMessage.Performative.MATCH_ACCEPT)
             dialogue.outgoing_extend([msg])
