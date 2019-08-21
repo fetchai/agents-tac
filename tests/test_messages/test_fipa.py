@@ -18,6 +18,8 @@
 # ------------------------------------------------------------------------------
 
 """This module contains the tests for the FIPA protocol."""
+from oef.schema import Description
+
 from tac.aea.mail.messages import FIPAMessage
 from tac.aea.protocols.fipa.serialization import FIPASerializer
 
@@ -25,15 +27,40 @@ from tac.aea.mail.protocol import Envelope
 
 
 def test_fipa_cfp_serialization():
-    """Test that the serialization for the 'fipa' protocol works.."""
-    msg = FIPAMessage(message_id=0, dialogue_id=0, target=0, performative=FIPAMessage.Performative.CFP,
-                      query={"foo": "bar"})
-    envelope = Envelope(to="receiver", sender="sender", protocol_id=FIPAMessage.protocol_id, message=msg)
-    serializer = FIPASerializer()
+    """Test that the serialization for the 'fipa' protocol works."""
+    msg = FIPAMessage(message_id=0, dialogue_id=0, target=0, performative=FIPAMessage.Performative.CFP, query={"foo": "bar"})
+    msg_bytes = FIPASerializer().encode(msg)
+    envelope = Envelope(to="receiver", sender="sender", protocol_id=FIPAMessage.protocol_id, message=msg_bytes)
+    envelope_bytes = envelope.encode()
 
-    envelope_bytes = envelope.encode(serializer)
-
-    actual_envelope = Envelope.decode(envelope_bytes, serializer)
+    actual_envelope = Envelope.decode(envelope_bytes)
     expected_envelope = envelope
-
     assert expected_envelope == actual_envelope
+
+    actual_msg = FIPASerializer().decode(actual_envelope.message)
+    expected_msg = msg
+    assert expected_msg == actual_msg
+
+
+def test_fipa_propose_serialization():
+    """Test that the serialization for the 'fipa' protocol works."""
+    proposal = [
+        Description({"foo1": 1, "bar1": 2}),  # DataModel("dm_bar", [AttributeSchema("foo1", int, True), AttributeSchema("bar1", int, True)]))
+        Description({"foo2": 1, "bar2": 2}),
+    ]
+    msg = FIPAMessage(message_id=0, dialogue_id=0, target=0, performative=FIPAMessage.Performative.PROPOSE, proposal=proposal)
+    msg_bytes = FIPASerializer().encode(msg)
+    envelope = Envelope(to="receiver", sender="sender", protocol_id=FIPAMessage.protocol_id, message=msg_bytes)
+    envelope_bytes = envelope.encode()
+
+    actual_envelope = Envelope.decode(envelope_bytes)
+    expected_envelope = envelope
+    assert expected_envelope == actual_envelope
+
+    actual_msg = FIPASerializer().decode(actual_envelope.message)
+    expected_msg = msg
+
+    p1 = actual_msg.get("proposal")
+    p2 = expected_msg.get("proposal")
+    assert p1[0].values == p2[0].values
+    assert p1[1].values == p2[1].values

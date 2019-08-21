@@ -36,8 +36,6 @@ ProtocolId = str
 class Message:
     """This class implements a message."""
 
-    protocol_id = "default"
-
     def __init__(self, body: Optional[Dict] = None,
                  **kwargs):
         """
@@ -117,6 +115,10 @@ class OEFMessage(Message):
         DIALOGUE_ERROR = "dialogue_error"
         SEARCH_RESULT = "search_result"
 
+        def __str__(self):
+            """Get string representation."""
+            return self.value
+
     def __init__(self, oef_type: Optional[Type] = None,
                  **kwargs):
         """
@@ -124,7 +126,7 @@ class OEFMessage(Message):
 
         :param oef_type: the type of OEF message.
         """
-        super().__init__(type=oef_type, **kwargs)
+        super().__init__(type=str(oef_type), **kwargs)
 
     def check_consistency(self) -> bool:
         """Check that the data is consistent."""
@@ -182,31 +184,13 @@ class OEFMessage(Message):
         return True
 
 
-class ByteMessage(Message):
-    """The Byte message class."""
+class DefaultMessage(Message):
+    """The Default message class."""
 
-    protocol_id = "bytes"
-
-    def __init__(self, message_id: Optional[int] = None,
-                 dialogue_id: Optional[int] = None,
-                 content: bytes = b""):
-        """
-        Initialize.
-
-        :param message_id: the message id.
-        :param dialogue_id: the dialogue id.
-        :param content: the message content.
-        """
-        super().__init__(id=message_id, dialogue_id=dialogue_id, content=content)
-
-
-class SimpleMessage(Message):
-    """The Simple message class."""
-
-    protocol_id = "simple"
+    protocol_id = "default"
 
     class Type(Enum):
-        """Simple message types."""
+        """Default message types."""
 
         BYTES = "bytes"
         ERROR = "error"
@@ -234,6 +218,10 @@ class FIPAMessage(Message):
         ACCEPT = "accept"
         MATCH_ACCEPT = "match_accept"
         DECLINE = "decline"
+
+        def __str__(self):
+            """Get string representation."""
+            return self.value
 
     def __init__(self, message_id: Optional[int] = None,
                  dialogue_id: Optional[int] = None,

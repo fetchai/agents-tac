@@ -22,6 +22,7 @@
 
 from abc import abstractmethod
 
+from tac.aea.mail.messages import Message
 from tac.aea.mail.protocol import Envelope
 from tac.platform.protocol import Error, TransactionConfirmation, StateUpdate, GameData
 
@@ -180,7 +181,7 @@ class DialogueReactionInterface:
     """This interface contains the methods to react to events from other agents."""
 
     @abstractmethod
-    def on_new_dialogue(self, envelope: Envelope) -> None:
+    def on_new_dialogue(self, message: Message) -> None:
         """
         React to a message for a new dialogue.
 
@@ -188,27 +189,27 @@ class DialogueReactionInterface:
         - the protocol rules that messages must follow;
         - how the agent behaves in this dialogue.
 
-        :param envelope: the agent message
+        :param message: the agent message
 
         :return: None
         """
 
     @abstractmethod
-    def on_existing_dialogue(self, envelope: Envelope) -> None:
+    def on_existing_dialogue(self, message: Message) -> None:
         """
         React to a message of an existing dialogue.
 
-        :param envelope: the agent message
+        :param message: the agent message
 
         :return: None
         """
 
     @abstractmethod
-    def on_unidentified_dialogue(self, envelope: Envelope) -> None:
+    def on_unidentified_dialogue(self, message: Message) -> None:
         """
         React to a message of an unidentified dialogue.
 
-        :param envelope: the agent message
+        :param message: the agent message
 
         :return: None
         """

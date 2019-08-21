@@ -19,7 +19,7 @@
 
 """This module contains the tests of the messages module."""
 from tac.aea.mail.messages import Message
-from tac.aea.mail.protocol import DefaultProtobufSerializer, DefaultJSONSerializer, Envelope
+from tac.aea.mail.protocol import ProtobufSerializer, JSONSerializer, Envelope
 
 
 class TestDefaultSerializations:
@@ -29,26 +29,31 @@ class TestDefaultSerializations:
     def setup_class(cls):
         """Set up the use case."""
         cls.message = Message(content="hello")
-        cls.envelope = Envelope(to="receiver", sender="sender", protocol_id="my_own_protocol", message=cls.message)
 
     def test_default_protobuf_serialization(self):
         """Test that the default Protobuf serialization works."""
-        envelope = self.envelope
+        message_bytes = ProtobufSerializer().encode(self.message)
+        envelope = Envelope(to="receiver", sender="sender", protocol_id="my_own_protocol", message=message_bytes)
+        envelope_bytes = envelope.encode()
 
-        serializer = DefaultProtobufSerializer()
-        envelope_bytes = envelope.encode(serializer)
-        actual_envelope = Envelope.decode(envelope_bytes, serializer)
-        expected_envelope = envelope
-
+        expected_envelope = Envelope.decode(envelope_bytes)
+        actual_envelope = envelope
         assert expected_envelope == actual_envelope
+
+        expected_msg = ProtobufSerializer().decode(expected_envelope.message)
+        actual_msg = self.message
+        assert expected_msg == actual_msg
 
     def test_default_json_serialization(self):
         """Test that the default JSON serialization works."""
-        envelope = self.envelope
+        message_bytes = JSONSerializer().encode(self.message)
+        envelope = Envelope(to="receiver", sender="sender", protocol_id="my_own_protocol", message=message_bytes)
+        envelope_bytes = envelope.encode()
 
-        serializer = DefaultJSONSerializer()
-        envelope_bytes = envelope.encode(serializer)
-        actual_envelope = Envelope.decode(envelope_bytes, serializer)
-        expected_envelope = envelope
-
+        expected_envelope = Envelope.decode(envelope_bytes)
+        actual_envelope = envelope
         assert expected_envelope == actual_envelope
+
+        expected_msg = JSONSerializer().decode(expected_envelope.message)
+        actual_msg = self.message
+        assert expected_msg == actual_msg

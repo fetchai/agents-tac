@@ -28,9 +28,13 @@ from enum import Enum
 from typing import Dict, Optional
 
 from tac.aea.mail.base import InBox, OutBox, MailBox
+from tac.aea.mail.messages import ProtocolId
 from tac.aea.crypto.base import Crypto
 
 logger = logging.getLogger(__name__)
+
+Handler = object
+Behaviour = object
 
 
 class AgentState(Enum):
@@ -80,8 +84,8 @@ class Agent:
         self._liveness = Liveness()
         self._timeout = timeout
 
-        self._handlers = {}
-        self._behaviours = {}
+        self._handlers = {}  # type: Dict[ProtocolId, Handler]
+        self._behaviours = {}  # type: Dict[ProtocolId, Behaviour]
 
         self.debug = debug
 

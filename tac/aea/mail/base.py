@@ -25,9 +25,8 @@ from abc import abstractmethod
 from queue import Queue
 from typing import Optional
 
-from tac.aea.mail.messages import Address, ProtocolId, Message
+from tac.aea.mail.messages import Address, ProtocolId
 from tac.aea.mail.protocol import Envelope
-
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +106,7 @@ class OutBox(object):
         self._queue.put(item)
 
     def put_message(self, to: Optional[Address] = None, sender: Optional[Address] = None,
-                    protocol_id: Optional[ProtocolId] = None, message: Optional[Message] = None) -> None:
+                    protocol_id: Optional[ProtocolId] = None, message: bytes = b"") -> None:
         """
         Put a message in the outbox.
 

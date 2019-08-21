@@ -19,6 +19,8 @@
 # ------------------------------------------------------------------------------
 
 """Serialization for the FIPA protocol."""
+from google.protobuf.struct_pb2 import Struct
+from oef import data_model_instance_pb2
 from oef.schema import Description
 
 from tac.aea.mail.messages import Message, FIPAMessage
@@ -39,19 +41,22 @@ class FIPASerializer(Serializer):
         performative_id = msg.get("performative").value
         if performative_id == "cfp":
             performative = fipa_pb2.FIPAMessage.CFP()
-            performative.query.update(msg.get("query"))
+            query = msg.get("query")
+            if query is None:
+                nothing = fipa_pb2.FIPAMessage.CFP.Nothing()
+                performative.nothing.CopyFrom(nothing)
+            elif type(query) == dict:
+                performative.json.update(query)
+            elif type(query) == bytes:
+                performative.bytes = query
+            else:
+                raise ValueError("Query type not supported: {}".format(type(query)))
             fipa_msg.cfp.CopyFrom(performative)
         elif performative_id == "propose":
             performative = fipa_pb2.FIPAMessage.Propose()
             proposal = msg.get("proposal")
-            for p in proposal:
-                p: Description
-                new_struct = performative.proposal.add()
-                new_struct.update(p.values)
-
-            for bytes_p in performative.proposal:
-                print(bytes_p)
-
+            p_array_bytes = [p.to_pb().SerializeToString() for p in proposal]
+            performative.proposal.extend(p_array_bytes)
             fipa_msg.propose.CopyFrom(performative)
 
         elif performative_id == "accept":
@@ -78,21 +83,37 @@ class FIPASerializer(Serializer):
         target = fipa_pb.target
 
         performative = fipa_pb.WhichOneof("performative")
+        performative_id = FIPAMessage.Performative(str(performative))
         performative_content = dict()
-        if performative == "cfp":
-            query = dict(fipa_pb.cfp.query)
+        if performative_id == FIPAMessage.Performative.CFP:
+            query_type = fipa_pb.cfp.WhichOneof("query")
+            if query_type == "nothing":
+                query = None
+            elif query_type == "json":
+                query_pb = Struct()
+                query_pb.update(fipa_pb.cfp.json)
+                query = dict(query_pb)
+            elif query_type == "bytes":
+                query = fipa_pb.cfp.bytes
+            else:
+                raise ValueError("Query type not recognized.")
+
             performative_content["query"] = query
-        elif performative == "propose":
-            proposal = [dict(p) for p in fipa_pb.propose.proposal]
-            performative_content["proposal"] = proposal
-        elif performative == "accept":
+        elif performative_id == FIPAMessage.Performative.PROPOSE:
+            descriptions = []
+            for p_bytes in fipa_pb.propose.proposal:
+                p_pb = data_model_instance_pb2.Instance()
+                p_pb.ParseFromString(p_bytes)
+                descriptions.append(Description.from_pb(p_pb))
+            performative_content["proposal"] = descriptions
+        elif performative_id == FIPAMessage.Performative.ACCEPT:
             pass
-        elif performative == "match_accept":
+        elif performative_id == FIPAMessage.Performative.MATCH_ACCEPT:
             pass
-        elif performative == "decline":
+        elif performative_id == FIPAMessage.Performative.DECLINE:
             pass
         else:
-            raise ValueError("Performative not valid.")
+            raise ValueError("Performative not valid: {}.".format(performative))
 
         return FIPAMessage(message_id=message_id, dialogue_id=dialogue_id, target=target,
                            performative=performative, **performative_content)

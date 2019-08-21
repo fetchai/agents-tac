@@ -32,11 +32,17 @@ from oef.messages import OEFErrorOperation, CFP_TYPES, PROPOSE_TYPES
 from oef.proxy import OEFNetworkProxy
 
 from tac.aea.helpers.local_node import LocalNode, OEFLocalProxy
-from tac.aea.mail.protocol import Envelope
 from tac.aea.mail.base import Connection, MailBox
-from tac.aea.mail.messages import OEFMessage, FIPAMessage, ByteMessage
+from tac.aea.mail.messages import OEFMessage, FIPAMessage
+from tac.aea.mail.protocol import Envelope
+from tac.aea.protocols.fipa.serialization import FIPASerializer
+from tac.aea.protocols.oef.serialization import OEFSerializer
 
 logger = logging.getLogger(__name__)
+
+
+STUB_MESSSAGE_ID = 0
+STUB_DIALOGUE_ID = 0
 
 
 class MailStats(object):
@@ -122,10 +128,9 @@ class OEFChannel(Agent):
         :param content: the bytes content.
         :return: None
         """
-        msg = ByteMessage(message_id=msg_id,
-                          dialogue_id=dialogue_id,
-                          content=content)
-        envelope = Envelope(to=self.public_key, sender=origin, protocol_id=ByteMessage.protocol_id, message=msg)
+        # We are not using the 'origin' parameter because 'content' contains a serialized instance of 'Envelope',
+        # hence it already contains the address of the sender.
+        envelope = Envelope.decode(content)
         self.in_queue.put(envelope)
 
     def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES) -> None:
@@ -144,7 +149,8 @@ class OEFChannel(Agent):
                           target=target,
                           performative=FIPAMessage.Performative.CFP,
                           query=query)
-        envelope = Envelope(to=self.public_key, sender=origin, protocol_id=FIPAMessage.protocol_id, message=msg)
+        msg_bytes = FIPASerializer().encode(msg)
+        envelope = Envelope(to=self.public_key, sender=origin, protocol_id=FIPAMessage.protocol_id, message=msg_bytes)
         self.in_queue.put(envelope)
 
     def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES) -> None:
@@ -163,7 +169,8 @@ class OEFChannel(Agent):
                           target=target,
                           performative=FIPAMessage.Performative.PROPOSE,
                           proposal=proposals)
-        envelope = Envelope(to=self.public_key, sender=origin, protocol_id=FIPAMessage.protocol_id, message=msg)
+        msg_bytes = FIPASerializer().encode(msg)
+        envelope = Envelope(to=self.public_key, sender=origin, protocol_id=FIPAMessage.protocol_id, message=msg_bytes)
         self.in_queue.put(envelope)
 
     def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
@@ -181,7 +188,8 @@ class OEFChannel(Agent):
                           dialogue_id=dialogue_id,
                           target=target,
                           performative=performative)
-        envelope = Envelope(to=self.public_key, sender=origin, protocol_id=FIPAMessage.protocol_id, message=msg)
+        msg_bytes = FIPASerializer().encode(msg)
+        envelope = Envelope(to=self.public_key, sender=origin, protocol_id=FIPAMessage.protocol_id, message=msg_bytes)
         self.in_queue.put(envelope)
 
     def on_decline(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
@@ -198,7 +206,8 @@ class OEFChannel(Agent):
                           dialogue_id=dialogue_id,
                           target=target,
                           performative=FIPAMessage.Performative.DECLINE)
-        envelope = Envelope(to=self.public_key, sender=origin, protocol_id=FIPAMessage.protocol_id, message=msg)
+        msg_bytes = FIPASerializer().encode(msg)
+        envelope = Envelope(to=self.public_key, sender=origin, protocol_id=FIPAMessage.protocol_id, message=msg_bytes)
         self.in_queue.put(envelope)
 
     def on_search_result(self, search_id: int, agents: List[str]) -> None:
@@ -211,7 +220,8 @@ class OEFChannel(Agent):
         """
         self.mail_stats.search_end(search_id, len(agents))
         msg = OEFMessage(oef_type=OEFMessage.Type.SEARCH_RESULT, id=search_id, agents=agents)
-        envelope = Envelope(to=self.public_key, sender=None, protocol_id=OEFMessage.protocol_id, message=msg)
+        msg_bytes = OEFSerializer().encode(msg)
+        envelope = Envelope(to=self.public_key, sender=None, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
         self.in_queue.put(envelope)
 
     def on_oef_error(self, answer_id: int, operation: OEFErrorOperation) -> None:
@@ -225,7 +235,8 @@ class OEFChannel(Agent):
         msg = OEFMessage(oef_type=OEFMessage.Type.OEF_ERROR,
                          id=answer_id,
                          operation=operation)
-        envelope = Envelope(to=self.public_key, sender=None, protocol_id=OEFMessage.protocol_id, message=msg)
+        msg_bytes = OEFSerializer().encode(msg)
+        envelope = Envelope(to=self.public_key, sender=None, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
         self.in_queue.put(envelope)
 
     def on_dialogue_error(self, answer_id: int, dialogue_id: int, origin: str) -> None:
@@ -241,7 +252,8 @@ class OEFChannel(Agent):
                          id=answer_id,
                          dialogue_id=dialogue_id,
                          origin=origin)
-        envelope = Envelope(to=self.public_key, sender=None, protocol_id=OEFMessage.protocol_id, message=msg)
+        msg_bytes = OEFSerializer().encode(msg)
+        envelope = Envelope(to=self.public_key, sender=None, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
         self.in_queue.put(envelope)
 
     def send(self, envelope: Envelope) -> None:
@@ -256,15 +268,9 @@ class OEFChannel(Agent):
         elif envelope.protocol_id == "fipa":
             self.send_fipa_message(envelope)
         elif envelope.protocol_id == "bytes":
-            message_id = envelope.message.get("id")
-            dialogue_id = envelope.message.get("dialogue_id")
-            content = envelope.message.get("content")
-            self.send_message(message_id, dialogue_id, envelope.to, content)
+            self.send_bytes_message(envelope)
         elif envelope.protocol_id == "default":
-            message_id = envelope.message.get("id")
-            dialogue_id = 0
-            content = envelope.message.get("content")
-            self.send_message(message_id, dialogue_id, envelope.to, content)
+            self.send_default_message(envelope)
         else:
             raise ValueError("Cannot send message.")
 
@@ -275,31 +281,32 @@ class OEFChannel(Agent):
         :param envelope: the message.
         :return: None
         """
-        oef_type = envelope.message.get("type")
+        oef_message = OEFSerializer().decode(envelope.message)
+        oef_type = OEFMessage.Type(oef_message.get("type"))
         if oef_type == OEFMessage.Type.REGISTER_SERVICE:
-            id = envelope.message.get("id")
-            service_description = envelope.message.get("service_description")
-            service_id = envelope.message.get("service_id")
+            id = oef_message.get("id")
+            service_description = oef_message.get("service_description")
+            service_id = oef_message.get("service_id")
             self.register_service(id, service_description, service_id)
         elif oef_type == OEFMessage.Type.REGISTER_AGENT:
-            id = envelope.message.get("id")
-            agent_description = envelope.message.get("agent_description")
+            id = oef_message.get("id")
+            agent_description = oef_message.get("agent_description")
             self.register_agent(id, agent_description)
         elif oef_type == OEFMessage.Type.UNREGISTER_SERVICE:
-            id = envelope.message.get("id")
-            service_description = envelope.message.get("service_description")
-            service_id = envelope.message.get("service_id")
+            id = oef_message.get("id")
+            service_description = oef_message.get("service_description")
+            service_id = oef_message.get("service_id")
             self.unregister_service(id, service_description, service_id)
         elif oef_type == OEFMessage.Type.UNREGISTER_AGENT:
-            id = envelope.message.get("id")
+            id = oef_message.get("id")
             self.unregister_agent(id)
         elif oef_type == OEFMessage.Type.SEARCH_AGENTS:
-            id = envelope.message.get("id")
-            query = envelope.message.get("query")
+            id = oef_message.get("id")
+            query = oef_message.get("query")
             self.search_agents(id, query)
         elif oef_type == OEFMessage.Type.SEARCH_SERVICES:
-            id = envelope.message.get("id")
-            query = envelope.message.get("query")
+            id = oef_message.get("id")
+            query = oef_message.get("query")
             self.mail_stats.search_start(id)
             self.search_services(id, query)
         else:
@@ -312,16 +319,17 @@ class OEFChannel(Agent):
         :param envelope: the message.
         :return: None
         """
-        id = envelope.message.get("id")
-        dialogue_id = envelope.message.get("dialogue_id")
+        fipa_message = FIPASerializer().decode(envelope.message)
+        id = fipa_message.get("id")
+        dialogue_id = fipa_message.get("dialogue_id")
         destination = envelope.to
-        target = envelope.message.get("target")
-        performative = envelope.message.get("performative")
+        target = fipa_message.get("target")
+        performative = FIPAMessage.Performative(fipa_message.get("performative"))
         if performative == FIPAMessage.Performative.CFP:
-            query = envelope.message.get("query")
+            query = fipa_message.get("query")
             self.send_cfp(id, dialogue_id, destination, target, query)
         elif performative == FIPAMessage.Performative.PROPOSE:
-            proposal = envelope.message.get("proposal")
+            proposal = fipa_message.get("proposal")
             self.send_propose(id, dialogue_id, destination, target, proposal)
         elif performative == FIPAMessage.Performative.ACCEPT:
             self.send_accept(id, dialogue_id, destination, target)
@@ -331,6 +339,14 @@ class OEFChannel(Agent):
             self.send_decline(id, dialogue_id, destination, target)
         else:
             raise ValueError("OEF FIPA message not recognized.")
+
+    def send_bytes_message(self, envelope: Envelope):
+        """Send a 'bytes' message."""
+        self.send_message(STUB_MESSSAGE_ID, STUB_DIALOGUE_ID, envelope.to, envelope.encode())
+
+    def send_default_message(self, envelope: Envelope):
+        """Send a 'default' message."""
+        self.send_message(STUB_MESSSAGE_ID, STUB_DIALOGUE_ID, envelope.to, envelope.encode())
 
 
 class OEFConnection(Connection):

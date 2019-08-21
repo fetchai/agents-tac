@@ -23,24 +23,24 @@ import json
 
 import base58
 
-from tac.aea.mail.messages import Message, SimpleMessage
+from tac.aea.mail.messages import Message, DefaultMessage
 from tac.aea.mail.protocol import Serializer
 
 
-class SimpleSerializer(Serializer):
-    """Serialization for the 'simple' protocol."""
+class DefaultSerializer(Serializer):
+    """Serialization for the 'default' protocol."""
 
     def encode(self, msg: Message) -> bytes:
-        """Encode a 'Simple' message into bytes."""
+        """Encode a 'default' message into bytes."""
         body = {}
 
         msg_type = msg.get("type")
-        assert msg_type in set(SimpleMessage.Type)
+        assert msg_type in set(DefaultMessage.Type)
         body["type"] = str(msg_type.value)
 
-        if msg_type == SimpleMessage.Type.BYTES:
+        if msg_type == DefaultMessage.Type.BYTES:
             body["content"] = base58.b58encode(msg.get("content")).decode("utf-8")
-        elif msg_type == SimpleMessage.Type.ERROR:
+        elif msg_type == DefaultMessage.Type.ERROR:
             body["error_code"] = msg.get("error_code")
             body["error_msg"] = msg.get("error_msg")
         else:
@@ -50,16 +50,16 @@ class SimpleSerializer(Serializer):
         return bytes_msg
 
     def decode(self, obj: bytes) -> Message:
-        """Decode bytes into a 'Simple' message."""
+        """Decode bytes into a 'default' message."""
         json_body = json.loads(obj.decode("utf-8"))
         body = {}
 
-        msg_type = SimpleMessage.Type(json_body["type"])
+        msg_type = DefaultMessage.Type(json_body["type"])
         body["type"] = msg_type
-        if msg_type == SimpleMessage.Type.BYTES:
+        if msg_type == DefaultMessage.Type.BYTES:
             content = base58.b58decode(json_body["content"].encode("utf-8"))
             body["content"] = content
-        elif msg_type == SimpleMessage.Type.ERROR:
+        elif msg_type == DefaultMessage.Type.ERROR:
             body["error_code"] = json_body["error_code"]
             body["error_msg"] = json_body["error_msg"]
         else:
