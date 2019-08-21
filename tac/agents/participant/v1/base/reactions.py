@@ -306,12 +306,11 @@ class OEFReactions(OEFReactionInterface):
             dialogue = self.game_instance.dialogues.create_self_initiated(agent_pbk, self.crypto.public_key, not is_searching_for_sellers)
             cfp = FIPAMessage(message_id=STARTING_MESSAGE_ID, dialogue_id=dialogue.dialogue_label.dialogue_id,
                               target=STARTING_MESSAGE_TARGET, performative=FIPAMessage.Performative.CFP, query=json.dumps(services).encode('utf-8'))
-            cfp_bytes = FIPASerializer().encode(cfp)
-            envelope = Envelope(to=agent_pbk, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id, message=cfp_bytes)
-            logger.debug("[{}]: send_cfp_as_{}: msg_id={}, dialogue_id={}, destination={}, target={}, services={}"
-                         .format(self.agent_name, dialogue.role, cfp.get("id"), cfp.get("dialogue_id"), envelope.to, cfp.get("target"), services))
             dialogue.outgoing_extend([cfp])
-            self.mailbox.outbox.put(envelope)
+            cfp_bytes = FIPASerializer().encode(cfp)
+            logger.debug("[{}]: send_cfp_as_{}: msg_id={}, dialogue_id={}, destination={}, target={}, services={}"
+                         .format(self.agent_name, dialogue.role, cfp.get("id"), cfp.get("dialogue_id"), agent_pbk, cfp.get("target"), services))
+            self.mailbox.outbox.put_message(to=agent_pbk, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id, message=cfp_bytes)
 
     def _register_to_tac(self, controller_pbk: str) -> None:
         """

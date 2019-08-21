@@ -116,6 +116,7 @@ class OEFMessage(Message):
         SEARCH_RESULT = "search_result"
 
         def __str__(self):
+            """Get string representation."""
             return self.value
 
     def __init__(self, oef_type: Optional[Type] = None,
@@ -237,6 +238,7 @@ class FIPAMessage(Message):
         DECLINE = "decline"
 
         def __str__(self):
+            """Get string representation."""
             return self.value
 
     def __init__(self, message_id: Optional[int] = None,

@@ -208,8 +208,8 @@ class FIPABehaviour:
         :return: a Decline, or an Accept and a Transaction, or a Transaction (in a Message object)
         """
         assert accept.get("performative") == FIPAMessage.Performative.ACCEPT \
-               and dialogue.dialogue_label in self.game_instance.transaction_manager.pending_proposals \
-               and accept.get("target") in self.game_instance.transaction_manager.pending_proposals[dialogue.dialogue_label]
+            and dialogue.dialogue_label in self.game_instance.transaction_manager.pending_proposals \
+            and accept.get("target") in self.game_instance.transaction_manager.pending_proposals[dialogue.dialogue_label]
         logger.debug("[{}]: on_accept: msg_id={}, dialogue_id={}, origin={}, target={}"
                      .format(self.agent_name, accept.get("id"), accept.get("dialogue_id"), dialogue.dialogue_label.dialogue_opponent_pbk, accept.get("target")))
         new_msg_id = accept.get("id") + 1
@@ -251,8 +251,8 @@ class FIPABehaviour:
         :return: a Transaction
         """
         assert match_accept.get("performative") == FIPAMessage.Performative.MATCH_ACCEPT \
-               and dialogue.dialogue_label in self.game_instance.transaction_manager.pending_initial_acceptances \
-               and match_accept.get("target") in self.game_instance.transaction_manager.pending_initial_acceptances[dialogue.dialogue_label]
+            and dialogue.dialogue_label in self.game_instance.transaction_manager.pending_initial_acceptances \
+            and match_accept.get("target") in self.game_instance.transaction_manager.pending_initial_acceptances[dialogue.dialogue_label]
         logger.debug("[{}]: on_match_accept: msg_id={}, dialogue_id={}, origin={}, target={}"
                      .format(self.agent_name, match_accept.get("id"), match_accept.get("dialogue_id"), dialogue.dialogue_label.dialogue_opponent_pbk, match_accept.get("target")))
         results = []

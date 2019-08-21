@@ -33,6 +33,9 @@ from tac.aea.crypto.base import Crypto
 
 logger = logging.getLogger(__name__)
 
+Handler = object
+Behaviour = object
+
 
 class AgentState(Enum):
     """Enumeration for an agent state."""
@@ -81,8 +84,8 @@ class Agent:
         self._liveness = Liveness()
         self._timeout = timeout
 
-        self._handlers = {} # type: Dict[ProtocolId, Handler]
-        self._behaviours = {} # type: Dict[ProtocolId, Behaviour]
+        self._handlers = {}  # type: Dict[ProtocolId, Handler]
+        self._behaviours = {}  # type: Dict[ProtocolId, Behaviour]
 
         self.debug = debug
 

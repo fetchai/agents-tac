@@ -34,8 +34,6 @@ from tac.aea.dialogue.base import Dialogue as BaseDialogue
 from tac.aea.dialogue.base import Dialogues as BaseDialogues
 from tac.aea.mail.messages import FIPAMessage, Message, Address
 
-from tac.aea.mail.protocol import Envelope
-
 Action = Any
 logger = logging.getLogger(__name__)
 

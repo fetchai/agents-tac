@@ -29,11 +29,11 @@ This module contains the message handler classes.
 import logging
 from typing import Any
 
-from tac.aea.mail.protocol import Envelope, JSONSerializer
+from tac.aea.mail.protocol import Envelope
 from tac.aea.agent import Liveness
 from tac.aea.crypto.base import Crypto
 from tac.aea.mail.base import MailBox
-from tac.aea.mail.messages import OEFMessage, Message, Address
+from tac.aea.mail.messages import OEFMessage, Message
 from tac.aea.protocols.default.serialization import DefaultSerializer
 from tac.aea.protocols.fipa.serialization import FIPASerializer
 from tac.aea.protocols.oef.serialization import OEFSerializer
@@ -73,7 +73,7 @@ class DialogueHandler(DialogueActions, DialogueReactions):
 
         :return: None
         """
-        message = FIPASerializer().decode(envelope.message)  # type: # Message
+        message = FIPASerializer().decode(envelope.message)  # type: Message
         logger.debug("Handling Dialogue message. type={}".format(type(message.get("performative"))))
         if self.dialogues.is_belonging_to_registered_dialogue(message, self.crypto.public_key, envelope.sender):
             self.on_existing_dialogue(message, envelope.sender)

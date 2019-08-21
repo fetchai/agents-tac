@@ -25,8 +25,8 @@ from abc import abstractmethod
 from queue import Queue
 from typing import Optional
 
-from tac.aea.mail.messages import Address, ProtocolId, Message
-from tac.aea.mail.protocol import Envelope, Encoder
+from tac.aea.mail.messages import Address, ProtocolId
+from tac.aea.mail.protocol import Envelope
 
 logger = logging.getLogger(__name__)
 
