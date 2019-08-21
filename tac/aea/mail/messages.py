@@ -98,6 +98,7 @@ class Message:
 
 class OEFErrorOperation(Enum):
     """Operation code for the OEF. It is returned in the OEF Error messages."""
+
     REGISTER_SERVICE = 0
     UNREGISTER_SERVICE = 1
     REGISTER_DESCRIPTION = 2

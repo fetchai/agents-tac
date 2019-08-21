@@ -24,7 +24,6 @@ import time
 from tac.aea.helpers.local_node import LocalNode, OEFLocalConnection
 from tac.aea.mail.base import MailBox
 from tac.aea.mail.messages import DefaultMessage, FIPAMessage
-from tac.aea.mail.oef import OEFMailBox
 from tac.aea.mail.protocol import Envelope
 from tac.aea.protocols.default.serialization import DefaultSerializer
 from tac.aea.protocols.fipa.serialization import FIPASerializer

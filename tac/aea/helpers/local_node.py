@@ -27,7 +27,7 @@ import threading
 from collections import defaultdict
 from queue import Queue
 from threading import Thread
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Optional
 
 from oef.query import Query
 from oef.schema import Description
@@ -94,6 +94,7 @@ class LocalNode:
             self.handle_agent_message(envelope)
 
     def handle_oef_message(self, envelope):
+        """Handle an OEF request."""
         oef_message = OEFSerializer().decode(envelope.message)
         sender = envelope.sender
         request_id = oef_message.get("id")
@@ -234,10 +235,12 @@ class LocalNode:
         self._send(envelope)
 
     def _send(self, envelope: Envelope):
+        """Send a message."""
         destination = envelope.to
         self._queues[destination].put_nowait(envelope)
 
     def disconnect(self, public_key: str):
+        """Disconnect an agent."""
         with self._lock:
             self._queues.pop(public_key, None)
             self.services.pop(public_key, None)
@@ -328,4 +331,3 @@ class OEFLocalConnection(Connection):
     def stop(self):
         """Tear down the connection."""
         self._connection = None
-
