@@ -23,8 +23,9 @@ from google.protobuf.struct_pb2 import Struct
 from oef import data_model_instance_pb2
 from oef.schema import Description
 
-from tac.aea.mail.messages import Message, FIPAMessage
-from tac.aea.mail.protocol import Serializer
+from tac.aea.protocols.base.message import Message
+from tac.aea.protocols.base.serialization import Serializer
+from tac.aea.protocols.fipa.message import FIPAMessage
 from tac.aea.protocols.fipa import fipa_pb2
 
 

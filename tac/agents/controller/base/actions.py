@@ -31,7 +31,7 @@ from oef.schema import Description, DataModel, AttributeSchema
 from tac.aea.agent import Liveness
 from tac.aea.crypto.base import Crypto
 from tac.aea.mail.base import MailBox
-from tac.aea.mail.messages import OEFMessage
+from tac.aea.protocols.oef.message import OEFMessage
 from tac.aea.protocols.oef.serialization import OEFSerializer, DEFAULT_OEF
 from tac.agents.controller.base.interfaces import OEFActionInterface
 

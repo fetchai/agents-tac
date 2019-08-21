@@ -26,9 +26,12 @@ import pprint
 from typing import List
 
 from tac.aea.crypto.base import Crypto
-from tac.aea.mail.messages import FIPAMessage, Message, DefaultMessage
-from tac.aea.mail.protocol import Envelope
+
+from tac.aea.mail.base import Envelope
+from tac.aea.protocols.base.message import Message
+from tac.aea.protocols.default.message import DefaultMessage
 from tac.aea.protocols.default.serialization import DefaultSerializer
+from tac.aea.protocols.fipa.message import FIPAMessage
 from tac.aea.protocols.fipa.serialization import FIPASerializer
 from tac.agents.participant.v1.base.dialogues import Dialogue
 from tac.agents.participant.v1.base.game_instance import GameInstance

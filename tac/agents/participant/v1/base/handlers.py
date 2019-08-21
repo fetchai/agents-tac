@@ -31,11 +31,11 @@ from typing import Any
 
 from tac.aea.agent import Liveness
 from tac.aea.crypto.base import Crypto
-from tac.aea.mail.base import MailBox
-from tac.aea.mail.messages import OEFMessage, Message
-from tac.aea.mail.protocol import Envelope
+from tac.aea.mail.base import MailBox, Envelope
+from tac.aea.protocols.base.message import Message
 from tac.aea.protocols.default.serialization import DefaultSerializer
 from tac.aea.protocols.fipa.serialization import FIPASerializer
+from tac.aea.protocols.oef.message import OEFMessage
 from tac.aea.protocols.oef.serialization import OEFSerializer
 from tac.agents.participant.v1.base.actions import DialogueActions, ControllerActions, OEFActions
 from tac.agents.participant.v1.base.game_instance import GameInstance

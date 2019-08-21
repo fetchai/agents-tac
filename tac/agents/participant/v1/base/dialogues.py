@@ -32,7 +32,9 @@ from typing import Any, Dict, List, Optional
 from tac.aea.dialogue.base import DialogueLabel
 from tac.aea.dialogue.base import Dialogue as BaseDialogue
 from tac.aea.dialogue.base import Dialogues as BaseDialogues
-from tac.aea.mail.messages import FIPAMessage, Message, Address
+from tac.aea.mail.base import Address
+from tac.aea.protocols.base.message import Message
+from tac.aea.protocols.fipa.message import FIPAMessage
 
 Action = Any
 logger = logging.getLogger(__name__)

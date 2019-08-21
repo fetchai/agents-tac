@@ -18,4 +18,4 @@
 #
 # ------------------------------------------------------------------------------
 
-"""This module contains the support resources for the default protocol."""
+"""This module contains the support resources for the base protocol."""

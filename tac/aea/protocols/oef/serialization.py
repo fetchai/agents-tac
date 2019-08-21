@@ -32,8 +32,9 @@ from oef.messages import OEFErrorOperation
 from oef.query import Query, ConstraintExpr, And, Or, Not, Constraint
 from oef.schema import Description, DataModel
 
-from tac.aea.mail.messages import Message, OEFMessage
-from tac.aea.mail.protocol import Serializer
+from tac.aea.protocols.base.message import Message
+from tac.aea.protocols.base.serialization import Serializer
+from tac.aea.protocols.oef.message import OEFMessage
 
 
 """default 'to' field for OEF envelopes."""
@@ -133,7 +134,7 @@ class QueryWrapper:
 
 
 class OEFSerializer(Serializer):
-    """Serialization for the FIPA protocol."""
+    """Serialization for the OEF protocol."""
 
     def encode(self, msg: Message) -> bytes:
         """

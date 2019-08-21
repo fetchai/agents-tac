@@ -33,8 +33,9 @@ from oef.query import Query, Constraint, GtEq
 from tac.aea.agent import Liveness
 from tac.aea.crypto.base import Crypto
 from tac.aea.mail.base import MailBox
-from tac.aea.mail.messages import OEFMessage, DefaultMessage
+from tac.aea.protocols.default.message import DefaultMessage
 from tac.aea.protocols.default.serialization import DefaultSerializer
+from tac.aea.protocols.oef.message import OEFMessage
 from tac.aea.protocols.oef.serialization import OEFSerializer, DEFAULT_OEF
 from tac.agents.participant.v1.base.game_instance import GameInstance
 from tac.agents.participant.v1.base.interfaces import ControllerActionInterface, OEFActionInterface, \

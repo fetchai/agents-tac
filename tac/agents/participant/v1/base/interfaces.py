@@ -22,8 +22,8 @@
 
 from abc import abstractmethod
 
-from tac.aea.mail.messages import Message
-from tac.aea.mail.protocol import Envelope
+from tac.aea.mail.base import Envelope
+from tac.aea.protocols.base.message import Message
 from tac.platform.protocol import Error, TransactionConfirmation, StateUpdate, GameData
 
 

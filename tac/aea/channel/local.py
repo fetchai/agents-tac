@@ -18,4 +18,4 @@
 #
 # ------------------------------------------------------------------------------
 
-"""This module contains the support resources for the default protocol."""
+"""Extension to the Local Node."""

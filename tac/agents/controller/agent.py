@@ -32,8 +32,8 @@ from typing import Union, Optional
 import dateutil
 
 from tac.aea.agent import Agent
-from tac.aea.mail.oef import OEFNetworkMailBox
-from tac.aea.mail.protocol import Envelope
+from tac.aea.channel.oef import OEFNetworkMailBox
+from tac.aea.mail.base import Envelope
 from tac.agents.controller.base.handlers import OEFHandler, GameHandler, AgentMessageDispatcher
 from tac.agents.controller.base.tac_parameters import TACParameters
 from tac.agents.participant.v1.base.helpers import is_oef_message
