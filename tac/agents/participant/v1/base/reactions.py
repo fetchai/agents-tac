@@ -380,9 +380,9 @@ class DialogueReactions(DialogueReactionInterface):
         is_seller = services['description'] == TAC_DEMAND_DATAMODEL_NAME
         dialogue = self.dialogues.create_opponent_initiated(sender, message.get("dialogue_id"), is_seller)
         logger.debug("[{}]: saving dialogue (as {}): dialogue_id={}".format(self.agent_name, dialogue.role, dialogue.dialogue_label.dialogue_id))
-        results = self._handle(message, dialogue)
-        for result in results:
-            self.mailbox.outbox.put(result)
+        envelopes = self._handle(message, dialogue)
+        for envelope in envelopes:
+            self.mailbox.outbox.put(envelope)
 
     def on_existing_dialogue(self, message: Message, sender: Address) -> None:
         """
@@ -394,9 +394,9 @@ class DialogueReactions(DialogueReactionInterface):
         """
         dialogue = self.dialogues.get_dialogue(message, sender, self.crypto.public_key)
 
-        results = self._handle(message, dialogue)
-        for result in results:
-            self.mailbox.outbox.put(result)
+        envelopes = self._handle(message, dialogue)
+        for envelope in envelopes:
+            self.mailbox.outbox.put(envelope)
 
     def on_unidentified_dialogue(self, message: Message, sender: Address) -> None:
         """
