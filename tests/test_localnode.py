@@ -22,8 +22,11 @@ import asyncio
 import time
 
 from tac.aea.helpers.local_node import LocalNode, OEFLocalProxy
-from tac.aea.mail.messages import ByteMessage, FIPAMessage
+from tac.aea.mail.messages import FIPAMessage, DefaultMessage
 from tac.aea.mail.oef import OEFMailBox
+from tac.aea.mail.protocol import Envelope
+from tac.aea.protocols.default.serialization import DefaultSerializer
+from tac.aea.protocols.fipa.serialization import FIPASerializer
 
 
 def test_connection():
@@ -48,27 +51,52 @@ def test_communication():
         mailbox1.connect()
         mailbox2.connect()
 
-        mailbox1.send(ByteMessage("mailbox2", "mailbox1", message_id=0, dialogue_id=0, content=b"hello"))
-        mailbox1.send(FIPAMessage("mailbox2", "mailbox1", 0, 0, 0, FIPAMessage.Performative.CFP, query=None))
-        mailbox1.send(FIPAMessage("mailbox2", "mailbox1", 0, 0, 0, FIPAMessage.Performative.PROPOSE, proposal=[]))
-        mailbox1.send(FIPAMessage("mailbox2", "mailbox1", 0, 0, 0, FIPAMessage.Performative.ACCEPT))
-        mailbox1.send(FIPAMessage("mailbox2", "mailbox1", 0, 0, 0, FIPAMessage.Performative.DECLINE))
+        msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=b"hello")
+        msg_bytes = DefaultSerializer().encode(msg)
+        envelope = Envelope(to="mailbox2", sender="mailbox1", protocol_id=DefaultMessage.protocol_id, message=msg_bytes)
+        mailbox1.send(envelope)
+
+        msg = FIPAMessage(0, 0, 0, FIPAMessage.Performative.CFP, query=None)
+        msg_bytes = FIPASerializer().encode(msg)
+        envelope = Envelope(to="mailbox2", sender="mailbox1", protocol_id=FIPAMessage.protocol_id, message=msg_bytes)
+        mailbox1.send(envelope)
+
+        msg = FIPAMessage(0, 0, 0, FIPAMessage.Performative.PROPOSE, proposal=[])
+        msg_bytes = FIPASerializer().encode(msg)
+        envelope = Envelope(to="mailbox2", sender="mailbox1", protocol_id=FIPAMessage.protocol_id, message=msg_bytes)
+        mailbox1.send(envelope)
+
+        msg = FIPAMessage(0, 0, 0, FIPAMessage.Performative.ACCEPT)
+        msg_bytes = FIPASerializer().encode(msg)
+        envelope = Envelope(to="mailbox2", sender="mailbox1", protocol_id=FIPAMessage.protocol_id, message=msg_bytes)
+        mailbox1.send(envelope)
+
+        msg = FIPAMessage(0, 0, 0, FIPAMessage.Performative.DECLINE)
+        msg_bytes = FIPASerializer().encode(msg)
+        envelope = Envelope(to="mailbox2", sender="mailbox1", protocol_id=FIPAMessage.protocol_id, message=msg_bytes)
+        mailbox1.send(envelope)
 
         time.sleep(1.0)
 
-        msg = mailbox2.inbox.get(block=True, timeout=1.0)
+        envelope = mailbox2.inbox.get(block=True, timeout=1.0)
+        msg = DefaultSerializer().decode(envelope.message)
+        assert envelope.protocol_id == "default"
         assert msg.get("content") == b"hello"
-        msg = mailbox2.inbox.get(block=True, timeout=1.0)
-        assert msg.protocol_id == "fipa"
+        envelope = mailbox2.inbox.get(block=True, timeout=1.0)
+        msg = FIPASerializer().decode(envelope.message)
+        assert envelope.protocol_id == "fipa"
         assert msg.get("performative") == FIPAMessage.Performative.CFP
-        msg = mailbox2.inbox.get(block=True, timeout=1.0)
-        assert msg.protocol_id == "fipa"
+        envelope = mailbox2.inbox.get(block=True, timeout=1.0)
+        msg = FIPASerializer().decode(envelope.message)
+        assert envelope.protocol_id == "fipa"
         assert msg.get("performative") == FIPAMessage.Performative.PROPOSE
-        msg = mailbox2.inbox.get(block=True, timeout=1.0)
-        assert msg.protocol_id == "fipa"
+        envelope = mailbox2.inbox.get(block=True, timeout=1.0)
+        msg = FIPASerializer().decode(envelope.message)
+        assert envelope.protocol_id == "fipa"
         assert msg.get("performative") == FIPAMessage.Performative.ACCEPT
-        msg = mailbox2.inbox.get(block=True, timeout=1.0)
-        assert msg.protocol_id == "fipa"
+        envelope = mailbox2.inbox.get(block=True, timeout=1.0)
+        msg = FIPASerializer().decode(envelope.message)
+        assert envelope.protocol_id == "fipa"
         assert msg.get("performative") == FIPAMessage.Performative.DECLINE
 
         mailbox1.disconnect()
