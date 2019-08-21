@@ -42,10 +42,10 @@ from typing import Any, Dict, Optional, List, Set, Type, TYPE_CHECKING
 
 from tac.aea.agent import Liveness
 from tac.aea.crypto.base import Crypto
-from tac.aea.mail.base import MailBox
-from tac.aea.mail.messages import OEFMessage, DefaultMessage
-from tac.aea.mail.protocol import Envelope
+from tac.aea.mail.base import MailBox, Envelope
+from tac.aea.protocols.default.message import DefaultMessage
 from tac.aea.protocols.default.serialization import DefaultSerializer
+from tac.aea.protocols.oef.message import OEFMessage
 from tac.aea.protocols.oef.serialization import OEFSerializer
 from tac.agents.controller.base.actions import OEFActions
 from tac.agents.controller.base.helpers import generate_good_pbk_to_name

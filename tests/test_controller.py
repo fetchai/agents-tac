@@ -26,8 +26,8 @@ import pytest
 import time
 from threading import Thread
 
-from tac.aea.mail.messages import DefaultMessage
-from tac.aea.mail.protocol import Envelope
+from tac.aea.mail.base import Envelope
+from tac.aea.protocols.default.message import DefaultMessage
 from tac.aea.protocols.default.serialization import DefaultSerializer
 from .common import TOEFAgent
 # from oef.core import AsyncioCore  # OEF-SDK 0.6.1

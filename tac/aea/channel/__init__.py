@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # ------------------------------------------------------------------------------
@@ -18,4 +19,4 @@
 #
 # ------------------------------------------------------------------------------
 
-"""This module contains the support resources for the default protocol."""
+"""This module contains the channel modules."""

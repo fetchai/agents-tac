@@ -24,7 +24,7 @@ import time
 from threading import Thread
 
 from tac.aea.agent import Agent, AgentState
-from tac.aea.mail.oef import OEFNetworkMailBox
+from tac.aea.channel.oef import OEFNetworkMailBox
 
 
 class TAgent(Agent):

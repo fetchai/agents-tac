@@ -23,8 +23,9 @@ import json
 
 import base58
 
-from tac.aea.mail.messages import Message, DefaultMessage
-from tac.aea.mail.protocol import Serializer
+from tac.aea.protocols.base.message import Message
+from tac.aea.protocols.base.serialization import Serializer
+from tac.aea.protocols.default.message import DefaultMessage
 
 
 class DefaultSerializer(Serializer):

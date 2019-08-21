@@ -23,7 +23,7 @@ from threading import Timer
 from unittest.mock import MagicMock
 
 from tac.aea.agent import Agent
-from tac.aea.mail.oef import OEFNetworkMailBox
+from tac.aea.channel.oef import OEFNetworkMailBox
 
 
 class TAgent(Agent):

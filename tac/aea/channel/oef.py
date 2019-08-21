@@ -32,9 +32,9 @@ from oef.messages import OEFErrorOperation, CFP_TYPES, PROPOSE_TYPES
 from oef.proxy import OEFNetworkProxy
 
 from tac.aea.helpers.local_node import LocalNode, OEFLocalProxy
-from tac.aea.mail.base import Connection, MailBox
-from tac.aea.mail.messages import OEFMessage, FIPAMessage
-from tac.aea.mail.protocol import Envelope
+from tac.aea.mail.base import Connection, MailBox, Envelope
+from tac.aea.protocols.fipa.message import FIPAMessage
+from tac.aea.protocols.oef.message import OEFMessage
 from tac.aea.protocols.fipa.serialization import FIPASerializer
 from tac.aea.protocols.oef.serialization import OEFSerializer
 

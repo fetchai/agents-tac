@@ -18,4 +18,29 @@
 #
 # ------------------------------------------------------------------------------
 
-"""This module contains the support resources for the default protocol."""
+"""This module contains the default message definition."""
+from enum import Enum
+from typing import Optional
+
+from tac.aea.protocols.base.message import Message
+
+
+class DefaultMessage(Message):
+    """The Default message class."""
+
+    protocol_id = "default"
+
+    class Type(Enum):
+        """Default message types."""
+
+        BYTES = "bytes"
+        ERROR = "error"
+
+    def __init__(self, type: Optional[Type] = None,
+                 **kwargs):
+        """
+        Initialize.
+
+        :param type: the type.
+        """
+        super().__init__(type=type, **kwargs)

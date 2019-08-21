@@ -30,7 +30,7 @@ from abc import abstractmethod
 from typing import Dict, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from tac.aea.mail.messages import Message
+    from tac.aea.protocols.base.message import Message
 
 
 class DialogueLabel:

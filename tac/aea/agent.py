@@ -27,9 +27,8 @@ from abc import abstractmethod
 from enum import Enum
 from typing import Dict, Optional
 
-from tac.aea.mail.base import InBox, OutBox, MailBox
-from tac.aea.mail.messages import ProtocolId
 from tac.aea.crypto.base import Crypto
+from tac.aea.mail.base import InBox, OutBox, MailBox, ProtocolId
 
 logger = logging.getLogger(__name__)
 

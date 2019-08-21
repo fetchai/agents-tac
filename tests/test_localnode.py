@@ -21,11 +21,12 @@
 import asyncio
 import time
 
+from tac.aea.mail.base import Envelope
+from tac.aea.channel.oef import OEFMailBox
 from tac.aea.helpers.local_node import LocalNode, OEFLocalProxy
-from tac.aea.mail.messages import DefaultMessage, FIPAMessage
-from tac.aea.mail.oef import OEFMailBox
-from tac.aea.mail.protocol import Envelope
+from tac.aea.protocols.default.message import DefaultMessage
 from tac.aea.protocols.default.serialization import DefaultSerializer
+from tac.aea.protocols.fipa.message import FIPAMessage
 from tac.aea.protocols.fipa.serialization import FIPASerializer
 
 

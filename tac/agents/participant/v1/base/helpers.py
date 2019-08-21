@@ -26,7 +26,7 @@ from oef.query import Query, Constraint, GtEq, Or
 from oef.schema import AttributeSchema, DataModel, Description
 
 from tac.aea.dialogue.base import DialogueLabel
-from tac.aea.mail.protocol import Envelope
+from tac.aea.mail.base import Envelope
 
 logger = logging.getLogger(__name__)
 

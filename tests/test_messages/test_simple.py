@@ -19,8 +19,8 @@
 
 """This module contains the tests of the messages module."""
 
-from tac.aea.mail.messages import DefaultMessage
-from tac.aea.mail.protocol import Envelope
+from tac.aea.mail.base import Envelope
+from tac.aea.protocols.default.message import DefaultMessage
 from tac.aea.protocols.default.serialization import DefaultSerializer
 
 
