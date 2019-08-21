@@ -33,9 +33,9 @@ from typing import List
 from tac.aea.agent import Liveness
 from tac.aea.crypto.base import Crypto
 from tac.aea.mail.base import MailBox
-from tac.aea.mail.messages import FIPAMessage, Address, Message, SimpleMessage
+from tac.aea.mail.messages import FIPAMessage, Address, Message, DefaultMessage
 from tac.aea.mail.protocol import Envelope
-from tac.aea.protocols.default.serialization import SimpleSerializer
+from tac.aea.protocols.default.serialization import DefaultSerializer
 from tac.aea.protocols.fipa.serialization import FIPASerializer
 from tac.agents.participant.base.dialogues import Dialogue
 from tac.agents.participant.base.game_instance import GameInstance, GamePhase
@@ -185,9 +185,9 @@ class ControllerReactions(ControllerReactionInterface):
         :return: None
         """
         tac_msg = GetStateUpdate(self.crypto.public_key, self.crypto).serialize()
-        msg = SimpleMessage(type=SimpleMessage.Type.BYTES, content=tac_msg)
-        msg_bytes = SimpleSerializer().encode(msg)
-        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=SimpleMessage.protocol_id, message=msg_bytes)
+        msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=tac_msg)
+        msg_bytes = DefaultSerializer().encode(msg)
+        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=DefaultMessage.protocol_id, message=msg_bytes)
 
 
 class OEFReactions(OEFReactionInterface):
@@ -324,9 +324,9 @@ class OEFReactions(OEFReactionInterface):
         self.game_instance.controller_pbk = controller_pbk
         self.game_instance._game_phase = GamePhase.GAME_SETUP
         tac_msg = Register(self.crypto.public_key, self.crypto, self.agent_name).serialize()
-        msg = SimpleMessage(type=SimpleMessage.Type.BYTES, content=tac_msg)
-        msg_bytes = SimpleSerializer().encode(msg)
-        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=SimpleMessage.protocol_id, message=msg_bytes)
+        msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=tac_msg)
+        msg_bytes = DefaultSerializer().encode(msg)
+        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=DefaultMessage.protocol_id, message=msg_bytes)
 
     def _rejoin_tac(self, controller_pbk: str) -> None:
         """
@@ -339,9 +339,9 @@ class OEFReactions(OEFReactionInterface):
         self.game_instance.controller_pbk = controller_pbk
         self.game_instance._game_phase = GamePhase.GAME_SETUP
         tac_msg = GetStateUpdate(self.crypto.public_key, self.crypto).serialize()
-        msg = SimpleMessage(type=SimpleMessage.Type.BYTES, content=tac_msg)
-        msg_bytes = SimpleSerializer().encode(msg)
-        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=SimpleMessage.protocol_id, message=msg_bytes)
+        msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=tac_msg)
+        msg_bytes = DefaultSerializer().encode(msg)
+        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=DefaultMessage.protocol_id, message=msg_bytes)
 
 
 class DialogueReactions(DialogueReactionInterface):
@@ -407,9 +407,9 @@ class DialogueReactions(DialogueReactionInterface):
         :return: None
         """
         logger.debug("[{}]: Unidentified dialogue.".format(self.agent_name))
-        msg = SimpleMessage(type=SimpleMessage.Type.BYTES, content=b'This message belongs to an unidentified dialogue.')
-        msg_bytes = SimpleSerializer().encode(msg)
-        self.mailbox.outbox.put_message(to=sender, sender=self.crypto.public_key, protocol_id=SimpleMessage.protocol_id, message=msg_bytes)
+        msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=b'This message belongs to an unidentified dialogue.')
+        msg_bytes = DefaultSerializer().encode(msg)
+        self.mailbox.outbox.put_message(to=sender, sender=self.crypto.public_key, protocol_id=DefaultMessage.protocol_id, message=msg_bytes)
 
     def _handle(self, message: Message, dialogue: Dialogue) -> List[Envelope]:
         """

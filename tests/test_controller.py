@@ -26,9 +26,9 @@ import pytest
 import time
 from threading import Thread
 
-from tac.aea.mail.messages import SimpleMessage
+from tac.aea.mail.messages import DefaultMessage
 from tac.aea.mail.protocol import Envelope
-from tac.aea.protocols.default.serialization import SimpleSerializer
+from tac.aea.protocols.default.serialization import DefaultSerializer
 from .common import TOEFAgent
 # from oef.core import AsyncioCore  # OEF-SDK 0.6.1
 
@@ -90,9 +90,9 @@ class TestCompetitionStopsTooFewAgentRegistered:
         agent_job.start()
 
         tac_msg = Register(crypto.public_key, crypto, 'agent_name').serialize()
-        msg = SimpleMessage(type=SimpleMessage.Type.BYTES, content=tac_msg)
-        msg_bytes = SimpleSerializer().encode(msg)
-        envelope = Envelope(to=cls.controller_agent.crypto.public_key, sender=crypto.public_key, protocol_id=SimpleMessage.protocol_id, message=msg_bytes)
+        msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=tac_msg)
+        msg_bytes = DefaultSerializer().encode(msg)
+        envelope = Envelope(to=cls.controller_agent.crypto.public_key, sender=crypto.public_key, protocol_id=DefaultMessage.protocol_id, message=msg_bytes)
         cls.agent1.send_message(0, 0, cls.controller_agent.crypto.public_key, envelope.encode())
 
         time.sleep(10.0)

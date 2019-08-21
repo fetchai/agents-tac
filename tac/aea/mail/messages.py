@@ -201,7 +201,7 @@ class ByteMessage(Message):
         super().__init__(id=message_id, dialogue_id=dialogue_id, content=content)
 
 
-class SimpleMessage(Message):
+class DefaultMessage(Message):
     """The Simple message class."""
 
     protocol_id = "default"

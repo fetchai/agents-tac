@@ -43,9 +43,9 @@ from typing import Any, Dict, Optional, List, Set, Type, TYPE_CHECKING
 from tac.aea.agent import Liveness
 from tac.aea.crypto.base import Crypto
 from tac.aea.mail.base import MailBox
-from tac.aea.mail.messages import OEFMessage, SimpleMessage
+from tac.aea.mail.messages import OEFMessage, DefaultMessage
 from tac.aea.mail.protocol import Envelope
-from tac.aea.protocols.default.serialization import SimpleSerializer
+from tac.aea.protocols.default.serialization import DefaultSerializer
 from tac.aea.protocols.oef.serialization import OEFSerializer
 from tac.agents.controller.base.actions import OEFActions
 from tac.agents.controller.base.helpers import generate_good_pbk_to_name
@@ -215,13 +215,10 @@ class TransactionHandler(RequestHandler):
         # send the transaction confirmation.
         tx_confirmation = TransactionConfirmation(tx.public_key, self.controller_agent.crypto, tx.transaction_id)
 
-        msg = SimpleMessage(type=SimpleMessage.Type.BYTES, content=tx_confirmation.serialize())
-        msg_bytes = SimpleSerializer().encode(msg)
-        self.controller_agent.outbox.put_message(to=tx.public_key, sender=self.controller_agent.crypto.public_key, protocol_id=SimpleMessage.protocol_id, message=msg_bytes)
-
-        msg = SimpleMessage(type=SimpleMessage.Type.BYTES, content=tx_confirmation.serialize())
-        msg_bytes = SimpleSerializer().encode(msg)
-        self.controller_agent.outbox.put_message(to=tx.counterparty, sender=self.controller_agent.crypto.public_key, protocol_id=SimpleMessage.protocol_id, message=msg_bytes)
+        msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=tx_confirmation.serialize())
+        msg_bytes = DefaultSerializer().encode(msg)
+        self.controller_agent.outbox.put_message(to=tx.public_key, sender=self.controller_agent.crypto.public_key, protocol_id=DefaultMessage.protocol_id, message=msg_bytes)
+        self.controller_agent.outbox.put_message(to=tx.counterparty, sender=self.controller_agent.crypto.public_key, protocol_id=DefaultMessage.protocol_id, message=msg_bytes)
 
         # log messages
         logger.debug("[{}]: Transaction '{}' settled successfully.".format(self.controller_agent.name, tx.transaction_id))
@@ -296,7 +293,7 @@ class AgentMessageDispatcher(object):
         :return: the response.
         """
         assert envelope.protocol_id == "default"
-        msg = SimpleSerializer().decode(envelope.message)
+        msg = DefaultSerializer().decode(envelope.message)
         sender = envelope.sender
         logger.debug("[{}] on_message: origin={}" .format(self.controller_agent.name, sender))
         request = self.decode(msg.get("content"), sender)
@@ -445,17 +442,17 @@ class GameHandler:
                          .format(self.agent_name, public_key, str(game_data_response)))
 
             self.game_data_per_participant[public_key] = game_data_response
-            msg = SimpleMessage(type=SimpleMessage.Type.BYTES, content=game_data_response.serialize())
-            msg_bytes = SimpleSerializer().encode(msg)
-            self.mailbox.outbox.put_message(to=public_key, sender=self.crypto.public_key, protocol_id=SimpleMessage.protocol_id, message=msg_bytes)
+            msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=game_data_response.serialize())
+            msg_bytes = DefaultSerializer().encode(msg)
+            self.mailbox.outbox.put_message(to=public_key, sender=self.crypto.public_key, protocol_id=DefaultMessage.protocol_id, message=msg_bytes)
 
     def notify_competition_cancelled(self):
         """Notify agents that the TAC is cancelled."""
         logger.debug("[{}]: Notifying agents that TAC is cancelled.".format(self.agent_name))
         for agent_pbk in self.registered_agents:
-            msg = SimpleMessage(type=SimpleMessage.Type.BYTES, content=Cancelled(agent_pbk, self.crypto).serialize())
-            msg_bytes = SimpleSerializer().encode(msg)
-            self.mailbox.outbox.put_message(to=agent_pbk, sender=self.crypto.public_key, protocol_id=SimpleMessage.protocol_id, message=msg_bytes)
+            msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=Cancelled(agent_pbk, self.crypto).serialize())
+            msg_bytes = DefaultSerializer().encode(msg)
+            self.mailbox.outbox.put_message(to=agent_pbk, sender=self.crypto.public_key, protocol_id=DefaultMessage.protocol_id, message=msg_bytes)
         self._game_phase = GamePhase.POST_GAME
 
     def simulation_dump(self) -> None:

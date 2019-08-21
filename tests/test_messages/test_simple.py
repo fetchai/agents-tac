@@ -19,15 +19,15 @@
 
 """This module contains the tests of the messages module."""
 
-from tac.aea.mail.messages import SimpleMessage
+from tac.aea.mail.messages import DefaultMessage
 from tac.aea.mail.protocol import Envelope
-from tac.aea.protocols.default.serialization import SimpleSerializer
+from tac.aea.protocols.default.serialization import DefaultSerializer
 
 
 def test_simple_bytes_serialization():
     """Test that the serialization for the 'simple' protocol works for the BYTES message."""
-    msg = SimpleMessage(type=SimpleMessage.Type.BYTES, content=b"hello")
-    msg_bytes = SimpleSerializer().encode(msg)
+    msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=b"hello")
+    msg_bytes = DefaultSerializer().encode(msg)
     envelope = Envelope(to="receiver", sender="sender", protocol_id="simple", message=msg_bytes)
     envelope_bytes = envelope.encode()
 
@@ -35,15 +35,15 @@ def test_simple_bytes_serialization():
     expected_envelope = envelope
     assert expected_envelope == actual_envelope
 
-    actual_msg = SimpleSerializer().decode(actual_envelope.message)
+    actual_msg = DefaultSerializer().decode(actual_envelope.message)
     expected_msg = msg
     assert expected_msg == actual_msg
 
 
 def test_simple_error_serialization():
     """Test that the serialization for the 'simple' protocol works for the ERROR message."""
-    msg = SimpleMessage(type=SimpleMessage.Type.ERROR, error_code=-1, error_msg="An error")
-    msg_bytes = SimpleSerializer().encode(msg)
+    msg = DefaultMessage(type=DefaultMessage.Type.ERROR, error_code=-1, error_msg="An error")
+    msg_bytes = DefaultSerializer().encode(msg)
     envelope = Envelope(to="receiver", sender="sender", protocol_id="simple", message=msg_bytes)
     envelope_bytes = envelope.encode()
 
@@ -51,6 +51,6 @@ def test_simple_error_serialization():
     expected_envelope = envelope
     assert expected_envelope == actual_envelope
 
-    actual_msg = SimpleSerializer().decode(actual_envelope.message)
+    actual_msg = DefaultSerializer().decode(actual_envelope.message)
     expected_msg = msg
     assert expected_msg == actual_msg

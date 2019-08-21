@@ -26,9 +26,9 @@ import pprint
 from typing import List
 
 from tac.aea.crypto.base import Crypto
-from tac.aea.mail.messages import FIPAMessage, Message, SimpleMessage
+from tac.aea.mail.messages import FIPAMessage, Message, DefaultMessage
 from tac.aea.mail.protocol import Envelope
-from tac.aea.protocols.default.serialization import SimpleSerializer
+from tac.aea.protocols.default.serialization import DefaultSerializer
 from tac.aea.protocols.fipa.serialization import FIPASerializer
 from tac.agents.participant.base.dialogues import Dialogue
 from tac.agents.participant.base.game_instance import GameInstance
@@ -223,9 +223,9 @@ class FIPABehaviour:
             logger.debug("[{}]: Locking the current state (as {}).".format(self.agent_name, dialogue.role))
             self.game_instance.transaction_manager.add_locked_tx(transaction, as_seller=dialogue.is_seller)
 
-            msg = SimpleMessage(type=SimpleMessage.Type.BYTES, content=transaction.serialize())
-            msg_bytes = SimpleSerializer().encode(msg)
-            results.append(Envelope(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=SimpleMessage.protocol_id, message=msg_bytes))
+            msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=transaction.serialize())
+            msg_bytes = DefaultSerializer().encode(msg)
+            results.append(Envelope(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=DefaultMessage.protocol_id, message=msg_bytes))
             dialogue.outgoing_extend([msg])
 
             msg = FIPAMessage(message_id=new_msg_id, dialogue_id=accept.get("dialogue_id"), target=accept.get("id"), performative=FIPAMessage.Performative.MATCH_ACCEPT)
@@ -257,8 +257,8 @@ class FIPABehaviour:
                      .format(self.agent_name, match_accept.get("id"), match_accept.get("dialogue_id"), dialogue.dialogue_label.dialogue_opponent_pbk, match_accept.get("target")))
         results = []
         transaction = self.game_instance.transaction_manager.pop_pending_initial_acceptance(dialogue.dialogue_label, match_accept.get("target"))
-        msg = SimpleMessage(type=SimpleMessage.Type.BYTES, content=transaction.serialize())
-        msg_bytes = SimpleSerializer().encode(msg)
-        results.append(Envelope(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=SimpleMessage.protocol_id, message=msg_bytes))
+        msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=transaction.serialize())
+        msg_bytes = DefaultSerializer().encode(msg)
+        results.append(Envelope(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=DefaultMessage.protocol_id, message=msg_bytes))
         dialogue.outgoing_extend([msg])
         return results

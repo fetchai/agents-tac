@@ -22,19 +22,22 @@
 import copy
 import json
 import pickle
-import pprint
 from typing import Dict
 
 import base58
 from google.protobuf import json_format
 from google.protobuf.json_format import MessageToJson
 from oef import query_pb2, dap_interface_pb2
-from oef.messages import OEFErrorOperation, CFP_TYPES
+from oef.messages import OEFErrorOperation
 from oef.query import Query, ConstraintExpr, And, Or, Not, Constraint
 from oef.schema import Description, DataModel
 
 from tac.aea.mail.messages import Message, OEFMessage
 from tac.aea.mail.protocol import Serializer
+
+
+"""default 'to' field for OEF envelopes."""
+DEFAULT_OEF = "oef"
 
 
 class ConstraintWrapper:

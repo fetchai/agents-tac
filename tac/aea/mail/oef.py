@@ -30,17 +30,19 @@ from oef.agents import Agent
 from oef.core import OEFProxy
 from oef.messages import OEFErrorOperation, CFP_TYPES, PROPOSE_TYPES
 from oef.proxy import OEFNetworkProxy
-from oef.schema import Description
 
 from tac.aea.helpers.local_node import LocalNode, OEFLocalProxy
 from tac.aea.mail.base import Connection, MailBox
-from tac.aea.mail.messages import OEFMessage, FIPAMessage, SimpleMessage
-from tac.aea.mail.protocol import Envelope, DefaultJSONSerializer
-from tac.aea.protocols.default.serialization import SimpleSerializer
+from tac.aea.mail.messages import OEFMessage, FIPAMessage
+from tac.aea.mail.protocol import Envelope
 from tac.aea.protocols.fipa.serialization import FIPASerializer
 from tac.aea.protocols.oef.serialization import OEFSerializer
 
 logger = logging.getLogger(__name__)
+
+
+STUB_MESSSAGE_ID = 0
+STUB_DIALOGUE_ID = 0
 
 
 class MailStats(object):
@@ -264,9 +266,9 @@ class OEFChannel(Agent):
         elif envelope.protocol_id == "fipa":
             self.send_fipa_message(envelope)
         elif envelope.protocol_id == "bytes":
-            self.send_bytes(envelope)
+            self.send_bytes_message(envelope)
         elif envelope.protocol_id == "default":
-            self.send_default(envelope)
+            self.send_default_message(envelope)
         else:
             raise ValueError("Cannot send message.")
 
@@ -336,13 +338,13 @@ class OEFChannel(Agent):
         else:
             raise ValueError("OEF FIPA message not recognized.")
 
-    def send_bytes(self, envelope: Envelope):
+    def send_bytes_message(self, envelope: Envelope):
         """Send a 'bytes' message."""
-        self.send_message(0, 0, envelope.to, envelope.encode())
+        self.send_message(STUB_MESSSAGE_ID, STUB_DIALOGUE_ID, envelope.to, envelope.encode())
 
-    def send_default(self, envelope: Envelope):
+    def send_default_message(self, envelope: Envelope):
         """Send a 'default' message."""
-        self.send_message(0, 0, envelope.to, envelope.encode())
+        self.send_message(STUB_MESSSAGE_ID, STUB_DIALOGUE_ID, envelope.to, envelope.encode())
 
 
 class OEFConnection(Connection):

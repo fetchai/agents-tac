@@ -20,10 +20,10 @@
 """This module contains tests for the mail module."""
 import time
 
-from tac.aea.mail.messages import FIPAMessage, ByteMessage, SimpleMessage  # OEFMessage
+from tac.aea.mail.messages import FIPAMessage, ByteMessage, DefaultMessage  # OEFMessage
 from tac.aea.mail.oef import OEFNetworkMailBox
 from tac.aea.mail.protocol import Envelope
-from tac.aea.protocols.default.serialization import SimpleSerializer
+from tac.aea.protocols.default.serialization import DefaultSerializer
 from tac.aea.protocols.fipa.serialization import FIPASerializer
 
 
@@ -35,9 +35,9 @@ def test_example(network_node):
     mailbox1.connect()
     mailbox2.connect()
 
-    msg = SimpleMessage(type=SimpleMessage.Type.BYTES, content=b"hello")
-    msg_bytes = SimpleSerializer().encode(msg)
-    mailbox1.outbox.put(Envelope(to="mailbox2", sender="mailbox1", protocol_id=SimpleMessage.protocol_id, message=msg_bytes))
+    msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=b"hello")
+    msg_bytes = DefaultSerializer().encode(msg)
+    mailbox1.outbox.put(Envelope(to="mailbox2", sender="mailbox1", protocol_id=DefaultMessage.protocol_id, message=msg_bytes))
 
     msg = FIPAMessage(message_id=0, dialogue_id=0, target=0, performative=FIPAMessage.Performative.CFP, query=None)
     msg_bytes = FIPASerializer().encode(msg)
@@ -58,7 +58,7 @@ def test_example(network_node):
     time.sleep(5.0)
 
     envelope = mailbox2.inbox.get(block=True, timeout=2.0)
-    msg = SimpleSerializer().decode(envelope.message)
+    msg = DefaultSerializer().decode(envelope.message)
     assert msg.get("content") == b"hello"
     envelope = mailbox2.inbox.get(block=True, timeout=2.0)
     msg = FIPASerializer().decode(envelope.message)

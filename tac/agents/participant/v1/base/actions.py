@@ -33,9 +33,9 @@ from oef.query import Query, Constraint, GtEq
 from tac.aea.agent import Liveness
 from tac.aea.crypto.base import Crypto
 from tac.aea.mail.base import MailBox
-from tac.aea.mail.messages import OEFMessage, SimpleMessage
-from tac.aea.protocols.default.serialization import SimpleSerializer
-from tac.aea.protocols.oef.serialization import OEFSerializer
+from tac.aea.mail.messages import OEFMessage, DefaultMessage
+from tac.aea.protocols.default.serialization import DefaultSerializer
+from tac.aea.protocols.oef.serialization import OEFSerializer, DEFAULT_OEF
 from tac.agents.participant.base.game_instance import GameInstance
 from tac.agents.participant.base.interfaces import ControllerActionInterface, OEFActionInterface, \
     DialogueActionInterface
@@ -72,10 +72,10 @@ class ControllerActions(ControllerActionInterface):
         :return: None
         """
         tac_msg = GetStateUpdate(self.crypto.public_key, self.crypto).serialize()
-        msg = SimpleMessage(type=SimpleMessage.Type.BYTES, content=tac_msg)
-        msg_bytes = SimpleSerializer().encode(msg)
+        msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=tac_msg)
+        msg_bytes = DefaultSerializer().encode(msg)
         self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key,
-                                        protocol_id=SimpleMessage.protocol_id, message=msg_bytes)
+                                        protocol_id=DefaultMessage.protocol_id, message=msg_bytes)
 
 
 class OEFActions(OEFActionInterface):
@@ -114,7 +114,7 @@ class OEFActions(OEFActionInterface):
 
         message = OEFMessage(oef_type=OEFMessage.Type.SEARCH_SERVICES, id=search_id, query=query)
         message_bytes = OEFSerializer().encode(message)
-        self.mailbox.outbox.put_message(to=None, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=message_bytes)
+        self.mailbox.outbox.put_message(to=DEFAULT_OEF, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=message_bytes)
 
     def update_services(self) -> None:
         """
@@ -134,11 +134,11 @@ class OEFActions(OEFActionInterface):
         if self.game_instance.goods_demanded_description is not None:
             msg = OEFMessage(oef_type=OEFMessage.Type.UNREGISTER_SERVICE, id=1, service_description=self.game_instance.goods_demanded_description, service_id="")
             msg_bytes = OEFSerializer().encode(msg)
-            self.mailbox.outbox.put_message(to=None, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
+            self.mailbox.outbox.put_message(to=DEFAULT_OEF, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
         if self.game_instance.goods_supplied_description is not None:
             msg = OEFMessage(oef_type=OEFMessage.Type.UNREGISTER_SERVICE, id=1, service_description=self.game_instance.goods_supplied_description, service_id="")
             msg_bytes = OEFSerializer().encode(msg)
-            self.mailbox.outbox.put_message(to=None, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
+            self.mailbox.outbox.put_message(to=DEFAULT_OEF, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
 
     def register_service(self) -> None:
         """
@@ -157,14 +157,14 @@ class OEFActions(OEFActionInterface):
             self.game_instance.goods_supplied_description = goods_supplied_description
             msg = OEFMessage(oef_type=OEFMessage.Type.REGISTER_SERVICE, id=1, service_description=goods_supplied_description, service_id="")
             msg_bytes = OEFSerializer().encode(msg)
-            self.mailbox.outbox.put_message(to=None, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
+            self.mailbox.outbox.put_message(to=DEFAULT_OEF, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
         if self.game_instance.strategy.is_registering_as_buyer:
             logger.debug("[{}]: Updating service directory as buyer with goods demanded.".format(self.agent_name))
             goods_demanded_description = self.game_instance.get_service_description(is_supply=False)
             self.game_instance.goods_demanded_description = goods_demanded_description
             msg = OEFMessage(oef_type=OEFMessage.Type.REGISTER_SERVICE, id=1, service_description=goods_demanded_description, service_id="")
             msg_bytes = OEFSerializer().encode(msg)
-            self.mailbox.outbox.put_message(to=None, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
+            self.mailbox.outbox.put_message(to=DEFAULT_OEF, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
 
     def search_services(self) -> None:
         """
@@ -189,7 +189,7 @@ class OEFActions(OEFActionInterface):
 
                 msg = OEFMessage(oef_type=OEFMessage.Type.SEARCH_SERVICES, id=search_id, query=query)
                 msg_bytes = OEFSerializer().encode(msg)
-                self.mailbox.outbox.put_message(to=None, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
+                self.mailbox.outbox.put_message(to=DEFAULT_OEF, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
         if self.game_instance.strategy.is_searching_for_buyers:
             query = self.game_instance.build_services_query(is_searching_for_sellers=False)
             if query is None:
@@ -202,7 +202,7 @@ class OEFActions(OEFActionInterface):
 
                 msg = OEFMessage(oef_type=OEFMessage.Type.SEARCH_SERVICES, id=search_id, query=query)
                 msg_bytes = OEFSerializer().encode(msg)
-                self.mailbox.outbox.put_message(to=None, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
+                self.mailbox.outbox.put_message(to=DEFAULT_OEF, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
 
 
 class DialogueActions(DialogueActionInterface):

@@ -19,7 +19,7 @@
 
 """This module contains the tests of the messages module."""
 from tac.aea.mail.messages import Message
-from tac.aea.mail.protocol import DefaultProtobufSerializer, DefaultJSONSerializer, Envelope
+from tac.aea.mail.protocol import ProtobufSerializer, JSONSerializer, Envelope
 
 
 class TestDefaultSerializations:
@@ -33,7 +33,7 @@ class TestDefaultSerializations:
     def test_default_protobuf_serialization(self):
         """Test that the default Protobuf serialization works."""
 
-        message_bytes = DefaultProtobufSerializer().encode(self.message)
+        message_bytes = ProtobufSerializer().encode(self.message)
         envelope = Envelope(to="receiver", sender="sender", protocol_id="my_own_protocol", message=message_bytes)
         envelope_bytes = envelope.encode()
 
@@ -41,13 +41,13 @@ class TestDefaultSerializations:
         actual_envelope = envelope
         assert expected_envelope == actual_envelope
 
-        expected_msg = DefaultProtobufSerializer().decode(expected_envelope.message)
+        expected_msg = ProtobufSerializer().decode(expected_envelope.message)
         actual_msg = self.message
         assert expected_msg == actual_msg
 
     def test_default_json_serialization(self):
         """Test that the default JSON serialization works."""
-        message_bytes = DefaultJSONSerializer().encode(self.message)
+        message_bytes = JSONSerializer().encode(self.message)
         envelope = Envelope(to="receiver", sender="sender", protocol_id="my_own_protocol", message=message_bytes)
         envelope_bytes = envelope.encode()
 
@@ -55,6 +55,6 @@ class TestDefaultSerializations:
         actual_envelope = envelope
         assert expected_envelope == actual_envelope
 
-        expected_msg = DefaultJSONSerializer().decode(expected_envelope.message)
+        expected_msg = JSONSerializer().decode(expected_envelope.message)
         actual_msg = self.message
         assert expected_msg == actual_msg

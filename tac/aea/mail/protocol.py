@@ -59,7 +59,7 @@ class Serializer(Encoder, Decoder, ABC):
     """The implementations of this class defines a serialization layer for a protocol."""
 
 
-class DefaultProtobufSerializer(Serializer):
+class ProtobufSerializer(Serializer):
     """
     Default Protobuf serializer.
 
@@ -83,7 +83,7 @@ class DefaultProtobufSerializer(Serializer):
         return msg
 
 
-class DefaultJSONSerializer(Serializer):
+class JSONSerializer(Serializer):
     """Default serialization in JSON for the Message object."""
 
     def encode(self, msg: Message) -> bytes:

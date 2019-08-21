@@ -29,12 +29,12 @@ This module contains the message handler classes.
 import logging
 from typing import Any
 
-from tac.aea.mail.protocol import Envelope, DefaultJSONSerializer
+from tac.aea.mail.protocol import Envelope, JSONSerializer
 from tac.aea.agent import Liveness
 from tac.aea.crypto.base import Crypto
 from tac.aea.mail.base import MailBox
 from tac.aea.mail.messages import OEFMessage, Message, Address
-from tac.aea.protocols.default.serialization import SimpleSerializer
+from tac.aea.protocols.default.serialization import DefaultSerializer
 from tac.aea.protocols.oef.serialization import OEFSerializer
 from tac.agents.participant.base.actions import DialogueActions, ControllerActions, OEFActions
 from tac.agents.participant.base.game_instance import GameInstance, GamePhase
@@ -109,7 +109,7 @@ class ControllerHandler(ControllerActions, ControllerReactions):
         :return: None
         """
         assert envelope.protocol_id == "default"
-        msg = SimpleSerializer().decode(envelope.message)
+        msg = DefaultSerializer().decode(envelope.message)
         response = Response.from_pb(msg.get("content"), envelope.sender, self.crypto)
         logger.debug("[{}]: Handling controller response. type={}".format(self.agent_name, type(response)))
         try:
