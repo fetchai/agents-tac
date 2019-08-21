@@ -22,6 +22,7 @@
 import asyncio
 import datetime
 import logging
+from asyncio import AbstractEventLoop
 from queue import Empty, Queue
 from threading import Thread
 from typing import List, Dict, Optional
@@ -91,7 +92,7 @@ class MailStats(object):
 class OEFChannel(OEFAgent):
     """The OEFChannel connects the OEF Agent with the connection."""
 
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000, in_queue: Optional[Queue] = None):
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000, loop: Optional[AbstractEventLoop] = None, in_queue: Optional[Queue] = None):
         """
         Initialize.
 
@@ -100,7 +101,7 @@ class OEFChannel(OEFAgent):
         :param oef_port: the OEF port.
         :param in_queue: the in queue.
         """
-        super().__init__(public_key, oef_addr, oef_port)
+        super().__init__(public_key, oef_addr, oef_port, loop=loop)
         self.in_queue = in_queue
         self.mail_stats = MailStats()
 
@@ -355,11 +356,13 @@ class OEFConnection(Connection):
         """
         Initialize.
 
-        :param oef_proxy: the OEFProxy
+        :param public_key: the public key of the agent.
+        :param oef_addr: the OEF IP address.
+        :param oef_port: the OEF port.
         """
         super().__init__()
 
-        self.bridge = OEFChannel(public_key, oef_addr, oef_port, self.in_queue)
+        self.bridge = OEFChannel(public_key, oef_addr, oef_port, loop=asyncio.new_event_loop(), in_queue=self.in_queue)
 
         self._stopped = True
         self.in_thread = Thread(target=self.bridge.run)
@@ -398,7 +401,7 @@ class OEFConnection(Connection):
         """
         self._stopped = True
         if self.bridge.is_active():
-            self.bridge.loop.call_soon_threadsafe(self.bridge.stop)
+            self.bridge.stop()
 
         self.in_thread.join()
         self.out_thread.join()
