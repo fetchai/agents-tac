@@ -50,23 +50,19 @@ class LocalNode:
         self.services = defaultdict(lambda: [])  # type: Dict[str, List[Description]]
         self._lock = threading.Lock()
 
-        self._task = None  # type: Optional[asyncio.Task]
         self._stopped = True  # type: bool
         self._thread = None  # type: Optional[Thread]
 
-        self._read_queue = Queue()
         self._queues = {}  # type: Dict[str, Queue]
 
     def __enter__(self):
         """Start the OEF Node."""
-        self.start()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Stop the OEF Node."""
-        self.stop()
 
-    def connect(self, public_key: str) -> Optional[Tuple[Queue, Queue]]:
+    def connect(self, public_key: str) -> Optional[Queue]:
         """
         Connect a public key to the node.
 
@@ -78,26 +74,17 @@ class LocalNode:
 
         q = Queue()
         self._queues[public_key] = q
-        return self._read_queue, q
+        return q
 
-    async def _process_messages(self) -> None:
+    def send_envelope(self, envelope: Envelope) -> None:
         """
         Process the incoming messages.
 
         :return: None
         """
-        while not self._stopped:
-            try:
-                envelope = await self._read_queue.get()  # type: Envelope
-            except asyncio.CancelledError:
-                logger.debug("Local Node: loop cancelled.")
-                break
-
-            sender = envelope.sender
-            assert isinstance(envelope, Envelope)
-            logger.debug("Processing message from {}: {}".format(sender, envelope))
-
-            self._decode_envelope(envelope)
+        sender = envelope.sender
+        logger.debug("Processing message from {}: {}".format(sender, envelope))
+        self._decode_envelope(envelope)
 
     def _decode_envelope(self, envelope):
         """Decode the envelope."""
@@ -139,35 +126,6 @@ class LocalNode:
             return
         else:
             self._send(envelope)
-
-    def run(self) -> None:
-        """
-        Run the node, i.e. start processing the messages.
-
-        :return: None
-        """
-        self._stopped = False
-        self._task = asyncio.ensure_future(self._process_messages(), loop=self.loop)
-        self.loop.run_until_complete(self._task)
-
-    def start(self):
-        """Start the node in its own thread."""
-        self._thread = Thread(target=self.run)
-        self._thread.start()
-
-    def stop(self) -> None:
-        """
-        Stop the execution of the node.
-
-        :return: None
-        """
-        self._stopped = True
-
-        if self._task and not self._task.cancelled():
-            self.loop.call_soon_threadsafe(self._task.cancel)
-
-        if self._thread:
-            self._thread.join()
 
     def register_agent(self, public_key: str, agent_description: Description) -> None:
         """
@@ -277,12 +235,10 @@ class LocalNode:
 
     def _send(self, envelope: Envelope):
         destination = envelope.to
-        loop = self._loops[destination]
-        loop.call_soon_threadsafe(self._queues[destination].put_nowait, envelope)
+        self._queues[destination].put_nowait(envelope)
 
     def disconnect(self, public_key: str):
         with self._lock:
-            self._loops.pop(public_key, None)
             self._queues.pop(public_key, None)
             self.services.pop(public_key, None)
             self.agents.pop(public_key, None)
@@ -309,9 +265,7 @@ class OEFLocalConnection(Connection):
         self.local_node = local_node
         self._loop = loop if loop is not None else asyncio.new_event_loop()
 
-        self._connection = None  # type: Optional[Tuple[queue.Queue, queue.Queue]]
-        self._read_queue = None  # type: Optional[Queue]
-        self._write_queue = None  # type: Optional[Queue]
+        self._connection = None  # type: Optional[Queue]
 
         self._stopped = True
         self.in_thread = None
@@ -325,16 +279,19 @@ class OEFLocalConnection(Connection):
         """
         while not self._stopped:
             try:
-                msg = self.out_queue.get(block=True, timeout=1.0)
+                msg = self.out_queue.get(block=True, timeout=2.0)
                 self.send(msg)
             except queue.Empty:
                 pass
 
-    async def _receive_loop(self):
+    def _receive_loop(self):
         """Receive messages."""
         while not self._stopped:
-            data = await self._read_queue.get()
-            self.in_queue.put_nowait(data)
+            try:
+                data = self._connection.get(timeout=2.0)
+                self.in_queue.put_nowait(data)
+            except queue.Empty:
+                pass
 
     @property
     def is_established(self) -> bool:
@@ -345,8 +302,7 @@ class OEFLocalConnection(Connection):
         """Connect to the local OEF Node."""
         if self._stopped:
             self._stopped = False
-            self._connection = self.local_node.connect(self.public_key, self._loop)
-            self._write_queue, self._read_queue = self._connection
+            self._connection = self.local_node.connect(self.public_key)
             self.in_thread = Thread(target=self._receive_loop)
             self.out_thread = Thread(target=self._fetch)
             self.in_thread.start()
@@ -367,10 +323,9 @@ class OEFLocalConnection(Connection):
         """Send a message."""
         if not self.is_established:
             raise ConnectionError("Connection not established yet. Please use 'connect()'.")
-        self.local_node.loop.call_soon_threadsafe(self._write_queue.put_nowait,envelope)
+        self.local_node.send_envelope(envelope)
 
     def stop(self):
         """Tear down the connection."""
         self._connection = None
-        self._read_queue = None
-        self._write_queue = None
+
