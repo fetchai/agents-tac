@@ -32,7 +32,6 @@ class TestDefaultSerializations:
 
     def test_default_protobuf_serialization(self):
         """Test that the default Protobuf serialization works."""
-
         message_bytes = ProtobufSerializer().encode(self.message)
         envelope = Envelope(to="receiver", sender="sender", protocol_id="my_own_protocol", message=message_bytes)
         envelope_bytes = envelope.encode()

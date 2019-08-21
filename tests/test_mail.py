@@ -20,7 +20,7 @@
 """This module contains tests for the mail module."""
 import time
 
-from tac.aea.mail.messages import FIPAMessage, ByteMessage, DefaultMessage  # OEFMessage
+from tac.aea.mail.messages import FIPAMessage, DefaultMessage
 from tac.aea.mail.oef import OEFNetworkMailBox
 from tac.aea.mail.protocol import Envelope
 from tac.aea.protocols.default.serialization import DefaultSerializer

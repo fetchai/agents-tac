@@ -32,6 +32,7 @@ from typing import Dict, Optional
 
 import docker
 
+from tac.aea.dialogue.base import Dialogue
 from tac.aea.mail.messages import FIPAMessage
 from tac.aea.mail.protocol import Envelope
 from tac.aea.protocols.fipa.serialization import FIPASerializer

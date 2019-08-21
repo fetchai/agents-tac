@@ -48,6 +48,11 @@ class ConstraintWrapper:
         self.c = c
 
     def to_json(self) -> Dict:
+        """
+        Convert to json.
+
+        :return: the dictionary
+        """
         result = {}
         if isinstance(self.c, And) or isinstance(self.c, Or):
             wraps = [ConstraintWrapper(subc).to_json() for subc in self.c.constraints]
@@ -65,7 +70,13 @@ class ConstraintWrapper:
         return result
 
     @classmethod
-    def from_json(cls, d: Dict):
+    def from_json(cls, d: Dict) -> Constraint:
+        """
+        Convert from json.
+
+        :param d: the dictionary.
+        :return: the constraint
+        """
         if "and" in d:
             return And([ConstraintWrapper.from_json(subc) for subc in d["and"]])
         elif "or" in d:
@@ -81,9 +92,19 @@ class QueryWrapper:
     """Make the query object pickable."""
 
     def __init__(self, q: Query):
+        """
+        Initialize.
+
+        :param q: the query
+        """
         self.q = q
 
     def to_json(self) -> Dict:
+        """
+        Convert to json.
+
+        :return: the dictionary
+        """
         result = {}
         if self.q.model:
             result["data_model"] = base58.b58encode(self.q.model.to_pb().SerializeToString()).decode("utf-8")
@@ -93,7 +114,13 @@ class QueryWrapper:
         return result
 
     @classmethod
-    def from_json(self, d: Dict):
+    def from_json(self, d: Dict) -> Query:
+        """
+        Convert from json.
+
+        :param d: the dictionary.
+        :return: the query
+        """
         if d["data_model"]:
             data_model_pb = dap_interface_pb2.ValueMessage.DataModel()
             data_model_pb.ParseFromString(base58.b58decode(d["data_model"]))
@@ -109,6 +136,12 @@ class OEFSerializer(Serializer):
     """Serialization for the FIPA protocol."""
 
     def encode(self, msg: Message) -> bytes:
+        """
+        Decode the message.
+
+        :param msg: the message object
+        :return: the bytes
+        """
         oef_type = OEFMessage.Type(msg.get("type"))
         new_body = copy.copy(msg.body)
 
@@ -137,6 +170,12 @@ class OEFSerializer(Serializer):
         return oef_message_bytes
 
     def decode(self, obj: bytes) -> Message:
+        """
+        Decode the message.
+
+        :param obj: the bytes object
+        :return: the message
+        """
         json_msg = json.loads(obj.decode("utf-8"))
         oef_type = OEFMessage.Type(json_msg["type"])
         new_body = copy.copy(json_msg)

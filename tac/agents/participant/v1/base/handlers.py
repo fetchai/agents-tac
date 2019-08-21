@@ -32,7 +32,7 @@ from typing import Any
 from tac.aea.agent import Liveness
 from tac.aea.crypto.base import Crypto
 from tac.aea.mail.base import MailBox
-from tac.aea.mail.messages import OEFMessage
+from tac.aea.mail.messages import OEFMessage, Message
 from tac.aea.mail.protocol import Envelope
 from tac.aea.protocols.default.serialization import DefaultSerializer
 from tac.aea.protocols.fipa.serialization import FIPASerializer
