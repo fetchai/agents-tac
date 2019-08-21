@@ -35,7 +35,6 @@ from oef.schema import Description, DataModel
 from tac.aea.mail.messages import Message, OEFMessage
 from tac.aea.mail.protocol import Serializer
 
-
 """default 'to' field for OEF envelopes."""
 DEFAULT_OEF = "oef"
 

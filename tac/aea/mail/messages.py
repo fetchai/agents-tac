@@ -23,7 +23,6 @@ from copy import copy
 from enum import Enum
 from typing import Optional, Any, Union, Dict
 
-from oef.messages import OEFErrorOperation
 from oef.query import Query
 from oef.schema import Description
 
@@ -95,6 +94,19 @@ class Message:
         """Compare with another object."""
         return isinstance(other, Message) \
             and self.body == other.body
+
+
+class OEFErrorOperation(Enum):
+    """Operation code for the OEF. It is returned in the OEF Error messages."""
+    REGISTER_SERVICE = 0
+    UNREGISTER_SERVICE = 1
+    REGISTER_DESCRIPTION = 2
+    UNREGISTER_DESCRIPTION = 3
+    SEARCH_SERVICES = 4
+    SEARCH_SERVICES_WIDE = 5
+    SEARCH_AGENTS = 6
+    SEND_MESSAGE = 7
+    GENERIC_ERROR = 10000
 
 
 class OEFMessage(Message):

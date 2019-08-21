@@ -28,10 +28,10 @@ from threading import Thread
 from typing import List, Dict, Optional
 
 from oef.agents import OEFAgent
-from oef.messages import OEFErrorOperation, CFP_TYPES, PROPOSE_TYPES
+from oef.messages import CFP_TYPES, PROPOSE_TYPES
 
 from tac.aea.mail.base import Connection, MailBox
-from tac.aea.mail.messages import OEFMessage, FIPAMessage
+from tac.aea.mail.messages import OEFMessage, FIPAMessage, OEFErrorOperation
 from tac.aea.mail.protocol import Envelope
 from tac.aea.protocols.fipa.serialization import FIPASerializer
 from tac.aea.protocols.oef.serialization import OEFSerializer
