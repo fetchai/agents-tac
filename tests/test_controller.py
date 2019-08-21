@@ -26,6 +26,9 @@ import pytest
 import time
 from threading import Thread
 
+from tac.aea.mail.messages import SimpleMessage
+from tac.aea.mail.protocol import Envelope
+from tac.aea.protocols.default.serialization import SimpleSerializer
 from .common import TOEFAgent
 # from oef.core import AsyncioCore  # OEF-SDK 0.6.1
 
@@ -54,14 +57,10 @@ class TestCompetitionStopsNoAgentRegistered:
         """Test no agent is registered."""
         job = Thread(target=self.controller_agent.start)
         job.start()
-        # process = multiprocessing.Process(target=self.controller_agent.start)
-        # process.start()
-        time.sleep(1.0)
+        job.join(10.0)
+        assert not job.is_alive()
         assert len(self.controller_agent.game_handler.registered_agents) == 0
         self.controller_agent.stop()
-        # process.join()
-        job.join()
-        # process.terminate()
 
 
 class TestCompetitionStopsTooFewAgentRegistered:
@@ -90,7 +89,11 @@ class TestCompetitionStopsTooFewAgentRegistered:
         agent_job = Thread(target=cls.agent1.run)
         agent_job.start()
 
-        cls.agent1.send_message(0, 0, cls.controller_agent.crypto.public_key, Register(crypto.public_key, crypto, 'agent_name').serialize())
+        tac_msg = Register(crypto.public_key, crypto, 'agent_name').serialize()
+        msg = SimpleMessage(type=SimpleMessage.Type.BYTES, content=tac_msg)
+        msg_bytes = SimpleSerializer().encode(msg)
+        envelope = Envelope(to=cls.controller_agent.crypto.public_key, sender=crypto.public_key, protocol_id=SimpleMessage.protocol_id, message=msg_bytes)
+        cls.agent1.send_message(0, 0, cls.controller_agent.crypto.public_key, envelope.encode())
 
         time.sleep(10.0)
 

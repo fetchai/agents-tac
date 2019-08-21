@@ -27,10 +27,11 @@ from typing import Optional
 from tac.aea.agent import Agent
 from tac.aea.mail.oef import OEFNetworkMailBox
 from tac.aea.mail.protocol import Envelope
-from tac.agents.participant.v1.base.game_instance import GameInstance, GamePhase
-from tac.agents.participant.v1.base.handlers import DialogueHandler, ControllerHandler, OEFHandler
-from tac.agents.participant.v1.base.helpers import is_oef_message, is_controller_message, is_fipa_message
-from tac.agents.participant.v1.base.strategy import Strategy
+from tac.aea.protocols.fipa.serialization import FIPASerializer
+from tac.agents.participant.base.game_instance import GameInstance, GamePhase
+from tac.agents.participant.base.handlers import DialogueHandler, ControllerHandler, OEFHandler
+from tac.agents.participant.base.helpers import is_oef_message, is_controller_message, is_fipa_message
+from tac.agents.participant.base.strategy import Strategy
 from tac.gui.dashboards.agent import AgentDashboard
 
 logger = logging.getLogger(__name__)
@@ -103,17 +104,19 @@ class ParticipantAgent(Agent):
         counter = 0
         while (not self.mailbox.inbox.empty() and counter < self.max_reactions):
             counter += 1
-            msg = self.mailbox.inbox.get_nowait()  # type: Optional[Envelope]
-            logger.debug("processing message of protocol={}".format(msg.protocol_id))
-            if msg is not None:
-                if is_oef_message(msg):
-                    self.oef_handler.handle_oef_message(msg)
-                elif is_controller_message(msg, self.crypto):
-                    self.controller_handler.handle_controller_message(msg)
-                elif is_fipa_message(msg):
-                    self.dialogue_handler.handle_dialogue_message(msg)
+            envelope = self.mailbox.inbox.get_nowait()  # type: Optional[Envelope]
+            logger.debug("processing message of protocol={}".format(envelope.protocol_id))
+
+            if envelope is not None:
+                if is_oef_message(envelope):
+                    self.oef_handler.handle_oef_message(envelope)
+                elif is_controller_message(envelope):
+                    self.controller_handler.handle_controller_message(envelope)
+                elif is_fipa_message(envelope):
+                    fipa_message = FIPASerializer().decode(envelope.message)  # type: # Message
+                    self.dialogue_handler.handle_dialogue_message(fipa_message, envelope.sender)
                 else:
-                    logger.warning("Message type not recognized: sender={}".format(msg.sender))
+                    logger.warning("Message type not recognized: sender={}".format(envelope.sender))
 
     def update(self) -> None:
         """

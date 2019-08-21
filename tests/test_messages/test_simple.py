@@ -18,32 +18,39 @@
 # ------------------------------------------------------------------------------
 
 """This module contains the tests of the messages module."""
+
 from tac.aea.mail.messages import SimpleMessage
 from tac.aea.mail.protocol import Envelope
-from tac.aea.protocols.simple.serialization import SimpleSerializer
+from tac.aea.protocols.default.serialization import SimpleSerializer
 
 
 def test_simple_bytes_serialization():
     """Test that the serialization for the 'simple' protocol works for the BYTES message."""
     msg = SimpleMessage(type=SimpleMessage.Type.BYTES, content=b"hello")
-    envelope = Envelope(to="receiver", sender="sender", protocol_id="simple", message=msg)
-    serializer = SimpleSerializer()
+    msg_bytes = SimpleSerializer().encode(msg)
+    envelope = Envelope(to="receiver", sender="sender", protocol_id="simple", message=msg_bytes)
+    envelope_bytes = envelope.encode()
 
-    envelope_bytes = envelope.encode(serializer)
-    actual_envelope = Envelope.decode(envelope_bytes, serializer)
+    actual_envelope = Envelope.decode(envelope_bytes)
     expected_envelope = envelope
-
     assert expected_envelope == actual_envelope
+
+    actual_msg = SimpleSerializer().decode(actual_envelope.message)
+    expected_msg = msg
+    assert expected_msg == actual_msg
 
 
 def test_simple_error_serialization():
     """Test that the serialization for the 'simple' protocol works for the ERROR message."""
     msg = SimpleMessage(type=SimpleMessage.Type.ERROR, error_code=-1, error_msg="An error")
-    envelope = Envelope(to="receiver", sender="sender", protocol_id="simple", message=msg)
-    serializer = SimpleSerializer()
+    msg_bytes = SimpleSerializer().encode(msg)
+    envelope = Envelope(to="receiver", sender="sender", protocol_id="simple", message=msg_bytes)
+    envelope_bytes = envelope.encode()
 
-    envelope_bytes = envelope.encode(serializer)
-    actual_envelope = Envelope.decode(envelope_bytes, serializer)
+    actual_envelope = Envelope.decode(envelope_bytes)
     expected_envelope = envelope
-
     assert expected_envelope == actual_envelope
+
+    actual_msg = SimpleSerializer().decode(actual_envelope.message)
+    expected_msg = msg
+    assert expected_msg == actual_msg

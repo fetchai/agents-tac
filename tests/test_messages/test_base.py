@@ -29,26 +29,32 @@ class TestDefaultSerializations:
     def setup_class(cls):
         """Set up the use case."""
         cls.message = Message(content="hello")
-        cls.envelope = Envelope(to="receiver", sender="sender", protocol_id="my_own_protocol", message=cls.message)
 
     def test_default_protobuf_serialization(self):
         """Test that the default Protobuf serialization works."""
-        envelope = self.envelope
 
-        serializer = DefaultProtobufSerializer()
-        envelope_bytes = envelope.encode(serializer)
-        actual_envelope = Envelope.decode(envelope_bytes, serializer)
-        expected_envelope = envelope
+        message_bytes = DefaultProtobufSerializer().encode(self.message)
+        envelope = Envelope(to="receiver", sender="sender", protocol_id="my_own_protocol", message=message_bytes)
+        envelope_bytes = envelope.encode()
 
+        expected_envelope = Envelope.decode(envelope_bytes)
+        actual_envelope = envelope
         assert expected_envelope == actual_envelope
+
+        expected_msg = DefaultProtobufSerializer().decode(expected_envelope.message)
+        actual_msg = self.message
+        assert expected_msg == actual_msg
 
     def test_default_json_serialization(self):
         """Test that the default JSON serialization works."""
-        envelope = self.envelope
+        message_bytes = DefaultJSONSerializer().encode(self.message)
+        envelope = Envelope(to="receiver", sender="sender", protocol_id="my_own_protocol", message=message_bytes)
+        envelope_bytes = envelope.encode()
 
-        serializer = DefaultJSONSerializer()
-        envelope_bytes = envelope.encode(serializer)
-        actual_envelope = Envelope.decode(envelope_bytes, serializer)
-        expected_envelope = envelope
-
+        expected_envelope = Envelope.decode(envelope_bytes)
+        actual_envelope = envelope
         assert expected_envelope == actual_envelope
+
+        expected_msg = DefaultJSONSerializer().decode(expected_envelope.message)
+        actual_msg = self.message
+        assert expected_msg == actual_msg

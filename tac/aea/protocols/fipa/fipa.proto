@@ -7,10 +7,16 @@ import "google/protobuf/struct.proto";
 message FIPAMessage{
 
     message CFP{
-        google.protobuf.Struct query = 1;
+        message Nothing {
+        }
+        oneof query{
+            google.protobuf.Struct json = 1;
+            bytes bytes = 2;
+            Nothing nothing = 3;
+        }
     }
     message Propose{
-        repeated google.protobuf.Struct proposal = 4;
+        repeated bytes proposal = 4;
     }
     message Accept{}
     message MatchAccept{}

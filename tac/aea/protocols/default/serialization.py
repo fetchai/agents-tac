@@ -28,7 +28,7 @@ from tac.aea.mail.protocol import Serializer
 
 
 class SimpleSerializer(Serializer):
-    """Serialization for the 'simple' protocol."""
+    """Serialization for the 'default' protocol."""
 
     def encode(self, msg: Message) -> bytes:
         """Encode a 'Simple' message into bytes."""
