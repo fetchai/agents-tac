@@ -32,7 +32,7 @@ from typing import Union, Optional
 import dateutil
 
 from tac.aea.agent import Agent
-from tac.aea.mail.oef import OEFNetworkMailBox
+from tac.aea.mail.oef import OEFMailBox
 from tac.aea.mail.protocol import Envelope
 from tac.agents.controller.base.handlers import OEFHandler, GameHandler, AgentMessageDispatcher
 from tac.agents.controller.base.tac_parameters import TACParameters
@@ -73,7 +73,7 @@ class ControllerAgent(Agent):
         :param debug: if True, run the agent in debug mode.
         """
         super().__init__(name, oef_addr, oef_port, private_key_pem, agent_timeout, debug=debug)
-        self.mailbox = OEFNetworkMailBox(self.crypto.public_key, oef_addr, oef_port)
+        self.mailbox = OEFMailBox(self.crypto.public_key, oef_addr, oef_port)
 
         self.oef_handler = OEFHandler(self.crypto, self.liveness, self.mailbox, self.name)
         self.agent_message_dispatcher = AgentMessageDispatcher(self)

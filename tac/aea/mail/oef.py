@@ -24,14 +24,11 @@ import datetime
 import logging
 from queue import Empty, Queue
 from threading import Thread
-from typing import List, Dict
+from typing import List, Dict, Optional
 
-from oef.agents import Agent
-from oef.core import OEFProxy
+from oef.agents import OEFAgent
 from oef.messages import OEFErrorOperation, CFP_TYPES, PROPOSE_TYPES
-from oef.proxy import OEFNetworkProxy
 
-from tac.aea.helpers.local_node import LocalNode, OEFLocalProxy
 from tac.aea.mail.base import Connection, MailBox
 from tac.aea.mail.messages import OEFMessage, FIPAMessage
 from tac.aea.mail.protocol import Envelope
@@ -91,17 +88,19 @@ class MailStats(object):
         self._search_result_counts[search_id] = nb_search_results
 
 
-class OEFChannel(Agent):
+class OEFChannel(OEFAgent):
     """The OEFChannel connects the OEF Agent with the connection."""
 
-    def __init__(self, oef_proxy: OEFProxy, in_queue: Queue):
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000, in_queue: Optional[Queue] = None):
         """
         Initialize.
 
-        :param oef_proxy: the OEFProxy.
+        :param public_key: the public key of the agent.
+        :param oef_addr: the OEF IP address.
+        :param oef_port: the OEF port.
         :param in_queue: the in queue.
         """
-        super().__init__(oef_proxy)
+        super().__init__(public_key, oef_addr, oef_port)
         self.in_queue = in_queue
         self.mail_stats = MailStats()
 
@@ -352,7 +351,7 @@ class OEFChannel(Agent):
 class OEFConnection(Connection):
     """The OEFConnection connects the to the mailbox."""
 
-    def __init__(self, oef_proxy: OEFProxy):
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000):
         """
         Initialize.
 
@@ -360,7 +359,7 @@ class OEFConnection(Connection):
         """
         super().__init__()
 
-        self.bridge = OEFChannel(oef_proxy, self.in_queue)
+        self.bridge = OEFChannel(public_key, oef_addr, oef_port, self.in_queue)
 
         self._stopped = True
         self.in_thread = Thread(target=self.bridge.run)
@@ -424,44 +423,18 @@ class OEFConnection(Connection):
 class OEFMailBox(MailBox):
     """The OEF mail box."""
 
-    def __init__(self, oef_proxy: OEFProxy):
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000):
         """
         Initialize.
 
-        :param oef_proxy: the oef proxy.
+        :param public_key: the public key of the agent.
+        :param oef_addr: the OEF IP address.
+        :param oef_port: the OEF port.
         """
-        connection = OEFConnection(oef_proxy)
+        connection = OEFConnection(public_key, oef_addr, oef_port)
         super().__init__(connection)
 
     @property
     def mail_stats(self) -> MailStats:
         """Get the mail stats object."""
         return self._connection.bridge.mail_stats
-
-
-class OEFNetworkMailBox(OEFMailBox):
-    """The OEF network mail box."""
-
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000):
-        """
-        Initialize.
-
-        :param public_key: the public key of the agent.
-        :param oef_addr: the OEF address.
-        :param oef_port: the oef port.
-        """
-        super().__init__(OEFNetworkProxy(public_key, oef_addr, oef_port, loop=asyncio.new_event_loop()))
-
-
-class OEFLocalMailBox(OEFMailBox):
-    """The OEF local mail box."""
-
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000):
-        """
-        Initialize.
-
-        :param public_key: the public key of the agent.
-        :param oef_addr: the OEF address.
-        :param oef_port: the oef port.
-        """
-        super().__init__(OEFLocalProxy(public_key, LocalNode(), loop=asyncio.new_event_loop()))

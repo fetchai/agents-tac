@@ -26,7 +26,7 @@ import logging
 from typing import Optional
 
 from tac.aea.agent import Agent
-from tac.aea.mail.oef import OEFNetworkMailBox
+from tac.aea.mail.oef import OEFMailBox
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ class MyAgent(Agent):
     def __init__(self, name: str, oef_addr: str, oef_port: int, agent_timeout: float = 1.0, private_key_pem_path: Optional[str] = None):
         """Agent initialization."""
         super().__init__(name, oef_addr, oef_port, private_key_pem_path, agent_timeout)
-        self.mailbox = OEFNetworkMailBox(self.crypto.public_key, oef_addr, oef_port)
+        self.mailbox = OEFMailBox(self.crypto.public_key, oef_addr, oef_port)
 
         raise NotImplementedError("Your agent must implement the interface defined in Agent.")
 
