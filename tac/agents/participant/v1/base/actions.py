@@ -28,7 +28,8 @@ This module contains the classes which define the actions of an agent.
 
 import logging
 
-from oef.query import Query, Constraint, GtEq
+from aea.protocols.oef.models import Query, Constraint
+from oef.query import GtEq
 
 from aea.agent import Liveness
 from aea.crypto.base import Crypto

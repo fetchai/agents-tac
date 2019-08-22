@@ -24,7 +24,7 @@ from abc import abstractmethod
 from enum import Enum
 from typing import List, Set, Optional
 
-from oef.schema import Description
+from aea.protocols.oef.models import Description
 
 from tac.agents.participant.v1.base.states import WorldState
 

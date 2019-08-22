@@ -26,7 +26,7 @@ This module contains the classes which define the actions of an agent.
 
 import logging
 
-from oef.schema import Description, DataModel, AttributeSchema
+from aea.protocols.oef.models import Description, DataModel, Attribute
 
 from aea.agent import Liveness
 from aea.crypto.base import Crypto
@@ -38,7 +38,7 @@ from tac.agents.controller.base.interfaces import OEFActionInterface
 logger = logging.getLogger(__name__)
 
 CONTROLLER_DATAMODEL = DataModel("tac", [
-    AttributeSchema("version", int, True, "Version number of the TAC Controller Agent."),
+    Attribute("version", int, True, "Version number of the TAC Controller Agent."),
 ])
 
 

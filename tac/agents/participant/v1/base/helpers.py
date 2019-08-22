@@ -22,11 +22,10 @@
 import logging
 from typing import Dict, List, Set, Union
 
-from oef.query import Query, Constraint, GtEq, Or
-from oef.schema import AttributeSchema, DataModel, Description
-
 from aea.dialogue.base import DialogueLabel
 from aea.mail.base import Envelope
+from aea.protocols.oef.models import DataModel, Attribute, Description, Query, Constraint, Or
+from oef.query import GtEq
 
 logger = logging.getLogger(__name__)
 
@@ -104,9 +103,9 @@ def build_datamodel(good_pbks: List[str], is_supply: bool) -> DataModel:
 
     :return: the data model.
     """
-    goods_quantities_attributes = [AttributeSchema(good_pbk, int, False)
+    goods_quantities_attributes = [Attribute(good_pbk, int, False)
                                    for good_pbk in good_pbks]
-    price_attribute = AttributeSchema("price", float, False)
+    price_attribute = Attribute("price", float, False)
     description = TAC_SUPPLY_DATAMODEL_NAME if is_supply else TAC_DEMAND_DATAMODEL_NAME
     data_model = DataModel(description, goods_quantities_attributes + [price_attribute])
     return data_model

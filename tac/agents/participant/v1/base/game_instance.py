@@ -24,8 +24,7 @@ import datetime
 import random
 from typing import List, Optional, Set, Tuple, Dict, Union
 
-from oef.query import Query
-from oef.schema import Description
+from aea.protocols.oef.models import Description, Query
 
 from aea.channel.oef import MailStats
 from tac.agents.participant.v1.base.dialogues import Dialogues, Dialogue

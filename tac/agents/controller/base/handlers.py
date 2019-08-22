@@ -59,7 +59,7 @@ from tac.platform.protocol import Response, Request, Register, Unregister, Error
     Transaction, TransactionConfirmation, ErrorCode, Cancelled, GetStateUpdate, StateUpdate
 
 if TYPE_CHECKING:
-    from tac.platform.controller.controller_agent import ControllerAgent
+    from tac.agents.controller.agent import ControllerAgent
 
 logger = logging.getLogger(__name__)
 
