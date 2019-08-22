@@ -29,12 +29,12 @@ This module contains the classes required for dialogue management.
 import logging
 from typing import Any, Dict, List, Optional
 
-from tac.aea.dialogue.base import DialogueLabel
-from tac.aea.dialogue.base import Dialogue as BaseDialogue
-from tac.aea.dialogue.base import Dialogues as BaseDialogues
-from tac.aea.mail.base import Address
-from tac.aea.protocols.base.message import Message
-from tac.aea.protocols.fipa.message import FIPAMessage
+from aea.dialogue.base import DialogueLabel
+from aea.dialogue.base import Dialogue as BaseDialogue
+from aea.dialogue.base import Dialogues as BaseDialogues
+from aea.mail.base import Address
+from aea.protocols.base.message import Message
+from aea.protocols.fipa.message import FIPAMessage
 
 Action = Any
 logger = logging.getLogger(__name__)

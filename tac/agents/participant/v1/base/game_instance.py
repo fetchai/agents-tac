@@ -27,7 +27,7 @@ from typing import List, Optional, Set, Tuple, Dict, Union
 from oef.query import Query
 from oef.schema import Description
 
-from tac.aea.channel.oef import MailStats
+from aea.channel.oef import MailStats
 from tac.agents.participant.v1.base.dialogues import Dialogues, Dialogue
 from tac.agents.participant.v1.base.helpers import build_dict, build_query, get_goods_quantities_description
 from tac.agents.participant.v1.base.states import AgentState, WorldState

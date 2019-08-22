@@ -19,9 +19,9 @@
 
 """This module contains the tests of the messages module."""
 
-from tac.aea.mail.base import Envelope
-from tac.aea.protocols.default.message import DefaultMessage
-from tac.aea.protocols.default.serialization import DefaultSerializer
+from aea.mail.base import Envelope
+from aea.protocols.default.message import DefaultMessage
+from aea.protocols.default.serialization import DefaultSerializer
 
 
 def test_simple_bytes_serialization():

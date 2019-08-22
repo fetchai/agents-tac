@@ -25,8 +25,8 @@ from typing import Dict, List, Set, Union
 from oef.query import Query, Constraint, GtEq, Or
 from oef.schema import AttributeSchema, DataModel, Description
 
-from tac.aea.dialogue.base import DialogueLabel
-from tac.aea.mail.base import Envelope
+from aea.dialogue.base import DialogueLabel
+from aea.mail.base import Envelope
 
 logger = logging.getLogger(__name__)
 

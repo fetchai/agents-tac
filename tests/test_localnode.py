@@ -21,13 +21,12 @@
 import asyncio
 import time
 
-from tac.aea.mail.base import Envelope, MailBox
-from tac.aea.channel.oef import OEFLocalConnection
-from tac.aea.helpers.local_node import LocalNode
-from tac.aea.protocols.default.message import DefaultMessage
-from tac.aea.protocols.default.serialization import DefaultSerializer
-from tac.aea.protocols.fipa.message import FIPAMessage
-from tac.aea.protocols.fipa.serialization import FIPASerializer
+from aea.mail.base import Envelope, MailBox
+from aea.helpers.local_node import LocalNode, OEFLocalConnection
+from aea.protocols.default.message import DefaultMessage
+from aea.protocols.default.serialization import DefaultSerializer
+from aea.protocols.fipa.message import FIPAMessage
+from aea.protocols.fipa.serialization import FIPASerializer
 
 
 def test_connection():

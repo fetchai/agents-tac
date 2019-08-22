@@ -21,7 +21,7 @@
 
 import pytest
 
-from tac.aea.crypto.base import Crypto
+from aea.crypto.base import Crypto
 from tac.platform.protocol import Register, Unregister, Transaction, TransactionConfirmation, Error, \
     GameData, Request, Response, ErrorCode, Cancelled, GetStateUpdate, StateUpdate
 

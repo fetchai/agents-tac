@@ -20,12 +20,12 @@
 """This module contains tests for the mail module."""
 import time
 
-from tac.aea.channel.oef import OEFMailBox
-from tac.aea.mail.base import Envelope
-from tac.aea.protocols.default.message import DefaultMessage
-from tac.aea.protocols.fipa.message import FIPAMessage
-from tac.aea.protocols.default.serialization import DefaultSerializer
-from tac.aea.protocols.fipa.serialization import FIPASerializer
+from aea.channel.oef import OEFMailBox
+from aea.mail.base import Envelope
+from aea.protocols.default.message import DefaultMessage
+from aea.protocols.fipa.message import FIPAMessage
+from aea.protocols.default.serialization import DefaultSerializer
+from aea.protocols.fipa.serialization import FIPASerializer
 
 
 def test_example(network_node):

@@ -27,7 +27,7 @@ import matplotlib
 import os
 import pylab as plt
 
-from tac.aea.crypto.base import Crypto
+from aea.crypto.base import Crypto
 from tac.agents.controller.base.states import Game
 from tac.agents.participant.v1.base.states import AgentState
 

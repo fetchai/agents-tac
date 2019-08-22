@@ -24,9 +24,9 @@ import logging
 import time
 from typing import Optional
 
-from tac.aea.agent import Agent
-from tac.aea.channel.oef import OEFMailBox
-from tac.aea.mail.base import Envelope
+from aea.agent import Agent
+from aea.channel.oef import OEFMailBox
+from aea.mail.base import Envelope
 from tac.gui.dashboards.agent import AgentDashboard
 
 logger = logging.getLogger(__name__)

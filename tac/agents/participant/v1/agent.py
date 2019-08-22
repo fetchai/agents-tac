@@ -24,9 +24,9 @@ import logging
 import time
 from typing import Optional
 
-from tac.aea.agent import Agent
-from tac.aea.channel.oef import OEFMailBox
-from tac.aea.mail.base import Envelope
+from aea.agent import Agent
+from aea.channel.oef import OEFMailBox
+from aea.mail.base import Envelope
 from tac.agents.participant.v1.base.game_instance import GameInstance
 from tac.agents.participant.v1.base.handlers import ControllerHandler, DialogueHandler, OEFHandler
 from tac.agents.participant.v1.base.helpers import is_oef_message, is_controller_message, is_fipa_message

@@ -22,8 +22,8 @@
 from threading import Timer
 from unittest.mock import MagicMock
 
-from tac.aea.agent import Agent
-from tac.aea.channel.oef import OEFMailBox
+from aea.agent import Agent
+from aea.channel.oef import OEFMailBox
 
 
 class TAgent(Agent):

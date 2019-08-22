@@ -26,10 +26,10 @@ This module contains the classes which define the reactions of an agent.
 
 import logging
 
-from tac.aea.agent import Liveness
-from tac.aea.crypto.base import Crypto
-from tac.aea.mail.base import MailBox, Envelope
-from tac.aea.protocols.oef.serialization import OEFSerializer
+from aea.agent import Liveness
+from aea.crypto.base import Crypto
+from aea.mail.base import MailBox, Envelope
+from aea.protocols.oef.serialization import OEFSerializer
 from tac.agents.controller.base.interfaces import OEFReactionInterface
 
 logger = logging.getLogger(__name__)

@@ -40,13 +40,13 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Any, Dict, Optional, List, Set, Type, TYPE_CHECKING
 
-from tac.aea.agent import Liveness
-from tac.aea.crypto.base import Crypto
-from tac.aea.mail.base import MailBox, Envelope
-from tac.aea.protocols.default.message import DefaultMessage
-from tac.aea.protocols.default.serialization import DefaultSerializer
-from tac.aea.protocols.oef.message import OEFMessage
-from tac.aea.protocols.oef.serialization import OEFSerializer
+from aea.agent import Liveness
+from aea.crypto.base import Crypto
+from aea.mail.base import MailBox, Envelope
+from aea.protocols.default.message import DefaultMessage
+from aea.protocols.default.serialization import DefaultSerializer
+from aea.protocols.oef.message import OEFMessage
+from aea.protocols.oef.serialization import OEFSerializer
 from tac.agents.controller.base.actions import OEFActions
 from tac.agents.controller.base.helpers import generate_good_pbk_to_name
 from tac.agents.controller.base.reactions import OEFReactions

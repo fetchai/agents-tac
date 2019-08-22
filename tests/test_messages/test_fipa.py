@@ -20,9 +20,9 @@
 """This module contains the tests for the FIPA protocol."""
 from oef.schema import Description
 
-from tac.aea.mail.base import Envelope
-from tac.aea.protocols.fipa.message import FIPAMessage
-from tac.aea.protocols.fipa.serialization import FIPASerializer
+from aea.mail.base import Envelope
+from aea.protocols.fipa.message import FIPAMessage
+from aea.protocols.fipa.serialization import FIPASerializer
 
 
 def test_fipa_cfp_serialization():

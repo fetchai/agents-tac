@@ -26,7 +26,7 @@ import os
 from collections import defaultdict
 from typing import Optional, Dict, List
 
-from tac.aea.crypto.base import Crypto
+from aea.crypto.base import Crypto
 from tac.agents.controller.base.states import Game
 from tac.gui.dashboards.base import start_visdom_server, Dashboard
 from tac.platform.game.stats import GameStats
