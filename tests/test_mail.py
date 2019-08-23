@@ -21,6 +21,7 @@
 import time
 
 from aea.channel.oef import OEFMailBox
+from aea.crypto.base import Crypto
 from aea.mail.base import Envelope
 from aea.protocols.default.message import DefaultMessage
 from aea.protocols.fipa.message import FIPAMessage
@@ -30,31 +31,35 @@ from aea.protocols.fipa.serialization import FIPASerializer
 
 def test_example(network_node):
     """Test the mailbox."""
-    mailbox1 = OEFMailBox("mailbox1", "127.0.0.1", 10000)
-    mailbox2 = OEFMailBox("mailbox2", "127.0.0.1", 10000)
+
+    crypto1 = Crypto()
+    crypto2 = Crypto()
+
+    mailbox1 = OEFMailBox(crypto1.public_key, "127.0.0.1", 10000)
+    mailbox2 = OEFMailBox(crypto2.public_key, "127.0.0.1", 10000)
 
     mailbox1.connect()
     mailbox2.connect()
 
     msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=b"hello")
     msg_bytes = DefaultSerializer().encode(msg)
-    mailbox1.outbox.put(Envelope(to="mailbox2", sender="mailbox1", protocol_id=DefaultMessage.protocol_id, message=msg_bytes))
+    mailbox1.outbox.put(Envelope(to=crypto2.public_key, sender=crypto1.public_key, protocol_id=DefaultMessage.protocol_id, message=msg_bytes))
 
     msg = FIPAMessage(message_id=0, dialogue_id=0, target=0, performative=FIPAMessage.Performative.CFP, query=None)
     msg_bytes = FIPASerializer().encode(msg)
-    mailbox1.outbox.put(Envelope(to="mailbox2", sender="mailbox1", protocol_id=FIPAMessage.protocol_id, message=msg_bytes))
+    mailbox1.outbox.put(Envelope(to=crypto2.public_key, sender=crypto1.public_key, protocol_id=FIPAMessage.protocol_id, message=msg_bytes))
 
     msg = FIPAMessage(message_id=0, dialogue_id=0, target=0, performative=FIPAMessage.Performative.PROPOSE, proposal=[])
     msg_bytes = FIPASerializer().encode(msg)
-    mailbox1.outbox.put(Envelope(to="mailbox2", sender="mailbox1", protocol_id=FIPAMessage.protocol_id, message=msg_bytes))
+    mailbox1.outbox.put(Envelope(to=crypto2.public_key, sender=crypto1.public_key, protocol_id=FIPAMessage.protocol_id, message=msg_bytes))
 
     msg = FIPAMessage(message_id=0, dialogue_id=0, target=0, performative=FIPAMessage.Performative.ACCEPT)
     msg_bytes = FIPASerializer().encode(msg)
-    mailbox1.outbox.put(Envelope(to="mailbox2", sender="mailbox1", protocol_id=FIPAMessage.protocol_id, message=msg_bytes))
+    mailbox1.outbox.put(Envelope(to=crypto2.public_key, sender=crypto1.public_key, protocol_id=FIPAMessage.protocol_id, message=msg_bytes))
 
     msg = FIPAMessage(message_id=0, dialogue_id=0, target=0, performative=FIPAMessage.Performative.DECLINE)
     msg_bytes = FIPASerializer().encode(msg)
-    mailbox1.outbox.put(Envelope(to="mailbox2", sender="mailbox1", protocol_id=FIPAMessage.protocol_id, message=msg_bytes))
+    mailbox1.outbox.put(Envelope(to=crypto2.public_key, sender=crypto1.public_key, protocol_id=FIPAMessage.protocol_id, message=msg_bytes))
 
     time.sleep(5.0)
 
