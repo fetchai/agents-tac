@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "13219dde216f73c945f18c20b136b748a0f131dd3aa4505d11ba29a60e797574"
+            "sha256": "bd24006788c89b0a5678e335640502b980c3d377d6d6e65c26505b57cc568093"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -22,12 +22,9 @@
     },
     "default": {
         "aea": {
-            "hashes": [
-                "sha256:299da7e504547a4e143a3f792d276d79f550826d8d869f815a1421453972c58e",
-                "sha256:c00a7aeb9d005a669cc05dea1ec257660b5ef39bc9e29281e8ebf5bc2889c86a"
-            ],
-            "index": "test-pypi",
-            "version": "==0.1.0.post3"
+            "editable": true,
+            "git": "https://github.com/fetchai/agents-aea.git",
+            "ref": "c0e643c7caa6cdd6def2283a95905414bf6cc6f6"
         },
         "alabaster": {
             "hashes": [
@@ -742,14 +739,6 @@
         }
     },
     "develop": {
-        "appnope": {
-            "hashes": [
-                "sha256:5b26757dc6f79a3b7dc9fab95359328d5747fcb2409d331ea66d0272b90ab2a0",
-                "sha256:8b995ffe925347a2138d7ac0fe77155e4311a0ea6d6da4f5128fe4b3cbe5ed71"
-            ],
-            "markers": "sys_platform == 'darwin'",
-            "version": "==0.1.0"
-        },
         "atomicwrites": {
             "hashes": [
                 "sha256:03472c30eb2c5d1ba9227e4c2ca66ab8287fbfbbda3888aa93dc2e28fc6811b4",
@@ -1332,10 +1321,10 @@
         },
         "virtualenv": {
             "hashes": [
-                "sha256:5e4d92f9a36359a745ddb113cabb662e6100e71072a1e566eb6ddfcc95fdb7ed",
-                "sha256:b6711690882013bc79e0eac55889d901596f0967165d80adfa338c5729db1c71"
+                "sha256:94a6898293d07f84a98add34c4df900f8ec64a570292279f6d91c781d37fd305",
+                "sha256:f6fc312c031f2d2344f885de114f1cb029dfcffd26aa6e57d2ee2296935c4e7d"
             ],
-            "version": "==16.7.3"
+            "version": "==16.7.4"
         },
         "virtualenv-clone": {
             "hashes": [
