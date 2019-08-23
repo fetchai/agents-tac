@@ -31,7 +31,6 @@ from aea.protocols.fipa.serialization import FIPASerializer
 
 def test_example(network_node):
     """Test the mailbox."""
-
     crypto1 = Crypto()
     crypto2 = Crypto()
 
