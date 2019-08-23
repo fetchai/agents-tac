@@ -26,19 +26,19 @@ This module contains the classes which define the actions of an agent.
 
 import logging
 
-from oef.schema import Description, DataModel, AttributeSchema
+from aea.protocols.oef.models import Description, DataModel, Attribute
 
-from tac.aea.agent import Liveness
-from tac.aea.crypto.base import Crypto
-from tac.aea.mail.base import MailBox
-from tac.aea.protocols.oef.message import OEFMessage
-from tac.aea.protocols.oef.serialization import OEFSerializer, DEFAULT_OEF
+from aea.agent import Liveness
+from aea.crypto.base import Crypto
+from aea.mail.base import MailBox
+from aea.protocols.oef.message import OEFMessage
+from aea.protocols.oef.serialization import OEFSerializer, DEFAULT_OEF
 from tac.agents.controller.base.interfaces import OEFActionInterface
 
 logger = logging.getLogger(__name__)
 
 CONTROLLER_DATAMODEL = DataModel("tac", [
-    AttributeSchema("version", int, True, "Version number of the TAC Controller Agent."),
+    Attribute("version", int, True, "Version number of the TAC Controller Agent."),
 ])
 
 

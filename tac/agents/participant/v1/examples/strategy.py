@@ -22,7 +22,7 @@
 
 from typing import List, Optional, Set
 
-from oef.schema import Description
+from aea.protocols.oef.models import Description
 
 from tac.agents.participant.v1.base.helpers import get_goods_quantities_description
 from tac.agents.participant.v1.base.states import WorldState

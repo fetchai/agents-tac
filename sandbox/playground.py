@@ -32,10 +32,10 @@ from typing import Dict, Optional
 
 import docker
 
-from tac.aea.dialogue.base import Dialogue
-from tac.aea.mail.base import Envelope
-from tac.aea.protocols.fipa.message import FIPAMessage
-from tac.aea.protocols.fipa.serialization import FIPASerializer
+from aea.dialogue.base import Dialogue
+from aea.mail.base import Envelope
+from aea.protocols.fipa.message import FIPAMessage
+from aea.protocols.fipa.serialization import FIPASerializer
 from tac.agents.participant.v1.examples.baseline import BaselineAgent
 from tac.agents.participant.v1.examples.strategy import BaselineStrategy
 from tac.platform.protocol import GameData

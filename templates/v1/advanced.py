@@ -25,11 +25,10 @@ import argparse
 import logging
 from typing import List, Optional, Set
 
-from oef.schema import Description
-
-from tac.aea.state.base import WorldState
+from aea.protocols.oef.models import Description
+from aea.state.base import WorldState
 from tac.agents.participant.v1.base.strategy import RegisterAs, SearchFor, Strategy
-from tac.agents.participant.examples.baseline import BaselineAgent
+from tac.agents.participant.v1.examples.baseline import BaselineAgent
 from tac.gui.dashboards.agent import AgentDashboard
 
 logger = logging.getLogger(__name__)

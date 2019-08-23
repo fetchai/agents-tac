@@ -21,7 +21,7 @@
 
 import pytest
 
-from tac.aea.crypto.base import Crypto
+from aea.crypto.base import Crypto
 from tac.agents.controller.base.states import GameInitialization, Game
 from tac.agents.participant.v1.base.states import AgentState
 from tac.platform.game.base import GameConfiguration, GoodState

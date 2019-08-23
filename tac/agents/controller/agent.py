@@ -30,10 +30,10 @@ import time
 from typing import Union, Optional
 
 import dateutil
+from aea.agent import Agent
+from aea.channel.oef import OEFMailBox
+from aea.mail.base import Envelope
 
-from tac.aea.agent import Agent
-from tac.aea.channel.oef import OEFMailBox
-from tac.aea.mail.base import Envelope
 from tac.agents.controller.base.handlers import OEFHandler, GameHandler, AgentMessageDispatcher
 from tac.agents.controller.base.tac_parameters import TACParameters
 from tac.agents.participant.v1.base.helpers import is_oef_message

@@ -28,7 +28,7 @@ It cointains:
 
 from abc import abstractmethod
 
-from tac.aea.mail.base import Envelope
+from aea.mail.base import Envelope
 
 
 class OEFReactionInterface:

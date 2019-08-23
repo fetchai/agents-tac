@@ -29,7 +29,7 @@ from cryptography.hazmat.primitives.serialization import Encoding, PrivateFormat
 
 import argparse
 
-from tac.aea.crypto.base import Crypto
+from aea.crypto.base import Crypto
 
 parser = argparse.ArgumentParser("generate_private_key", description=__doc__)
 parser.add_argument("out_file", type=str, help="Where to save the private key.")

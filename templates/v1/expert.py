@@ -25,8 +25,8 @@ import argparse
 import logging
 from typing import Optional
 
-from tac.aea.agent import Agent
-from tac.aea.mail.oef import OEFMailBox
+from aea.agent import Agent
+from aea.mail.oef import OEFMailBox
 
 logger = logging.getLogger(__name__)
 

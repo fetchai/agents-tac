@@ -28,15 +28,16 @@ This module contains the classes which define the actions of an agent.
 
 import logging
 
-from oef.query import Query, Constraint, GtEq
+from aea.protocols.oef.models import Query, Constraint
+from oef.query import GtEq
 
-from tac.aea.agent import Liveness
-from tac.aea.crypto.base import Crypto
-from tac.aea.mail.base import MailBox
-from tac.aea.protocols.default.message import DefaultMessage
-from tac.aea.protocols.default.serialization import DefaultSerializer
-from tac.aea.protocols.oef.message import OEFMessage
-from tac.aea.protocols.oef.serialization import OEFSerializer, DEFAULT_OEF
+from aea.agent import Liveness
+from aea.crypto.base import Crypto
+from aea.mail.base import MailBox
+from aea.protocols.default.message import DefaultMessage
+from aea.protocols.default.serialization import DefaultSerializer
+from aea.protocols.oef.message import OEFMessage
+from aea.protocols.oef.serialization import OEFSerializer, DEFAULT_OEF
 from tac.agents.participant.v1.base.game_instance import GameInstance
 from tac.agents.participant.v1.base.interfaces import ControllerActionInterface, OEFActionInterface, \
     DialogueActionInterface

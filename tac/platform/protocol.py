@@ -46,12 +46,11 @@ from enum import Enum
 from typing import List, Dict, Any
 from typing import Optional
 
+from aea.protocols.oef.models import Description
 from google.protobuf.message import DecodeError
 
-from tac.aea.crypto.base import Crypto
+from aea.crypto.base import Crypto
 import tac.tac_pb2 as tac_pb2
-
-from oef.schema import Description
 
 logger = logging.getLogger(__name__)
 

@@ -103,7 +103,7 @@ setup(
     author=about['__author__'],
     url=about['__url__'],
     long_description=readme,
-    packages=find_packages(include=["tac"]),
+    packages=find_packages(include=["tac*"]),
     cmdclass={
         'protoc': protoc,
     },
@@ -111,7 +111,7 @@ setup(
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
         'Natural Language :: English',
-        'License :: OSI Approved :: MIT Software License',
+        'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
     ],

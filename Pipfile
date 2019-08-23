@@ -21,20 +21,21 @@ flake8-docstrings = "*"
 pygments = "*"
 
 [packages]
+fetchai-ledger-api = {git = "https://github.com/fetchai/ledger-api-py.git"}
+base58 = "*"
+cryptography = "*"
+flask-restful = "*"
+nbsphinx = "*"
 numpy = "*"
 matplotlib = "*"
-python-dateutil = "*"
-visdom = "*"
-cryptography = "*"
-base58 = "*"
-fetchai-ledger-api = {git = "https://github.com/fetchai/ledger-api-py.git"}
 oef = {version = "==0.6.0",index = "test-pypi"}
+python-dateutil = "*"
 sphinxcontrib-mermaid = "*"
 sphinxcontrib-apidoc = "*"
 sphinx = "*"
-nbsphinx = "*"
-flask-restful = "*"
 wtforms = "*"
+visdom = "*"
+aea = {editable = true,git = "https://github.com/fetchai/agents-aea.git",ref = "develop"}
 
 [requires]
 python_version = "3.7"

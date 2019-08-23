@@ -29,14 +29,14 @@ This module contains the message handler classes.
 import logging
 from typing import Any
 
-from tac.aea.agent import Liveness
-from tac.aea.crypto.base import Crypto
-from tac.aea.mail.base import MailBox, Envelope
-from tac.aea.protocols.base.message import Message
-from tac.aea.protocols.default.serialization import DefaultSerializer
-from tac.aea.protocols.fipa.serialization import FIPASerializer
-from tac.aea.protocols.oef.message import OEFMessage
-from tac.aea.protocols.oef.serialization import OEFSerializer
+from aea.agent import Liveness
+from aea.crypto.base import Crypto
+from aea.mail.base import MailBox, Envelope
+from aea.protocols.base.message import Message
+from aea.protocols.default.serialization import DefaultSerializer
+from aea.protocols.fipa.serialization import FIPASerializer
+from aea.protocols.oef.message import OEFMessage
+from aea.protocols.oef.serialization import OEFSerializer
 from tac.agents.participant.v1.base.actions import DialogueActions, ControllerActions, OEFActions
 from tac.agents.participant.v1.base.game_instance import GameInstance
 from tac.agents.participant.v1.base.reactions import DialogueReactions, ControllerReactions, OEFReactions
