@@ -21,7 +21,6 @@ flake8-docstrings = "*"
 pygments = "*"
 
 [packages]
-aea = {version = "==0.1.0.post3",index = "test-pypi"}
 fetchai-ledger-api = {git = "https://github.com/fetchai/ledger-api-py.git"}
 base58 = "*"
 cryptography = "*"
@@ -36,6 +35,7 @@ sphinxcontrib-apidoc = "*"
 sphinx = "*"
 wtforms = "*"
 visdom = "*"
+aea = {editable = true,git = "https://github.com/fetchai/agents-aea.git",ref = "develop"}
 
 [requires]
 python_version = "3.7"
