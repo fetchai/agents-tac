@@ -31,10 +31,10 @@ from typing import List, Dict, Any
 
 from aea.crypto.base import Crypto
 from tac.agents.participant.v1.base.states import AgentState
-from tac.platform.game.base import GameConfiguration, GoodState
+from tac.platform.game.base import GameConfiguration, GoodState, Transaction
 from tac.platform.game.helpers import generate_money_endowments, generate_good_endowments, generate_utility_params, \
     generate_equilibrium_prices_and_holdings, determine_scaling_factor
-from tac.platform.protocol import Transaction
+
 
 Endowment = List[int]  # an element e_j is the endowment of good j.
 UtilityParams = List[float]  # an element u_j is the utility value of good j.
@@ -382,7 +382,7 @@ class Game:
         (20, [2, 1, 1])
         >>> agent_state_2.balance, agent_state_2.current_holdings
         (20, [1, 1, 2])
-        >>> tx = Transaction('some_tx_id', True, 'tac_agent_1_pbk', 15, {'tac_good_0': 1, 'tac_good_1': 0, 'tac_good_2': 0}, 'tac_agent_0_pbk', Crypto())
+        >>> tx = Transaction('some_tx_id', True, 'tac_agent_1_pbk', 15, {'tac_good_0': 1, 'tac_good_1': 0, 'tac_good_2': 0}, 'tac_agent_0_pbk')
         >>> game.settle_transaction(tx)
         >>> agent_state_0.balance, agent_state_0.current_holdings
         (4.5, [2, 1, 1])
@@ -517,7 +517,7 @@ class Game:
 
         game = Game(configuration, initialization)
         for tx_dict in d["transactions"]:
-            tx = Transaction.from_dict(tx_dict, crypto)
+            tx = Transaction.from_dict(tx_dict)
             game.settle_transaction(tx)
 
         return game

@@ -26,7 +26,7 @@ from collections import defaultdict, deque
 from typing import Dict, Tuple, Deque
 
 from tac.agents.participant.v1.base.dialogues import DialogueLabel
-from tac.platform.protocol import Transaction
+from tac.platform.game.base import Transaction
 
 logger = logging.getLogger(__name__)
 

@@ -24,8 +24,7 @@ import pytest
 from aea.crypto.base import Crypto
 from tac.agents.controller.base.states import GameInitialization, Game
 from tac.agents.participant.v1.base.states import AgentState
-from tac.platform.game.base import GameConfiguration, GoodState
-from tac.platform.protocol import Transaction
+from tac.platform.game.base import GameConfiguration, GoodState, Transaction
 
 
 class TestGameConfiguration:
@@ -372,7 +371,7 @@ class TestGame:
         seller_pbk = 'tac_agent_1_pbk'
         amount = 20
         quantities_by_good = {0: 1, 1: 1, 2: 1}
-        invalid_transaction = Transaction(tx_id, is_sender_buyer, buyer_pbk, amount, quantities_by_good, seller_pbk, Crypto())
+        invalid_transaction = Transaction(tx_id, is_sender_buyer, buyer_pbk, amount, quantities_by_good, seller_pbk)
 
         # transaction is invalide because buyer_balance < amount + fee
         assert not game.is_transaction_valid(invalid_transaction)
@@ -427,7 +426,7 @@ class TestGame:
         counterparty_pbk = 'tac_agent_1_pbk'
         amount = 20
         quantities_by_good = {0: 3, 1: 0, 2: 0}
-        invalid_transaction = Transaction(tx_id, is_sender_buyer, counterparty_pbk, amount, quantities_by_good, sender_pbk, Crypto())
+        invalid_transaction = Transaction(tx_id, is_sender_buyer, counterparty_pbk, amount, quantities_by_good, sender_pbk)
 
         assert not game.is_transaction_valid(invalid_transaction)
 
@@ -547,8 +546,8 @@ class TestGame:
         tx_id = 'some_tx_id'
         sender_pbk = 'tac_agent_0_pbk'
         counterparty_pbk = 'tac_agent_1_pbk'
-        transaction_1 = Transaction(tx_id, True, counterparty_pbk, 10, {'tac_good_0_pbk': 1}, sender_pbk, Crypto())
-        transaction_2 = Transaction(tx_id, False, counterparty_pbk, 10, {'tac_good_0_pbk': 1}, sender_pbk, Crypto())
+        transaction_1 = Transaction(tx_id, True, counterparty_pbk, 10, {'tac_good_0_pbk': 1}, sender_pbk)
+        transaction_2 = Transaction(tx_id, False, counterparty_pbk, 10, {'tac_good_0_pbk': 1}, sender_pbk)
         game.settle_transaction(transaction_1)
         game.settle_transaction(transaction_2)
 
@@ -611,8 +610,8 @@ class TestGame:
         tx_id = 'some_tx_id'
         sender_pbk = 'tac_agent_0_pbk'
         counterparty_pbk = 'tac_agent_1_pbk'
-        transaction_1 = Transaction(tx_id, True, counterparty_pbk, 10, {'tac_good_0_pbk': 1}, sender_pbk, Crypto())
-        transaction_2 = Transaction(tx_id, False, counterparty_pbk, 10, {'tac_good_0_pbk': 1}, sender_pbk, Crypto())
+        transaction_1 = Transaction(tx_id, True, counterparty_pbk, 10, {'tac_good_0_pbk': 1}, sender_pbk)
+        transaction_2 = Transaction(tx_id, False, counterparty_pbk, 10, {'tac_good_0_pbk': 1}, sender_pbk)
         expected_game.settle_transaction(transaction_1)
         expected_game.settle_transaction(transaction_2)
 

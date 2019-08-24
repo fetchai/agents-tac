@@ -29,10 +29,14 @@ Classes:
 - GoodState: a class to hold the current state of a good.
 - WorldState represent the state of the world from the perspective of the agent.
 """
-
+import copy
 from enum import Enum
 import logging
 from typing import List, Dict, Any
+
+from aea.mail.base import Address
+from aea.protocols.tac.message import TACMessage
+from aea.protocols.oef.models import Description
 
 Endowment = List[int]  # an element e_j is the endowment of good j.
 UtilityParams = List[float]  # an element u_j is the utility value of good j.
@@ -191,3 +195,165 @@ class GoodState:
         :raises: AssertionError: if some constraint is not satisfied.
         """
         assert self.price >= 0, "The price must be non-negative."
+
+
+class Transaction:
+    """Convenience representation of a transaction."""
+
+    def __init__(self, transaction_id: str, is_sender_buyer: bool, counterparty: str,
+                 amount: float, quantities_by_good_pbk: Dict[str, int], sender: str) -> None:
+        """
+        Instantiate transaction request.
+
+        :param transaction_id: the id of the transaction.
+        :param is_sender_buyer: whether the transaction is sent by a buyer.
+        :param counterparty: the counterparty of the transaction.
+        :param amount: the amount of money involved.
+        :param quantities_by_good_pbk: a map from good pbk to the quantity of that good involved in the transaction.
+        :param sender: the sender of the transaction.
+
+        :return: None
+        """
+        self.sender = sender
+        self.transaction_id = transaction_id
+        self.is_sender_buyer = is_sender_buyer
+        self.counterparty = counterparty
+        self.amount = amount
+        self.quantities_by_good_pbk = quantities_by_good_pbk
+
+        self._check_consistency()
+
+    @property
+    def sender(self):
+        """Get the sender public key."""
+        return self.sender
+
+    @property
+    def buyer_pbk(self) -> str:
+        """Get the publick key of the buyer."""
+        result = self.sender if self.is_sender_buyer else self.counterparty
+        return result
+
+    @property
+    def seller_pbk(self) -> str:
+        """Get the publick key of the seller."""
+        result = self.counterparty if self.is_sender_buyer else self.sender
+        return result
+
+    def _check_consistency(self) -> None:
+        """
+        Check the consistency of the transaction parameters.
+
+        :return: None
+        :raises AssertionError if some constraint is not satisfied.
+        """
+        assert self.sender != self.counterparty
+        assert self.amount >= 0
+        assert len(self.quantities_by_good_pbk.keys()) == len(set(self.quantities_by_good_pbk.keys()))
+        assert all(quantity >= 0 for quantity in self.quantities_by_good_pbk.values())
+
+    def to_dict(self) -> Dict[str, Any]:
+        """From object to dictionary."""
+        return {
+            "transaction_id": self.transaction_id,
+            "is_sender_buyer": self.is_sender_buyer,
+            "counterparty": self.counterparty,
+            "amount": self.amount,
+            "quantities_by_good_pbk": self.quantities_by_good_pbk,
+            "sender": self.sender
+        }
+
+    @classmethod
+    def from_dict(cls, d: Dict[str, Any]) -> 'Transaction':
+        """Return a class instance from a dictionary."""
+        return cls(
+            transaction_id=d["transaction_id"],
+            is_sender_buyer=d["is_sender_buyer"],
+            counterparty=d["counterparty"],
+            amount=d["amount"],
+            quantities_by_good_pbk=d["quantities_by_good_pbk"],
+            sender=d["sender"]
+        )
+
+    @classmethod
+    def from_proposal(cls, proposal: Description, transaction_id: str,
+                      is_sender_buyer: bool, counterparty: str, sender: str) -> 'Transaction':
+        """
+        Create a transaction from a proposal.
+
+        :param proposal: the proposal
+        :param transaction_id: the transaction id
+        :param is_sender_buyer: whether the sender is the buyer
+        :param counterparty: the counterparty public key
+        :param sender: the sender public key
+        :param crypto: the crypto object
+        :return: Transaction
+        """
+        data = copy.deepcopy(proposal.values)
+        price = data.pop("price")
+        quantity_by_good_pbk = {key: value for key, value in data.items()}
+        return Transaction(transaction_id, is_sender_buyer, counterparty, price, quantity_by_good_pbk, sender)
+
+    @classmethod
+    def from_message(cls, message: TACMessage, sender: Address) -> 'Transaction':
+        """
+        Create a transaction from a proposal.
+
+        :param message: the message
+        :return: Transaction
+        """
+        return Transaction(message.get("transaction_id"), message.get("is_sender_buyer"), message.get("counterparty"), message.get("amount"), message.get("quantities_by_good_pbk"), sender)
+
+    def matches(self, other: 'Transaction') -> bool:
+        """
+        Check if the transaction matches with another (mirroring) transaction.
+
+        Two transaction requests do match if:
+        - the transaction id is the same;
+        - one of them is from a buyer and the other one is from a seller
+        - the counterparty and the origin field are consistent.
+        - the amount and the quantities are equal.
+
+        :param other: the other transaction to match.
+        :return: True if the two
+        """
+        result = True
+        result = result and self.transaction_id == other.transaction_id
+        result = result and self.is_sender_buyer != other.is_sender_buyer
+        result = result and self.counterparty == other.sender
+        result = result and other.counterparty == self.sender
+        result = result and self.amount == other.amount
+        result = result and self.quantities_by_good_pbk == other.quantities_by_good_pbk
+
+        return result
+
+
+class GameData:
+    """Convenience representation of the game data."""
+
+    def __init__(self, sender: str, money: float, endowment: List[int], utility_params: List[float],
+                 nb_agents: int, nb_goods: int, tx_fee: float, agent_pbk_to_name: Dict[str, str], good_pbk_to_name: Dict[str, str]) -> None:
+        """
+        Initialize a game data object.
+
+        :param sender: the sender
+        :param money: the money amount.
+        :param endowment: the endowment for every good.
+        :param utility_params: the utility params for every good.
+        :param nb_agents: the number of agents.
+        :param nb_goods: the number of goods.
+        :param tx_fee: the transaction fee.
+        :param agent_pbk_to_name: the mapping from the public keys to the names of the agents.
+        :param good_pbk_to_name: the mapping from the public keys to the names of the goods.
+        :return: None
+        """
+        assert len(endowment) == len(utility_params)
+        self.sender = sender
+        self.money = money
+        self.endowment = endowment
+        self.utility_params = utility_params
+        self.nb_agents = nb_agents
+        self.nb_goods = nb_goods
+        self.tx_fee = tx_fee
+        self.agent_pbk_to_name = agent_pbk_to_name
+        self.good_pbk_to_name = good_pbk_to_name

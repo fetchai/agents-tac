@@ -25,6 +25,7 @@ import random
 from typing import List, Optional, Set, Tuple, Dict, Union
 
 from aea.protocols.oef.models import Description, Query
+from aea.protocols.tac.message import TACMessage
 
 from aea.channel.oef import MailStats
 from tac.agents.participant.v1.base.dialogues import Dialogues, Dialogue
@@ -35,7 +36,7 @@ from tac.agents.participant.v1.base.strategy import Strategy
 from tac.agents.participant.v1.base.transaction_manager import TransactionManager
 from tac.gui.dashboards.agent import AgentDashboard
 from tac.platform.game.base import GamePhase, GameConfiguration
-from tac.platform.protocol import GameData, StateUpdate, Transaction
+from tac.platform.game.base import GameData, Transaction
 
 
 class Search:
@@ -133,7 +134,7 @@ class GameInstance:
             opponent_pbks.remove(agent_pbk)
             self._world_state = WorldState(opponent_pbks, self.game_configuration.good_pbks, self.initial_agent_state)
 
-    def on_state_update(self, state_update: StateUpdate, agent_pbk: str) -> None:
+    def on_state_update(self, message: TACMessage, agent_pbk: str) -> None:
         """
         Update the game instance with a State Update from the controller.
 
@@ -142,10 +143,10 @@ class GameInstance:
 
         :return: None
         """
-        self.init(state_update.initial_state, agent_pbk)
+        self.init(message.get("initial_state"), agent_pbk)
         self._game_phase = GamePhase.GAME
-        for tx in state_update.transactions:
-            self.agent_state.update(tx, state_update.initial_state.tx_fee)
+        for tx in message.get("transactions"):
+            self.agent_state.update(tx, message.get("initial_state").get("tx_fee"))
 
     @property
     def strategy(self) -> Strategy:

@@ -34,14 +34,13 @@ from oef.query import GtEq
 from aea.agent import Liveness
 from aea.crypto.base import Crypto
 from aea.mail.base import MailBox
-from aea.protocols.default.message import DefaultMessage
-from aea.protocols.default.serialization import DefaultSerializer
 from aea.protocols.oef.message import OEFMessage
 from aea.protocols.oef.serialization import OEFSerializer, DEFAULT_OEF
+from aea.protocols.tac.message import TACMessage
+from aea.protocols.tac.serialization import TACSerializer
 from tac.agents.participant.v1.base.game_instance import GameInstance
 from tac.agents.participant.v1.base.interfaces import ControllerActionInterface, OEFActionInterface, \
     DialogueActionInterface
-from tac.platform.protocol import GetStateUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -73,11 +72,10 @@ class ControllerActions(ControllerActionInterface):
 
         :return: None
         """
-        tac_msg = GetStateUpdate(self.crypto.public_key, self.crypto).serialize()
-        msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=tac_msg)
-        msg_bytes = DefaultSerializer().encode(msg)
+        tac_msg = TACMessage(tac_type=TACMessage.Type.GET_STATE_UPDATE)
+        tac_bytes = TACSerializer().encode(tac_msg)
         self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key,
-                                        protocol_id=DefaultMessage.protocol_id, message=msg_bytes)
+                                        protocol_id=TACMessage.protocol_id, message=tac_bytes)
 
 
 class OEFActions(OEFActionInterface):

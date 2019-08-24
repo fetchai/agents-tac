@@ -30,7 +30,7 @@ from tac.agents.participant.v1.base.states import AgentState
 from tac.agents.participant.v1.base.stats_manager import StatsManager
 from tac.gui.dashboards.base import Dashboard
 from tac.gui.dashboards.helpers import generate_html_table_from_dict, escape_html
-from tac.platform.protocol import Transaction
+from tac.platform.game.base import Transaction
 
 CUR_PATH = inspect.getfile(inspect.currentframe())
 CUR_DIR = os.path.dirname(CUR_PATH)

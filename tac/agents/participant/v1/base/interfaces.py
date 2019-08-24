@@ -22,9 +22,8 @@
 
 from abc import abstractmethod
 
-from aea.mail.base import Envelope
+from aea.mail.base import Envelope, Address
 from aea.protocols.base.message import Message
-from tac.platform.protocol import Error, TransactionConfirmation, StateUpdate, GameData
 
 
 class ControllerReactionInterface:
@@ -41,11 +40,12 @@ class ControllerReactionInterface:
         """
 
     @abstractmethod
-    def on_start(self, game_data: GameData) -> None:
+    def on_start(self, message: Message, sender: Address) -> None:
         """
         On start of the competition, do the setup.
 
-        :param game_data: the data for the started game.
+        :param message: the message
+        :param sender: the address of the sender
 
         :return: None
         """
@@ -59,29 +59,34 @@ class ControllerReactionInterface:
         """
 
     @abstractmethod
-    def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
+    def on_transaction_confirmed(self, message: Message, sender: Address) -> None:
         """
         On Transaction confirmed handler.
 
-        :param tx_confirmation: the transaction confirmation
+        :param message: the message
+        :param sender: the address of the sender
 
         :return: None
         """
 
     @abstractmethod
-    def on_state_update(self, agent_state: StateUpdate) -> None:
+    def on_state_update(self, message: Message, sender: Address) -> None:
         """
         On receiving the agent state update.
 
-        :param agent_state: the current state of the agent in the competition.
+        :param message: the message
+        :param sender: the address of the sender
 
         :return: None
         """
 
     @abstractmethod
-    def on_tac_error(self, error: Error) -> None:
+    def on_tac_error(self, message: Message, sender: Address) -> None:
         """
         Handle error messages from the TAC controller.
+
+        :param message: the message
+        :param sender: the address of the sender
 
         :return: None
         """
@@ -103,7 +108,7 @@ class OEFReactionInterface:
     """This interface contains the methods to react to events from the OEF."""
 
     @abstractmethod
-    def on_search_result(self, search_result: Envelope) -> None:
+    def on_search_result(self, search_result: Message) -> None:
         """
         Handle search results.
 
@@ -113,7 +118,7 @@ class OEFReactionInterface:
         """
 
     @abstractmethod
-    def on_oef_error(self, oef_error: Envelope) -> None:
+    def on_oef_error(self, oef_error: Message) -> None:
         """
         Handle an OEF error message.
 
@@ -123,7 +128,7 @@ class OEFReactionInterface:
         """
 
     @abstractmethod
-    def on_dialogue_error(self, dialogue_error: Envelope) -> None:
+    def on_dialogue_error(self, dialogue_error: Message) -> None:
         """
         Handle a dialogue error message.
 
@@ -181,7 +186,7 @@ class DialogueReactionInterface:
     """This interface contains the methods to react to events from other agents."""
 
     @abstractmethod
-    def on_new_dialogue(self, message: Message) -> None:
+    def on_new_dialogue(self, message: Message, sender: Address) -> None:
         """
         React to a message for a new dialogue.
 
@@ -190,26 +195,29 @@ class DialogueReactionInterface:
         - how the agent behaves in this dialogue.
 
         :param message: the agent message
+        :param sender: the address of the sender
 
         :return: None
         """
 
     @abstractmethod
-    def on_existing_dialogue(self, message: Message) -> None:
+    def on_existing_dialogue(self, message: Message, sender: Address) -> None:
         """
         React to a message of an existing dialogue.
 
         :param message: the agent message
+        :param sender: the address of the sender
 
         :return: None
         """
 
     @abstractmethod
-    def on_unidentified_dialogue(self, message: Message) -> None:
+    def on_unidentified_dialogue(self, message: Message, sender: Address) -> None:
         """
         React to a message of an unidentified dialogue.
 
         :param message: the agent message
+        :param sender: the address of the sender
 
         :return: None
         """

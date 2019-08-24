@@ -29,15 +29,15 @@ from aea.crypto.base import Crypto
 
 from aea.mail.base import Envelope
 from aea.protocols.base.message import Message
-from aea.protocols.default.message import DefaultMessage
-from aea.protocols.default.serialization import DefaultSerializer
 from aea.protocols.fipa.message import FIPAMessage
 from aea.protocols.fipa.serialization import FIPASerializer
+from aea.protocols.tac.message import TACMessage
+from aea.protocols.tac.serialization import TACSerializer
 from tac.agents.participant.v1.base.dialogues import Dialogue
 from tac.agents.participant.v1.base.game_instance import GameInstance
 from tac.agents.participant.v1.base.helpers import generate_transaction_id
 from tac.agents.participant.v1.base.stats_manager import EndState
-from tac.platform.protocol import Transaction
+from tac.platform.game.base import Transaction
 
 logger = logging.getLogger(__name__)
 
@@ -226,10 +226,15 @@ class FIPABehaviour:
             logger.debug("[{}]: Locking the current state (as {}).".format(self.agent_name, dialogue.role))
             self.game_instance.transaction_manager.add_locked_tx(transaction, as_seller=dialogue.is_seller)
 
-            msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=transaction.serialize())
-            dialogue.outgoing_extend([msg])
-            msg_bytes = DefaultSerializer().encode(msg)
-            results.append(Envelope(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=DefaultMessage.protocol_id, message=msg_bytes))
+            tac_msg = TACMessage(tac_type=TACMessage.Type.TRANSACTION,
+                                 transaction_id=transaction.transaction_id,
+                                 is_sender_buyer=transaction.is_sender_buyer,
+                                 counterparty=transaction.counterparty,
+                                 amount=transaction.amount,
+                                 quantities_by_good_pbk=transaction.quantities_by_good_pbk)
+            dialogue.outgoing_extend([tac_msg])
+            tac_bytes = TACSerializer().encode(tac_msg)
+            results.append(Envelope(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=TACMessage.protocol_id, message=tac_bytes))
 
             msg = FIPAMessage(message_id=new_msg_id, dialogue_id=accept.get("dialogue_id"), target=accept.get("id"), performative=FIPAMessage.Performative.MATCH_ACCEPT)
             dialogue.outgoing_extend([msg])
@@ -260,8 +265,13 @@ class FIPABehaviour:
                      .format(self.agent_name, match_accept.get("id"), match_accept.get("dialogue_id"), dialogue.dialogue_label.dialogue_opponent_pbk, match_accept.get("target")))
         results = []
         transaction = self.game_instance.transaction_manager.pop_pending_initial_acceptance(dialogue.dialogue_label, match_accept.get("target"))
-        msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=transaction.serialize())
-        msg_bytes = DefaultSerializer().encode(msg)
-        results.append(Envelope(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=DefaultMessage.protocol_id, message=msg_bytes))
-        dialogue.outgoing_extend([msg])
+        tac_msg = TACMessage(tac_type=TACMessage.Type.TRANSACTION,
+                             transaction_id=transaction.transaction_id,
+                             is_sender_buyer=transaction.is_sender_buyer,
+                             counterparty=transaction.counterparty,
+                             amount=transaction.amount,
+                             quantities_by_good_pbk=transaction.quantities_by_good_pbk)
+        dialogue.outgoing_extend([tac_msg])
+        tac_bytes = TACSerializer().encode(tac_msg)
+        results.append(Envelope(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=TACMessage.protocol_id, message=tac_bytes))
         return results

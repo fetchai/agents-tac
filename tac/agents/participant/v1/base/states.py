@@ -34,7 +34,7 @@ from aea.state.base import AgentState as BaseAgentState
 from aea.state.base import WorldState as BaseWorldState
 from tac.agents.participant.v1.base.price_model import GoodPriceModel
 from tac.platform.game.helpers import logarithmic_utility
-from tac.platform.protocol import Transaction
+from tac.platform.game.base import Transaction
 
 Endowment = List[int]  # an element e_j is the endowment of good j.
 UtilityParams = List[float]  # an element u_j is the utility value of good j.
