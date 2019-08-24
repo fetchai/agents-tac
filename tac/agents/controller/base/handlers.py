@@ -190,23 +190,23 @@ class TransactionHandler(TACMessageHandler):
         if message.get("transaction_id") not in self._pending_transaction_requests:
             if self.controller_agent.game_handler.current_game.is_transaction_valid(message):
                 logger.debug("[{}]: Put transaction TACMessage in the pool: {}".format(self.controller_agent.name, message.get("transaction_id")))
-                self._pending_transaction_requests[message.get("transaction_id")] = message
+                self._pending_transaction_requests[message.get("transaction_id")] = transaction
             else:
                 self._handle_invalid_transaction(message, sender)
         # if transaction arrives second time then process it
         else:
             pending_tx = self._pending_transaction_requests.pop(message.get("transaction_id"))
             if transaction.matches(pending_tx):
-                if self.controller_agent.game_handler.current_game.is_transaction_valid(message):
+                if self.controller_agent.game_handler.current_game.is_transaction_valid(transaction):
                     self.controller_agent.game_handler.confirmed_transaction_per_participant[pending_tx.sender].append(pending_tx)
                     self.controller_agent.game_handler.confirmed_transaction_per_participant[transaction.sender].append(transaction)
-                    self._handle_valid_transaction(message, sender)
+                    self._handle_valid_transaction(message, sender, transaction)
                 else:
                     self._handle_invalid_transaction(message, sender)
             else:
                 self._handle_non_matching_transaction(message, sender)
 
-    def _handle_valid_transaction(self, message: TACMessage, sender: Address) -> None:
+    def _handle_valid_transaction(self, message: TACMessage, sender: Address, transaction: Transaction) -> None:
         """
         Handle a valid transaction.
 
@@ -220,7 +220,7 @@ class TransactionHandler(TACMessageHandler):
         logger.debug("[{}]: Handling valid transaction: {}".format(self.controller_agent.name, message.get("transaction_id")))
 
         # update the game state.
-        self.controller_agent.game_handler.current_game.settle_transaction(message)
+        self.controller_agent.game_handler.current_game.settle_transaction(transaction)
 
         # update the dashboard monitor
         self.controller_agent.game_handler.monitor.update()

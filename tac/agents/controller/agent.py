@@ -36,7 +36,6 @@ from aea.mail.base import Envelope
 
 from tac.agents.controller.base.handlers import OEFHandler, GameHandler, AgentMessageDispatcher
 from tac.agents.controller.base.tac_parameters import TACParameters
-from tac.agents.participant.v1.base.helpers import is_oef_message
 from tac.platform.game.base import GamePhase
 from tac.gui.monitor import Monitor, NullMonitor, VisdomMonitor
 
@@ -141,13 +140,15 @@ class ControllerAgent(Agent):
         counter = 0
         while (not self.inbox.empty() and counter < self.max_reactions):
             counter += 1
-            msg = self.inbox.get_nowait()  # type: Optional[Envelope]
-            if msg is not None:
-                if is_oef_message(msg):
-                    self.oef_handler.handle_oef_message(msg)
-                else:
-                    self.agent_message_dispatcher.handle_agent_message(msg)
+            envelope = self.inbox.get_nowait()  # type: Optional[Envelope]
+            if envelope is not None:
+                if envelope.protocol_id == 'oef':
+                    self.oef_handler.handle_oef_message(envelope)
+                elif envelope.protocol_id == 'tac':
+                    self.agent_message_dispatcher.handle_agent_message(envelope)
                     self.last_activity = datetime.datetime.now()
+                else:
+                    raise ValueError("Unknown protocol_id: {}".format(envelope.protocol_id))
 
     def update(self) -> None:
         """

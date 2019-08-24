@@ -214,12 +214,12 @@ class Transaction:
 
         :return: None
         """
-        self.sender = sender
         self.transaction_id = transaction_id
         self.is_sender_buyer = is_sender_buyer
         self.counterparty = counterparty
         self.amount = amount
         self.quantities_by_good_pbk = quantities_by_good_pbk
+        self.sender = sender
 
         self._check_consistency()
 
@@ -286,7 +286,6 @@ class Transaction:
         :param is_sender_buyer: whether the sender is the buyer
         :param counterparty: the counterparty public key
         :param sender: the sender public key
-        :param crypto: the crypto object
         :return: Transaction
         """
         data = copy.deepcopy(proposal.values)

@@ -47,6 +47,7 @@ from tac.agents.participant.v1.base.interfaces import ControllerReactionInterfac
     DialogueReactionInterface
 from tac.agents.participant.v1.base.negotiation_behaviours import FIPABehaviour
 from tac.agents.participant.v1.base.stats_manager import EndState
+from tac.platform.game.base import GameData
 
 
 logger = logging.getLogger(__name__)
@@ -95,7 +96,9 @@ class ControllerReactions(ControllerReactionInterface):
         :return: None
         """
         logger.debug("[{}]: Received start event from the controller. Starting to compete...".format(self.agent_name))
-        self.game_instance.init(message.get("game_data"), self.crypto.public_key)
+        game_data = GameData(sender, message.get("money"), message.get("endowment"), message.get("utility_params"),
+                             message.get("nb_agents"), message.get("nb_goods"), message.get("tx_fee"), message.get("agent_pbk_to_name"), message.get("good_pbk_to_name"))
+        self.game_instance.init(game_data, self.crypto.public_key)
         self.game_instance._game_phase = GamePhase.GAME
 
         dashboard = self.game_instance.dashboard

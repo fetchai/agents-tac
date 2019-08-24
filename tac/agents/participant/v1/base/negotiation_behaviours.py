@@ -118,8 +118,7 @@ class FIPABehaviour:
                                                     transaction_id=transaction_id,
                                                     is_sender_buyer=not dialogue.is_seller,
                                                     counterparty=dialogue.dialogue_label.dialogue_opponent_pbk,
-                                                    sender=self.crypto.public_key,
-                                                    crypto=self.crypto)
+                                                    sender=self.crypto.public_key)
             self.game_instance.transaction_manager.add_pending_proposal(dialogue.dialogue_label, new_msg_id, transaction)
             logger.debug("[{}]: sending to {} a Propose{}".format(self.agent_name, dialogue.dialogue_label.dialogue_opponent_pbk,
                                                                   pprint.pformat({
@@ -153,8 +152,7 @@ class FIPABehaviour:
                                                 transaction_id=transaction_id,
                                                 is_sender_buyer=not dialogue.is_seller,
                                                 counterparty=dialogue.dialogue_label.dialogue_opponent_pbk,
-                                                sender=self.crypto.public_key,
-                                                crypto=self.crypto)
+                                                sender=self.crypto.public_key)
         new_msg_id = propose.get("id") + 1
         is_profitable_transaction, propose_log_msg = self.game_instance.is_profitable_transaction(transaction, dialogue)
         logger.debug(propose_log_msg)
