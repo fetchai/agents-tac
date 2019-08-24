@@ -19,79 +19,12 @@
 
 """This module contains an OEF agent for testing."""
 
-from typing import List
-
-from oef.agents import OEFAgent
-from oef.messages import PROPOSE_TYPES, BaseMessage, Message, CFP, CFP_TYPES, Propose, Accept, Decline
-from oef.uri import Context
+from aea.channel.oef import OEFMailBox
 
 
-class TOEFAgent(OEFAgent):
+class TOEFAgent(OEFMailBox):
     """An OEF agent for testing."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000):
         """Initialize."""
-        super().__init__(*args, **kwargs)
-        self.messages = []  # type: List[BaseMessage]
-
-    def on_message(self, msg_id: int, dialogue_id: int, origin: str, content: bytes) -> None:
-        """
-        On message handler.
-
-        :param msg_id: the message id
-        :param dialogue_id: the dialogue id
-        :param origin: the origin public key
-        :param content: the message content
-        :return: None
-        """
-        self.messages.append(Message(msg_id, dialogue_id, origin, content, Context()))
-
-    def on_cfp(self, msg_id: int, dialogue_id: int, origin: str, target: int, query: CFP_TYPES) -> None:
-        """
-        On cfp handler.
-
-        :param msg_id: the message id
-        :param dialogue_id: the dialogue id
-        :param origin: the origin public key
-        :param target: the message target
-        :param query: the query object
-        :return: None
-        """
-        self.messages.append(CFP(msg_id, dialogue_id, origin, target, query, Context()))
-
-    def on_propose(self, msg_id: int, dialogue_id: int, origin: str, target: int, proposals: PROPOSE_TYPES) -> None:
-        """
-        On propose handler.
-
-        :param msg_id: the message id
-        :param dialogue_id: the dialogue id
-        :param origin: the origin public key
-        :param target: the message target
-        :param proposals: the proposals
-        :return: None
-        """
-        self.messages.append(Propose(msg_id, dialogue_id, origin, target, proposals, Context()))
-
-    def on_accept(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
-        """
-        On accept handler.
-
-        :param msg_id: the message id
-        :param dialogue_id: the dialogue id
-        :param origin: the origin public key
-        :param target: the message target
-        :return: None
-        """
-        self.messages.append(Accept(msg_id, dialogue_id, origin, target, Context()))
-
-    def on_decline(self, msg_id: int, dialogue_id: int, origin: str, target: int) -> None:
-        """
-        On message handler.
-
-        :param msg_id: the message id
-        :param dialogue_id: the dialogue id
-        :param origin: the origin public key
-        :param target: the message target
-        :return: None
-        """
-        self.messages.append(Decline(msg_id, dialogue_id, origin, target, Context()))
+        super().__init__(public_key, oef_addr, oef_port)
