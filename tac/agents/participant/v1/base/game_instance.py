@@ -24,10 +24,11 @@ import datetime
 import random
 from typing import List, Optional, Set, Tuple, Dict, Union
 
+from aea.channel.oef import MailStats
+from aea.mail.base import Address
 from aea.protocols.oef.models import Description, Query
 from aea.protocols.tac.message import TACMessage
 
-from aea.channel.oef import MailStats
 from tac.agents.participant.v1.base.dialogues import Dialogues, Dialogue
 from tac.agents.participant.v1.base.helpers import build_dict, build_query, get_goods_quantities_description
 from tac.agents.participant.v1.base.states import AgentState, WorldState
@@ -116,7 +117,7 @@ class GameInstance:
             self.dashboard.start()
             self.stats_manager.start()
 
-    def init(self, game_data: GameData, agent_pbk: str) -> None:
+    def init(self, game_data: GameData, agent_pbk: Address) -> None:
         """
         Populate data structures with the game data.
 
@@ -134,7 +135,7 @@ class GameInstance:
             opponent_pbks.remove(agent_pbk)
             self._world_state = WorldState(opponent_pbks, self.game_configuration.good_pbks, self.initial_agent_state)
 
-    def on_state_update(self, message: TACMessage, agent_pbk: str) -> None:
+    def on_state_update(self, message: TACMessage, agent_pbk: Address) -> None:
         """
         Update the game instance with a State Update from the controller.
 

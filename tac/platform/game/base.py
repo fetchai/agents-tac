@@ -40,6 +40,7 @@ from aea.protocols.oef.models import Description
 
 Endowment = List[int]  # an element e_j is the endowment of good j.
 UtilityParams = List[float]  # an element u_j is the utility value of good j.
+TransactionId = str
 
 logger = logging.getLogger(__name__)
 
@@ -200,8 +201,8 @@ class GoodState:
 class Transaction:
     """Convenience representation of a transaction."""
 
-    def __init__(self, transaction_id: str, is_sender_buyer: bool, counterparty: str,
-                 amount: float, quantities_by_good_pbk: Dict[str, int], sender: str) -> None:
+    def __init__(self, transaction_id: TransactionId, is_sender_buyer: bool, counterparty: Address,
+                 amount: float, quantities_by_good_pbk: Dict[str, int], sender: Address) -> None:
         """
         Instantiate transaction request.
 
@@ -276,8 +277,8 @@ class Transaction:
         )
 
     @classmethod
-    def from_proposal(cls, proposal: Description, transaction_id: str,
-                      is_sender_buyer: bool, counterparty: str, sender: str) -> 'Transaction':
+    def from_proposal(cls, proposal: Description, transaction_id: TransactionId,
+                      is_sender_buyer: bool, counterparty: Address, sender: Address) -> 'Transaction':
         """
         Create a transaction from a proposal.
 
@@ -330,7 +331,7 @@ class Transaction:
 class GameData:
     """Convenience representation of the game data."""
 
-    def __init__(self, sender: str, money: float, endowment: List[int], utility_params: List[float],
+    def __init__(self, sender: Address, money: float, endowment: List[int], utility_params: List[float],
                  nb_agents: int, nb_goods: int, tx_fee: float, agent_pbk_to_name: Dict[str, str], good_pbk_to_name: Dict[str, str]) -> None:
         """
         Initialize a game data object.

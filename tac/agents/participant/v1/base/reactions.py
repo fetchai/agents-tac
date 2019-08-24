@@ -315,7 +315,7 @@ class OEFReactions(OEFReactionInterface):
                          .format(self.agent_name, dialogue.role, cfp.get("id"), cfp.get("dialogue_id"), agent_pbk, cfp.get("target"), services))
             self.mailbox.outbox.put_message(to=agent_pbk, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id, message=cfp_bytes)
 
-    def _register_to_tac(self, controller_pbk: str) -> None:
+    def _register_to_tac(self, controller_pbk: Address) -> None:
         """
         Register to active TAC Controller.
 
@@ -329,7 +329,7 @@ class OEFReactions(OEFReactionInterface):
         tac_bytes = TACSerializer().encode(tac_msg)
         self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=TACMessage.protocol_id, message=tac_bytes)
 
-    def _rejoin_tac(self, controller_pbk: str) -> None:
+    def _rejoin_tac(self, controller_pbk: Address) -> None:
         """
         Rejoin the TAC run by a Controller.
 

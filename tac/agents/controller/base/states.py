@@ -30,6 +30,7 @@ import logging
 from typing import List, Dict, Any
 
 from aea.crypto.base import Crypto
+from aea.mail.base import Address
 from tac.agents.participant.v1.base.states import AgentState
 from tac.platform.game.base import GameConfiguration, GoodState, Transaction
 from tac.platform.game.helpers import generate_money_endowments, generate_good_endowments, generate_utility_params, \
@@ -303,7 +304,7 @@ class Game:
         """Get the current scores for every agent."""
         return {agent_pbk: agent_state.get_score() for agent_pbk, agent_state in self.agent_states.items()}
 
-    def get_agent_state_from_agent_pbk(self, agent_pbk: str) -> 'AgentState':
+    def get_agent_state_from_agent_pbk(self, agent_pbk: Address) -> 'AgentState':
         """
         Get agent state from agent pbk.
 
