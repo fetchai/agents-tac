@@ -220,23 +220,23 @@ class Transaction:
         self.counterparty = counterparty
         self.amount = amount
         self.quantities_by_good_pbk = quantities_by_good_pbk
-        self.sender = sender
+        self._sender = sender
 
         self._check_consistency()
 
     @property
-    def sender(self):
+    def sender(self) -> Address:
         """Get the sender public key."""
-        return self.sender
+        return self._sender
 
     @property
-    def buyer_pbk(self) -> str:
+    def buyer_pbk(self) -> Address:
         """Get the publick key of the buyer."""
         result = self.sender if self.is_sender_buyer else self.counterparty
         return result
 
     @property
-    def seller_pbk(self) -> str:
+    def seller_pbk(self) -> Address:
         """Get the publick key of the seller."""
         result = self.counterparty if self.is_sender_buyer else self.sender
         return result

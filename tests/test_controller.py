@@ -101,6 +101,6 @@ class TestCompetitionStopsTooFewAgentRegistered:
         counter = 0
         while not self.agent1.inbox.empty():
             counter += 1
-            msg = self.inbox.get_nowait()
+            msg = self.agent1.inbox.get_nowait()
             assert msg is not None
         assert counter == 1

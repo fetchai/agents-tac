@@ -21,7 +21,6 @@
 
 import pytest
 
-from aea.crypto.base import Crypto
 from tac.agents.controller.base.states import GameInitialization, Game
 from tac.agents.participant.v1.base.states import AgentState
 from tac.platform.game.base import GameConfiguration, GoodState, Transaction
@@ -615,7 +614,7 @@ class TestGame:
         expected_game.settle_transaction(transaction_1)
         expected_game.settle_transaction(transaction_2)
 
-        actual_game = Game.from_dict(expected_game.to_dict(), Crypto())
+        actual_game = Game.from_dict(expected_game.to_dict())
 
         assert actual_game == expected_game
 

@@ -29,7 +29,6 @@ Classes:
 import logging
 from typing import List, Dict, Any
 
-from aea.crypto.base import Crypto
 from aea.mail.base import Address
 from tac.agents.participant.v1.base.states import AgentState
 from tac.platform.game.base import GameConfiguration, GoodState, Transaction
@@ -511,7 +510,7 @@ class Game:
         }
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any], crypto: Crypto) -> 'Game':
+    def from_dict(cls, d: Dict[str, Any]) -> 'Game':
         """Get class instance from dictionary."""
         configuration = GameConfiguration.from_dict(d["configuration"])
         initialization = GameInitialization.from_dict(d["initialization"])
