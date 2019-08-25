@@ -73,24 +73,21 @@ class TestCompetitionStopsTooFewAgentRegistered:
         tac_parameters = TACParameters(min_nb_agents=2, start_time=datetime.datetime.now(), registration_timeout=5)
         cls.controller_agent = ControllerAgent('controller', '127.0.0.1', 10000, tac_parameters)
 
+        job = Thread(target=cls.controller_agent.start)
+        job.start()
+
         crypto = Crypto()
         cls.agent1 = TOEFAgent(crypto.public_key, oef_addr='127.0.0.1', oef_port=10000)
         cls.agent1.connect()
 
-        job = Thread(target=cls.controller_agent.start)
-        job.start()
-        agent_job = Thread(target=cls.agent1.run)
-        agent_job.start()
-
-        tac_msg = TACMessage(type=TACMessage.Type.REGISTER, agent_name='agent_name')
+        tac_msg = TACMessage(tac_type=TACMessage.Type.REGISTER, agent_name='agent_name')
         tac_bytes = TACSerializer().encode(tac_msg)
         cls.agent1.outbox.put_message(to=cls.controller_agent.crypto.public_key, sender=crypto.public_key, protocol_id=TACMessage.protocol_id, message=tac_bytes)
 
-        time.sleep(10.0)
+        time.sleep(5.0)
 
         job.join()
-        cls.agent1.stop()
-        agent_job.join()
+        cls.agent1.disconnect()
 
     def test_only_one_agent_registered(self):
         """Test exactly one agent is registered."""
@@ -102,5 +99,5 @@ class TestCompetitionStopsTooFewAgentRegistered:
         while not self.agent1.inbox.empty():
             counter += 1
             msg = self.agent1.inbox.get_nowait()
-            assert msg is not None
+            assert msg is not None and msg.sender == self.controller_agent.crypto.public_key
         assert counter == 1

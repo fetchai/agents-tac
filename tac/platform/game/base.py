@@ -327,6 +327,17 @@ class Transaction:
 
         return result
 
+    def __eq__(self, other):
+        return isinstance(other, Transaction) \
+            and self.transaction_id == other.transaction_id \
+            and self.is_sender_buyer == other.is_sender_buyer \
+            and self.counterparty == other.counterparty \
+            and self.amount == other.amount \
+            and self.quantities_by_good_pbk == other.quantities_by_good_pbk \
+            and self.sender == other.sender \
+            and self.buyer_pbk == other.buyer_pbk \
+            and self.seller_pbk == other.seller_pbk
+
 
 class GameData:
     """Convenience representation of the game data."""

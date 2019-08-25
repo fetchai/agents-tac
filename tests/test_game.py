@@ -18,6 +18,7 @@
 # ------------------------------------------------------------------------------
 
 """This module contains the tests of the game module."""
+from pprint import pprint
 
 import pytest
 
@@ -569,7 +570,7 @@ class TestGame:
         tx_fee = 1.0
         agent_pbk_to_name = {'tac_agent_0_pbk': 'tac_agent_0', 'tac_agent_1_pbk': 'tac_agent_1', 'tac_agent_2_pbk': 'tac_agent_2'}
         good_pbk_to_name = {'tac_good_0_pbk': 'tac_good_0', 'tac_good_1_pbk': 'tac_good_1', 'tac_good_2_pbk': 'tac_good_2'}
-        money_amounts = [20, 20, 20]
+        money_amounts = [20.0, 20.0, 20.0]
         endowments = [
             [1, 1, 1],
             [2, 1, 1],
@@ -609,8 +610,8 @@ class TestGame:
         tx_id = 'some_tx_id'
         sender_pbk = 'tac_agent_0_pbk'
         counterparty_pbk = 'tac_agent_1_pbk'
-        transaction_1 = Transaction(tx_id, True, counterparty_pbk, 10, {'tac_good_0_pbk': 1}, sender_pbk)
-        transaction_2 = Transaction(tx_id, False, counterparty_pbk, 10, {'tac_good_0_pbk': 1}, sender_pbk)
+        transaction_1 = Transaction(tx_id, True, counterparty_pbk, 10.0, {'tac_good_0_pbk': 1}, sender_pbk)
+        transaction_2 = Transaction(tx_id, False, counterparty_pbk, 10.0, {'tac_good_0_pbk': 1}, sender_pbk)
         expected_game.settle_transaction(transaction_1)
         expected_game.settle_transaction(transaction_2)
 

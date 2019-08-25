@@ -48,7 +48,7 @@ class GameInitialization:
     """Class containing the game initialization of a TAC instance."""
 
     def __init__(self,
-                 initial_money_amounts: List[int],
+                 initial_money_amounts: List[float],
                  endowments: List[Endowment],
                  utility_params: List[UtilityParams],
                  eq_prices: List[float],
@@ -80,7 +80,7 @@ class GameInitialization:
         self._check_consistency()
 
     @property
-    def initial_money_amounts(self) -> List[int]:
+    def initial_money_amounts(self) -> List[float]:
         """Get list of the initial amount of money of every agent."""
         return self._initial_money_amounts
 

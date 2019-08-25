@@ -24,7 +24,3 @@ from aea.channel.oef import OEFMailBox
 
 class TOEFAgent(OEFMailBox):
     """An OEF agent for testing."""
-
-    def __init__(self, public_key: str, oef_addr: str, oef_port: int = 10000):
-        """Initialize."""
-        super().__init__(public_key, oef_addr, oef_port)
