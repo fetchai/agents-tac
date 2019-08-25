@@ -38,6 +38,8 @@ from aea.protocols.default.message import DefaultMessage
 from aea.protocols.default.serialization import DefaultSerializer
 from aea.protocols.fipa.message import FIPAMessage
 from aea.protocols.fipa.serialization import FIPASerializer
+from aea.protocols.tac.message import TACMessage
+from aea.protocols.tac.serialization import TACSerializer
 from tac.agents.participant.v1.base.dialogues import Dialogue
 from tac.agents.participant.v1.base.game_instance import GameInstance, GamePhase
 from tac.agents.participant.v1.base.helpers import dialogue_label_from_transaction_id, TAC_DEMAND_DATAMODEL_NAME
@@ -45,8 +47,8 @@ from tac.agents.participant.v1.base.interfaces import ControllerReactionInterfac
     DialogueReactionInterface
 from tac.agents.participant.v1.base.negotiation_behaviours import FIPABehaviour
 from tac.agents.participant.v1.base.stats_manager import EndState
-from tac.platform.protocol import Error, ErrorCode, GameData, TransactionConfirmation, StateUpdate, Register, \
-    GetStateUpdate
+from tac.platform.game.base import GameData
+
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +77,7 @@ class ControllerReactions(ControllerReactionInterface):
         self.mailbox = mailbox
         self.agent_name = agent_name
 
-    def on_dialogue_error(self, message: Message) -> None:
+    def on_dialogue_error(self, message: TACMessage, sender: Address) -> None:
         """
         Handle dialogue error event emitted by the controller.
 
@@ -83,11 +85,9 @@ class ControllerReactions(ControllerReactionInterface):
 
         :return: None
         """
-        dialogue_error = message
-        logger.warning("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}"
-                       .format(self.agent_name, dialogue_error.get("id"), dialogue_error.get("dialogue_id"), dialogue_error.get("origin")))
+        logger.warning("[{}]: Received Dialogue error from: details={}, sender={}".format(self.agent_name, message.get("details"), sender))
 
-    def on_start(self, game_data: GameData) -> None:
+    def on_start(self, message: TACMessage, sender: Address) -> None:
         """
         Handle the 'start' event emitted by the controller.
 
@@ -96,6 +96,8 @@ class ControllerReactions(ControllerReactionInterface):
         :return: None
         """
         logger.debug("[{}]: Received start event from the controller. Starting to compete...".format(self.agent_name))
+        game_data = GameData(sender, message.get("money"), message.get("endowment"), message.get("utility_params"),
+                             message.get("nb_agents"), message.get("nb_goods"), message.get("tx_fee"), message.get("agent_pbk_to_name"), message.get("good_pbk_to_name"))
         self.game_instance.init(game_data, self.crypto.public_key)
         self.game_instance._game_phase = GamePhase.GAME
 
@@ -104,7 +106,7 @@ class ControllerReactions(ControllerReactionInterface):
             dashboard.init()
             dashboard.update_from_agent_state(self.game_instance.agent_state, append=False)
 
-    def on_transaction_confirmed(self, tx_confirmation: TransactionConfirmation) -> None:
+    def on_transaction_confirmed(self, message: TACMessage, sender: Address) -> None:
         """
         Handle 'on transaction confirmed' event emitted by the controller.
 
@@ -112,15 +114,15 @@ class ControllerReactions(ControllerReactionInterface):
 
         :return: None
         """
-        logger.debug("[{}]: Received transaction confirmation from the controller: transaction_id={}".format(self.agent_name, tx_confirmation.transaction_id))
-        if tx_confirmation.transaction_id not in self.game_instance.transaction_manager.locked_txs:
+        logger.debug("[{}]: Received transaction confirmation from the controller: transaction_id={}".format(self.agent_name, message.get("transaction_id")))
+        if message.get("transaction_id") not in self.game_instance.transaction_manager.locked_txs:
             logger.debug("[{}]: transaction not found - ask the controller an update of the state.".format(self.agent_name))
             self._request_state_update()
             return
 
-        transaction = self.game_instance.transaction_manager.pop_locked_tx(tx_confirmation.transaction_id)
+        transaction = self.game_instance.transaction_manager.pop_locked_tx(message.get("transaction_id"))
         self.game_instance.agent_state.update(transaction, self.game_instance.game_configuration.tx_fee)
-        dialogue_label = dialogue_label_from_transaction_id(self.crypto.public_key, tx_confirmation.transaction_id)
+        dialogue_label = dialogue_label_from_transaction_id(self.crypto.public_key, message.get("transaction_id"))
         self.game_instance.stats_manager.add_dialogue_endstate(EndState.SUCCESSFUL, self.crypto.public_key == dialogue_label.dialogue_starter_pbk)
 
         dashboard = self.game_instance.dashboard
@@ -130,7 +132,7 @@ class ControllerReactions(ControllerReactionInterface):
             agent_name = self.game_instance.game_configuration.agent_names[list(self.game_instance.game_configuration.agent_pbks).index(transaction.counterparty)]
             dashboard.add_transaction(transaction, agent_name=agent_name)
 
-    def on_state_update(self, state_update: StateUpdate) -> None:
+    def on_state_update(self, message: TACMessage, sender: Address) -> None:
         """
         Handle 'on state update' event emitted by the controller.
 
@@ -138,7 +140,7 @@ class ControllerReactions(ControllerReactionInterface):
 
         :return: None
         """
-        self.game_instance.on_state_update(state_update, self.crypto.public_key)
+        self.game_instance.on_state_update(message.get("state_update"), self.crypto.public_key)
 
         dashboard = self.game_instance.dashboard
         if dashboard is not None:
@@ -154,7 +156,7 @@ class ControllerReactions(ControllerReactionInterface):
         self.liveness._is_stopped = True
         self.game_instance._game_phase = GamePhase.POST_GAME
 
-    def on_tac_error(self, error: Error) -> None:
+    def on_tac_error(self, message: TACMessage, sender: Address) -> None:
         """
         Handle 'on tac error' event emitted by the controller.
 
@@ -162,21 +164,22 @@ class ControllerReactions(ControllerReactionInterface):
 
         :return: None
         """
-        logger.error("[{}]: Received error from the controller. error_msg={}".format(self.agent_name, error.error_msg))
-        if error.error_code == ErrorCode.TRANSACTION_NOT_VALID:
+        error_code = TACMessage.ErrorCode(message.get("error_code"))
+        logger.error("[{}]: Received error from the controller. error_msg={}".format(self.agent_name, TACMessage._from_ec_to_msg.get(error_code)))
+        if error_code == TACMessage.ErrorCode.TRANSACTION_NOT_VALID:
             # if error in checking transaction, remove it from the pending transactions.
             start_idx_of_tx_id = len("Error in checking transaction: ")
-            transaction_id = error.error_msg[start_idx_of_tx_id:]
+            transaction_id = message.get("error_msg")[start_idx_of_tx_id:]
             if transaction_id in self.game_instance.transaction_manager.locked_txs:
                 self.game_instance.transaction_manager.pop_locked_tx(transaction_id)
             else:
                 logger.warning("[{}]: Received error on unknown transaction id: {}".format(self.agent_name, transaction_id))
             pass
-        elif error.error_code == ErrorCode.TRANSACTION_NOT_MATCHING:
+        elif error_code == TACMessage.ErrorCode.TRANSACTION_NOT_MATCHING:
             pass
-        elif error.error_code == ErrorCode.AGENT_PBK_ALREADY_REGISTERED or error.error_code == ErrorCode.AGENT_NAME_ALREADY_REGISTERED or error.error_code == ErrorCode.AGENT_NOT_REGISTERED:
+        elif error_code == TACMessage.ErrorCode.AGENT_PBK_ALREADY_REGISTERED or error_code == TACMessage.ErrorCode.AGENT_NAME_ALREADY_REGISTERED or error_code == TACMessage.ErrorCode.AGENT_NOT_REGISTERED:
             self.liveness._is_stopped = True
-        elif error.error_code == ErrorCode.REQUEST_NOT_VALID or error.error_code == ErrorCode.GENERIC_ERROR:
+        elif error_code == TACMessage.ErrorCode.REQUEST_NOT_VALID or error_code == TACMessage.ErrorCode.GENERIC_ERROR:
             logger.warning("[{}]: Check last request sent and investigate!".format(self.agent_name))
 
     def _request_state_update(self) -> None:
@@ -185,10 +188,9 @@ class ControllerReactions(ControllerReactionInterface):
 
         :return: None
         """
-        tac_msg = GetStateUpdate(self.crypto.public_key, self.crypto).serialize()
-        msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=tac_msg)
-        msg_bytes = DefaultSerializer().encode(msg)
-        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=DefaultMessage.protocol_id, message=msg_bytes)
+        tac_msg = TACMessage(tac_type=TACMessage.Type.GET_STATE_UPDATE)
+        tac_bytes = TACSerializer.encode(tac_msg)
+        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=TACMessage.protocol_id, message=tac_bytes)
 
 
 class OEFReactions(OEFReactionInterface):
@@ -313,7 +315,7 @@ class OEFReactions(OEFReactionInterface):
                          .format(self.agent_name, dialogue.role, cfp.get("id"), cfp.get("dialogue_id"), agent_pbk, cfp.get("target"), services))
             self.mailbox.outbox.put_message(to=agent_pbk, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id, message=cfp_bytes)
 
-    def _register_to_tac(self, controller_pbk: str) -> None:
+    def _register_to_tac(self, controller_pbk: Address) -> None:
         """
         Register to active TAC Controller.
 
@@ -323,12 +325,11 @@ class OEFReactions(OEFReactionInterface):
         """
         self.game_instance.controller_pbk = controller_pbk
         self.game_instance._game_phase = GamePhase.GAME_SETUP
-        tac_msg = Register(self.crypto.public_key, self.crypto, self.agent_name).serialize()
-        msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=tac_msg)
-        msg_bytes = DefaultSerializer().encode(msg)
-        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=DefaultMessage.protocol_id, message=msg_bytes)
+        tac_msg = TACMessage(tac_type=TACMessage.Type.REGISTER, agent_name=self.agent_name)
+        tac_bytes = TACSerializer().encode(tac_msg)
+        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=TACMessage.protocol_id, message=tac_bytes)
 
-    def _rejoin_tac(self, controller_pbk: str) -> None:
+    def _rejoin_tac(self, controller_pbk: Address) -> None:
         """
         Rejoin the TAC run by a Controller.
 
@@ -338,10 +339,9 @@ class OEFReactions(OEFReactionInterface):
         """
         self.game_instance.controller_pbk = controller_pbk
         self.game_instance._game_phase = GamePhase.GAME_SETUP
-        tac_msg = GetStateUpdate(self.crypto.public_key, self.crypto).serialize()
-        msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=tac_msg)
-        msg_bytes = DefaultSerializer().encode(msg)
-        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=DefaultMessage.protocol_id, message=msg_bytes)
+        tac_msg = TACMessage(tac_type=TACMessage.Type.GET_STATE_UPDATE)
+        tac_bytes = TACSerializer().encode(tac_msg)
+        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=TACMessage.protocol_id, message=tac_bytes)
 
 
 class DialogueReactions(DialogueReactionInterface):

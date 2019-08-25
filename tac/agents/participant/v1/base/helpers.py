@@ -23,8 +23,9 @@ import logging
 from typing import Dict, List, Set, Union
 
 from aea.dialogue.base import DialogueLabel
-from aea.mail.base import Envelope
+from aea.mail.base import Address
 from aea.protocols.oef.models import DataModel, Attribute, Description, Query, Constraint, Or
+from tac.platform.game.base import TransactionId
 from oef.query import GtEq
 
 logger = logging.getLogger(__name__)
@@ -35,32 +36,7 @@ TAC_DEMAND_DATAMODEL_NAME = "tac_demand"
 QUANTITY_SHIFT = 1  # Any non-negative integer is fine.
 
 
-def is_oef_message(envelope: Envelope) -> bool:
-    """
-    Check whether a message is from the oef.
-
-    :param envelope: the message
-    :return: boolean indicating whether or not the message is from the oef
-    """
-    return envelope.protocol_id == "oef"
-
-
-def is_controller_message(envelope: Envelope) -> bool:
-    """
-    Check whether a message is from the controller.
-
-    :param envelope: the message
-    :return: boolean indicating whether or not the message is from the controller
-    """
-    return envelope.protocol_id == "default"
-
-
-def is_fipa_message(envelope: Envelope) -> bool:
-    """Chcek whether a message is a FIPA message."""
-    return envelope.protocol_id == "fipa"
-
-
-def generate_transaction_id(agent_pbk: str, opponent_pbk: str, dialogue_label: DialogueLabel, agent_is_seller: bool) -> str:
+def generate_transaction_id(agent_pbk: Address, opponent_pbk: Address, dialogue_label: DialogueLabel, agent_is_seller: bool) -> str:
     """
     Make a transaction id.
 
@@ -77,7 +53,7 @@ def generate_transaction_id(agent_pbk: str, opponent_pbk: str, dialogue_label: D
     return transaction_id
 
 
-def dialogue_label_from_transaction_id(agent_pbk: str, transaction_id: str) -> DialogueLabel:
+def dialogue_label_from_transaction_id(agent_pbk: Address, transaction_id: TransactionId) -> DialogueLabel:
     """
     Recover dialogue label from transaction id.
 

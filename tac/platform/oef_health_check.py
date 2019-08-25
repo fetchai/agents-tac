@@ -24,8 +24,8 @@
 import argparse
 import logging
 
-from oef.agents import OEFAgent
-# from oef.core import AsyncioCore  # OEF-SDK 0.6.1
+from aea.crypto.base import Crypto
+from aea.channel.oef import OEFMailBox
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +45,8 @@ class OEFHealthCheck(object):
         :param oef_addr: IP address of the OEF node.
         :param oef_port: Port of the OEF node.
         """
+        crypto = Crypto()
+        self.mailbox = OEFMailBox(crypto.public_key, oef_addr=oef_addr, oef_port=oef_port)
         self.oef_addr = oef_addr
         self.oef_port = oef_port
 
@@ -56,24 +58,15 @@ class OEFHealthCheck(object):
         """
         result = False
         try:
-            pbk = 'check'
             print("Connecting to {}:{}".format(self.oef_addr, self.oef_port))
-            # core = AsyncioCore(logger=logger)  # OEF-SDK 0.6.1
-            # core.run_threaded()  # OEF-SDK 0.6.1
-            import asyncio
-            agent = OEFAgent(pbk, oef_addr=self.oef_addr, oef_port=self.oef_port, loop=asyncio.new_event_loop())
-            # agent = OEFAgent(pbk, oef_addr=self.addr, oef_port=self.port, core=core)  # OEF-SDK 0.6.1
-            agent.connect()
-            agent.disconnect()
-            # core.stop()  # OEF-SDK 0.6.1
+            self.mailbox.connect()
+            self.mailbox.disconnect()
             print("OK!")
             result = True
             return result
         except Exception as e:
             print(str(e))
             return result
-        # finally:
-        # core.stop(). # OEF-SDK 0.6.1
 
 
 def main(oef_addr, oef_port):

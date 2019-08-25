@@ -33,15 +33,15 @@ from aea.agent import Liveness
 from aea.crypto.base import Crypto
 from aea.mail.base import MailBox, Envelope
 from aea.protocols.base.message import Message
-from aea.protocols.default.serialization import DefaultSerializer
 from aea.protocols.fipa.serialization import FIPASerializer
 from aea.protocols.oef.message import OEFMessage
 from aea.protocols.oef.serialization import OEFSerializer
+from aea.protocols.tac.message import TACMessage
+from aea.protocols.tac.serialization import TACSerializer
 from tac.agents.participant.v1.base.actions import DialogueActions, ControllerActions, OEFActions
 from tac.agents.participant.v1.base.game_instance import GameInstance
 from tac.agents.participant.v1.base.reactions import DialogueReactions, ControllerReactions, OEFReactions
 from tac.platform.game.base import GamePhase
-from tac.platform.protocol import Error, TransactionConfirmation, StateUpdate, Response, GameData, Cancelled
 
 logger = logging.getLogger(__name__)
 
@@ -110,30 +110,30 @@ class ControllerHandler(ControllerActions, ControllerReactions):
 
         :return: None
         """
-        assert envelope.protocol_id == "default"
-        msg = DefaultSerializer().decode(envelope.message)
-        response = Response.from_pb(msg.get("content"), envelope.sender, self.crypto)
-        logger.debug("[{}]: Handling controller response. type={}".format(self.agent_name, type(response)))
+        assert envelope.protocol_id == "tac"
+        tac_msg = TACSerializer().decode(envelope.message)
+        tac_msg_type = TACMessage.Type(tac_msg.get("type"))
+        logger.debug("[{}]: Handling controller response. type={}".format(self.agent_name, tac_msg_type))
         try:
             if envelope.sender != self.game_instance.controller_pbk:
                 raise ValueError("The sender of the message is not the controller agent we registered with.")
 
-            if isinstance(response, Error):
-                self.on_tac_error(response)
+            if tac_msg_type == TACMessage.Type.TAC_ERROR:
+                self.on_tac_error(tac_msg, envelope.sender)
             elif self.game_instance.game_phase == GamePhase.PRE_GAME:
                 raise ValueError("We do not expect a controller agent message in the pre game phase.")
             elif self.game_instance.game_phase == GamePhase.GAME_SETUP:
-                if isinstance(response, GameData):
-                    self.on_start(response)
-                elif isinstance(response, Cancelled):
+                if tac_msg_type == TACMessage.Type.GAME_DATA:
+                    self.on_start(tac_msg, envelope.sender)
+                elif tac_msg_type == TACMessage.Type.CANCELLED:
                     self.on_cancelled()
             elif self.game_instance.game_phase == GamePhase.GAME:
-                if isinstance(response, TransactionConfirmation):
-                    self.on_transaction_confirmed(response)
-                elif isinstance(response, Cancelled):
+                if tac_msg_type == TACMessage.Type.TRANSACTION_CONFIRMATION:
+                    self.on_transaction_confirmed(tac_msg, envelope.sender)
+                elif tac_msg_type == TACMessage.Type.CANCELLED:
                     self.on_cancelled()
-                elif isinstance(response, StateUpdate):
-                    self.on_state_update(response)
+                elif tac_msg_type == TACMessage.Type.STATE_UPDATE:
+                    self.on_state_update(tac_msg, envelope.sender)
             elif self.game_instance.game_phase == GamePhase.POST_GAME:
                 raise ValueError("We do not expect a controller agent message in the post game phase.")
         except ValueError as e:

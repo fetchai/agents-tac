@@ -29,7 +29,6 @@ from aea.channel.oef import OEFMailBox
 from aea.mail.base import Envelope
 from tac.agents.participant.v1.base.game_instance import GameInstance
 from tac.agents.participant.v1.base.handlers import ControllerHandler, DialogueHandler, OEFHandler
-from tac.agents.participant.v1.base.helpers import is_oef_message, is_controller_message, is_fipa_message
 from tac.agents.participant.v1.base.strategy import Strategy
 from tac.gui.dashboards.agent import AgentDashboard
 from tac.platform.game.base import GamePhase
@@ -108,11 +107,11 @@ class ParticipantAgent(Agent):
 
             if envelope is not None:
                 logger.debug("processing message of protocol={}".format(envelope.protocol_id))
-                if is_oef_message(envelope):
+                if envelope.protocol_id == "oef":
                     self.oef_handler.handle_oef_message(envelope)
-                elif is_controller_message(envelope):
+                elif envelope.protocol_id == "tac":
                     self.controller_handler.handle_controller_message(envelope)
-                elif is_fipa_message(envelope):
+                elif envelope.protocol_id == "fipa":
                     self.dialogue_handler.handle_dialogue_message(envelope)
                 else:
                     logger.warning("Message type not recognized: sender={}".format(envelope.sender))

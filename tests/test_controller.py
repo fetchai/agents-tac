@@ -26,16 +26,13 @@ import pytest
 import time
 from threading import Thread
 
-from aea.mail.base import Envelope
-from aea.protocols.default.message import DefaultMessage
-from aea.protocols.default.serialization import DefaultSerializer
+from aea.protocols.tac.message import TACMessage
+from aea.protocols.tac.serialization import TACSerializer
 from .common import TOEFAgent
-# from oef.core import AsyncioCore  # OEF-SDK 0.6.1
 
 from aea.crypto.base import Crypto
 from tac.agents.controller.agent import ControllerAgent
 from tac.agents.controller.base.tac_parameters import TACParameters
-from tac.platform.protocol import Register
 
 logger = logging.getLogger(__name__)
 
@@ -76,30 +73,21 @@ class TestCompetitionStopsTooFewAgentRegistered:
         tac_parameters = TACParameters(min_nb_agents=2, start_time=datetime.datetime.now(), registration_timeout=5)
         cls.controller_agent = ControllerAgent('controller', '127.0.0.1', 10000, tac_parameters)
 
-        import asyncio
-        crypto = Crypto()
-        cls.agent1 = TOEFAgent(crypto.public_key, oef_addr='127.0.0.1', oef_port=10000, loop=asyncio.new_event_loop())
-        cls.agent1.connect()
-        # core = AsyncioCore(logger=logger)  # OEF-SDK 0.6.1
-        # core.run_threaded()  # OEF-SDK 0.6.1
-        # agent1 = TestOEFAgent(crypto.public_key, oef_addr='127.0.0.1', oef_port=10000, core=core)  # OEF-SDK 0.6.1
-
         job = Thread(target=cls.controller_agent.start)
         job.start()
-        agent_job = Thread(target=cls.agent1.run)
-        agent_job.start()
 
-        tac_msg = Register(crypto.public_key, crypto, 'agent_name').serialize()
-        msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=tac_msg)
-        msg_bytes = DefaultSerializer().encode(msg)
-        envelope = Envelope(to=cls.controller_agent.crypto.public_key, sender=crypto.public_key, protocol_id=DefaultMessage.protocol_id, message=msg_bytes)
-        cls.agent1.send_message(0, 0, cls.controller_agent.crypto.public_key, envelope.encode())
+        crypto = Crypto()
+        cls.agent1 = TOEFAgent(crypto.public_key, oef_addr='127.0.0.1', oef_port=10000)
+        cls.agent1.connect()
 
-        time.sleep(10.0)
+        tac_msg = TACMessage(tac_type=TACMessage.Type.REGISTER, agent_name='agent_name')
+        tac_bytes = TACSerializer().encode(tac_msg)
+        cls.agent1.outbox.put_message(to=cls.controller_agent.crypto.public_key, sender=crypto.public_key, protocol_id=TACMessage.protocol_id, message=tac_bytes)
+
+        time.sleep(5.0)
 
         job.join()
-        cls.agent1.stop()
-        agent_job.join()
+        cls.agent1.disconnect()
 
     def test_only_one_agent_registered(self):
         """Test exactly one agent is registered."""
@@ -107,4 +95,9 @@ class TestCompetitionStopsTooFewAgentRegistered:
 
     def test_agent_receives_cancelled_message(self):
         """Test the agent receives a cancelled message."""
-        assert len(self.agent1.messages) == 1
+        counter = 0
+        while not self.agent1.inbox.empty():
+            counter += 1
+            msg = self.agent1.inbox.get_nowait()
+            assert msg is not None and msg.sender == self.controller_agent.crypto.public_key
+        assert counter == 1

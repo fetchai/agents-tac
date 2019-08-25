@@ -203,7 +203,7 @@ class Dialogues(BaseDialogues):
             and (sender in known_pbks)
         return result
 
-    def is_belonging_to_registered_dialogue(self, message: Message, agent_pbk: str, sender: Address) -> bool:
+    def is_belonging_to_registered_dialogue(self, message: Message, agent_pbk: Address, sender: Address) -> bool:
         """
         Check whether an agent message is part of a registered dialogue.
 
@@ -242,7 +242,7 @@ class Dialogues(BaseDialogues):
                 result = self_initiated_dialogue.is_expecting_accept_decline()
         return result
 
-    def get_dialogue(self, message: Message, sender: Address, agent_pbk: str) -> Dialogue:
+    def get_dialogue(self, message: Message, sender: Address, agent_pbk: Address) -> Dialogue:
         """
         Retrieve dialogue.
 
@@ -282,7 +282,7 @@ class Dialogues(BaseDialogues):
             raise ValueError('Should have found dialogue.')
         return dialogue
 
-    def create_self_initiated(self, dialogue_opponent_pbk: str, dialogue_starter_pbk: str, is_seller: bool) -> Dialogue:
+    def create_self_initiated(self, dialogue_opponent_pbk: Address, dialogue_starter_pbk: Address, is_seller: bool) -> Dialogue:
         """
         Create a self initiated dialogue.
 
@@ -296,7 +296,7 @@ class Dialogues(BaseDialogues):
         result = self._create(dialogue_label, is_seller)
         return result
 
-    def create_opponent_initiated(self, dialogue_opponent_pbk: str, dialogue_id: int, is_seller: bool) -> Dialogue:
+    def create_opponent_initiated(self, dialogue_opponent_pbk: Address, dialogue_id: int, is_seller: bool) -> Dialogue:
         """
         Save an opponent initiated dialogue.
 

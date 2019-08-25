@@ -26,7 +26,7 @@ from collections import defaultdict, deque
 from typing import Dict, Tuple, Deque
 
 from tac.agents.participant.v1.base.dialogues import DialogueLabel
-from tac.platform.protocol import Transaction
+from tac.platform.game.base import Transaction, TransactionId
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +92,7 @@ class TransactionManager(object):
                 break
             next_date, next_item = queue[0]
 
-    def _register_transaction_with_time(self, transaction_id: str) -> None:
+    def _register_transaction_with_time(self, transaction_id: TransactionId) -> None:
         """
         Register a transaction with a creation datetime.
 
@@ -178,7 +178,7 @@ class TransactionManager(object):
         else:
             self.locked_txs_as_buyer[transaction_id] = transaction
 
-    def pop_locked_tx(self, transaction_id: str) -> Transaction:
+    def pop_locked_tx(self, transaction_id: TransactionId) -> Transaction:
         """
         Remove a lock (in the form of a transaction).
 

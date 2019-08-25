@@ -24,8 +24,8 @@
 import argparse
 import logging
 
-from oef.agents import OEFAgent
-# from oef.core import AsyncioCore  # OEF-SDK 0.6.1
+from aea.crypto.base import Crypto
+from aea.channel.oef import OEFMailBox
 
 logger = logging.getLogger(__name__)
 
@@ -39,15 +39,11 @@ if __name__ == '__main__':
         args = parser.parse_args()
         host = args.addr
         port = args.port
-        pbk = 'check'
         print("Connecting to {}:{}".format(host, port))
-        # core = AsyncioCore(logger=logger)  # OEF-SDK 0.6.1
-        # core.run_threaded()  # OEF-SDK 0.6.1
-        # agent = OEFAgent(pbk, oef_addr=host, oef_port=port, core=core)  # OEF-SDK 0.6.1
-        import asyncio
-        agent = OEFAgent(pbk, oef_addr=host, oef_port=port, loop=asyncio.get_event_loop())
-        agent.connect()
-        agent.disconnect()
+        crypto = Crypto()
+        mailbox = OEFMailBox(crypto.public_key, oef_addr=host, oef_port=port)
+        mailbox.connect()
+        mailbox.disconnect()
         print("OK!")
         exit(0)
     except Exception as e:

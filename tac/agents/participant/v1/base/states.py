@@ -30,11 +30,12 @@ import copy
 import pprint
 from typing import Dict, List
 
+from aea.mail.base import Address
 from aea.state.base import AgentState as BaseAgentState
 from aea.state.base import WorldState as BaseWorldState
 from tac.agents.participant.v1.base.price_model import GoodPriceModel
 from tac.platform.game.helpers import logarithmic_utility
-from tac.platform.protocol import Transaction
+from tac.platform.game.base import Transaction
 
 Endowment = List[int]  # an element e_j is the endowment of good j.
 UtilityParams = List[float]  # an element u_j is the utility value of good j.
@@ -269,7 +270,7 @@ class WorldState(BaseWorldState):
         expected_utility_params = utility_params
         return expected_utility_params
 
-    def expected_price(self, good_pbk: str, marginal_utility: float, is_seller: bool, share_of_tx_fee: float) -> float:
+    def expected_price(self, good_pbk: Address, marginal_utility: float, is_seller: bool, share_of_tx_fee: float) -> float:
         """
         Compute expectation of the price for the good given a constraint.
 
@@ -284,7 +285,7 @@ class WorldState(BaseWorldState):
         expected_price = good_price_model.get_price_expectation(constraint, is_seller)
         return expected_price
 
-    def _update_price(self, good_pbk: str, price: float, is_accepted: bool) -> None:
+    def _update_price(self, good_pbk: Address, price: float, is_accepted: bool) -> None:
         """
         Update the price for the good based on an outcome.
 

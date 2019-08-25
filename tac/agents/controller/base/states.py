@@ -29,12 +29,12 @@ Classes:
 import logging
 from typing import List, Dict, Any
 
-from aea.crypto.base import Crypto
+from aea.mail.base import Address
 from tac.agents.participant.v1.base.states import AgentState
-from tac.platform.game.base import GameConfiguration, GoodState
+from tac.platform.game.base import GameConfiguration, GoodState, Transaction
 from tac.platform.game.helpers import generate_money_endowments, generate_good_endowments, generate_utility_params, \
     generate_equilibrium_prices_and_holdings, determine_scaling_factor
-from tac.platform.protocol import Transaction
+
 
 Endowment = List[int]  # an element e_j is the endowment of good j.
 UtilityParams = List[float]  # an element u_j is the utility value of good j.
@@ -48,7 +48,7 @@ class GameInitialization:
     """Class containing the game initialization of a TAC instance."""
 
     def __init__(self,
-                 initial_money_amounts: List[int],
+                 initial_money_amounts: List[float],
                  endowments: List[Endowment],
                  utility_params: List[UtilityParams],
                  eq_prices: List[float],
@@ -80,7 +80,7 @@ class GameInitialization:
         self._check_consistency()
 
     @property
-    def initial_money_amounts(self) -> List[int]:
+    def initial_money_amounts(self) -> List[float]:
         """Get list of the initial amount of money of every agent."""
         return self._initial_money_amounts
 
@@ -303,7 +303,7 @@ class Game:
         """Get the current scores for every agent."""
         return {agent_pbk: agent_state.get_score() for agent_pbk, agent_state in self.agent_states.items()}
 
-    def get_agent_state_from_agent_pbk(self, agent_pbk: str) -> 'AgentState':
+    def get_agent_state_from_agent_pbk(self, agent_pbk: Address) -> 'AgentState':
         """
         Get agent state from agent pbk.
 
@@ -382,7 +382,7 @@ class Game:
         (20, [2, 1, 1])
         >>> agent_state_2.balance, agent_state_2.current_holdings
         (20, [1, 1, 2])
-        >>> tx = Transaction('some_tx_id', True, 'tac_agent_1_pbk', 15, {'tac_good_0': 1, 'tac_good_1': 0, 'tac_good_2': 0}, 'tac_agent_0_pbk', Crypto())
+        >>> tx = Transaction('some_tx_id', True, 'tac_agent_1_pbk', 15, {'tac_good_0': 1, 'tac_good_1': 0, 'tac_good_2': 0}, 'tac_agent_0_pbk')
         >>> game.settle_transaction(tx)
         >>> agent_state_0.balance, agent_state_0.current_holdings
         (4.5, [2, 1, 1])
@@ -510,14 +510,14 @@ class Game:
         }
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any], crypto: Crypto) -> 'Game':
+    def from_dict(cls, d: Dict[str, Any]) -> 'Game':
         """Get class instance from dictionary."""
         configuration = GameConfiguration.from_dict(d["configuration"])
         initialization = GameInitialization.from_dict(d["initialization"])
 
         game = Game(configuration, initialization)
         for tx_dict in d["transactions"]:
-            tx = Transaction.from_dict(tx_dict, crypto)
+            tx = Transaction.from_dict(tx_dict)
             game.settle_transaction(tx)
 
         return game
