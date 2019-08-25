@@ -328,6 +328,7 @@ class Transaction:
         return result
 
     def __eq__(self, other):
+        """Compare to another object."""
         return isinstance(other, Transaction) \
             and self.transaction_id == other.transaction_id \
             and self.is_sender_buyer == other.is_sender_buyer \

@@ -18,7 +18,6 @@
 # ------------------------------------------------------------------------------
 
 """This module contains the tests of the game module."""
-from pprint import pprint
 
 import pytest
 
