@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "bd24006788c89b0a5678e335640502b980c3d377d6d6e65c26505b57cc568093"
+            "sha256": "e6dd69d9dff1b803678bd42f0a3e8d83f9183b31bb6dcba1248baa70dbfa191a"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -24,7 +24,7 @@
         "aea": {
             "editable": true,
             "git": "https://github.com/fetchai/agents-aea.git",
-            "ref": "ed2389ca853e5259c22cf9df6385eab769b05112"
+            "ref": "26926d2a94a5e2fdcebc82baf27316beceaafacc"
         },
         "alabaster": {
             "hashes": [
@@ -405,11 +405,11 @@
         },
         "oef": {
             "hashes": [
-                "sha256:1944b11632c4af841e373f52e3e96941821f6b4bb4dbc430f790c1b436880618",
-                "sha256:cab9e251bfd1476f332de5046a83e0c01d0ce75ddfefb1bd614359a2b904d726"
+                "sha256:1f2dbe6b8815fe5aec927e0c97dd9b9b286c8105284c94013e477ea8b697864e",
+                "sha256:5f9f2badc79d18fc8716795a6db8dc0c3b5b287dd1d7d25389f88a6b04fde78a"
             ],
             "index": "test-pypi",
-            "version": "==0.6.0"
+            "version": "==0.6.2"
         },
         "packaging": {
             "hashes": [
@@ -739,14 +739,6 @@
         }
     },
     "develop": {
-        "appnope": {
-            "hashes": [
-                "sha256:5b26757dc6f79a3b7dc9fab95359328d5747fcb2409d331ea66d0272b90ab2a0",
-                "sha256:8b995ffe925347a2138d7ac0fe77155e4311a0ea6d6da4f5128fe4b3cbe5ed71"
-            ],
-            "markers": "sys_platform == 'darwin'",
-            "version": "==0.1.0"
-        },
         "atomicwrites": {
             "hashes": [
                 "sha256:03472c30eb2c5d1ba9227e4c2ca66ab8287fbfbbda3888aa93dc2e28fc6811b4",
@@ -1371,10 +1363,10 @@
         },
         "zipp": {
             "hashes": [
-                "sha256:4970c3758f4e89a7857a973b1e2a5d75bcdc47794442f2e2dd4fe8e0466e809a",
-                "sha256:8a5712cfd3bb4248015eb3b0b3c54a5f6ee3f2425963ef2a0125b8bc40aafaec"
+                "sha256:3718b1cbcd963c7d4c5511a8240812904164b7f381b647143a89d3b98f9bcd8e",
+                "sha256:f06903e9f1f43b12d371004b4ac7b06ab39a44adc747266928ae6debfa7b3335"
             ],
-            "version": "==0.5.2"
+            "version": "==0.6.0"
         }
     }
 }

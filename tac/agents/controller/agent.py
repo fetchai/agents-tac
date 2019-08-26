@@ -166,6 +166,7 @@ class ControllerAgent(Agent):
         logger.debug("[{}]: Stopping myself...".format(self.name))
         if self.game_handler.game_phase == GamePhase.GAME or self.game_handler.game_phase == GamePhase.GAME_SETUP:
             self.game_handler.notify_competition_cancelled()
+        time.sleep(2.0)
         super().stop()
 
     def start(self) -> None:
