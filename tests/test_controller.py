@@ -22,6 +22,8 @@
 import datetime
 import logging
 # import multiprocessing
+from pprint import pprint
+
 import pytest
 import time
 from threading import Thread
@@ -54,7 +56,7 @@ class TestCompetitionStopsNoAgentRegistered:
         """Test no agent is registered."""
         job = Thread(target=self.controller_agent.start)
         job.start()
-        job.join(10.0)
+        job.join(20.0)
         assert not job.is_alive()
         assert len(self.controller_agent.game_handler.registered_agents) == 0
 
@@ -109,3 +111,52 @@ class TestCompetitionStopsTooFewAgentRegistered:
     def teardown_class(cls):
         cls.controller_agent.stop()
         cls.agent1.disconnect()
+
+
+class TestControllerError:
+    """Test that the controller returns a TAC error."""
+
+    @pytest.fixture(autouse=True)
+    def _start_oef_node(self, network_node):
+        pass
+
+    @classmethod
+    def setup_class(cls):
+        """"""
+        tac_parameters = TACParameters(min_nb_agents=2, start_time=datetime.datetime.now(), registration_timeout=5)
+        cls.controller_agent = ControllerAgent('controller', '127.0.0.1', 10000, tac_parameters)
+
+        job = Thread(target=cls.controller_agent.start)
+        job.start()
+
+        tac_msg = TACMessage(tac_type=TACMessage.Type.CANCELLED, agent_name='agent_name')
+        tac_bytes = TACSerializer().encode(tac_msg)
+        cls.controller_agent.outbox.put_message(to=cls.controller_agent.crypto.public_key,
+                                                 sender=cls.controller_agent.crypto.public_key,
+                                                 protocol_id=TACMessage.protocol_id, message=tac_bytes)
+        tac_msg = TACMessage(tac_type=TACMessage.Type.CANCELLED, agent_name='agent_name')
+        tac_bytes = TACSerializer().encode(tac_msg)
+        cls.controller_agent.outbox.put_message(to=cls.controller_agent.crypto.public_key,
+                                                 sender=cls.controller_agent.crypto.public_key,
+                                                 protocol_id=TACMessage.protocol_id, message=tac_bytes)
+        tac_msg = TACMessage(tac_type=TACMessage.Type.CANCELLED, agent_name='agent_name')
+        tac_bytes = TACSerializer().encode(tac_msg)
+        cls.controller_agent.outbox.put_message(to=cls.controller_agent.crypto.public_key,
+                                                 sender=cls.controller_agent.crypto.public_key,
+                                                 protocol_id=TACMessage.protocol_id, message=tac_bytes)
+
+        job.join()
+
+    def test_get_message(self):
+        """test that the controller can send a message to himself."""
+
+        counter = 0
+        while not self.controller_agent.inbox.empty():
+            counter += 1
+            msg = self.controller_agent.inbox.get_nowait()
+            assert msg is not None and msg.sender == self.controller_agent.crypto.public_key
+        assert counter == 3
+
+    @classmethod
+    def teardown_class(cls):
+        cls.controller_agent.stop()

@@ -309,20 +309,23 @@ class AgentMessageDispatcher(object):
         assert envelope.protocol_id == "tac"
         tac_msg = TACSerializer().decode(envelope.message)
         logger.debug("[{}] on_message: origin={}" .format(self.controller_agent.name, envelope.sender))
-        handle_tac_message = self.handlers.get(TACMessage.Type(tac_msg.get("type")), None)  # type: TACMessageHandler
+        tac_msg_type = tac_msg.get("type")
+        handle_tac_message = self.handlers.get(TACMessage.Type(tac_msg_type), None)  # type: TACMessageHandler
         if handle_tac_message is None:
             logger.debug("[{}]: Unknown message from {}".format(self.controller_agent.name, envelope.sender))
-            tac_error = TACMessage(tac_type=TACMessage.Type.TAC_ERROR, error_code=TACMessage.ErrorCode.REQUEST_NOT_VALID)
+            tac_error = TACMessage(tac_type=TACMessage.Type.TAC_ERROR, error_code=TACMessage.ErrorCode.REQUEST_NOT_VALID.value)
             tac_bytes = TACSerializer().encode(tac_error)
             self.controller_agent.mailbox.outbox.put_message(to=envelope.sender, sender=self.controller_agent.crypto.public_key, protocol_id=tac_error.protocol_id, message=tac_bytes)
-        try:
-            handle_tac_message(tac_msg, envelope.sender)
-        except Exception as e:
-            logger.debug("[{}]: Error caught: {}".format(self.controller_agent.name, str(e)))
-            logger.exception(e)
-            tac_error = TACMessage(tac_type=TACMessage.Type.TAC_ERROR, error_code=TACMessage.ErrorCode.GENERIC_ERROR)
-            tac_bytes = TACSerializer().encode(tac_error)
-            self.controller_agent.mailbox.outbox.put_message(to=envelope.sender, sender=self.controller_agent.crypto.public_key, protocol_id=tac_error.protocol_id, message=tac_bytes)
+            return
+        else:
+            try:
+                handle_tac_message(tac_msg, envelope.sender)
+            except Exception as e:
+                logger.debug("[{}]: Error caught: {}".format(self.controller_agent.name, str(e)))
+                logger.exception(e)
+                tac_error = TACMessage(tac_type=TACMessage.Type.TAC_ERROR, error_code=TACMessage.ErrorCode.GENERIC_ERROR.value)
+                tac_bytes = TACSerializer().encode(tac_error)
+                self.controller_agent.mailbox.outbox.put_message(to=envelope.sender, sender=self.controller_agent.crypto.public_key, protocol_id=tac_error.protocol_id, message=tac_bytes)
 
 
 class GameHandler:

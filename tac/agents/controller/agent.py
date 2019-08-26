@@ -137,18 +137,19 @@ class ControllerAgent(Agent):
 
         :return: None
         """
-        counter = 0
-        while (not self.inbox.empty() and counter < self.max_reactions):
-            counter += 1
-            envelope = self.inbox.get_nowait()  # type: Optional[Envelope]
-            if envelope is not None:
-                if envelope.protocol_id == 'oef':
-                    self.oef_handler.handle_oef_message(envelope)
-                elif envelope.protocol_id == 'tac':
-                    self.agent_message_dispatcher.handle_agent_message(envelope)
-                    self.last_activity = datetime.datetime.now()
-                else:
-                    raise ValueError("Unknown protocol_id: {}".format(envelope.protocol_id))
+        pass
+        # counter = 0
+        # while (not self.inbox.empty() and counter < self.max_reactions):
+        #     counter += 1
+        #     envelope = self.inbox.get_nowait()  # type: Optional[Envelope]
+        #     if envelope is not None:
+        #         if envelope.protocol_id == 'oef':
+        #             self.oef_handler.handle_oef_message(envelope)
+        #         elif envelope.protocol_id == 'tac':
+        #             self.agent_message_dispatcher.handle_agent_message(envelope)
+        #             self.last_activity = datetime.datetime.now()
+        #         else:
+        #             raise ValueError("Unknown protocol_id: {}".format(envelope.protocol_id))
 
     def update(self) -> None:
         """
