@@ -71,7 +71,7 @@ class ControllerAgent(Agent):
         :param private_key_pem: the path to a private key in PEM format.
         :param debug: if True, run the agent in debug mode.
         """
-        super().__init__(name, oef_addr, oef_port, private_key_pem, agent_timeout, debug=debug)
+        super().__init__(name, private_key_pem, agent_timeout, debug=debug)
         self.mailbox = OEFMailBox(self.crypto.public_key, oef_addr, oef_port)
 
         self.oef_handler = OEFHandler(self.crypto, self.liveness, self.mailbox, self.name)
@@ -137,19 +137,18 @@ class ControllerAgent(Agent):
 
         :return: None
         """
-        pass
-        # counter = 0
-        # while (not self.inbox.empty() and counter < self.max_reactions):
-        #     counter += 1
-        #     envelope = self.inbox.get_nowait()  # type: Optional[Envelope]
-        #     if envelope is not None:
-        #         if envelope.protocol_id == 'oef':
-        #             self.oef_handler.handle_oef_message(envelope)
-        #         elif envelope.protocol_id == 'tac':
-        #             self.agent_message_dispatcher.handle_agent_message(envelope)
-        #             self.last_activity = datetime.datetime.now()
-        #         else:
-        #             raise ValueError("Unknown protocol_id: {}".format(envelope.protocol_id))
+        counter = 0
+        while (not self.inbox.empty() and counter < self.max_reactions):
+            counter += 1
+            envelope = self.inbox.get_nowait()  # type: Optional[Envelope]
+            if envelope is not None:
+                if envelope.protocol_id == 'oef':
+                    self.oef_handler.handle_oef_message(envelope)
+                elif envelope.protocol_id == 'tac':
+                    self.agent_message_dispatcher.handle_agent_message(envelope)
+                    self.last_activity = datetime.datetime.now()
+                else:
+                    raise ValueError("Unknown protocol_id: {}".format(envelope.protocol_id))
 
     def update(self) -> None:
         """

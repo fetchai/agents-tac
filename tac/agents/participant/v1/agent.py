@@ -65,7 +65,7 @@ class ParticipantAgent(Agent):
         :param private_key_pem: the path to a private key in PEM format.
         :param debug: if True, run the agent in debug mode.
         """
-        super().__init__(name, oef_addr, oef_port, private_key_pem, agent_timeout, debug=debug)
+        super().__init__(name, private_key_pem, agent_timeout, debug=debug)
         self.mailbox = OEFMailBox(self.crypto.public_key, oef_addr, oef_port)
 
         self._game_instance = GameInstance(name, strategy, self.mailbox.mail_stats, services_interval, pending_transaction_timeout, dashboard)  # type: Optional[GameInstance]
