@@ -26,7 +26,7 @@ import asyncio
 import logging
 from typing import Optional
 
-from oef.core import AsyncioCore, Connection
+from oef.agents import AsyncioCore, Connection
 
 logger = logging.getLogger(__name__)
 
