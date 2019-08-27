@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "4b47dbf0e5072aced0b959e92c05509aa05678f8912e5789ea5cc1c53e193440"
+            "sha256": "333259b3f3958b9e54d7eac0e8ca397ab28e2e8e29b6fce8369ab775a792efcd"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -24,7 +24,7 @@
         "aea": {
             "editable": true,
             "git": "https://github.com/fetchai/agents-aea.git",
-            "ref": "7a552b56dfe30d3e5fc2ee6d935e02ac9789a207"
+            "ref": "68727db42830dc1034819858648e1c53e76a9017"
         },
         "alabaster": {
             "hashes": [
@@ -408,6 +408,7 @@
                 "sha256:9ede6588109edb4346bf89e3804b8654e460a7070e353f762f3d9402781d45ab",
                 "sha256:d5254a61e3cdc88e0d8c254c72dcf4b72bda048b055f661937c5bc4c7748f40c"
             ],
+            "index": "test-pypi",
             "version": "==0.6.3"
         },
         "packaging": {
