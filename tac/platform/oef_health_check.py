@@ -26,8 +26,6 @@ import asyncio
 import logging
 from typing import Optional
 
-from aea.crypto.base import Crypto
-from aea.channel.oef import OEFMailBox
 from oef.core import AsyncioCore, Connection
 
 logger = logging.getLogger(__name__)

@@ -59,6 +59,7 @@ class TestCompetitionStopsNoAgentRegistered:
 
     @classmethod
     def teardown_class(cls):
+        """Teardown test class."""
         cls.controller_agent.stop()
 
 
@@ -106,5 +107,6 @@ class TestCompetitionStopsTooFewAgentRegistered:
 
     @classmethod
     def teardown_class(cls):
+        """Teardown test class."""
         cls.controller_agent.stop()
         cls.agent1.disconnect()
