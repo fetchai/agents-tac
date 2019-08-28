@@ -32,7 +32,7 @@ class TAgent(Agent):
 
     def __init__(self):
         """Initialize the test agent."""
-        super().__init__("test_agent", "127.0.0.1", 10000)
+        super().__init__("test_agent")
         self.mailbox = OEFMailBox(self.crypto.public_key, "127.0.0.1", 10000)
 
     def setup(self) -> None:
@@ -55,7 +55,7 @@ class TAgent(Agent):
 
 def test_agent_initiated():
     """Test that when the agent is initiated, her state is AgentState.INITIATED."""
-    test_agent = Agent("test_agent", "127.0.0.1", 10000)
+    test_agent = TAgent()
     assert test_agent.agent_state == AgentState.INITIATED
 
 

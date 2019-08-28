@@ -31,7 +31,7 @@ class TAgent(Agent):
 
     def __init__(self, **kwargs):
         """Initialize the test agent."""
-        super().__init__("test_agent", "127.0.0.1", 10000, **kwargs)
+        super().__init__("test_agent", **kwargs)
         self.mailbox = OEFMailBox(self.crypto.public_key, "127.0.0.1", 10000)
 
     def setup(self) -> None:

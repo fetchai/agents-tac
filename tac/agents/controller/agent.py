@@ -71,7 +71,7 @@ class ControllerAgent(Agent):
         :param private_key_pem: the path to a private key in PEM format.
         :param debug: if True, run the agent in debug mode.
         """
-        super().__init__(name, oef_addr, oef_port, private_key_pem, agent_timeout, debug=debug)
+        super().__init__(name, private_key_pem, agent_timeout, debug=debug)
         self.mailbox = OEFMailBox(self.crypto.public_key, oef_addr, oef_port)
 
         self.oef_handler = OEFHandler(self.crypto, self.liveness, self.mailbox, self.name)

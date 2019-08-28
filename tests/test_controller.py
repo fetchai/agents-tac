@@ -21,18 +21,17 @@
 
 import datetime
 import logging
-# import multiprocessing
-import pytest
-import time
 from threading import Thread
 
+import pytest
+from aea.crypto.base import Crypto
 from aea.protocols.tac.message import TACMessage
 from aea.protocols.tac.serialization import TACSerializer
-from .common import TOEFAgent
 
-from aea.crypto.base import Crypto
 from tac.agents.controller.agent import ControllerAgent
 from tac.agents.controller.base.tac_parameters import TACParameters
+from .common import TOEFAgent
+
 
 logger = logging.getLogger(__name__)
 
@@ -54,10 +53,14 @@ class TestCompetitionStopsNoAgentRegistered:
         """Test no agent is registered."""
         job = Thread(target=self.controller_agent.start)
         job.start()
-        job.join(10.0)
+        job.join(20.0)
         assert not job.is_alive()
         assert len(self.controller_agent.game_handler.registered_agents) == 0
-        self.controller_agent.stop()
+
+    @classmethod
+    def teardown_class(cls):
+        """Teardown test class."""
+        cls.controller_agent.stop()
 
 
 class TestCompetitionStopsTooFewAgentRegistered:
@@ -73,25 +76,25 @@ class TestCompetitionStopsTooFewAgentRegistered:
         tac_parameters = TACParameters(min_nb_agents=2, start_time=datetime.datetime.now(), registration_timeout=5)
         cls.controller_agent = ControllerAgent('controller', '127.0.0.1', 10000, tac_parameters)
 
+        cls.controller_agent.mailbox.connect()
         job = Thread(target=cls.controller_agent.start)
         job.start()
 
-        crypto = Crypto()
-        cls.agent1 = TOEFAgent(crypto.public_key, oef_addr='127.0.0.1', oef_port=10000)
+        cls.crypto = Crypto()
+        cls.agent1 = TOEFAgent(cls.crypto.public_key, oef_addr='127.0.0.1', oef_port=10000)
         cls.agent1.connect()
 
         tac_msg = TACMessage(tac_type=TACMessage.Type.REGISTER, agent_name='agent_name')
         tac_bytes = TACSerializer().encode(tac_msg)
-        cls.agent1.outbox.put_message(to=cls.controller_agent.crypto.public_key, sender=crypto.public_key, protocol_id=TACMessage.protocol_id, message=tac_bytes)
-
-        time.sleep(5.0)
+        cls.agent1.outbox.put_message(to=cls.controller_agent.crypto.public_key, sender=cls.crypto.public_key, protocol_id=TACMessage.protocol_id, message=tac_bytes)
 
         job.join()
-        cls.agent1.disconnect()
 
     def test_only_one_agent_registered(self):
         """Test exactly one agent is registered."""
         assert len(self.controller_agent.game_handler.registered_agents) == 1
+        agent_pbk = next(iter(self.controller_agent.game_handler.registered_agents))
+        assert agent_pbk == self.crypto.public_key
 
     def test_agent_receives_cancelled_message(self):
         """Test the agent receives a cancelled message."""
@@ -101,3 +104,9 @@ class TestCompetitionStopsTooFewAgentRegistered:
             msg = self.agent1.inbox.get_nowait()
             assert msg is not None and msg.sender == self.controller_agent.crypto.public_key
         assert counter == 1
+
+    @classmethod
+    def teardown_class(cls):
+        """Teardown test class."""
+        cls.controller_agent.stop()
+        cls.agent1.disconnect()
