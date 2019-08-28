@@ -23,15 +23,9 @@
 from typing import Any, Dict, Optional, Tuple, List
 
 import numpy as np
-import matplotlib
-import os
-import pylab as plt
 
-from aea.crypto.base import Crypto
 from tac.agents.controller.base.states import Game
 from tac.agents.participant.v1.base.states import AgentState
-
-matplotlib.use('agg')
 
 
 class GameStats:
@@ -50,7 +44,7 @@ class GameStats:
     @classmethod
     def from_json(cls, d: Dict[str, Any]):
         """Read from json."""
-        game = Game.from_dict(d, Crypto())  # any crypto object will do here
+        game = Game.from_dict(d)
         return GameStats(game)
 
     def holdings_history(self):
@@ -145,29 +139,6 @@ class GameStats:
             result[idx + 1, :] = np.asarray(temp_game.get_prices(), dtype=np.float32)
 
         return result
-
-    def plot_score_history(self, output_path: Optional[str] = None) -> None:
-        """
-        Plot the history of the scores, for every agent, by transaction.
-
-        :param output_path: an optional output path where to save the figure generated.
-
-        :return: None
-        """
-        keys, history = self.score_history()
-
-        plt.clf()
-        plt.plot(history)
-        plt.legend([self.game.configuration.agent_pbk_to_name[agent_pbk] for agent_pbk in keys], loc="best")
-        plt.xlabel("Transactions")
-        plt.ylabel("Score")
-
-        plt.gca().xaxis.set_major_locator(plt.MaxNLocator(integer=True))
-
-        if output_path is None:
-            plt.show()
-        else:
-            plt.savefig(output_path)
 
     def eq_vs_mean_price(self) -> Tuple[List[str], np.ndarray]:
         """
@@ -285,15 +256,3 @@ class GameStats:
         result = np.transpose(result)
 
         return keys, result
-
-    def dump(self, directory: str, experiment_name: str) -> None:
-        """
-        Dump the plot.
-
-        :param directory: the directory where experiments details are listed.
-        :param experiment_name: the name of the folder where the data about experiment will be saved.
-
-        :return: None.
-        """
-        experiment_dir = directory + "/" + experiment_name
-        self.plot_score_history(os.path.join(experiment_dir, "plot.png"))

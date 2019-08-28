@@ -29,7 +29,7 @@ import random
 import time
 from typing import Union, Optional
 
-import dateutil
+import dateutil.parser
 from aea.agent import Agent
 from aea.channel.oef import OEFMailBox
 from aea.mail.base import Envelope
@@ -123,12 +123,10 @@ class ControllerAgent(Agent):
             if inactivity_duration > self.game_handler.tac_parameters.inactivity_timedelta:
                 logger.debug("[{}]: Inactivity timeout expired. Terminating...".format(self.name))
                 self.stop()
-                self.teardown()
                 return
             elif current_time > self.game_handler.tac_parameters.end_time:
                 logger.debug("[{}]: Competition timeout expired. Terminating...".format(self.name))
                 self.stop()
-                self.teardown()
                 return
 
     def react(self) -> None:
