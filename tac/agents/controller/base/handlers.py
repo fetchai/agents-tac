@@ -469,7 +469,8 @@ class GameHandler:
             tac_msg = TACMessage(tac_type=TACMessage.Type.CANCELLED)
             tac_bytes = TACSerializer().encode(tac_msg)
             self.mailbox.outbox.put_message(to=agent_pbk, sender=self.crypto.public_key, protocol_id=TACMessage.protocol_id, message=tac_bytes)
-        time.sleep(1.0)
+        # wait some time to make sure the connection delivers the messages
+        time.sleep(2.0)
         self._game_phase = GamePhase.POST_GAME
 
     def simulation_dump(self) -> None:
