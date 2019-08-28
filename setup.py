@@ -96,6 +96,14 @@ with open('README.md', 'r') as f:
     readme = f.read()
 
 
+extras = {
+    "gui": [
+        "flask",
+        "flask_restful",
+        "wtforms"
+    ]
+}
+
 setup(
     name=about['__title__'],
     description=about['__description__'],
@@ -116,19 +124,14 @@ setup(
         'Programming Language :: Python :: 3.7',
     ],
     install_requires=[
+        "aea @ git+https://github.com/fetchai/agents-aea.git@develop#egg=aea",
         "oef",
         "numpy",
-        "matplotlib",
-        "flask",
-        "flask_restful",
-        "wtforms",
         "python-dateutil",
-        "visdom",
-        "cryptography",
-        "fetchai-ledger-api @ git+https://github.com/fetchai/ledger-api-py.git#egg=fetchai-ledger-api",
-        "base58"
+        "visdom"
     ],
     tests_require=["tox"],
+    extras_require=extras,
     zip_safe=False,
     include_package_data=True,
     data_files=[
