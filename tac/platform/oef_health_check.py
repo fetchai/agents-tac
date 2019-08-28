@@ -24,11 +24,10 @@
 import argparse
 import asyncio
 import logging
-import time
-from threading import Thread, Timer
+from threading import Timer
 from typing import Optional
 
-from oef.agents import AsyncioCore, Connection, OEFAgent
+from oef.agents import AsyncioCore, OEFAgent
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +73,6 @@ class OEFHealthCheck(object):
         """Handle a connection failure."""
         print("Connection terminated.")
         self._stop = True
-
 
     def run(self) -> bool:
         """
