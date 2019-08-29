@@ -36,6 +36,7 @@ sphinx = "*"
 wtforms = "*"
 visdom = "*"
 aea = {editable = true,git = "https://github.com/fetchai/agents-aea.git",ref = "develop"}
+colorlog = "*"
 
 [requires]
 python_version = "3.7"

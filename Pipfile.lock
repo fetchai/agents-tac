@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "331da37d0749378faeded473e56279f8164d9c5e73a1fe0b233e656952e89eeb"
+            "sha256": "c104a4860ddd2511c5a6510c10724b3bff7c843eb3e5b1c664919525c497e3f4"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -131,6 +131,14 @@
             ],
             "version": "==7.0"
         },
+        "colorlog": {
+            "hashes": [
+                "sha256:3cf31b25cbc8f86ec01fef582ef3b840950dea414084ed19ab922c8b493f9b42",
+                "sha256:450f52ea2a2b6ebb308f034ea9a9b15cea51e65650593dca1da3eb792e4e4981"
+            ],
+            "index": "pypi",
+            "version": "==4.0.2"
+        },
         "cryptography": {
             "hashes": [
                 "sha256:24b61e5fcb506424d3ec4e18bca995833839bf13c59fc43e530e488f28d46b8c",
@@ -191,7 +199,7 @@
         },
         "fetchai-ledger-api": {
             "git": "https://github.com/fetchai/ledger-api-py.git",
-            "ref": "a5f513a9247524ee767e1dd1519aad1a1f4383e3"
+            "ref": "514e17c209932357d000be599e85362a1cbeb8a0"
         },
         "flask": {
             "hashes": [

@@ -66,6 +66,7 @@ setup(
     install_requires=[
         "aea @ git+https://github.com/fetchai/agents-aea.git@develop#egg=aea",
         "oef",
+        "colorlog",  # TODO 'oef' dependency, to be fixed.
         "numpy",
         "python-dateutil",
         "visdom"
