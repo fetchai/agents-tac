@@ -129,6 +129,7 @@ tac/gui/.visdom_env/
 
 sandbox/TAC
 sandbox/data
+simulation/v1/data/
 
 *.pem
 !tests/data/priv.pem`
