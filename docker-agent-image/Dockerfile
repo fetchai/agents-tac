@@ -10,6 +10,6 @@ ENV PYTHONPATH "$PYTHONPATH:/usr/lib/python3.7/site-packages"
 RUN pip install --upgrade pip
 RUN pip install protobuf colorlog graphviz # other oef dependences
 RUN pip install --index-url https://test.pypi.org/simple/ oef==0.6.4  --no-deps
-RUN pip install git+https://github.com/fetchai/agents-tac.git@develop#egg=tac
+RUN pip install -e git+https://github.com/fetchai/agents-tac.git@develop#egg=tac
 
-ENTRYPOINT ["bash", "-c"]
+ENTRYPOINT []
