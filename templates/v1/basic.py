@@ -59,7 +59,7 @@ def main():
     args = parse_arguments()
 
     if args.dashboard:
-        agent_dashboard = AgentDashboard(agent_name=args.name, env_name=args.name)
+        agent_dashboard = AgentDashboard(agent_name=args.name, visdom_addr=args.visdom_addr, visdom_port=args.visdom_port, env_name=args.name)
     else:
         agent_dashboard = None
 
