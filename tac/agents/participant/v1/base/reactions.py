@@ -189,7 +189,7 @@ class ControllerReactions(ControllerReactionInterface):
         :return: None
         """
         tac_msg = TACMessage(tac_type=TACMessage.Type.GET_STATE_UPDATE)
-        tac_bytes = TACSerializer.encode(tac_msg)
+        tac_bytes = TACSerializer().encode(tac_msg)
         self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key, protocol_id=TACMessage.protocol_id, message=tac_bytes)
 
 
