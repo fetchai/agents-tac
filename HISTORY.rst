@@ -23,3 +23,9 @@ Release History
 - Improved documentation by adding detailed guides
 - Added more tools/features to support the developer (e.g. the launcher app)
 
+0.1.4 (2019-09-05)
+-------------------
+
+- Updated to OEF SDK version 0.6.7
+- Transition to AEA architecture and extraction of AEA framework.
+- Updated to AEA version 0.1.1
