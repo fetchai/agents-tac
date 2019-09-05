@@ -22,17 +22,19 @@
 import inspect
 import logging
 import os
-import subprocess
+# import subprocess
 import time
 
 import docker
 import pytest
 from docker.models.containers import Container
 
+from tac.platform.oef_health_check import OEFHealthCheck
+
 logger = logging.getLogger(__name__)
 
 CUR_PATH = inspect.getfile(inspect.currentframe())
-ROOT_DIR = os.path.dirname(CUR_PATH) + "/.."
+ROOT_DIR = os.path.join(os.path.dirname(CUR_PATH), "..")
 
 
 def pytest_addoption(parser):
@@ -66,10 +68,12 @@ def _wait_for_oef(max_attempts: int = 15, sleep_rate: float = 1.0):
     while not success and attempt < max_attempts:
         attempt += 1
         logger.info("Attempt {}...".format(attempt))
-        oef_healthcheck = subprocess.Popen(["python3", ROOT_DIR + "/sandbox/oef_healthcheck.py", "127.0.0.1", "10000"])
-        oef_healthcheck.wait()
-        oef_healthcheck.terminate()
-        if oef_healthcheck.returncode == 0:
+        # oef_healthcheck = subprocess.Popen(["python3", ROOT_DIR + "/sandbox/oef_healthcheck.py", "127.0.0.1", "10000"])
+        # oef_healthcheck.wait()
+        # oef_healthcheck.terminate()
+        oef_healthcheck = OEFHealthCheck("127.0.0.1", 10000)
+        result = oef_healthcheck.run()
+        if result:
             success = True
         else:
             logger.info("OEF not available yet - sleeping for {} second...".format(sleep_rate))
@@ -100,7 +104,7 @@ def network_node(oef_addr, oef_port, pytestconfig):
 
     if pytestconfig.getoption("ci"):
         logger.warning("Skipping creation of OEF Docker image...")
-        success = _wait_for_oef(max_attempts=15, sleep_rate=3.0)
+        success = _wait_for_oef(max_attempts=10, sleep_rate=2.0)
         if not success:
             pytest.fail("OEF doesn't work. Exiting...")
         else:
@@ -112,7 +116,7 @@ def network_node(oef_addr, oef_port, pytestconfig):
 
         # wait for the setup...
         logger.info("Setting up the OEF node...")
-        success = _wait_for_oef(max_attempts=15, sleep_rate=3.0)
+        success = _wait_for_oef(max_attempts=10, sleep_rate=2.0)
 
         if not success:
             c.stop()

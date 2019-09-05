@@ -35,7 +35,7 @@ import time
 from collections import defaultdict
 from typing import List, Dict, Any
 
-from tac.platform.stats import GameStats
+from tac.platform.game.stats import GameStats
 
 OUR_DIRECTORY = os.path.dirname(inspect.getfile(inspect.currentframe()))
 ROOT_DIR = os.path.join(OUR_DIRECTORY, "..")

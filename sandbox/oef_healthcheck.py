@@ -22,24 +22,28 @@
 """This script waits until the OEF is up and running."""
 
 import argparse
-import asyncio
+import logging
 
-import oef.agents
+from aea.crypto.base import Crypto
+from aea.channel.oef import OEFMailBox
+
+logger = logging.getLogger(__name__)
 
 parser = argparse.ArgumentParser("oef_healthcheck", description=__doc__)
 parser.add_argument("addr", type=str, help="IP address of the OEF node.")
 parser.add_argument("port", type=int, help="Port of the OEF node.")
+
 
 if __name__ == '__main__':
     try:
         args = parser.parse_args()
         host = args.addr
         port = args.port
-        pbk = 'check'
         print("Connecting to {}:{}".format(host, port))
-        agent = oef.agents.OEFAgent(pbk, host, port, loop=asyncio.get_event_loop())
-        agent.connect()
-        agent.disconnect()
+        crypto = Crypto()
+        mailbox = OEFMailBox(crypto.public_key, oef_addr=host, oef_port=port)
+        mailbox.connect()
+        mailbox.disconnect()
         print("OK!")
         exit(0)
     except Exception as e:

@@ -19,7 +19,6 @@
 
 """This module contains the tests of the simulation."""
 
-import asyncio
 import datetime
 from threading import Thread
 from typing import List
@@ -27,13 +26,12 @@ from typing import List
 import numpy as np
 import pytest
 
-from tac.agents.v1.base.strategy import SearchFor, RegisterAs
-from tac.agents.v1.examples.strategy import BaselineStrategy
-from tac.platform.game import Game
-
-from tac.agents.v1.examples.baseline import BaselineAgent as BaselineAgentV1
-
-from tac.platform.controller import ControllerAgent, TACParameters
+from tac.agents.controller.agent import ControllerAgent
+from tac.agents.controller.base.states import Game
+from tac.agents.controller.base.tac_parameters import TACParameters
+from tac.agents.participant.v1.base.strategy import SearchFor, RegisterAs
+from tac.agents.participant.v1.examples.baseline import BaselineAgent as BaselineAgentV1
+from tac.agents.participant.v1.examples.strategy import BaselineStrategy
 
 
 def _init_baseline_agents(n: int, version: str, oef_addr: str, oef_port: int) -> List[BaselineAgentV1]:
@@ -68,10 +66,6 @@ class TestSimulation:
     @classmethod
     def setup_class(cls):
         """Class setup."""
-        cls.tac_controller = ControllerAgent(loop=asyncio.new_event_loop())
-        cls.tac_controller.connect()
-        cls.tac_controller.register()
-
         cls.baseline_agents = _init_baseline_agents(5, "v1", "127.0.0.1", 10000)
 
         cls.tac_parameters = TACParameters(min_nb_agents=5,
@@ -84,12 +78,13 @@ class TestSimulation:
                                            start_time=datetime.datetime.now() + datetime.timedelta(0, 2),
                                            registration_timeout=8,
                                            competition_timeout=20,
-                                           inactivity_timeout=10)
+                                           inactivity_timeout=15)
+
+        cls.tac_controller = ControllerAgent('controller', '127.0.0.1', 10000, cls.tac_parameters)
 
         # run the simulation
         try:
-            # generate task for the controller
-            controller_thread = Thread(target=cls.tac_controller.handle_competition, args=(cls.tac_parameters,))
+            controller_thread = Thread(target=cls.tac_controller.start)
 
             baseline_threads = [Thread(target=_run_baseline_agent, args=[baseline_agent, "v1"])
                                 for baseline_agent in cls.baseline_agents]

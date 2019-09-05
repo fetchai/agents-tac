@@ -29,9 +29,9 @@ from typing import Optional, Dict
 import numpy as np
 
 from tac.gui.dashboards.base import start_visdom_server, Dashboard
-from tac.helpers.crypto import Crypto
-from tac.platform.game import Game
-from tac.platform.stats import GameStats
+from aea.crypto.base import Crypto
+from tac.agents.controller.base.states import Game
+from tac.platform.game.stats import GameStats
 
 DEFAULT_ENV_NAME = "tac_simulation_env_main"
 

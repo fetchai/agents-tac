@@ -20,21 +20,24 @@
 # ------------------------------------------------------------------------------
 
 """Start a Visdom server, an OEF node instance, and run the simulation script."""
-
+import importlib
 import inspect
 import os
 import platform
 import re
 import subprocess
 import sys
+import time
 
 import docker
 
 import tac
+from tac.platform.oef_health_check import OEFHealthCheck
 from tac.platform.simulation import parse_arguments, build_simulation_parameters
 
 CUR_PATH = inspect.getfile(inspect.currentframe())
 ROOT_DIR = os.path.join(os.path.dirname(CUR_PATH), "..")
+stack_tracer = importlib.import_module("stack_tracer", package=CUR_PATH)
 
 
 class VisdomServer:
@@ -69,14 +72,13 @@ class OEFNode:
     def _wait_for_oef(self):
         """Wait for the OEF to come live."""
         print("Waiting for the OEF to be operative...")
-        wait_for_oef = subprocess.Popen([
-            os.path.join("sandbox", "wait-for-oef.sh"),
-            "127.0.0.1",
-            "10000",
-            ":"
-        ], env=os.environ, cwd=ROOT_DIR)
-
-        wait_for_oef.wait(30)
+        for loop in range(0, 30):
+            oef_healthcheck = OEFHealthCheck("127.0.0.1", 10000)
+            is_success = oef_healthcheck.run()
+            # exit_status = os.system("netstat -nal | grep 10000 | grep LISTEN")
+            # if exit_status != 1: break
+            if is_success: break
+            time.sleep(1)
 
     def __enter__(self):
         """Define what the context manager should do at the beginning of the block."""
@@ -108,4 +110,6 @@ if __name__ == '__main__':
     simulation_params = build_simulation_parameters(args)
 
     with VisdomServer(), OEFNode():
+        stack_tracer.start_trace(os.path.join(ROOT_DIR, "data/trace.html"), interval=5, auto=True)
         tac.platform.simulation.run(simulation_params)
+        stack_tracer.stop_trace()

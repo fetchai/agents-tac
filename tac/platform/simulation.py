@@ -28,14 +28,13 @@ It requires an OEF node running and a Visdom server, if the visualization is des
 
 You can also run it as a script. To check the available arguments:
 
-    python3 -m tac.platform.simulation -h
+    python -m tac.platform.simulation -h
 
 """
 
 import argparse
 import datetime
 import logging
-import math
 import multiprocessing
 import pprint
 import random
@@ -44,10 +43,11 @@ from typing import Optional, List
 
 import dateutil
 
-from tac.agents.v1.base.strategy import RegisterAs, SearchFor
-from tac.agents.v1.examples.baseline import main as baseline_main
-from tac.platform.controller import TACParameters
-from tac.platform.controller import main as controller_main
+from tac.agents.controller.agent import main as controller_main
+from tac.agents.controller.base.tac_parameters import TACParameters
+from tac.agents.participant.v1.base.strategy import RegisterAs, SearchFor
+from tac.agents.participant.v1.examples.baseline import main as baseline_main
+from tac.platform.game.helpers import make_agent_name
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +70,7 @@ class SimulationParams:
                  data_output_dir: Optional[str] = "data",
                  experiment_id: int = None,
                  seed: int = 42,
+                 nb_baseline_agents_world_modeling: int = 1,
                  tac_parameters: Optional[TACParameters] = None):
         """
         Initialize a SimulationParams class.
@@ -88,6 +89,7 @@ class SimulationParams:
         :param data_output_dir: the path to the output directory.
         :param experiment_id: the name of the experiment.
         :param seed: the random seed.
+        :param nb_baseline_agents_world_modeling: the number of world modelling baseline agents.
         :param tac_parameters: the parameters for the TAC.
         """
         self.tac_parameters = tac_parameters if tac_parameters is not None else TACParameters()
@@ -105,39 +107,17 @@ class SimulationParams:
         self.data_output_dir = data_output_dir
         self.experiment_id = experiment_id
         self.seed = seed
+        self.nb_baseline_agents_world_modeling = nb_baseline_agents_world_modeling
 
 
-def _make_id(agent_id: int, is_world_modeling: bool, nb_agents: int) -> str:
+def spawn_controller_agent(params: SimulationParams) -> multiprocessing.Process:
     """
-    Make the name for baseline agents from an integer identifier.
+    Spawn a controller agent.
 
-    E.g.:
-
-    >>> _make_id(2, False, 10)
-    'tac_agent_2'
-    >>> _make_id(2, False, 100)
-    'tac_agent_02'
-    >>> _make_id(2, False, 101)
-    'tac_agent_002'
-
-    :param agent_id: the agent id.
-    :param is_world_modeling: the boolean indicated whether the baseline agent models the world around her or not.
-    :param nb_agents: the overall number of agents.
-    :return: the formatted name.
-    :return: the string associated to the integer id.
+    :param params: the simulation params.
+    :return: the process running the controller.
     """
-    max_number_of_digits = math.ceil(math.log10(nb_agents))
-    if is_world_modeling:
-        string_format = "tac_agent_{:0" + str(max_number_of_digits) + "}_wm"
-    else:
-        string_format = "tac_agent_{:0" + str(max_number_of_digits) + "}"
-    result = string_format.format(agent_id)
-    return result
-
-
-def spawn_controller_agent(params: SimulationParams):
-    """Spawn a controller agent."""
-    result = multiprocessing.Process(target=controller_main, kwargs=dict(
+    process = multiprocessing.Process(target=controller_main, kwargs=dict(
         name="tac_controller",
         nb_agents=params.tac_parameters.min_nb_agents,
         nb_goods=params.tac_parameters.nb_goods,
@@ -160,41 +140,35 @@ def spawn_controller_agent(params: SimulationParams):
         data_output_dir=params.data_output_dir,
         experiment_id=params.experiment_id,
         seed=params.seed,
-        version=1,
     ))
-    result.start()
-    return result
-
-
-def run_baseline_agent(**kwargs) -> None:
-    """Run a baseline agent."""
-    # give the time to the controller to connect to the OEF
-    time.sleep(5.0)
-    baseline_main(**kwargs)
+    process.start()
+    return process
 
 
 def spawn_baseline_agents(params: SimulationParams) -> List[multiprocessing.Process]:
-    """Spawn baseline agents."""
-    fraction_world_modeling = 0.1
-    nb_baseline_agents_world_modeling = round(params.nb_baseline_agents * fraction_world_modeling)
+    """
+    Spawn baseline agents.
 
-    threads = [multiprocessing.Process(target=run_baseline_agent, kwargs=dict(
-        name=_make_id(i, i < nb_baseline_agents_world_modeling, params.nb_baseline_agents),
+    :param params: the simulation params.
+    :return: the processes running the agents (as a list).
+    """
+    processes = [multiprocessing.Process(target=baseline_main, kwargs=dict(
+        name=make_agent_name(i, i < params.nb_baseline_agents_world_modeling, params.nb_baseline_agents),
         oef_addr=params.oef_addr,
         oef_port=params.oef_port,
         register_as=params.register_as,
         search_for=params.search_for,
-        is_world_modeling=i < nb_baseline_agents_world_modeling,
+        is_world_modeling=i < params.nb_baseline_agents_world_modeling,
         services_interval=params.services_interval,
         pending_transaction_timeout=params.pending_transaction_timeout,
         dashboard=params.dashboard,
         visdom_addr=params.visdom_addr,
         visdom_port=params.visdom_port)) for i in range(params.nb_baseline_agents)]
 
-    for t in threads:
-        t.start()
+    for process in processes:
+        process.start()
 
-    return threads
+    return processes
 
 
 def parse_arguments():
@@ -211,7 +185,7 @@ def parse_arguments():
     parser.add_argument("--oef-port", default=10000, help="TCP/IP port of the OEF Agent")
     parser.add_argument("--nb-baseline-agents", type=int, default=10, help="Number of baseline agent to run. Defaults to the number of agents of the competition.")
     parser.add_argument("--start-time", default=str(datetime.datetime.now() + datetime.timedelta(0, 10)), type=str, help="The start time for the competition (in UTC format).")
-    parser.add_argument("--registration-timeout", default=10, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
+    parser.add_argument("--registration-timeout", default=20, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
     parser.add_argument("--inactivity-timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
     parser.add_argument("--competition-timeout", default=240, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
     parser.add_argument("--services-interval", default=5, type=int, help="The amount of time (in seconds) the baseline agents wait until it updates services again.")
@@ -224,6 +198,7 @@ def parse_arguments():
     parser.add_argument("--visdom-addr", default="localhost", help="TCP/IP address of the Visdom server")
     parser.add_argument("--visdom-port", default=8097, help="TCP/IP port of the Visdom server")
     parser.add_argument("--seed", default=42, help="The random seed of the simulation.")
+    parser.add_argument("--fraction-world-modeling", default=0.1, type=float, choices=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0], help="The fraction of world modelling baseline agents.")
     parser.add_argument("--whitelist-file", nargs="?", default=None, type=str, help="The file that contains the list of agent names to be whitelisted.")
 
     arguments = parser.parse_args()
@@ -233,7 +208,12 @@ def parse_arguments():
 
 
 def build_simulation_parameters(arguments: argparse.Namespace) -> SimulationParams:
-    """From argparse output, build an instance of SimulationParams."""
+    """
+    From argparse output, build an instance of SimulationParams.
+
+    :param arguments: the arguments
+    :return: the simulation parameters
+    """
     tac_parameters = TACParameters(
         min_nb_agents=arguments.nb_agents,
         money_endowment=arguments.money_endowment,
@@ -259,24 +239,32 @@ def build_simulation_parameters(arguments: argparse.Namespace) -> SimulationPara
         data_output_dir=arguments.data_output_dir,
         experiment_id=arguments.experiment_id,
         seed=arguments.seed,
+        nb_baseline_agents_world_modeling=round(arguments.nb_baseline_agents * arguments.fraction_world_modeling),
         tac_parameters=tac_parameters
     )
 
     return simulation_params
 
 
-def run(params: SimulationParams):
-    """Run the simulation."""
+def run(params: SimulationParams) -> None:
+    """
+    Run the simulation.
+
+    :param params: the simulation parameters
+    :return: None
+    """
     random.seed(params.seed)
 
-    controller_thread = None  # type: Optional[multiprocessing.Process]
-    baseline_threads = []  # type: List[multiprocessing.Process]
+    controller_process = None  # type: Optional[multiprocessing.Process]
+    baseline_processes = []  # type: List[multiprocessing.Process]
 
     try:
 
-        controller_thread = spawn_controller_agent(params)
-        baseline_threads = spawn_baseline_agents(params)
-        controller_thread.join()
+        controller_process = spawn_controller_agent(params)
+        # give the time to the controller to connect to the OEF
+        time.sleep(5.0)
+        baseline_processes = spawn_baseline_agents(params)
+        controller_process.join()
 
     except KeyboardInterrupt:
         logger.debug("Simulation interrupted...")
@@ -284,13 +272,13 @@ def run(params: SimulationParams):
         logger.exception("Unexpected exception.")
         exit(-1)
     finally:
-        if controller_thread is not None:
-            controller_thread.join(timeout=5)
-            controller_thread.terminate()
+        if controller_process is not None:
+            controller_process.join(timeout=5)
+            controller_process.terminate()
 
-        for t in baseline_threads:
-            t.join(timeout=5)
-            t.terminate()
+        for process in baseline_processes:
+            process.join(timeout=5)
+            process.terminate()
 
 
 if __name__ == '__main__':
