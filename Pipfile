@@ -35,7 +35,7 @@ sphinxcontrib-apidoc = "*"
 sphinx = "*"
 wtforms = "*"
 visdom = "*"
-aea = {editable = true,git = "https://github.com/fetchai/agents-aea.git",ref = "develop"}
+aea = {index = "test-pypi",version = "==0.1.1"}
 colorlog = "*"
 
 [requires]
