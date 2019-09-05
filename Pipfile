@@ -28,7 +28,7 @@ flask-restful = "*"
 nbsphinx = "*"
 numpy = "*"
 matplotlib = "*"
-oef = {index = "test-pypi",version = "==0.6.4"}
+oef = {index = "test-pypi",version = "==0.6.7"}
 python-dateutil = "*"
 sphinxcontrib-mermaid = "*"
 sphinxcontrib-apidoc = "*"
