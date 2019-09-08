@@ -110,6 +110,6 @@ if __name__ == '__main__':
     simulation_params = build_simulation_parameters(args)
 
     with VisdomServer(), OEFNode():
-        stack_tracer.start_trace(os.path.join(ROOT_DIR, "data/trace.html"), interval=5, auto=True)
+        stack_tracer.start_trace(os.path.join(ROOT_DIR, "data/trace.html"), interval=5, auto=True)  # type: ignore
         tac.platform.simulation.run(simulation_params)
-        stack_tracer.stop_trace()
+        stack_tracer.stop_trace()  # type: ignore

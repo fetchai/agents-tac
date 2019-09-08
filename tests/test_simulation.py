@@ -40,6 +40,8 @@ def _init_baseline_agents(n: int, version: str, oef_addr: str, oef_port: int) ->
         return [BaselineAgentV1("baseline_{:02}".format(i), "127.0.0.1", 10000,
                                 BaselineStrategy(search_for=SearchFor.BOTH, register_as=RegisterAs.BOTH),
                                 pending_transaction_timeout=120) for i in range(n)]
+    else:
+        raise ValueError("Invalid version.")
 
 
 def _run_baseline_agent(agent: BaselineAgentV1, version: str) -> None:

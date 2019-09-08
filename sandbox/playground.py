@@ -97,7 +97,6 @@ if __name__ == '__main__':
         good_pbk_to_name = {'good_1_pbk': 'good_1', 'good_2_pbk': 'good_2', 'good_3_pbk': 'good_3', 'good_4_pbk': 'good_4'}
 
         game_data_one = GameData(agent_one.crypto.public_key,
-                                 agent_one.crypto,
                                  money,
                                  initial_endowments,
                                  utility_params_one,
@@ -109,7 +108,6 @@ if __name__ == '__main__':
         agent_one.game_instance.init(game_data_one, agent_one.crypto.public_key)
 
         game_data_two = GameData(agent_two.crypto.public_key,
-                                 agent_two.crypto,
                                  money,
                                  initial_endowments,
                                  utility_params_one,

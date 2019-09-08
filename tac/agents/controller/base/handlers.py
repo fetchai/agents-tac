@@ -128,7 +128,7 @@ class RegisterHandler(TACMessageHandler):
             self.controller_agent.mailbox.outbox.put_message(to=sender, sender=self.controller_agent.crypto.public_key, protocol_id=TACMessage.protocol_id, message=tac_bytes)
 
         try:
-            self.controller_agent.game_handler.monitor.dashboard.agent_pbk_to_name.update({sender: agent_name})
+            self.controller_agent.game_handler.monitor.dashboard.agent_pbk_to_name.update({sender: agent_name})  # type: ignore
             self.controller_agent.game_handler.monitor.update()
         except Exception as e:
             logger.error(str(e))
