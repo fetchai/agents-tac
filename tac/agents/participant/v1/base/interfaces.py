@@ -30,11 +30,12 @@ class ControllerReactionInterface:
     """This interface contains the methods to react to events from the ControllerAgent."""
 
     @abstractmethod
-    def on_dialogue_error(self, envelope: Envelope) -> None:
+    def on_dialogue_error(self, envelope: Envelope, sender: Address) -> None:
         """
         Handle dialogue error event emitted by the controller.
 
         :param envelope: the dialogue error message
+        :param sender: the address of the sender
 
         :return: None
         """

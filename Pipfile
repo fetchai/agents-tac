@@ -19,6 +19,7 @@ pytest-cov = "*"
 docker = "*"
 flake8-docstrings = "*"
 pygments = "*"
+mypy = "*"
 
 [packages]
 fetchai-ledger-api = {git = "https://github.com/fetchai/ledger-api-py.git"}

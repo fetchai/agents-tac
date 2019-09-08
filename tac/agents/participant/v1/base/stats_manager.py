@@ -23,7 +23,7 @@
 import time
 from enum import Enum
 from threading import Thread
-from typing import Dict
+from typing import Dict, Optional
 
 import numpy as np
 
@@ -54,7 +54,7 @@ class StatsManager(object):
         """
         self.dashboard = dashboard
         self._update_stats_task_is_running = False
-        self._update_stats_task = None
+        self._update_stats_task = None  # type: Optional[Thread]
         self._update_stats_task_timeout = task_timeout
 
         self._mail_stats = mail_stats

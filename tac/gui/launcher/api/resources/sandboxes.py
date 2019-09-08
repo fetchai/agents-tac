@@ -57,7 +57,7 @@ parser.add_argument("register_as", choices=['seller', 'buyer', 'both'], default=
 parser.add_argument("search_for", choices=['sellers', 'buyers', 'both'], default='both', help="The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.")
 
 sandboxes = {}  # type: Dict[int, SandboxRunner]
-sandbox_queue = Queue()
+sandbox_queue = Queue()  # type: Queue
 
 
 class SandboxState(Enum):
@@ -132,6 +132,8 @@ class SandboxRunner:
             return SandboxState.FINISHED
         elif returncode > 0:
             return SandboxState.FAILED
+        else:
+            raise ValueError("Unexpected return code.")
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize the object into a dictionary."""
