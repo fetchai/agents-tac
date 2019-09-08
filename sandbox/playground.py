@@ -38,7 +38,7 @@ from aea.protocols.fipa.message import FIPAMessage
 from aea.protocols.fipa.serialization import FIPASerializer
 from tac.agents.participant.v1.examples.baseline import BaselineAgent
 from tac.agents.participant.v1.examples.strategy import BaselineStrategy
-from tac.platform.protocol import GameData
+from tac.platform.game.base import GameData
 
 CUR_PATH = inspect.getfile(inspect.currentframe())
 ROOT_DIR = os.path.join(os.path.dirname(CUR_PATH), "..")
