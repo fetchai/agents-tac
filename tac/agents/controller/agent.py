@@ -27,7 +27,7 @@ import logging
 import pprint
 import random
 import time
-from typing import Union, Optional
+from typing import Optional
 
 import dateutil.parser
 from aea.agent import Agent
@@ -235,7 +235,7 @@ def main(
         tx_fee: float = 1.0,
         oef_addr: str = "127.0.0.1",
         oef_port: int = 10000,
-        start_time: Union[str, datetime.datetime] = str(datetime.datetime.now() + datetime.timedelta(0, 10)),
+        start_time: str = str(datetime.datetime.now() + datetime.timedelta(0, 10)),
         registration_timeout: int = 10,
         inactivity_timeout: int = 60,
         competition_timeout: int = 240,
@@ -269,7 +269,7 @@ def main(
             base_good_endowment=base_good_endowment,
             lower_bound_factor=lower_bound_factor,
             upper_bound_factor=upper_bound_factor,
-            start_time=dateutil.parser.parse(start_time) if type(start_time) == str else start_time,
+            start_time=dateutil.parser.parse(start_time),
             registration_timeout=registration_timeout,
             competition_timeout=competition_timeout,
             inactivity_timeout=inactivity_timeout,

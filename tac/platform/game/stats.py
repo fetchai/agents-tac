@@ -185,7 +185,7 @@ class GameStats:
             (agent_pbk,
                 AgentState(
                     self.game.initialization.eq_money_holdings[i],
-                    self.game.initialization.eq_good_holdings[i],
+                    [int(h) for h in self.game.initialization.eq_good_holdings[i]],
                     self.game.initialization.utility_params[i]
                 ))
             for agent_pbk, i in zip(self.game.configuration.agent_pbks, range(self.game.configuration.nb_agents)))  # type: Dict[str, AgentState]
@@ -225,7 +225,7 @@ class GameStats:
             (agent_pbk,
                 AgentState(
                     self.game.initialization.eq_money_holdings[i],
-                    self.game.initialization.eq_good_holdings[i],
+                    [int(h) for h in self.game.initialization.eq_good_holdings[i]],
                     self.game.initialization.utility_params[i]
                 ))
             for agent_pbk, i in zip(self.game.configuration.agent_pbks, range(self.game.configuration.nb_agents)))  # type: Dict[str, AgentState]

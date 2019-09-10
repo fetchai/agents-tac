@@ -23,7 +23,7 @@
 import json
 import logging
 import pprint
-from typing import List
+from typing import List, cast
 
 from aea.crypto.base import Crypto
 
@@ -33,6 +33,7 @@ from aea.protocols.fipa.message import FIPAMessage
 from aea.protocols.fipa.serialization import FIPASerializer
 from aea.protocols.tac.message import TACMessage
 from aea.protocols.tac.serialization import TACSerializer
+from aea.protocols.oef.models import Description
 from tac.agents.participant.v1.base.dialogues import Dialogue
 from tac.agents.participant.v1.base.game_instance import GameInstance
 from tac.agents.participant.v1.base.helpers import generate_transaction_id
@@ -98,6 +99,8 @@ class FIPABehaviour:
             if proposal is None:
                 decline = True
                 logger.debug("[{}]: Current strategy does not generate proposal that satisfies CFP query.".format(self.agent_name))
+            else:
+                proposal = cast(Description, proposal)
 
         if decline:
             logger.debug("[{}]: sending to {} a Decline{}".format(self.agent_name, dialogue.dialogue_label.dialogue_opponent_pbk,

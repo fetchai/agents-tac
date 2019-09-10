@@ -128,7 +128,7 @@ class RegisterHandler(TACMessageHandler):
             self.controller_agent.mailbox.outbox.put_message(to=sender, sender=self.controller_agent.crypto.public_key, protocol_id=TACMessage.protocol_id, message=tac_bytes)
 
         try:
-            self.controller_agent.game_handler.monitor.dashboard.agent_pbk_to_name.update({sender: agent_name})
+            self.controller_agent.game_handler.monitor.dashboard.agent_pbk_to_name.update({sender: agent_name})  # type: ignore
             self.controller_agent.game_handler.monitor.update()
         except Exception as e:
             logger.error(str(e))
@@ -264,7 +264,7 @@ class GetStateUpdateHandler(TACMessageHandler):
         :return: None
         """
         logger.debug("[{}]: Handling the 'get agent state' TACMessage: {}".format(self.controller_agent.name, message))
-        if not self.controller_agent.game_handler.is_game_running():
+        if not self.controller_agent.game_handler.is_game_running:
             logger.error("[{}]: GetStateUpdate TACMessage is not valid while the competition is not running.".format(self.controller_agent.name))
             tac_msg = TACMessage(tac_type=TACMessage.Type.TAC_ERROR, error_code=TACMessage.ErrorCode.COMPETITION_NOT_RUNNING)
         if sender not in self.controller_agent.game_handler.registered_agents:
@@ -272,7 +272,7 @@ class GetStateUpdateHandler(TACMessageHandler):
             tac_msg = TACMessage(tac_type=TACMessage.Type.TAC_ERROR, error_code=TACMessage.ErrorCode.AGENT_NOT_REGISTERED)
         else:
             transactions = self.controller_agent.game_handler.confirmed_transaction_per_participant[sender]  # type: List[Transaction]
-            initial_game_data = self.controller_agent.game_handler.game_data_per_participant[sender]  # type: Dict
+            initial_game_data = self.controller_agent.game_handler.game_data_per_participant[sender]  # type: GameData
             tac_msg = TACMessage(tac_type=TACMessage.Type.STATE_UPDATE, initial_state=initial_game_data, transactions=transactions)
         tac_bytes = TACSerializer().encode(tac_msg)
         self.controller_agent.mailbox.outbox.put_message(to=sender, sender=self.controller_agent.crypto.public_key, protocol_id=TACMessage.protocol_id, message=tac_bytes)
@@ -345,9 +345,8 @@ class GameHandler:
         self.agent_name = agent_name
         self.crypto = crypto
         self.mailbox = mailbox
-        self.monitor = monitor
         self.tac_parameters = tac_parameters
-        self.competition_start = None
+        self.competition_start = None  # type: Optional[datetime.datetime]
         self._game_phase = GamePhase.PRE_GAME
 
         self.registered_agents = set()  # type: Set[str]

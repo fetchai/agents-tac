@@ -493,8 +493,8 @@ class Game:
             result = result + good_pbk + " " + str(eq_price) + "\n"
         result = result + "\n"
         result = result + "Equilibrium good allocation: \n"
-        for agent_name, eq_allocation in zip(self.configuration.agent_names, self.initialization.eq_good_holdings):
-            result = result + agent_name + " " + str(eq_allocation) + "\n"
+        for agent_name, eq_allocations in zip(self.configuration.agent_names, self.initialization.eq_good_holdings):
+            result = result + agent_name + " " + str(eq_allocations) + "\n"
         result = result + "\n"
         result = result + "Equilibrium money allocation: \n"
         for agent_name, eq_allocation in zip(self.configuration.agent_names, self.initialization.eq_money_holdings):

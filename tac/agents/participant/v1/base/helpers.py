@@ -20,7 +20,7 @@
 
 """This module contains helper methods for base agent implementations."""
 import logging
-from typing import Dict, List, Set, Union
+from typing import Dict, List, Set, Sequence
 
 from aea.dialogue.base import DialogueLabel
 from aea.mail.base import Address
@@ -155,7 +155,7 @@ def build_query(good_pbks: Set[str], is_searching_for_sellers: bool) -> Query:
     return query
 
 
-def build_dict(good_pbks: Set[str], is_supply: bool) -> Dict[str, Union[str, List]]:
+def build_dict(good_pbks: Set[str], is_supply: bool) -> Dict[str, Sequence[str]]:
     """
     Build supply or demand services dictionary.
 

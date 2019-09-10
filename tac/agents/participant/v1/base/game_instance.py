@@ -22,7 +22,7 @@
 
 import datetime
 import random
-from typing import List, Optional, Set, Tuple, Dict, Union
+from typing import Any, List, Optional, Set, Tuple, Dict, Union, Sequence, cast
 
 from aea.channel.oef import MailStats
 from aea.mail.base import Address
@@ -283,7 +283,7 @@ class GameInstance:
         res = None if len(good_pbks) == 0 else build_query(good_pbks, is_searching_for_sellers)
         return res
 
-    def build_services_dict(self, is_supply: bool) -> Optional[Dict[str, Union[str, List]]]:
+    def build_services_dict(self, is_supply: bool) -> Optional[Dict[str, Sequence[str]]]:
         """
         Build a dictionary containing the services demanded/supplied.
 
@@ -296,7 +296,7 @@ class GameInstance:
         res = None if len(good_pbks) == 0 else build_dict(good_pbks, is_supply)
         return res
 
-    def is_matching(self, cfp_services: Dict[str, Union[bool, List]], goods_description: Description) -> bool:
+    def is_matching(self, cfp_services: Dict[str, Union[bool, List[Any]]], goods_description: Description) -> bool:
         """
         Check for a match between the CFP services and the goods description.
 
@@ -306,6 +306,7 @@ class GameInstance:
         :return: Bool
         """
         services = cfp_services['services']
+        services = cast(List[Any], services)
         if cfp_services['description'] is goods_description.data_model.name:
             # The call for proposal description and the goods model name cannot be the same for trading agent pairs.
             return False
@@ -353,7 +354,7 @@ class GameInstance:
         state_after_locks = self._agent_state.apply(transactions, self.game_configuration.tx_fee)
         return state_after_locks
 
-    def generate_proposal(self, cfp_services: Dict[str, Union[bool, List]], is_seller: bool) -> Optional[List[Description]]:
+    def generate_proposal(self, cfp_services: Dict[str, Union[bool, List[Any]]], is_seller: bool) -> Optional[Description]:
         """
         Wrap the function which generates proposals from a seller or buyer.
 
