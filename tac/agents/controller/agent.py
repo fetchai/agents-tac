@@ -52,7 +52,7 @@ class ControllerAgent(Agent):
                  oef_addr: str,
                  oef_port: int,
                  tac_parameters: TACParameters,
-                 monitor: Optional[Monitor] = None,
+                 monitor: Monitor,
                  agent_timeout: Optional[float] = 1.0,
                  max_reactions: int = 100,
                  private_key_pem: Optional[str] = None,
@@ -102,6 +102,7 @@ class ControllerAgent(Agent):
             self.oef_handler.register_tac()
             self.game_handler._game_phase = GamePhase.GAME_SETUP
         elif self.game_handler.game_phase == GamePhase.GAME_SETUP:
+            assert self.game_handler.competition_start is not None, "No competition start time set!"
             now = datetime.datetime.now()
             if now >= self.game_handler.competition_start:
                 logger.debug("[{}]: Checking if we can start the competition.".format(self.name))

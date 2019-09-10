@@ -171,6 +171,7 @@ class StatsManager(object):
 
         :return: None
         """
+        assert self._update_stats_task is not None, "Call start before calling stop."
         if self._update_stats_task_is_running:
             self._update_stats_task_is_running = False
             self._update_stats_task.join()

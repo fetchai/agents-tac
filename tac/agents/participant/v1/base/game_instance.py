@@ -172,21 +172,25 @@ class GameInstance:
     @property
     def game_configuration(self) -> GameConfiguration:
         """Get the game configuration."""
+        assert self._game_configuration is not None, "Game configuration not assigned!"
         return self._game_configuration
 
     @property
     def initial_agent_state(self) -> AgentState:
         """Get the initial agent state."""
+        assert self._initial_agent_state is not None, "Initial agent state not assigned!"
         return self._initial_agent_state
 
     @property
     def agent_state(self) -> AgentState:
         """Get the agent state."""
+        assert self._agent_state is not None, "Agent state not assigned!"
         return self._agent_state
 
     @property
     def world_state(self) -> WorldState:
         """Get the world state."""
+        assert self._world_state is not None, "World state not assigned!"
         return self._world_state
 
     @property
@@ -349,6 +353,7 @@ class GameInstance:
 
         :return: the agent state with the locks applied to current state
         """
+        assert self._agent_state is not None, "Agent state not assigned!"
         transactions = list(self.transaction_manager.locked_txs_as_seller.values()) if is_seller \
             else list(self.transaction_manager.locked_txs_as_buyer.values())
         state_after_locks = self._agent_state.apply(transactions, self.game_configuration.tx_fee)

@@ -99,8 +99,6 @@ class FIPABehaviour:
             if proposal is None:
                 decline = True
                 logger.debug("[{}]: Current strategy does not generate proposal that satisfies CFP query.".format(self.agent_name))
-            else:
-                proposal = cast(Description, proposal)
 
         if decline:
             logger.debug("[{}]: sending to {} a Decline{}".format(self.agent_name, dialogue.dialogue_label.dialogue_opponent_pbk,
@@ -116,6 +114,7 @@ class FIPABehaviour:
             response = Envelope(to=dialogue.dialogue_label.dialogue_opponent_pbk, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id, message=msg_bytes)
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_CFP, dialogue.is_self_initiated)
         else:
+            proposal = cast(Description, proposal)
             transaction_id = generate_transaction_id(self.crypto.public_key, dialogue.dialogue_label.dialogue_opponent_pbk, dialogue.dialogue_label, dialogue.is_seller)
             transaction = Transaction.from_proposal(proposal=proposal,
                                                     transaction_id=transaction_id,

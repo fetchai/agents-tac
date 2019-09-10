@@ -32,6 +32,7 @@ from tac.agents.controller.base.tac_parameters import TACParameters
 from tac.agents.participant.v1.base.strategy import SearchFor, RegisterAs
 from tac.agents.participant.v1.examples.baseline import BaselineAgent as BaselineAgentV1
 from tac.agents.participant.v1.examples.strategy import BaselineStrategy
+from tac.gui.monitor import NullMonitor
 
 
 def _init_baseline_agents(n: int, version: str, oef_addr: str, oef_port: int) -> List[BaselineAgentV1]:
@@ -82,7 +83,7 @@ class TestSimulation:
                                            competition_timeout=20,
                                            inactivity_timeout=15)
 
-        cls.tac_controller = ControllerAgent('controller', '127.0.0.1', 10000, cls.tac_parameters)
+        cls.tac_controller = ControllerAgent('controller', '127.0.0.1', 10000, cls.tac_parameters, NullMonitor())
 
         # run the simulation
         try:

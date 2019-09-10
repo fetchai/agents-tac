@@ -28,7 +28,7 @@ import pdb
 import re
 import subprocess
 import time
-from typing import Dict, Optional
+from typing import Dict, Optional, Sequence, cast
 
 import docker
 
@@ -129,7 +129,7 @@ if __name__ == '__main__':
         # agent_one creates a CFP and enqueues it in the outbox
         starting_message_id = 1
         starting_message_target = 0
-        services = agent_one.game_instance.build_services_dict(is_supply=is_seller)  # type: Dict
+        services = agent_one.game_instance.build_services_dict(is_supply=is_seller)  # type: Optional[Dict[str, Sequence[str]]]
         cfp = FIPAMessage(message_id=starting_message_id, dialogue_id=dialogue.dialogue_label.dialogue_id,
                           target=starting_message_target, performative=FIPAMessage.Performative.CFP,
                           query=json.dumps(services).encode('utf-8'))
@@ -151,8 +151,13 @@ if __name__ == '__main__':
                 checks += 1
             else:
                 checks = 10
-        msg = agent_two.inbox.get_nowait()  # type: Optional[Envelope]
-        print("The msg is a CFP: {}".format(msg.get("performative") == FIPAMessage.Performative.CFP))
+
+        in_envelope = agent_two.inbox.get_nowait()  # type: Optional[Envelope]
+        if in_envelope is not None:
+            performative = cast(FIPAMessage.Performative, in_envelope.get("performative"))
+            print("The msg is a CFP: {}".format(performative == FIPAMessage.Performative.CFP))
+        else:
+            print("No message received!")
 
         # Set the debugger
         print("Setting debugger ... To continue enter: c + Enter")

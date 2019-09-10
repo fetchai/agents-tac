@@ -41,21 +41,28 @@ class Dashboard(object):
                  env_name: Optional[str] = None):
         """Initialize the dashboard."""
         self._proc = None  # type: Optional[subprocess.Popen]
-        self.viz = None  # type: Optional[Visdom]
+        self._viz = None  # type: Optional[Visdom]
         self.visdom_addr = visdom_addr
         self.visdom_port = visdom_port
         self.env_name = env_name if env_name is not None else "default_env"
 
+    @property
+    def viz(self) -> Visdom:
+        """Get the visdom server."""
+        assert self._viz is not None, "No visdom server assigned!"
+        return self._viz
+
     def _is_running(self):
-        return self.viz is not None
+        """Check the server is running."""
+        return self._viz is not None
 
     def start(self):
         """Start the dashboard."""
-        self.viz = Visdom(server=self.visdom_addr, port=self.visdom_port, env=self.env_name)
+        self._viz = Visdom(server=self.visdom_addr, port=self.visdom_port, env=self.env_name)
 
     def stop(self):
         """Stop the dashboard."""
-        self.viz = None
+        self._viz = None
 
 
 def start_visdom_server() -> subprocess.Popen:
