@@ -109,5 +109,7 @@ class TestCompetitionStopsTooFewAgentRegistered:
     @classmethod
     def teardown_class(cls):
         """Teardown test class."""
-        cls.controller_agent.stop()
+        # Default the controller agent should stop automatically. But we make sure if it hasn't (test failed) it stops anyway.
+        if not cls.controller_agent.liveness._is_stopped:
+            cls.controller_agent.stop()
         cls.agent1.disconnect()

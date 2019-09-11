@@ -116,7 +116,6 @@ class ControllerAgent(Agent):
                     logger.debug("[{}]: Not enough agents to start TAC. Registered agents: {}, minimum number of agents: {}."
                                  .format(self.name, nb_reg_agents, min_nb_agents))
                     self.stop()
-                    self.teardown()
                     return
         elif self.game_handler.game_phase == GamePhase.GAME:
             current_time = datetime.datetime.now()
@@ -156,16 +155,8 @@ class ControllerAgent(Agent):
         :return: None
         """
 
-    def stop(self) -> None:
-        """
-        Stop the agent.
-
-        :return: None
-        """
-        logger.debug("[{}]: Stopping myself...".format(self.name))
-        if self.game_handler.game_phase == GamePhase.GAME or self.game_handler.game_phase == GamePhase.GAME_SETUP:
-            self.game_handler.notify_competition_cancelled()
-        super().stop()
+    def setup(self) -> None:
+        """Set up the agent."""
 
     def start(self) -> None:
         """
@@ -187,8 +178,17 @@ class ControllerAgent(Agent):
         time.sleep(2.0)
         self.start()
 
-    def setup(self) -> None:
-        """Set up the agent."""
+    def stop(self) -> None:
+        """
+        Stop the agent.
+
+        :return: None
+        """
+        logger.debug("[{}]: Stopping myself...".format(self.name))
+        if self.game_handler.game_phase == GamePhase.GAME or self.game_handler.game_phase == GamePhase.GAME_SETUP:
+            self.game_handler.notify_competition_cancelled()
+        super().stop()
+        self.teardown()
 
     def teardown(self) -> None:
         """Tear down the agent."""
