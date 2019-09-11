@@ -75,8 +75,6 @@ class OEFNode:
         for loop in range(0, 30):
             oef_healthcheck = OEFHealthCheck("127.0.0.1", 10000)
             is_success = oef_healthcheck.run()
-            # exit_status = os.system("netstat -nal | grep 10000 | grep LISTEN")
-            # if exit_status != 1: break
             if is_success: break
             time.sleep(1)
 
@@ -84,7 +82,7 @@ class OEFNode:
         """Define what the context manager should do at the beginning of the block."""
         self._stop_oef_search_images()
         script_path = os.path.join("oef_search_pluto_scripts", "launch.py")
-        configuration_file_path = os.path.join("oef_search_pluto_scripts", "launch_config_latest.json")
+        configuration_file_path = os.path.join("oef_search_pluto_scripts", "launch_config.json")
         print("Launching new OEF Node...")
         self.oef_process = subprocess.Popen(["python3", script_path, "-c", configuration_file_path, "--background"],
                                             stdout=subprocess.PIPE, env=os.environ, cwd=ROOT_DIR)

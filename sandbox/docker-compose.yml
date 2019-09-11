@@ -1,7 +1,7 @@
 version: '3.4'
 services:
   oef-node:
-    image: "fetchai/oef-search:latest"
+    image: "fetchai/oef-search:0.7"
     ports:
       - "10000:10000"
       - "20000:20000"
@@ -16,7 +16,7 @@ services:
       - "../oef_search_pluto_scripts:/config"
       - "../data/oef-logs:/logs/"
     command:
-      - "/config/node_config_latest.json"
+      - "/config/node_config.json"
     healthcheck:
       interval: 10s
       retries: 5
