@@ -74,7 +74,7 @@ class ParticipantAgent(Agent):
         counter = 0
         while (not self.mailbox.inbox.empty() and counter < self.max_reactions):
             counter += 1
-            msg = self.mailbox.inbox.get_nowait()  # type: Optional[Envelope]
+            msg = self.mailbox.inbox.get_nowait()  # type: Envelope
             logger.debug("processing message of protocol={}".format(msg.protocol_id))
             handler = self.handlers[msg.protocol_id]
             handler.handle(msg)

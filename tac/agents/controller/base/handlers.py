@@ -53,7 +53,7 @@ from tac.agents.controller.base.helpers import generate_good_pbk_to_name
 from tac.agents.controller.base.reactions import OEFReactions
 from tac.agents.controller.base.states import Game
 from tac.agents.controller.base.tac_parameters import TACParameters
-from tac.gui.monitor import Monitor, NullMonitor
+from tac.gui.monitor import Monitor
 from tac.platform.game.base import GameData, GamePhase, Transaction
 from tac.platform.game.stats import GameStats
 
@@ -128,7 +128,7 @@ class RegisterHandler(TACMessageHandler):
             self.controller_agent.mailbox.outbox.put_message(to=sender, sender=self.controller_agent.crypto.public_key, protocol_id=TACMessage.protocol_id, message=tac_bytes)
 
         try:
-            self.controller_agent.game_handler.monitor.dashboard.agent_pbk_to_name.update({sender: agent_name})
+            self.controller_agent.game_handler.monitor.dashboard.agent_pbk_to_name.update({sender: agent_name})  # type: ignore
             self.controller_agent.game_handler.monitor.update()
         except Exception as e:
             logger.error(str(e))
@@ -264,7 +264,7 @@ class GetStateUpdateHandler(TACMessageHandler):
         :return: None
         """
         logger.debug("[{}]: Handling the 'get agent state' TACMessage: {}".format(self.controller_agent.name, message))
-        if not self.controller_agent.game_handler.is_game_running():
+        if not self.controller_agent.game_handler.is_game_running:
             logger.error("[{}]: GetStateUpdate TACMessage is not valid while the competition is not running.".format(self.controller_agent.name))
             tac_msg = TACMessage(tac_type=TACMessage.Type.TAC_ERROR, error_code=TACMessage.ErrorCode.COMPETITION_NOT_RUNNING)
         if sender not in self.controller_agent.game_handler.registered_agents:
@@ -272,7 +272,7 @@ class GetStateUpdateHandler(TACMessageHandler):
             tac_msg = TACMessage(tac_type=TACMessage.Type.TAC_ERROR, error_code=TACMessage.ErrorCode.AGENT_NOT_REGISTERED)
         else:
             transactions = self.controller_agent.game_handler.confirmed_transaction_per_participant[sender]  # type: List[Transaction]
-            initial_game_data = self.controller_agent.game_handler.game_data_per_participant[sender]  # type: Dict
+            initial_game_data = self.controller_agent.game_handler.game_data_per_participant[sender]  # type: GameData
             tac_msg = TACMessage(tac_type=TACMessage.Type.STATE_UPDATE, initial_state=initial_game_data, transactions=transactions)
         tac_bytes = TACSerializer().encode(tac_msg)
         self.controller_agent.mailbox.outbox.put_message(to=sender, sender=self.controller_agent.crypto.public_key, protocol_id=TACMessage.protocol_id, message=tac_bytes)
@@ -310,7 +310,7 @@ class AgentMessageDispatcher(object):
         tac_msg = TACSerializer().decode(envelope.message)
         logger.debug("[{}] on_message: origin={}" .format(self.controller_agent.name, envelope.sender))
         tac_msg_type = tac_msg.get("type")
-        handle_tac_message = self.handlers.get(TACMessage.Type(tac_msg_type), None)  # type: TACMessageHandler
+        handle_tac_message = self.handlers.get(TACMessage.Type(tac_msg_type), None)  # type: Optional[TACMessageHandler]
         if handle_tac_message is None:
             logger.debug("[{}]: Unknown message from {}".format(self.controller_agent.name, envelope.sender))
             tac_error = TACMessage(tac_type=TACMessage.Type.TAC_ERROR, error_code=TACMessage.ErrorCode.REQUEST_NOT_VALID.value)
@@ -345,28 +345,27 @@ class GameHandler:
         self.agent_name = agent_name
         self.crypto = crypto
         self.mailbox = mailbox
-        self.monitor = monitor
         self.tac_parameters = tac_parameters
-        self.competition_start = None
+        self.competition_start = None  # type: Optional[datetime.datetime]
         self._game_phase = GamePhase.PRE_GAME
 
         self.registered_agents = set()  # type: Set[str]
         self.agent_pbk_to_name = defaultdict()  # type: Dict[str, str]
         self.good_pbk_to_name = generate_good_pbk_to_name(self.tac_parameters.nb_goods)  # type: Dict[str, str]
-        self.current_game = None  # type: Optional[Game]
+        self._current_game = None  # type: Optional[Game]
         self.inactivity_timeout_timedelta = datetime.timedelta(seconds=tac_parameters.inactivity_timeout) \
             if tac_parameters.inactivity_timeout is not None else datetime.timedelta(seconds=15)
 
         self.game_data_per_participant = {}  # type: Dict[str, GameData]
         self.confirmed_transaction_per_participant = defaultdict(lambda: [])  # type: Dict[str, List[Transaction]]
 
-        self.monitor = NullMonitor() if monitor is None else monitor  # type: Monitor
+        self.monitor = monitor
         self.monitor.start(None)
         self.monitor.update()
 
     def reset(self) -> None:
         """Reset the game."""
-        self.current_game = None
+        self._current_game = None
         self.registered_agents = set()
         self.agent_pbk_to_name = defaultdict()
         self.good_pbk_to_name = defaultdict()
@@ -375,6 +374,12 @@ class GameHandler:
     def game_phase(self) -> GamePhase:
         """Get the game phase."""
         return self._game_phase
+
+    @property
+    def current_game(self) -> Game:
+        """Get the game phase."""
+        assert self._current_game is not None, "No current_game assigned!"
+        return self._current_game
 
     @property
     def is_game_running(self) -> bool:
@@ -389,7 +394,7 @@ class GameHandler:
         """Create a game and send the game setting to every registered agent."""
         # assert that there is no competition running.
         assert not self.is_game_running
-        self.current_game = self._create_game()
+        self._current_game = self._create_game()
 
         try:
             self.monitor.set_gamestats(GameStats(self.current_game))

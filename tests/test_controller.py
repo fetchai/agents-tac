@@ -30,6 +30,7 @@ from aea.protocols.tac.serialization import TACSerializer
 
 from tac.agents.controller.agent import ControllerAgent
 from tac.agents.controller.base.tac_parameters import TACParameters
+from tac.gui.monitor import NullMonitor
 from .common import TOEFAgent
 
 
@@ -47,7 +48,7 @@ class TestCompetitionStopsNoAgentRegistered:
     def setup_class(cls):
         """Test that if the controller agent does not receive enough registrations, it stops."""
         tac_parameters = TACParameters(min_nb_agents=2, start_time=datetime.datetime.now(), registration_timeout=5)
-        cls.controller_agent = ControllerAgent('controller', '127.0.0.1', 10000, tac_parameters)
+        cls.controller_agent = ControllerAgent('controller', '127.0.0.1', 10000, tac_parameters, NullMonitor())
 
     def test_no_registered_agents(self):
         """Test no agent is registered."""
@@ -74,7 +75,7 @@ class TestCompetitionStopsTooFewAgentRegistered:
     def setup_class(cls):
         """Test that if the controller agent does not receive enough registrations, it stops."""
         tac_parameters = TACParameters(min_nb_agents=2, start_time=datetime.datetime.now(), registration_timeout=5)
-        cls.controller_agent = ControllerAgent('controller', '127.0.0.1', 10000, tac_parameters)
+        cls.controller_agent = ControllerAgent('controller', '127.0.0.1', 10000, tac_parameters, NullMonitor())
 
         cls.controller_agent.mailbox.connect()
         job = Thread(target=cls.controller_agent.start)
@@ -108,5 +109,7 @@ class TestCompetitionStopsTooFewAgentRegistered:
     @classmethod
     def teardown_class(cls):
         """Teardown test class."""
-        cls.controller_agent.stop()
+        # Default the controller agent should stop automatically. But we make sure if it hasn't (test failed) it stops anyway.
+        if not cls.controller_agent.liveness._is_stopped:
+            cls.controller_agent.stop()
         cls.agent1.disconnect()

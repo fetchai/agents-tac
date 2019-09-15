@@ -27,7 +27,7 @@ import logging
 import pprint
 import random
 import time
-from typing import Union, Optional
+from typing import Optional
 
 import dateutil.parser
 from aea.agent import Agent
@@ -52,7 +52,7 @@ class ControllerAgent(Agent):
                  oef_addr: str,
                  oef_port: int,
                  tac_parameters: TACParameters,
-                 monitor: Optional[Monitor] = None,
+                 monitor: Monitor,
                  agent_timeout: Optional[float] = 1.0,
                  max_reactions: int = 100,
                  private_key_pem: Optional[str] = None,
@@ -102,6 +102,7 @@ class ControllerAgent(Agent):
             self.oef_handler.register_tac()
             self.game_handler._game_phase = GamePhase.GAME_SETUP
         elif self.game_handler.game_phase == GamePhase.GAME_SETUP:
+            assert self.game_handler.competition_start is not None, "No competition start time set!"
             now = datetime.datetime.now()
             if now >= self.game_handler.competition_start:
                 logger.debug("[{}]: Checking if we can start the competition.".format(self.name))
@@ -115,7 +116,6 @@ class ControllerAgent(Agent):
                     logger.debug("[{}]: Not enough agents to start TAC. Registered agents: {}, minimum number of agents: {}."
                                  .format(self.name, nb_reg_agents, min_nb_agents))
                     self.stop()
-                    self.teardown()
                     return
         elif self.game_handler.game_phase == GamePhase.GAME:
             current_time = datetime.datetime.now()
@@ -155,16 +155,8 @@ class ControllerAgent(Agent):
         :return: None
         """
 
-    def stop(self) -> None:
-        """
-        Stop the agent.
-
-        :return: None
-        """
-        logger.debug("[{}]: Stopping myself...".format(self.name))
-        if self.game_handler.game_phase == GamePhase.GAME or self.game_handler.game_phase == GamePhase.GAME_SETUP:
-            self.game_handler.notify_competition_cancelled()
-        super().stop()
+    def setup(self) -> None:
+        """Set up the agent."""
 
     def start(self) -> None:
         """
@@ -186,8 +178,17 @@ class ControllerAgent(Agent):
         time.sleep(2.0)
         self.start()
 
-    def setup(self) -> None:
-        """Set up the agent."""
+    def stop(self) -> None:
+        """
+        Stop the agent.
+
+        :return: None
+        """
+        logger.debug("[{}]: Stopping myself...".format(self.name))
+        if self.game_handler.game_phase == GamePhase.GAME or self.game_handler.game_phase == GamePhase.GAME_SETUP:
+            self.game_handler.notify_competition_cancelled()
+        super().stop()
+        self.teardown()
 
     def teardown(self) -> None:
         """Tear down the agent."""
@@ -235,7 +236,7 @@ def main(
         tx_fee: float = 1.0,
         oef_addr: str = "127.0.0.1",
         oef_port: int = 10000,
-        start_time: Union[str, datetime.datetime] = str(datetime.datetime.now() + datetime.timedelta(0, 10)),
+        start_time: str = str(datetime.datetime.now() + datetime.timedelta(0, 10)),
         registration_timeout: int = 10,
         inactivity_timeout: int = 60,
         competition_timeout: int = 240,
@@ -269,7 +270,7 @@ def main(
             base_good_endowment=base_good_endowment,
             lower_bound_factor=lower_bound_factor,
             upper_bound_factor=upper_bound_factor,
-            start_time=dateutil.parser.parse(start_time) if type(start_time) == str else start_time,
+            start_time=dateutil.parser.parse(start_time),
             registration_timeout=registration_timeout,
             competition_timeout=competition_timeout,
             inactivity_timeout=inactivity_timeout,

@@ -127,9 +127,13 @@ The following steps are only relevant if you intend to contribute to the reposit
 
 	  tox -e py37
 
-- To run linters:
+- To run linters (code style checks):
 
-	  tox -e flake8
+    tox -e flake8
+
+- To run static type checks:
+
+    tox -e mypy
 
 - We recommend you use the latest OEF build:
 

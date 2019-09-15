@@ -186,7 +186,7 @@ def compute_aggregate_scores(all_game_stats: List[GameStats]) -> Dict[str, float
     :param all_game_stats: the GameStats object for every instance of TAC.
     :return: a dictionary "agent_name" -> "final score"
     """
-    result = defaultdict(lambda: 0)
+    result = defaultdict(lambda: 0.0)  # type: Dict[str, float]
     for game_stats in all_game_stats:
         agent_pbk_to_scores = game_stats.game.get_scores()
         for pbk, score in agent_pbk_to_scores.items():

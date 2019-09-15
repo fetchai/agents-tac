@@ -32,7 +32,7 @@ class Monitor(ABC):
     """Abstract monitor class."""
 
     @abstractmethod
-    def start(self, game_stats: GameStats):
+    def start(self, game_stats: Optional[GameStats] = None):
         """Start the monitor."""
 
     @abstractmethod
@@ -55,7 +55,7 @@ class NullMonitor(Monitor):
         """Instantiate the monitor."""
         self._is_running = False
 
-    def start(self, game_stats: GameStats):
+    def start(self, game_stats: Optional[GameStats] = None):
         """Start the monitor."""
         self._is_running = True
 
@@ -80,18 +80,24 @@ class VisdomMonitor(Monitor):
         """Instantiate the monitor."""
         self.visdom_addr = visdom_addr
         self.visdom_port = visdom_port
-        self.dashboard = None  # type: Optional[ControllerDashboard]
+        self._dashboard = None  # type: Optional[ControllerDashboard]
+
+    @property
+    def dashboard(self) -> ControllerDashboard:
+        """Get the controller dashboard."""
+        assert self._dashboard is not None, "Dashboard has not been assigned!"
+        return self._dashboard
 
     @property
     def is_running(self) -> bool:
         """Check if the monitor is running."""
-        return self.dashboard is not None
+        return self._dashboard is not None
 
-    def start(self, game_stats: GameStats):
+    def start(self, game_stats: Optional[GameStats] = None):
         """Start the monitor."""
         if self.is_running:
             raise Exception("A dashboard is already running.")
-        self.dashboard = ControllerDashboard(game_stats, self.visdom_addr, self.visdom_port)
+        self._dashboard = ControllerDashboard(game_stats, self.visdom_addr, self.visdom_port)
         self.dashboard.start()
 
     def update(self):
@@ -107,4 +113,4 @@ class VisdomMonitor(Monitor):
         if not self.is_running:
             raise Exception("The dashboard not running.")
         self.dashboard.stop()
-        self.dashboard = None
+        self._dashboard = None
