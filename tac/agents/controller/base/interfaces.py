@@ -59,9 +59,9 @@ class OEFActionInterface:
     """This interface contains the methods to interact with the OEF."""
 
     @abstractmethod
-    def register_service(self) -> None:
+    def register_tac(self) -> None:
         """
-        Register services to OEF Service Directory.
+        Register tac to OEF Service Directory.
 
         :return: None
         """

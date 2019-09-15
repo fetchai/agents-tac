@@ -23,7 +23,6 @@
 Classes:
 
 - GameConfiguration: a class to hold the configuration of a game. Immutable.
-- GameInitialization: a class to hold the initialization of a game. Immutable.
 - Game: the class that manages an instance of a game (e.g. validate and settling transactions).
 - AgentState: a class to hold the current state of an agent.
 - GoodState: a class to hold the current state of a good.

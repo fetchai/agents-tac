@@ -28,7 +28,7 @@ import pdb
 import re
 import subprocess
 import time
-from typing import Dict, Optional
+from typing import Dict, Optional, Sequence, cast
 
 import docker
 
@@ -38,7 +38,7 @@ from aea.protocols.fipa.message import FIPAMessage
 from aea.protocols.fipa.serialization import FIPASerializer
 from tac.agents.participant.v1.examples.baseline import BaselineAgent
 from tac.agents.participant.v1.examples.strategy import BaselineStrategy
-from tac.platform.protocol import GameData
+from tac.platform.game.base import GameData
 
 CUR_PATH = inspect.getfile(inspect.currentframe())
 ROOT_DIR = os.path.join(os.path.dirname(CUR_PATH), "..")
@@ -97,7 +97,6 @@ if __name__ == '__main__':
         good_pbk_to_name = {'good_1_pbk': 'good_1', 'good_2_pbk': 'good_2', 'good_3_pbk': 'good_3', 'good_4_pbk': 'good_4'}
 
         game_data_one = GameData(agent_one.crypto.public_key,
-                                 agent_one.crypto,
                                  money,
                                  initial_endowments,
                                  utility_params_one,
@@ -109,7 +108,6 @@ if __name__ == '__main__':
         agent_one.game_instance.init(game_data_one, agent_one.crypto.public_key)
 
         game_data_two = GameData(agent_two.crypto.public_key,
-                                 agent_two.crypto,
                                  money,
                                  initial_endowments,
                                  utility_params_one,
@@ -131,7 +129,7 @@ if __name__ == '__main__':
         # agent_one creates a CFP and enqueues it in the outbox
         starting_message_id = 1
         starting_message_target = 0
-        services = agent_one.game_instance.build_services_dict(is_supply=is_seller)  # type: Dict
+        services = agent_one.game_instance.build_services_dict(is_supply=is_seller)  # type: Optional[Dict[str, Sequence[str]]]
         cfp = FIPAMessage(message_id=starting_message_id, dialogue_id=dialogue.dialogue_label.dialogue_id,
                           target=starting_message_target, performative=FIPAMessage.Performative.CFP,
                           query=json.dumps(services).encode('utf-8'))
@@ -153,8 +151,13 @@ if __name__ == '__main__':
                 checks += 1
             else:
                 checks = 10
-        msg = agent_two.inbox.get_nowait()  # type: Optional[Envelope]
-        print("The msg is a CFP: {}".format(msg.get("performative") == FIPAMessage.Performative.CFP))
+
+        in_envelope = agent_two.inbox.get_nowait()  # type: Optional[Envelope]
+        if in_envelope is not None:
+            performative = cast(FIPAMessage.Performative, in_envelope.get("performative"))
+            print("The msg is a CFP: {}".format(performative == FIPAMessage.Performative.CFP))
+        else:
+            print("No message received!")
 
         # Set the debugger
         print("Setting debugger ... To continue enter: c + Enter")

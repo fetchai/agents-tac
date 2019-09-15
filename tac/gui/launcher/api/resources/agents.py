@@ -113,6 +113,8 @@ class AgentRunner:
             return AgentState.FINISHED
         elif returncode > 0:
             return AgentState.FAILED
+        else:
+            raise ValueError("Unexpected return code.")
 
     def to_dict(self):
         """Serialize the object into a dictionary."""

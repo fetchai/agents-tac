@@ -127,7 +127,7 @@ def _sample_good_instances(nb_agents: int, nb_goods: int, base_amount: int,
     return nb_instances
 
 
-def generate_money_endowments(nb_agents: int, money_endowment: int) -> List[int]:
+def generate_money_endowments(nb_agents: int, money_endowment: int) -> List[float]:
     """
     Compute the initial money amounts for each agent.
 
@@ -135,7 +135,7 @@ def generate_money_endowments(nb_agents: int, money_endowment: int) -> List[int]
     :param money_endowment: money endowment per agent.
     :return: the list of initial money amounts.
     """
-    return [money_endowment] * nb_agents
+    return [money_endowment * 1.0] * nb_agents
 
 
 def generate_equilibrium_prices_and_holdings(endowments: List[List[int]], utility_function_params: List[List[float]], money_endowment: float, scaling_factor: float, quantity_shift: int = QUANTITY_SHIFT) -> Tuple[List[float], List[List[float]], List[float]]:

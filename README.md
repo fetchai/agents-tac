@@ -127,13 +127,17 @@ The following steps are only relevant if you intend to contribute to the reposit
 
 	  tox -e py37
 
-- To run linters:
+- To run linters (code style checks):
 
-	  tox -e flake8
+    tox -e flake8
+
+- To run static type checks:
+
+    tox -e mypy
 
 - We recommend you use the latest OEF build:
 
-	  python oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config_latest.json
+	  python oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config.json
 
 ## Resources
 
