@@ -388,7 +388,7 @@ class GameHandler:
 
         :return: Return True if there is a game running, False otherwise.
         """
-        return self.current_game is not None
+        return self._current_game is not None
 
     def start_competition(self):
         """Create a game and send the game setting to every registered agent."""

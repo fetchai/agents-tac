@@ -25,8 +25,8 @@ import argparse
 import logging
 from typing import List, Optional, Set
 
+from aea.helpers.state.base import WorldState
 from aea.protocols.oef.models import Description
-from aea.state.base import WorldState
 from tac.agents.participant.v1.base.strategy import RegisterAs, SearchFor, Strategy
 from tac.agents.participant.v1.examples.baseline import BaselineAgent
 from tac.gui.dashboards.agent import AgentDashboard

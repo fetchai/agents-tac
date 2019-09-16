@@ -31,7 +31,7 @@ from typing import Optional
 
 import dateutil.parser
 from aea.agent import Agent
-from aea.channel.oef import OEFMailBox
+from aea.channels.oef import OEFMailBox
 from aea.mail.base import Envelope
 
 from tac.agents.controller.base.handlers import OEFHandler, GameHandler, AgentMessageDispatcher
@@ -270,7 +270,7 @@ def main(
             base_good_endowment=base_good_endowment,
             lower_bound_factor=lower_bound_factor,
             upper_bound_factor=upper_bound_factor,
-            start_time=dateutil.parser.parse(start_time),
+            start_time=dateutil.parser.parse(str(start_time)),
             registration_timeout=registration_timeout,
             competition_timeout=competition_timeout,
             inactivity_timeout=inactivity_timeout,
