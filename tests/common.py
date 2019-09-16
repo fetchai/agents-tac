@@ -19,7 +19,7 @@
 
 """This module contains an OEF agent for testing."""
 
-from aea.channel.oef import OEFMailBox
+from aea.channels.oef import OEFMailBox
 
 
 class TOEFAgent(OEFMailBox):

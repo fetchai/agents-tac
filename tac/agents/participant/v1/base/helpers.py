@@ -22,7 +22,7 @@
 import logging
 from typing import Dict, List, Set, Sequence
 
-from aea.dialogue.base import DialogueLabel
+from aea.helpers.dialogue.base import DialogueLabel
 from aea.mail.base import Address
 from aea.protocols.oef.models import DataModel, Attribute, Description, Query, Constraint, Or
 from tac.platform.game.base import TransactionId

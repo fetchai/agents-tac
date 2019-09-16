@@ -24,7 +24,7 @@ import datetime
 import random
 from typing import Any, List, Optional, Set, Tuple, Dict, Union, Sequence, cast
 
-from aea.channel.oef import MailStats
+from aea.channels.oef import MailStats
 from aea.mail.base import Address
 from aea.protocols.oef.models import Description, Query
 from aea.protocols.tac.message import TACMessage

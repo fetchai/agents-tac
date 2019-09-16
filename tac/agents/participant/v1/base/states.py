@@ -30,9 +30,9 @@ import copy
 import pprint
 from typing import Dict, List
 
+from aea.helpers.state.base import AgentState as BaseAgentState
+from aea.helpers.state.base import WorldState as BaseWorldState
 from aea.mail.base import Address
-from aea.state.base import AgentState as BaseAgentState
-from aea.state.base import WorldState as BaseWorldState
 from tac.agents.participant.v1.base.price_model import GoodPriceModel
 from tac.platform.game.helpers import logarithmic_utility
 from tac.platform.game.base import Transaction
