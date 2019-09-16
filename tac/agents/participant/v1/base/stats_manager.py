@@ -23,11 +23,11 @@
 import time
 from enum import Enum
 from threading import Thread
-from typing import Dict
+from typing import Dict, Optional
 
 import numpy as np
 
-from aea.channel.oef import MailStats
+from aea.channels.oef import MailStats
 
 
 class EndState(Enum):
@@ -54,7 +54,7 @@ class StatsManager(object):
         """
         self.dashboard = dashboard
         self._update_stats_task_is_running = False
-        self._update_stats_task = None
+        self._update_stats_task = None  # type: Optional[Thread]
         self._update_stats_task_timeout = task_timeout
 
         self._mail_stats = mail_stats
@@ -171,6 +171,7 @@ class StatsManager(object):
 
         :return: None
         """
+        assert self._update_stats_task is not None, "Call start before calling stop."
         if self._update_stats_task_is_running:
             self._update_stats_task_is_running = False
             self._update_stats_task.join()

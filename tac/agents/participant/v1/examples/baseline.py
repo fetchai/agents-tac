@@ -102,10 +102,9 @@ def main(
     Main entrypoint for starting a baseline agent.
     Please run the module with hte '--help flag' to get more details about the parameters.
     """
+    agent_dashboard = None  # type: Optional[AgentDashboard]
     if dashboard:
         agent_dashboard = AgentDashboard(agent_name=name, env_name=name, visdom_addr=visdom_addr, visdom_port=visdom_port)
-    else:
-        agent_dashboard = None
 
     strategy = BaselineStrategy(register_as=RegisterAs(register_as), search_for=SearchFor(search_for), is_world_modeling=is_world_modeling)
     agent = BaselineAgent(name=name, oef_addr=oef_addr, oef_port=oef_port, strategy=strategy,

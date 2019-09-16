@@ -26,7 +26,6 @@ import os
 from collections import defaultdict
 from typing import Optional, Dict, List
 
-from aea.crypto.base import Crypto
 from tac.agents.controller.base.states import Game
 from tac.gui.dashboards.base import start_visdom_server, Dashboard
 from tac.platform.game.stats import GameStats
@@ -41,7 +40,7 @@ def compute_aggregate_scores(all_game_stats: List[GameStats]) -> Dict[str, float
     :param all_game_stats: the GameStats object for every instance of TAC.
     :return: a dictionary "agent_name" -> "final score"
     """
-    result = defaultdict(lambda: 0)
+    result = defaultdict(lambda: 0.0)  # type: Dict[str, float]
     for game_stats in all_game_stats:
         pbk_to_name = game_stats.game.configuration.agent_pbk_to_name
         pbk_to_score = game_stats.game.get_scores()
@@ -79,7 +78,7 @@ class LeaderboardDashboard(Dashboard):
         for game_dir in game_dirs:
             game_data_json_filepath = os.path.join(self.competition_directory, game_dir, "game.json")
             game_data = json.load(open(game_data_json_filepath))
-            game = Game.from_dict(game_data, Crypto())
+            game = Game.from_dict(game_data)
             game_stats = GameStats(game)
             result.append(game_stats)
 

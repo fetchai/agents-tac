@@ -20,9 +20,8 @@
 
 """This module contains a class to query statistics about a game."""
 
-from typing import Any, Dict, Optional, Tuple, List
-
 import numpy as np
+from typing import Any, Dict, List, Tuple
 
 from tac.agents.controller.base.states import Game
 from tac.agents.participant.v1.base.states import AgentState
@@ -31,7 +30,7 @@ from tac.agents.participant.v1.base.states import AgentState
 class GameStats:
     """A class to query statistics about a game."""
 
-    def __init__(self, game: Optional[Game]) -> None:
+    def __init__(self, game: Game) -> None:
         """
         Instantiate game stats.
 
@@ -39,7 +38,7 @@ class GameStats:
 
         :return: None
         """
-        self.game = game  # type: Optional[Game]
+        self.game = game
 
     @classmethod
     def from_json(cls, d: Dict[str, Any]):
@@ -185,7 +184,7 @@ class GameStats:
             (agent_pbk,
                 AgentState(
                     self.game.initialization.eq_money_holdings[i],
-                    self.game.initialization.eq_good_holdings[i],
+                    [int(h) for h in self.game.initialization.eq_good_holdings[i]],
                     self.game.initialization.utility_params[i]
                 ))
             for agent_pbk, i in zip(self.game.configuration.agent_pbks, range(self.game.configuration.nb_agents)))  # type: Dict[str, AgentState]
@@ -225,7 +224,7 @@ class GameStats:
             (agent_pbk,
                 AgentState(
                     self.game.initialization.eq_money_holdings[i],
-                    self.game.initialization.eq_good_holdings[i],
+                    [int(h) for h in self.game.initialization.eq_good_holdings[i]],
                     self.game.initialization.utility_params[i]
                 ))
             for agent_pbk, i in zip(self.game.configuration.agent_pbks, range(self.game.configuration.nb_agents)))  # type: Dict[str, AgentState]

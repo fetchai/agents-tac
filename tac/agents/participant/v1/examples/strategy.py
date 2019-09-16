@@ -112,6 +112,7 @@ class BaselineStrategy(Strategy):
             switch = -1 if is_seller else 1
             marginal_utility_from_delta_holdings = marginal_utility(utility_params, current_holdings, delta_holdings) * switch
             if self.is_world_modeling:
+                assert world_state is not None, "Need to provide world state if is_world_modeling=True."
                 desc.values["price"] = world_state.expected_price(good_pbk, round(marginal_utility_from_delta_holdings, 2), is_seller, share_of_tx_fee)
             else:
                 if is_seller:

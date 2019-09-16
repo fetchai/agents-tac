@@ -82,6 +82,7 @@ class ControllerReactions(ControllerReactionInterface):
         Handle dialogue error event emitted by the controller.
 
         :param message: the dialogue error message
+        :param sender: the address of the sender
 
         :return: None
         """

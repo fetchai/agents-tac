@@ -29,3 +29,11 @@ Release History
 - Updated to OEF SDK version 0.6.7
 - Transition to AEA architecture and extraction of AEA framework.
 - Updated to AEA version 0.1.1
+
+0.1.5 (2019-09-16)
+-------------------
+
+- Bump to latest oef image 0.7
+- Bump to latest aea version 0.1.2
+- Static type checking with Mypy
+- Test/bug fixes

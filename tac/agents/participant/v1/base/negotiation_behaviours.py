@@ -23,7 +23,7 @@
 import json
 import logging
 import pprint
-from typing import List
+from typing import List, cast
 
 from aea.crypto.base import Crypto
 
@@ -33,6 +33,7 @@ from aea.protocols.fipa.message import FIPAMessage
 from aea.protocols.fipa.serialization import FIPASerializer
 from aea.protocols.tac.message import TACMessage
 from aea.protocols.tac.serialization import TACSerializer
+from aea.protocols.oef.models import Description
 from tac.agents.participant.v1.base.dialogues import Dialogue
 from tac.agents.participant.v1.base.game_instance import GameInstance
 from tac.agents.participant.v1.base.helpers import generate_transaction_id
@@ -113,6 +114,7 @@ class FIPABehaviour:
             response = Envelope(to=dialogue.dialogue_label.dialogue_opponent_pbk, sender=self.crypto.public_key, protocol_id=FIPAMessage.protocol_id, message=msg_bytes)
             self.game_instance.stats_manager.add_dialogue_endstate(EndState.DECLINED_CFP, dialogue.is_self_initiated)
         else:
+            proposal = cast(Description, proposal)
             transaction_id = generate_transaction_id(self.crypto.public_key, dialogue.dialogue_label.dialogue_opponent_pbk, dialogue.dialogue_label, dialogue.is_seller)
             transaction = Transaction.from_proposal(proposal=proposal,
                                                     transaction_id=transaction_id,

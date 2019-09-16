@@ -20,6 +20,15 @@ pipeline {
 
                 } // code style check
 
+                stage('Static Type Check') {
+
+                    steps {
+                        sh 'pip3 install tox'
+                        sh 'tox -e mypy'
+                    }
+
+                } // static type check
+
                 stage('Unit Tests') {
 
                     steps {

@@ -13,12 +13,13 @@ flake8 = "*"
 ipython = "*"
 jupyter = "*"
 pytest = "*"
-tox = "*"
-tox-pipenv = "*"
+tox = "==3.7.0"
+tox-pipenv = "==1.9.0"
 pytest-cov = "*"
 docker = "*"
 flake8-docstrings = "*"
 pygments = "*"
+mypy = "*"
 
 [packages]
 fetchai-ledger-api = {git = "https://github.com/fetchai/ledger-api-py.git"}
@@ -28,14 +29,14 @@ flask-restful = "*"
 nbsphinx = "*"
 numpy = "*"
 matplotlib = "*"
-oef = {index = "test-pypi",version = "==0.6.7"}
+oef = {index = "test-pypi",version = "==0.6.10"}
 python-dateutil = "*"
 sphinxcontrib-mermaid = "*"
 sphinxcontrib-apidoc = "*"
 sphinx = "*"
 wtforms = "*"
 visdom = "*"
-aea = {index = "test-pypi",version = "==0.1.1"}
+aea = {index = "test-pypi",version = "==0.1.2"}
 colorlog = "*"
 
 [requires]

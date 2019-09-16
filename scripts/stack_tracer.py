@@ -83,7 +83,7 @@ class TraceDumper(threading.Thread):
 
         :return: None
         """
-        while not self.stop_requested.isSet():
+        while not self.stop_requested.isSet():  # type: ignore
             time.sleep(self.interval)
             if self.auto or not os.path.isfile(self.fpath):
                 self.stacktraces()

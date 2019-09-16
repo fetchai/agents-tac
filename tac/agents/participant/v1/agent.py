@@ -25,7 +25,7 @@ import time
 from typing import Optional
 
 from aea.agent import Agent
-from aea.channel.oef import OEFMailBox
+from aea.channels.oef import OEFMailBox
 from aea.mail.base import Envelope
 from tac.agents.participant.v1.base.game_instance import GameInstance
 from tac.agents.participant.v1.base.handlers import ControllerHandler, DialogueHandler, OEFHandler
@@ -68,7 +68,7 @@ class ParticipantAgent(Agent):
         super().__init__(name, private_key_pem, agent_timeout, debug=debug)
         self.mailbox = OEFMailBox(self.crypto.public_key, oef_addr, oef_port)
 
-        self._game_instance = GameInstance(name, strategy, self.mailbox.mail_stats, services_interval, pending_transaction_timeout, dashboard)  # type: Optional[GameInstance]
+        self._game_instance = GameInstance(name, strategy, self.mailbox.mail_stats, services_interval, pending_transaction_timeout, dashboard)
         self.max_reactions = max_reactions
 
         self.controller_handler = ControllerHandler(self.crypto, self.liveness, self.game_instance, self.mailbox, self.name)
