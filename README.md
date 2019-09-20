@@ -95,6 +95,10 @@ The [competition sandbox](../master/sandbox) provides the code to build the dock
 - Create and launch a virtual environment:
 
       pipenv --python 3.7 && pipenv shell
+      
+- Install dependencies
+
+      pipenv install
 
 - Install the package:
 
