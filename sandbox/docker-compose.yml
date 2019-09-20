@@ -13,7 +13,7 @@ services:
     logging:
       driver: none
     volumes:
-      - "../oef_search_pluto_scripts:/config"
+      - "../scripts/oef/:/config"
       - "../data/oef-logs:/logs/"
     command:
       - "/config/node_config.json"

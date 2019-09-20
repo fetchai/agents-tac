@@ -20,7 +20,7 @@
 """This module contains tests for the mail module."""
 import time
 
-from aea.channels.oef import OEFMailBox
+from aea.channels.oef.connection import OEFMailBox
 from aea.crypto.base import Crypto
 from aea.mail.base import Envelope
 from aea.protocols.default.message import DefaultMessage

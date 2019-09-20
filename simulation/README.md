@@ -20,7 +20,7 @@ Simply run:
 
 - First, ensure that you are running an OEF Node on `localhost`, using this command (make sure all docker containers are stopped `docker stop $(docker ps -q)`):
 
-      python oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config_latest.json
+      python scripts/oef/launch.py -c ./scripts/oef/launch_config_latest.json
 
 
 - Second, (in a new terminal window, from root and in shell) start a `visdom` server:

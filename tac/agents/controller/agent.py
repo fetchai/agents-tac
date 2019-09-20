@@ -31,7 +31,7 @@ from typing import Optional
 
 import dateutil.parser
 from aea.agent import Agent
-from aea.channels.oef import OEFMailBox
+from aea.channels.oef.connection import OEFMailBox
 from aea.mail.base import Envelope
 
 from tac.agents.controller.base.handlers import OEFHandler, GameHandler, AgentMessageDispatcher
