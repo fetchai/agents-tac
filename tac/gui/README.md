@@ -8,11 +8,11 @@ This displays dynamic information.
 
 ### To run a Visdom server via script to visualise historic data
 
-Set explicit experiment id `experiment_id` and then run
+Set explicit experiment id `version_id` and then run
 
-    python3 tac/gui/dashboard.py --datadir #{data_output_dir}/#{experiment_id}
+    python3 tac/gui/dashboard.py --datadir #{data_output_dir}/#{version_id}
 
-Here `#{data_output_dir}/#{experiment_id}` is the path to the folder containing the `game.json` file.
+Here `#{data_output_dir}/#{version_id}` is the path to the folder containing the `game.json` file.
 
 
 ### To visualize the leaderboard after a full TAC 

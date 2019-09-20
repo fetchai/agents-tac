@@ -33,7 +33,7 @@ oef = {index = "test-pypi",version = "==0.6.10"}
 python-dateutil = "*"
 sphinxcontrib-mermaid = "*"
 sphinxcontrib-apidoc = "*"
-sphinx = "*"
+sphinx = "==2.1.2"
 wtforms = "*"
 visdom = "*"
 aea = {index = "test-pypi",version = "==0.1.2"}

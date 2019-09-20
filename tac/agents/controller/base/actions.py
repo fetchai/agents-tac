@@ -45,7 +45,7 @@ CONTROLLER_DATAMODEL = DataModel("tac", [
 class OEFActions(OEFActionInterface):
     """The OEFActions class defines the actions of an agent towards the OEF."""
 
-    def __init__(self, crypto: Crypto, liveness: Liveness, mailbox: MailBox, agent_name: str) -> None:
+    def __init__(self, crypto: Crypto, liveness: Liveness, mailbox: MailBox, agent_name: str, tac_version: str) -> None:
         """
         Instantiate the OEFActions.
 
@@ -53,6 +53,7 @@ class OEFActions(OEFActionInterface):
         :param liveness: the liveness module
         :param mailbox: the mailbox of the agent
         :param agent_name: the agent name
+        :param tac_version: the tac version id
 
         :return: None
         """
@@ -60,6 +61,7 @@ class OEFActions(OEFActionInterface):
         self.liveness = liveness
         self.mailbox = mailbox
         self.agent_name = agent_name
+        self.tac_version = tac_version
 
     def register_tac(self) -> None:
         """
@@ -67,7 +69,7 @@ class OEFActions(OEFActionInterface):
 
         :return: None.
         """
-        desc = Description({"version": 1}, data_model=CONTROLLER_DATAMODEL)
+        desc = Description({"version": self.tac_version}, data_model=CONTROLLER_DATAMODEL)
         logger.debug("[{}]: Registering with {} data model".format(self.agent_name, desc.data_model.name))
         msg = OEFMessage(oef_type=OEFMessage.Type.REGISTER_SERVICE, id=1, service_description=desc, service_id="")
         msg_bytes = OEFSerializer().encode(msg)

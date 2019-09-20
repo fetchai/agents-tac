@@ -48,7 +48,7 @@ parser.add_argument("inactivity_timeout", default=60, type=int, help="The amount
 parser.add_argument("competition_timeout", default=240, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
 parser.add_argument("nb_baseline_agents", type=int, default=10, help="Number of baseline agent to run. Defaults to the number of agents of the competition.")
 parser.add_argument("data_output_dir", default="data", help="The output directory for the simulation data.")
-parser.add_argument("experiment_id", default=None, help="The experiment ID.")
+parser.add_argument("version_id", default=None, help="The version ID.")
 parser.add_argument("seed", default=42, help="The random seed of the simulation.")
 parser.add_argument("whitelist_file", default="", type=str, help="The file that contains the list of agent names to be whitelisted.")
 parser.add_argument("services_interval", default=5, type=int, help="The amount of time (in seconds) the baseline agents wait until it updates services again.")
@@ -101,7 +101,7 @@ class SandboxRunner:
             "OEF_ADDR": "172.28.1.1",
             "OEF_PORT": "10000",
             "DATA_OUTPUT_DIR": str(args["data_output_dir"]),
-            "EXPERIMENT_ID": str(args["experiment_id"]),
+            "VERSION_ID": str(args["version_id"]),
             "LOWER_BOUND_FACTOR": str(args["lower_bound_factor"]),
             "UPPER_BOUND_FACTOR": str(args["upper_bound_factor"]),
             "TX_FEE": str(args["tx_fee"]),
@@ -208,8 +208,8 @@ class SandboxList(Resource):
         """Process the arguments of the POST request on /api/sandbox."""
         if args["data_output_dir"] == "":
             args["data_output_dir"] = "./data"
-        if args["experiment_id"] == "" or args["experiment_id"] is None:
-            args["experiment_id"] = "./experiment-{}".format(sandbox_id)
+        if args["version_id"] == "" or args["version_id"] is None:
+            args["version_id"] = "./version-{}".format(sandbox_id)
         # if args["start_time"] == "":
         #     args["start_time"] = str(datetime.datetime.now())
         # else:

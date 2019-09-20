@@ -44,7 +44,7 @@ Register as 'tac' service
 The controller agent registers itself to the OEF as a service.
 
 The data model name is ``"tac"`` and as attribute we have ``"version"``,
-which is an integer value. The TAC controller agent will register with ``"version"=1``.
+which is an integer value. The TAC controller agent will register with ``"version"=VERSION_ID``.
 
 The controller agent will wait for *registration_timeout*. At the end, if there are enough
 participant, it will start the competition. Otherwise, it will send back a "Cancelled" message to every
@@ -60,19 +60,9 @@ How to register/unregister
 
 In order to complete a registration, a trading agent should do the following steps:
 
-1. Run a search for ``"tac"`` services, with the query ``"version" == 1``.
-2. On the search result, send a :class:`~tac.platform.protocol.Register` message to the right TAC controller
-3. Waiting for the :class:`~tac.platform.protocol.GameData` message.
-
-.. note::
-
-    All the communications toward the controller agent must be done
-    by using the `send_message <https://fetchai.github.io/oef-sdk-python/oef.html#oef.agents.Agent.send_message>`_,
-    that is, to send the general-purpose message in the OEF. In the following, we will see what kind of content the
-    message should have in order to be understandable by the controller agent.
-
-    E.g. for sending a :class:`~tac.platform.protocol.Register` message, you should first serialize the object by using
-    :meth:`~tac.platform.protocol.Message.serialize`, and then send the byte-encoded message in a simple message.
+1. Run a search for ``"tac"`` services, with the query ``"version" == VERSION_ID``.
+2. On the search result, send a `Register` message to the right TAC controller
+3. Waiting for the :class:`~tac.platform.game.base.GameData` message.
 
 
 Search for controller agent
@@ -86,10 +76,10 @@ Search for controller agent
 Register to TAC
 ^^^^^^^^^^^^^^^^
 
-In order to register, a TAC Agent must send a :class:`~tac.platform.protocol.Register` message to the controller agent.
+In order to register, a TAC Agent must send a `Register` message to the controller agent.
 
-The message :class:`~tac.platform.protocol.Register` is an empty message. In order to undo the effect of
-the registration, the agent can unregister from the competition by sending the :class:`~tac.platform.protocol.Unregister`
+The message `Register` is an empty message. In order to undo the effect of
+the registration, the agent can unregister from the competition by sending the `Unregister`
 message.
 
 .. mermaid:: ../diagrams/register_to_tac.mmd
@@ -100,10 +90,10 @@ message.
 Start of the competition
 ------------------------
 
-Once trading agents receive the :class:`~tac.platform.protocol.GameData` message, the competition starts
+Once trading agents receive the :class:`~tac.platform.game.base.GameData` message, the competition starts
 and the *trading phase* begins.
 
-The message :class:`~tac.platform.protocol.GameData` contains the following information:
+The message :class:`~tac.platform.game.base.GameData` contains the following information:
 
 - ``money`` (integer): the money amount available to the TAC agent.
 - ``endowment`` (list of integers): the endowment for every good.

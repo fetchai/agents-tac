@@ -86,6 +86,7 @@ if __name__ == '__main__':
 
         # Feed the agent some game data
         # To start, we require some game data to feed to the agent:
+        version_id = '1'
         money = 100.0
         initial_endowments = [2, 2, 2, 2]
         utility_params_one = [50.0, 25.0, 20.0, 5.0]
@@ -104,7 +105,8 @@ if __name__ == '__main__':
                                  nb_goods,
                                  tx_fee,
                                  agent_pbk_to_name,
-                                 good_pbk_to_name)
+                                 good_pbk_to_name,
+                                 version_id)
         agent_one.game_instance.init(game_data_one, agent_one.crypto.public_key)
 
         game_data_two = GameData(agent_two.crypto.public_key,
@@ -115,7 +117,8 @@ if __name__ == '__main__':
                                  nb_goods,
                                  tx_fee,
                                  agent_pbk_to_name,
-                                 good_pbk_to_name)
+                                 good_pbk_to_name,
+                                 version_id)
         agent_two.game_instance.init(game_data_two, agent_two.crypto.public_key)
 
         # Set the debugger

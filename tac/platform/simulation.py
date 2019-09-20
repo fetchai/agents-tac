@@ -68,7 +68,7 @@ class SimulationParams:
                  visdom_addr: str = "localhost",
                  visdom_port: int = 8097,
                  data_output_dir: Optional[str] = "data",
-                 experiment_id: int = None,
+                 version_id: str = str(random.randint(0, 10000)),
                  seed: int = 42,
                  nb_baseline_agents_world_modeling: int = 1,
                  tac_parameters: Optional[TACParameters] = None):
@@ -87,7 +87,7 @@ class SimulationParams:
         :param visdom_addr: the IP address of the Visdom server
         :param visdom_port: the port of the Visdom server.
         :param data_output_dir: the path to the output directory.
-        :param experiment_id: the name of the experiment.
+        :param version_id: the name of the experiment.
         :param seed: the random seed.
         :param nb_baseline_agents_world_modeling: the number of world modelling baseline agents.
         :param tac_parameters: the parameters for the TAC.
@@ -105,7 +105,7 @@ class SimulationParams:
         self.visdom_addr = visdom_addr
         self.visdom_port = visdom_port
         self.data_output_dir = data_output_dir
-        self.experiment_id = experiment_id
+        self.version_id = version_id
         self.seed = seed
         self.nb_baseline_agents_world_modeling = nb_baseline_agents_world_modeling
 
@@ -138,7 +138,7 @@ def spawn_controller_agent(params: SimulationParams) -> multiprocessing.Process:
         visdom_addr=params.visdom_addr,
         visdom_port=params.visdom_port,
         data_output_dir=params.data_output_dir,
-        experiment_id=params.experiment_id,
+        version_id=params.version_id,
         seed=params.seed,
     ))
     process.start()
@@ -194,7 +194,7 @@ def parse_arguments():
     parser.add_argument("--search-for", choices=['sellers', 'buyers', 'both'], default='both', help="The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.")
     parser.add_argument("--dashboard", action="store_true", help="Enable the agent dashboard.")
     parser.add_argument("--data-output-dir", default="data", help="The output directory for the simulation data.")
-    parser.add_argument("--experiment-id", default=None, help="The experiment ID.")
+    parser.add_argument("--version-id", default=str(random.randint(0, 10000)), type=str, help="The version ID.")
     parser.add_argument("--visdom-addr", default="localhost", help="TCP/IP address of the Visdom server")
     parser.add_argument("--visdom-port", default=8097, help="TCP/IP port of the Visdom server")
     parser.add_argument("--seed", default=42, help="The random seed of the simulation.")
@@ -226,7 +226,9 @@ def build_simulation_parameters(arguments: argparse.Namespace) -> SimulationPara
         registration_timeout=arguments.registration_timeout,
         competition_timeout=arguments.competition_timeout,
         inactivity_timeout=arguments.inactivity_timeout,
-        whitelist=arguments.whitelist_file
+        whitelist=arguments.whitelist_file,
+        data_output_dir=arguments.data_output_dir,
+        version_id=arguments.version_id
     )
 
     simulation_params = SimulationParams(
@@ -237,7 +239,7 @@ def build_simulation_parameters(arguments: argparse.Namespace) -> SimulationPara
         visdom_addr=arguments.visdom_addr,
         visdom_port=arguments.visdom_port,
         data_output_dir=arguments.data_output_dir,
-        experiment_id=arguments.experiment_id,
+        version_id=arguments.version_id,
         seed=arguments.seed,
         nb_baseline_agents_world_modeling=round(arguments.nb_baseline_agents * arguments.fraction_world_modeling),
         tac_parameters=tac_parameters

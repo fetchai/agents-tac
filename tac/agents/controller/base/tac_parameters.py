@@ -22,6 +22,7 @@
 """TACParameters: this class contains the parameters for the TAC."""
 
 import datetime
+import random
 
 from typing import Set, Optional
 
@@ -42,7 +43,7 @@ class TACParameters(object):
                  inactivity_timeout: int = 10,
                  whitelist: Optional[Set[str]] = None,
                  data_output_dir: str = "data",
-                 experiment_id: Optional[str] = None):
+                 version_id: str = str(random.randint(0, 10000))):
         """
         Initialize parameters for TAC.
 
@@ -72,7 +73,7 @@ class TACParameters(object):
         self._inactivity_timeout = inactivity_timeout
         self._whitelist = whitelist
         self._data_output_dir = data_output_dir
-        self._experiment_id = experiment_id
+        self._version_id = version_id
         self._check_values()
 
     def _check_values(self) -> None:
@@ -172,6 +173,6 @@ class TACParameters(object):
         return self._data_output_dir
 
     @property
-    def experiment_id(self) -> Optional[str]:
-        """Experiment id."""
-        return self._experiment_id
+    def version_id(self) -> str:
+        """Version id."""
+        return self._version_id

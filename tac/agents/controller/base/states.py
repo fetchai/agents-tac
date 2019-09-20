@@ -167,6 +167,7 @@ class Game:
     """
     Class representing a game instance of TAC.
 
+    >>> version_id = '1'
     >>> nb_agents = 3
     >>> nb_goods = 3
     >>> tx_fee = 1.0
@@ -188,6 +189,7 @@ class Game:
     ... [1.0, 1.0, 2.0]]
     >>> eq_money_holdings = [20.0, 20.0, 20.0]
     >>> game_configuration = GameConfiguration(
+    ...     version_id,
     ...     nb_agents,
     ...     nb_goods,
     ...     tx_fee,
@@ -261,7 +263,8 @@ class Game:
         return self._initial_agent_states
 
     @staticmethod
-    def generate_game(nb_agents: int,
+    def generate_game(version_id: str,
+                      nb_agents: int,
                       nb_goods: int,
                       tx_fee: float,
                       money_endowment: int,
@@ -273,6 +276,7 @@ class Game:
         """
         Generate a game, the endowments and the utilites.
 
+        :param version_id: the version of the game.
         :param nb_agents: the number of agents.
         :param nb_goods: the number of goods.
         :param tx_fee: the fee to pay per transaction.
@@ -284,7 +288,7 @@ class Game:
         :param good_pbk_to_name: the mapping of the public keys for the goods to their names.
         :return: a game.
         """
-        game_configuration = GameConfiguration(nb_agents, nb_goods, tx_fee, agent_pbk_to_name, good_pbk_to_name)
+        game_configuration = GameConfiguration(version_id, nb_agents, nb_goods, tx_fee, agent_pbk_to_name, good_pbk_to_name)
 
         scaling_factor = determine_scaling_factor(money_endowment)
         money_endowments = generate_money_endowments(nb_agents, money_endowment)
@@ -337,6 +341,7 @@ class Game:
         """
         Settle a valid transaction.
 
+        >>> version_id = '1'
         >>> nb_agents = 3
         >>> nb_goods = 3
         >>> tx_fee = 1.0
@@ -358,6 +363,7 @@ class Game:
         ... [1.0, 1.0, 2.0]]
         >>> eq_money_holdings = [20.0, 20.0, 20.0]
         >>> game_configuration = GameConfiguration(
+        ...     version_id,
         ...     nb_agents,
         ...     nb_goods,
         ...     tx_fee,
@@ -438,6 +444,7 @@ class Game:
         """
         Get holdings summary.
 
+        >>> version_id = '1'
         >>> nb_agents = 3
         >>> nb_goods = 3
         >>> tx_fee = 1.0
@@ -459,6 +466,7 @@ class Game:
         ... [1.0, 1.0, 2.0]]
         >>> eq_money_holdings = [20.0, 20.0, 20.0]
         >>> game_configuration = GameConfiguration(
+        ...     version_id,
         ...     nb_agents,
         ...     nb_goods,
         ...     tx_fee,
