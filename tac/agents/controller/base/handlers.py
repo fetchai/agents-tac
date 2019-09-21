@@ -417,7 +417,8 @@ class GameHandler:
         """
         nb_agents = len(self.registered_agents)
 
-        game = Game.generate_game(nb_agents,
+        game = Game.generate_game(self.tac_parameters.version_id,
+                                  nb_agents,
                                   self.tac_parameters.nb_goods,
                                   self.tac_parameters.tx_fee,
                                   self.tac_parameters.money_endowment,
@@ -448,7 +449,8 @@ class GameHandler:
                 self.current_game.configuration.nb_goods,
                 self.current_game.configuration.tx_fee,
                 self.current_game.configuration.agent_pbk_to_name,
-                self.current_game.configuration.good_pbk_to_name
+                self.current_game.configuration.good_pbk_to_name,
+                self.current_game.configuration.version_id
             )
             logger.debug("[{}]: sending GameData to '{}': {}"
                          .format(self.agent_name, public_key, str(game_data_response)))
@@ -462,7 +464,8 @@ class GameHandler:
                              nb_goods=self.current_game.configuration.nb_goods,
                              tx_fee=self.current_game.configuration.tx_fee,
                              agent_pbk_to_name=self.current_game.configuration.agent_pbk_to_name,
-                             good_pbk_to_name=self.current_game.configuration.good_pbk_to_name
+                             good_pbk_to_name=self.current_game.configuration.good_pbk_to_name,
+                             version_id=self.current_game.configuration.version_id
                              )
             tac_bytes = TACSerializer().encode(msg)
             self.mailbox.outbox.put_message(to=public_key, sender=self.crypto.public_key, protocol_id=TACMessage.protocol_id, message=tac_bytes)
@@ -484,8 +487,7 @@ class GameHandler:
 
         :return: None.
         """
-        experiment_id = str(self.tac_parameters.experiment_id) if self.tac_parameters.experiment_id is not None else str(datetime.datetime.now())
-        experiment_dir = self.tac_parameters.data_output_dir + "/" + experiment_id
+        version_dir = self.tac_parameters.data_output_dir + "/" + self.tac_parameters.version_id
 
         if not self.is_game_running:
             logger.warning("[{}]: Game not present. Using empty dictionary.".format(self.agent_name))
@@ -493,15 +495,15 @@ class GameHandler:
         else:
             game_dict = self.current_game.to_dict()
 
-        os.makedirs(experiment_dir, exist_ok=True)
-        with open(os.path.join(experiment_dir, "game.json"), "w") as f:
+        os.makedirs(version_dir, exist_ok=True)
+        with open(os.path.join(version_dir, "game.json"), "w") as f:
             json.dump(game_dict, f)
 
 
 class OEFHandler(OEFActions, OEFReactions):
     """Handle the message exchange with the OEF."""
 
-    def __init__(self, crypto: Crypto, liveness: Liveness, mailbox: MailBox, agent_name: str):
+    def __init__(self, crypto: Crypto, liveness: Liveness, mailbox: MailBox, agent_name: str, tac_version: str):
         """
         Instantiate the OEFHandler.
 
@@ -509,8 +511,9 @@ class OEFHandler(OEFActions, OEFReactions):
         :param liveness: the liveness module
         :param mailbox: the mailbox
         :param agent_name: the agent name
+        :param tac_version: the tac version id
         """
-        OEFActions.__init__(self, crypto, liveness, mailbox, agent_name)
+        OEFActions.__init__(self, crypto, liveness, mailbox, agent_name, tac_version)
         OEFReactions.__init__(self, crypto, liveness, mailbox, agent_name)
 
     def handle_oef_message(self, envelope: Envelope) -> None:

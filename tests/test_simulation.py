@@ -35,19 +35,20 @@ from tac.agents.participant.v1.examples.strategy import BaselineStrategy
 from tac.gui.monitor import NullMonitor
 
 
-def _init_baseline_agents(n: int, version: str, oef_addr: str, oef_port: int) -> List[BaselineAgentV1]:
+def _init_baseline_agents(n: int, agent_version: str, oef_addr: str, oef_port: int, tac_version_id: str) -> List[BaselineAgentV1]:
     """Baseline agents initialization."""
-    if version == "v1":
+    if agent_version == "v1":
         return [BaselineAgentV1("baseline_{:02}".format(i), "127.0.0.1", 10000,
                                 BaselineStrategy(search_for=SearchFor.BOTH, register_as=RegisterAs.BOTH),
+                                expected_version_id=tac_version_id,
                                 pending_transaction_timeout=120) for i in range(n)]
     else:
         raise ValueError("Invalid version.")
 
 
-def _run_baseline_agent(agent: BaselineAgentV1, version: str) -> None:
+def _run_baseline_agent(agent: BaselineAgentV1, agent_version: str) -> None:
     """Run a baseline agent. The version."""
-    if version == "v1":
+    if agent_version == "v1":
         agent.start()
     else:
         pytest.fail("Baseline agent version not recognized: {} (must be 'v1')")
@@ -69,7 +70,9 @@ class TestSimulation:
     @classmethod
     def setup_class(cls):
         """Class setup."""
-        cls.baseline_agents = _init_baseline_agents(5, "v1", "127.0.0.1", 10000)
+        cls.tac_version_id = '1'
+        cls.agent_version = 'v1'
+        cls.baseline_agents = _init_baseline_agents(5, cls.agent_version, "127.0.0.1", 10000, cls.tac_version_id)
 
         cls.tac_parameters = TACParameters(min_nb_agents=5,
                                            money_endowment=200,
@@ -81,7 +84,8 @@ class TestSimulation:
                                            start_time=datetime.datetime.now() + datetime.timedelta(0, 2),
                                            registration_timeout=8,
                                            competition_timeout=20,
-                                           inactivity_timeout=15)
+                                           inactivity_timeout=15,
+                                           version_id=cls.tac_version_id)
 
         cls.tac_controller = ControllerAgent('controller', '127.0.0.1', 10000, cls.tac_parameters, NullMonitor())
 

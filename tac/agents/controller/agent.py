@@ -74,7 +74,7 @@ class ControllerAgent(Agent):
         super().__init__(name, private_key_pem, agent_timeout, debug=debug)
         self.mailbox = OEFMailBox(self.crypto.public_key, oef_addr, oef_port)
 
-        self.oef_handler = OEFHandler(self.crypto, self.liveness, self.mailbox, self.name)
+        self.oef_handler = OEFHandler(self.crypto, self.liveness, self.mailbox, self.name, tac_parameters.version_id)
         self.agent_message_dispatcher = AgentMessageDispatcher(self)
         self.game_handler = GameHandler(name, self.crypto, self.mailbox, monitor, tac_parameters)
 
@@ -219,7 +219,7 @@ def _parse_arguments():
     parser.add_argument("--visdom-addr", default="localhost", help="TCP/IP address of the Visdom server.")
     parser.add_argument("--visdom-port", default=8097, help="TCP/IP port of the Visdom server.")
     parser.add_argument("--data-output-dir", default="data", help="The output directory for the simulation data.")
-    parser.add_argument("--experiment-id", default=None, help="The experiment ID.")
+    parser.add_argument("--version-id", default=str(random.randint(0, 10000)), type=str, help="The experiment ID.")
     parser.add_argument("--seed", default=42, help="The random seed for the generation of the game parameters.")
 
     return parser.parse_args()
@@ -246,7 +246,7 @@ def main(
         visdom_addr: str = "localhost",
         visdom_port: int = 8097,
         data_output_dir: str = "data",
-        experiment_id: Optional[str] = None,
+        version_id: str = str(random.randint(0, 10000)),
         seed: int = 42,
         **kwargs
 ):
@@ -276,7 +276,7 @@ def main(
             inactivity_timeout=inactivity_timeout,
             whitelist=whitelist,
             data_output_dir=data_output_dir,
-            experiment_id=experiment_id
+            version_id=version_id
         )
         agent = ControllerAgent(name=name,
                                 oef_addr=oef_addr,

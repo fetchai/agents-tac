@@ -98,7 +98,7 @@ class ControllerReactions(ControllerReactionInterface):
         """
         logger.debug("[{}]: Received start event from the controller. Starting to compete...".format(self.agent_name))
         game_data = GameData(sender, message.get("money"), message.get("endowment"), message.get("utility_params"),
-                             message.get("nb_agents"), message.get("nb_goods"), message.get("tx_fee"), message.get("agent_pbk_to_name"), message.get("good_pbk_to_name"))
+                             message.get("nb_agents"), message.get("nb_goods"), message.get("tx_fee"), message.get("agent_pbk_to_name"), message.get("good_pbk_to_name"), message.get("version_id"))
         self.game_instance.init(game_data, self.crypto.public_key)
         self.game_instance._game_phase = GamePhase.GAME
 
