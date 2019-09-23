@@ -16,7 +16,6 @@ pytest = "*"
 tox = "==3.7.0"
 tox-pipenv = "==1.9.0"
 pytest-cov = "*"
-docker = "*"
 flake8-docstrings = "*"
 pygments = "*"
 mypy = "*"
@@ -33,11 +32,13 @@ oef = {index = "test-pypi",version = "==0.6.10"}
 python-dateutil = "*"
 sphinxcontrib-mermaid = "*"
 sphinxcontrib-apidoc = "*"
-sphinx = "*"
+sphinx = "==2.1.2"
 wtforms = "*"
 visdom = "*"
-aea = {index = "test-pypi",version = "==0.1.2"}
+aea = {index = "pypi",version = "==0.1.4"}
 colorlog = "*"
+docker = "*"
+docker-compose = "*"
 
 [requires]
 python_version = "3.7"

@@ -81,8 +81,8 @@ class OEFNode:
     def __enter__(self):
         """Define what the context manager should do at the beginning of the block."""
         self._stop_oef_search_images()
-        script_path = os.path.join("oef_search_pluto_scripts", "launch.py")
-        configuration_file_path = os.path.join("oef_search_pluto_scripts", "launch_config.json")
+        script_path = os.path.join("scripts", "oef", "launch.py")
+        configuration_file_path = os.path.join("scripts", "oef", "launch_config.json")
         print("Launching new OEF Node...")
         self.oef_process = subprocess.Popen(["python3", script_path, "-c", configuration_file_path, "--background"],
                                             stdout=subprocess.PIPE, env=os.environ, cwd=ROOT_DIR)

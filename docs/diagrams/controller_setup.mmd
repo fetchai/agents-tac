@@ -4,9 +4,9 @@ sequenceDiagram
 
     Note right of Controller: register as a controller agent.
 
-    Controller->>OEF: register_service("tac", Description{version=1})
+    Controller->>OEF: register_service("tac", Description{version=VERSION_ID})
     Controller->>Controller: run()
     activate Controller
     deactivate Controller
 
-    Note right of Controller: Waiting for 'Register' messages from TAC agents, until 'start time'.
+    Note right of Controller: Waiting for 'REGISTER' messages from TAC agents, until 'start time'.

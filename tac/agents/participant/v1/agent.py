@@ -25,7 +25,7 @@ import time
 from typing import Optional
 
 from aea.agent import Agent
-from aea.channels.oef import OEFMailBox
+from aea.channels.oef.connection import OEFMailBox
 from aea.mail.base import Envelope
 from tac.agents.participant.v1.base.game_instance import GameInstance
 from tac.agents.participant.v1.base.handlers import ControllerHandler, DialogueHandler, OEFHandler
@@ -43,6 +43,7 @@ class ParticipantAgent(Agent):
                  oef_addr: str,
                  oef_port: int,
                  strategy: Strategy,
+                 expected_version_id: str,
                  agent_timeout: float = 1.0,
                  max_reactions: int = 100,
                  services_interval: int = 10,
@@ -57,6 +58,7 @@ class ParticipantAgent(Agent):
         :param oef_addr: the TCP/IP address of the OEF node.
         :param oef_port: the TCP/IP port of the OEF node.
         :param strategy: the strategy object that specify the behaviour during the competition.
+        :param expected_version_id: the expected version of the TAC.
         :param agent_timeout: the time in (fractions of) seconds to time out an agent between act and react.
         :param max_reactions: the maximum number of reactions (messages processed) per call to react.
         :param services_interval: the number of seconds between different searches.
@@ -68,7 +70,7 @@ class ParticipantAgent(Agent):
         super().__init__(name, private_key_pem, agent_timeout, debug=debug)
         self.mailbox = OEFMailBox(self.crypto.public_key, oef_addr, oef_port)
 
-        self._game_instance = GameInstance(name, strategy, self.mailbox.mail_stats, services_interval, pending_transaction_timeout, dashboard)
+        self._game_instance = GameInstance(name, strategy, self.mailbox.mail_stats, expected_version_id, services_interval, pending_transaction_timeout, dashboard)
         self.max_reactions = max_reactions
 
         self.controller_handler = ControllerHandler(self.crypto, self.liveness, self.game_instance, self.mailbox, self.name)

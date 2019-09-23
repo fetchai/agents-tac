@@ -20,7 +20,7 @@ Simply run:
 
 - First, ensure that you are running an OEF Node on `localhost`, using this command (make sure all docker containers are stopped `docker stop $(docker ps -q)`):
 
-      python oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config_latest.json
+      python scripts/oef/launch.py -c ./scripts/oef/launch_config.json
 
 
 - Second, (in a new terminal window, from root and in shell) start a `visdom` server:
@@ -47,7 +47,7 @@ For a full list, do `python simulation/tac_agent_spawner.py -h`
 - `--search-for` the string indicates whether the baseline agent searches for sellers, buyers or both on the oef.
 - `--uml` specifies whether or not to store the activity of the simulation in PlantUML syntax.
 - `--data-output-dir` is the output directory to use for storing simulation data in `${data_output_dir}/${experiment_id}`.
-- `--experiment-id` is the name to give to the simulation.
+- `--version-id` is the name to give to the simulation.
 - `--plot` specifies whether to plot a summary of the game.
 - `--money-endowment` is the money amount every agent receives.
 - `--base-good-endowment` is the base amount of per good instances every agent receives.
@@ -74,7 +74,7 @@ Example:
           --service-registration-strategy both
           --uml True
           --data-output-dir data
-          --experiment-id my_experiment
+          --version-id my_experiment
           --plot True
           --money-endowment 200
           --base-good-endowment 2
@@ -87,7 +87,7 @@ Example:
           --dashboard
           --seed 42
       
-It generates a `game.json` file in the `${data_output_dir}/${experiment_id}` that can be inspected with a dashboard (see `tac/gui`).
+It generates a `game.json` file in the `${data_output_dir}/${version_id}` that can be inspected with a dashboard (see `tac/gui`).
 
 ### Scalability
 

@@ -41,6 +41,12 @@ logger = logging.getLogger(__name__)
 
 STARTING_MESSAGE_ID = 1
 STARTING_MESSAGE_TARGET = 0
+PROPOSE_TARGET = STARTING_MESSAGE_ID
+ACCEPT_TARGET = PROPOSE_TARGET + 1
+MATCH_ACCEPT_TARGET = ACCEPT_TARGET + 1
+DECLINED_CFP_TARGET = STARTING_MESSAGE_ID
+DECLINED_PROPOSE_TARGET = PROPOSE_TARGET + 1
+DECLINED_ACCEPT_TARGET = ACCEPT_TARGET + 1
 
 
 class Dialogue(BaseDialogue):
@@ -219,25 +225,25 @@ class Dialogues(BaseDialogues):
         self_initiated_dialogue_label = DialogueLabel(dialogue_id, opponent, agent_pbk)
         other_initiated_dialogue_label = DialogueLabel(dialogue_id, opponent, opponent)
         result = False
-        if performative == FIPAMessage.Performative.PROPOSE and target == 1 and self_initiated_dialogue_label in self.dialogues:
+        if performative == FIPAMessage.Performative.PROPOSE and target == PROPOSE_TARGET and self_initiated_dialogue_label in self.dialogues:
             self_initiated_dialogue = self.dialogues[self_initiated_dialogue_label]
             result = self_initiated_dialogue.is_expecting_propose()
         elif performative == FIPAMessage.Performative.ACCEPT:
-            if target == 2 and other_initiated_dialogue_label in self.dialogues:
+            if target == ACCEPT_TARGET and other_initiated_dialogue_label in self.dialogues:
                 other_initiated_dialogue = self.dialogues[other_initiated_dialogue_label]
                 result = other_initiated_dialogue.is_expecting_initial_accept()
         elif performative == FIPAMessage.Performative.MATCH_ACCEPT:
-            if target == 3 and self_initiated_dialogue_label in self.dialogues:
+            if target == MATCH_ACCEPT_TARGET and self_initiated_dialogue_label in self.dialogues:
                 self_initiated_dialogue = self.dialogues[self_initiated_dialogue_label]
                 result = self_initiated_dialogue.is_expecting_matching_accept()
         elif performative == FIPAMessage.Performative.DECLINE:
-            if target == 1 and self_initiated_dialogue_label in self.dialogues:
+            if target == DECLINED_CFP_TARGET and self_initiated_dialogue_label in self.dialogues:
                 self_initiated_dialogue = self.dialogues[self_initiated_dialogue_label]
                 result = self_initiated_dialogue.is_expecting_cfp_decline()
-            elif target == 2 and other_initiated_dialogue_label in self.dialogues:
+            elif target == DECLINED_PROPOSE_TARGET and other_initiated_dialogue_label in self.dialogues:
                 other_initiated_dialogue = self.dialogues[other_initiated_dialogue_label]
                 result = other_initiated_dialogue.is_expecting_propose_decline()
-            elif target == 3 and self_initiated_dialogue_label in self.dialogues:
+            elif target == DECLINED_ACCEPT_TARGET and self_initiated_dialogue_label in self.dialogues:
                 self_initiated_dialogue = self.dialogues[self_initiated_dialogue_label]
                 result = self_initiated_dialogue.is_expecting_accept_decline()
         return result
@@ -257,24 +263,24 @@ class Dialogues(BaseDialogues):
         performative = message.get("performative")
         self_initiated_dialogue_label = DialogueLabel(dialogue_id, opponent, agent_pbk)
         other_initiated_dialogue_label = DialogueLabel(dialogue_id, opponent, opponent)
-        if performative == FIPAMessage.Performative.PROPOSE and target == 1 and self_initiated_dialogue_label in self.dialogues:
+        if performative == FIPAMessage.Performative.PROPOSE and target == PROPOSE_TARGET and self_initiated_dialogue_label in self.dialogues:
             dialogue = self.dialogues[self_initiated_dialogue_label]
         elif performative == FIPAMessage.Performative.ACCEPT:
-            if target == 2 and other_initiated_dialogue_label in self.dialogues:
+            if target == ACCEPT_TARGET and other_initiated_dialogue_label in self.dialogues:
                 dialogue = self.dialogues[other_initiated_dialogue_label]
             else:
                 raise ValueError('Should have found dialogue.')
         elif performative == FIPAMessage.Performative.MATCH_ACCEPT:
-            if target == 3 and self_initiated_dialogue_label in self.dialogues:
+            if target == MATCH_ACCEPT_TARGET and self_initiated_dialogue_label in self.dialogues:
                 dialogue = self.dialogues[self_initiated_dialogue_label]
             else:
                 raise ValueError('Should have found dialogue.')
         elif performative == FIPAMessage.Performative.DECLINE:
-            if target == 1 and self_initiated_dialogue_label in self.dialogues:
+            if target == DECLINED_CFP_TARGET and self_initiated_dialogue_label in self.dialogues:
                 dialogue = self.dialogues[self_initiated_dialogue_label]
-            elif target == 2 and other_initiated_dialogue_label in self.dialogues:
+            elif target == DECLINED_PROPOSE_TARGET and other_initiated_dialogue_label in self.dialogues:
                 dialogue = self.dialogues[other_initiated_dialogue_label]
-            elif target == 3 and self_initiated_dialogue_label in self.dialogues:
+            elif target == DECLINED_ACCEPT_TARGET and self_initiated_dialogue_label in self.dialogues:
                 dialogue = self.dialogues[self_initiated_dialogue_label]
             else:
                 raise ValueError('Should have found dialogue.')

@@ -7,12 +7,12 @@ note right of "Controller"
     register as a controller agent.
 end note
 
-"Controller"->"OEF Node": register_service("tac", Description{version=1})
+"Controller"->"OEF Node": register_service("tac", Description{version=VERSION_ID})
 "Controller"->"Controller": run()
 activate "Controller"
 
 note right of "Controller"
-    Waiting for 'Register' messages from
+    Waiting for 'REGISTER' messages from
     TAC agents, until 'start time'.
 end note
 

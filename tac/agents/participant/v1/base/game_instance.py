@@ -24,10 +24,9 @@ import datetime
 import random
 from typing import Any, List, Optional, Set, Tuple, Dict, Union, Sequence, cast
 
-from aea.channels.oef import MailStats
+from aea.channels.oef.connection import MailStats
 from aea.mail.base import Address
 from aea.protocols.oef.models import Description, Query
-from aea.protocols.tac.message import TACMessage
 
 from tac.agents.participant.v1.base.dialogues import Dialogues, Dialogue
 from tac.agents.participant.v1.base.helpers import build_dict, build_query, get_goods_quantities_description
@@ -38,6 +37,7 @@ from tac.agents.participant.v1.base.transaction_manager import TransactionManage
 from tac.gui.dashboards.agent import AgentDashboard
 from tac.platform.game.base import GamePhase, GameConfiguration
 from tac.platform.game.base import GameData, Transaction
+from tac.platform.protocols.tac.message import TACMessage
 
 
 class Search:
@@ -71,6 +71,7 @@ class GameInstance:
     def __init__(self, agent_name: str,
                  strategy: Strategy,
                  mail_stats: MailStats,
+                 expected_version_id: str,
                  services_interval: int = 10,
                  pending_transaction_timeout: int = 10,
                  dashboard: Optional[AgentDashboard] = None) -> None:
@@ -80,6 +81,7 @@ class GameInstance:
         :param agent_name: the name of the agent.
         :param strategy: the strategy of the agent.
         :param mail_stats: the mail stats of the mailbox.
+        :param expected_version_id: the expected version of the TAC.
         :param services_interval: the interval at which services are updated.
         :param pending_transaction_timeout: the timeout after which transactions are removed from the lock manager.
         :param dashboard: the agent dashboard.
@@ -96,6 +98,7 @@ class GameInstance:
 
         self._game_phase = GamePhase.PRE_GAME
 
+        self._expected_version_id = expected_version_id
         self._game_configuration = None  # type: Optional[GameConfiguration]
         self._initial_agent_state = None  # type: Optional[AgentState]
         self._agent_state = None  # type: Optional[AgentState]
@@ -126,7 +129,9 @@ class GameInstance:
 
         :return: None
         """
-        self._game_configuration = GameConfiguration(game_data.nb_agents, game_data.nb_goods, game_data.tx_fee,
+        # TODO: extend TAC messages to include reference to version id; then replace below with assert
+        game_data.version_id = self.expected_version_id
+        self._game_configuration = GameConfiguration(game_data.version_id, game_data.nb_agents, game_data.nb_goods, game_data.tx_fee,
                                                      game_data.agent_pbk_to_name, game_data.good_pbk_to_name)
         self._initial_agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
         self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
@@ -148,6 +153,11 @@ class GameInstance:
         self._game_phase = GamePhase.GAME
         for tx in message.get("transactions"):
             self.agent_state.update(tx, message.get("initial_state").get("tx_fee"))
+
+    @property
+    def expected_version_id(self) -> str:
+        """Get the expected version id of the TAC."""
+        return self._expected_version_id
 
     @property
     def strategy(self) -> Strategy:

@@ -8,35 +8,35 @@ This repository contains submodules. Clone with recursive strategy:
 
 	  git clone git@github.com:fetchai/agents-tac.git --recursive && cd agents-tac
 
-## Quick Start:
+## Option 1: Quick Start:
 
-- [x] You have followed the steps under 'Dependencies' and 'Preliminaries' below
-- [x] You have entered the virtual environment and launched the script:
+- [x] Follow the steps under 'Dependencies' and 'Preliminaries' below
+- [x] Enter the virtual environment and launched the script:
 
       pipenv shell
       python scripts/launch.py
 
 The controller GUI at http://localhost:8097 provides real time insights.
 
-## Step by step:
+## Option 2: Step by step:
 
 - [x] You have followed the steps under 'Dependencies' and 'Preliminaries' below
-- [x] In one terminal, you have built the sandbox and then launched it:
+- [x] In one terminal, build the sandbox and then launch it:
 
       cd sandbox && docker-compose build
       docker-compose up
 
-- [x] In another terminal, you have entered the virtual environment and connected a template agent to the sandbox:
+- [x] Optionally, in another terminal, enter the virtual environment and connect a template agent to the sandbox:
 
       pipenv shell
-      python templates/v1/basic.py --name my_agent --gui
+      python templates/v1/basic.py --name my_agent --dashboard
 
 The sandbox is starting up:
 <p align="center">
   <img src="https://github.com/fetchai/agents-tac/blob/master/docs/sandbox.png?raw=true" alt="Sandbox" width="60%"/>
 </p>
 
-Once agent is connecting and searching for the competition:
+Once agent is connected and searching for the competition:
 <p align="center">
   <img src="https://github.com/fetchai/agents-tac/blob/master/docs/agent.png?raw=true" alt="Sandbox" width="60%"/>
 </p>
@@ -44,7 +44,7 @@ Once agent is connecting and searching for the competition:
 The controller GUI at http://localhost:8097 provides real time insights:
 ![Controller GUI](../master/docs/controller_gui.png)
 
-- [x] You have had a look at the documentation and are developing your first agent.
+- [x] Have a look at the documentation and start developing your first agent.
 
 ## Quick Links
 
@@ -85,18 +85,22 @@ The [competition sandbox](../master/sandbox) provides the code to build the dock
 ## Dependencies
 
 - All python specific dependencies are specified in the Pipfile (and installed via the commands specified in 'Preliminaries').
-- The package requires that you install [Docker](https://www.docker.com/) and the sanbox requires that you in addition install [Docker Compose](https://docs.docker.com/compose/).
+- The package requires that you install [Docker](https://www.docker.com/) and the sandbox requires that in addition, you install [Docker Compose](https://docs.docker.com/compose/).
 - The project requires oef-search-pluto which can be pulled here:
 	
-	  docker pull fetchai/oef-search:latest
+	  docker pull fetchai/oef-search:0.7
 
 ## Preliminaries
 
 - Create and launch a virtual environment:
 
       pipenv --python 3.7 && pipenv shell
+      
+- Install the dependencies:
 
-- Install the package:
+      pipenv install
+
+- Install the tac package:
 
       python setup.py install
 
@@ -137,7 +141,7 @@ The following steps are only relevant if you intend to contribute to the reposit
 
 - We recommend you use the latest OEF build:
 
-	  python oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config.json
+	  python scripts/oef/launch.py -c ./scripts/oef/launch_config.json
 
 ## Resources
 

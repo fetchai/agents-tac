@@ -33,6 +33,7 @@ class TestGameConfiguration:
         """Test that if we try to instantiate a game_configuration with not enough agents, we raise an AssertionError."""
         with pytest.raises(AssertionError, match="Must have at least two agents."):
             GameConfiguration(
+                '1',
                 1,
                 2,
                 1.0,
@@ -44,6 +45,7 @@ class TestGameConfiguration:
         """Test that if we try to instantiate a game_configuration with not enough goods, we raise an AssertionError."""
         with pytest.raises(AssertionError, match="Must have at least two goods."):
             GameConfiguration(
+                '1',
                 2,
                 1,
                 1.0,
@@ -55,6 +57,7 @@ class TestGameConfiguration:
         """Test that if we try to instantiate a game_configuration with a negative tx_fee, we raise an AssertionError."""
         with pytest.raises(AssertionError, match="Tx fee must be non-negative."):
             GameConfiguration(
+                '1',
                 2,
                 2,
                 - 1.0,
@@ -66,6 +69,7 @@ class TestGameConfiguration:
         """Test that if we try to instantiate a game_configuration with non unique agent names, we raise an AssertionError."""
         with pytest.raises(AssertionError, match="Agents' names must be unique."):
             GameConfiguration(
+                '1',
                 2,
                 2,
                 1.0,
@@ -77,6 +81,7 @@ class TestGameConfiguration:
         """Test that if we try to instantiate a game_configuration with a different number of agents from agent public keys, we raise an AssertionError."""
         with pytest.raises(AssertionError, match="There must be one public key for each agent."):
             GameConfiguration(
+                '1',
                 3,
                 2,
                 1.0,
@@ -88,6 +93,7 @@ class TestGameConfiguration:
         """Test that if we try to instantiate a game_configuration with non unique good names, we raise an AssertionError."""
         with pytest.raises(AssertionError, match="Goods' names must be unique."):
             GameConfiguration(
+                '1',
                 2,
                 2,
                 1.0,
@@ -99,6 +105,7 @@ class TestGameConfiguration:
         """Test that if we try to instantiate a game_configuration with a different number of goods from good public keys, we raise an AssertionError."""
         with pytest.raises(AssertionError, match="There must be one public key for each good."):
             GameConfiguration(
+                '1',
                 2,
                 3,
                 1.0,
@@ -108,6 +115,7 @@ class TestGameConfiguration:
 
     def test_to_dict(self):
         """Test that conversion into dict works as expected."""
+        version_id = '1'
         nb_agents = 10
         nb_goods = 10
         tx_fee = 2.5
@@ -115,6 +123,7 @@ class TestGameConfiguration:
         good_pbk_to_name = {'tac_good_0_pbk': 'tac_good_0', 'tac_good_1_pbk': 'tac_good_1', 'tac_good_2_pbk': 'tac_good_2', 'tac_good_3_pbk': 'tac_good_3', 'tac_good_4_pbk': 'tac_good_4', 'tac_good_5_pbk': 'tac_good_5', 'tac_good_6_pbk': 'tac_good_6', 'tac_good_7_pbk': 'tac_good_7', 'tac_good_8_pbk': 'tac_good_8', 'tac_good_9_pbk': 'tac_good_9'}
 
         game_configuration = GameConfiguration(
+            version_id,
             nb_agents,
             nb_goods,
             tx_fee,
@@ -124,6 +133,7 @@ class TestGameConfiguration:
 
         actual_game_configuration_dict = game_configuration.to_dict()
         expected_game_configuration_dict = {
+            "version_id": version_id,
             "nb_agents": nb_agents,
             "nb_goods": nb_goods,
             "tx_fee": tx_fee,
@@ -135,13 +145,14 @@ class TestGameConfiguration:
 
     def test_from_dict(self):
         """Test that conversion from dict works as expected."""
+        version_id = '1'
         nb_agents = 10
         nb_goods = 10
         tx_fee = 2.5
         agent_pbk_to_name = {'tac_agent_0_pbk': 'tac_agent_0', 'tac_agent_1_pbk': 'tac_agent_1', 'tac_agent_2_pbk': 'tac_agent_2', 'tac_agent_3_pbk': 'tac_agent_3', 'tac_agent_4_pbk': 'tac_agent_4', 'tac_agent_5_pbk': 'tac_agent_5', 'tac_agent_6_pbk': 'tac_agent_6', 'tac_agent_7_pbk': 'tac_agent_7', 'tac_agent_8_pbk': 'tac_agent_8', 'tac_agent_9_pbk': 'tac_agent_9'}
         good_pbk_to_name = {'tac_good_0_pbk': 'tac_good_0', 'tac_good_1_pbk': 'tac_good_1', 'tac_good_2_pbk': 'tac_good_2', 'tac_good_3_pbk': 'tac_good_3', 'tac_good_4_pbk': 'tac_good_4', 'tac_good_5_pbk': 'tac_good_5', 'tac_good_6_pbk': 'tac_good_6', 'tac_good_7_pbk': 'tac_good_7', 'tac_good_8_pbk': 'tac_good_8', 'tac_good_9_pbk': 'tac_good_9'}
 
-        expected_game_configuration = GameConfiguration(nb_agents, nb_goods, tx_fee, agent_pbk_to_name, good_pbk_to_name)
+        expected_game_configuration = GameConfiguration(version_id, nb_agents, nb_goods, tx_fee, agent_pbk_to_name, good_pbk_to_name)
         actual_game_configuration = GameConfiguration.from_dict(expected_game_configuration.to_dict())
 
         assert actual_game_configuration == expected_game_configuration
@@ -346,6 +357,7 @@ class TestGame:
         eq_money_holdings = [20.0, 20.0, 20.0]
 
         game_configuration = GameConfiguration(
+            '1',
             nb_agents,
             nb_goods,
             tx_fee,
@@ -402,6 +414,7 @@ class TestGame:
         eq_money_holdings = [20.0, 20.0, 20.0]
 
         game_configuration = GameConfiguration(
+            '1',
             nb_agents,
             nb_goods,
             tx_fee,
@@ -431,6 +444,7 @@ class TestGame:
 
     def test_generate_game(self):
         """Test the game generation algorithm."""
+        version_id = '1'
         nb_agents = 3
         nb_goods = 3
         money_endowment = 20
@@ -441,12 +455,13 @@ class TestGame:
         agent_pbk_to_name = {'tac_agent_0_pbk': 'tac_agent_0', 'tac_agent_1_pbk': 'tac_agent_1', 'tac_agent_2_pbk': 'tac_agent_2'}
         good_pbk_to_name = {'tac_good_0_pbk': 'tac_good_0', 'tac_good_1_pbk': 'tac_good_1', 'tac_good_2_pbk': 'tac_good_2'}
 
-        _ = Game.generate_game(nb_agents, nb_goods, money_endowment, tx_fee, base_amount, lower_bound_factor, upper_bound_factor, agent_pbk_to_name, good_pbk_to_name)
+        _ = Game.generate_game(version_id, nb_agents, nb_goods, money_endowment, tx_fee, base_amount, lower_bound_factor, upper_bound_factor, agent_pbk_to_name, good_pbk_to_name)
 
         # please look at the assertions in tac.game.GameConfiguration._check_consistency()
 
     def test_get_game_data_from_agent_label(self):
         """Test that the getter of game states by agent label works as expected."""
+        version_id = '1'
         nb_agents = 3
         nb_goods = 3
         tx_fee = 1.0
@@ -472,6 +487,7 @@ class TestGame:
         eq_money_holdings = [20.0, 20.0, 20.0]
 
         game_configuration = GameConfiguration(
+            version_id,
             nb_agents,
             nb_goods,
             tx_fee,
@@ -500,6 +516,7 @@ class TestGame:
 
     def test_to_dict(self):
         """Test that conversion into dict works as expected."""
+        version_id = '1'
         nb_agents = 3
         nb_goods = 3
         tx_fee = 1.0
@@ -525,6 +542,7 @@ class TestGame:
         eq_money_holdings = [20.0, 20.0, 20.0]
 
         game_configuration = GameConfiguration(
+            version_id,
             nb_agents,
             nb_goods,
             tx_fee,
@@ -564,6 +582,7 @@ class TestGame:
 
     def test_from_dict(self):
         """Test that conversion from dict works as expected."""
+        version_id = '1'
         nb_agents = 3
         nb_goods = 3
         tx_fee = 1.0
@@ -589,6 +608,7 @@ class TestGame:
         eq_money_holdings = [20.0, 20.0, 20.0]
 
         game_configuration = GameConfiguration(
+            version_id,
             nb_agents,
             nb_goods,
             tx_fee,

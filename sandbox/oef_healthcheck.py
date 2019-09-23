@@ -25,7 +25,7 @@ import argparse
 import logging
 
 from aea.crypto.base import Crypto
-from aea.channels.oef import OEFMailBox
+from aea.channels.oef.connection import OEFMailBox
 
 logger = logging.getLogger(__name__)
 

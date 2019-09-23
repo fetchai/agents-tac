@@ -36,12 +36,12 @@ from aea.protocols.base.message import Message
 from aea.protocols.fipa.serialization import FIPASerializer
 from aea.protocols.oef.message import OEFMessage
 from aea.protocols.oef.serialization import OEFSerializer
-from aea.protocols.tac.message import TACMessage
-from aea.protocols.tac.serialization import TACSerializer
 from tac.agents.participant.v1.base.actions import DialogueActions, ControllerActions, OEFActions
 from tac.agents.participant.v1.base.game_instance import GameInstance
 from tac.agents.participant.v1.base.reactions import DialogueReactions, ControllerReactions, OEFReactions
 from tac.platform.game.base import GamePhase
+from tac.platform.protocols.tac.message import TACMessage
+from tac.platform.protocols.tac.serialization import TACSerializer
 
 logger = logging.getLogger(__name__)
 
