@@ -31,14 +31,14 @@ from aea.mail.base import Envelope
 from aea.protocols.base.message import Message
 from aea.protocols.fipa.message import FIPAMessage
 from aea.protocols.fipa.serialization import FIPASerializer
-from aea.protocols.tac.message import TACMessage
-from aea.protocols.tac.serialization import TACSerializer
 from aea.protocols.oef.models import Description
 from tac.agents.participant.v1.base.dialogues import Dialogue
 from tac.agents.participant.v1.base.game_instance import GameInstance
 from tac.agents.participant.v1.base.helpers import generate_transaction_id
 from tac.agents.participant.v1.base.stats_manager import EndState
 from tac.platform.game.base import Transaction
+from tac.platform.protocols.tac.message import TACMessage
+from tac.platform.protocols.tac.serialization import TACSerializer
 
 logger = logging.getLogger(__name__)
 

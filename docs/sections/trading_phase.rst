@@ -21,7 +21,7 @@ Game data
 As we said, every agent that registered to the competition will eventually receive their endowment
 in order to devise a strategy and to start playing.
 
-More precisely, the :class:`~tac.platform.protocol.GameData` contains the following information:
+More precisely, the :class:`~tac.platform.game.base.GameData` contains the following information:
 
 - ``money`` (integer): the money amount available to the TAC agent.
 - ``endowment`` (list of integers): the endowment for every good.
@@ -103,7 +103,7 @@ TAC Transaction
 A transaction in the TAC competition is an exchange of good instances and money between a buyer and a seller agent.
 
 The message that represents a transaction request to the controller agent
-is :class:`~tac.platform.protocol.Transaction`. It contains these fields:
+is :class:`~tac.platform.protocols.tac.message.TACMessage` of type :class:`~tac.platform.protocols.tac.message.TACMessage.Type.TRANSACTION`. It contains these fields:
 
 - ``transaction_id`` (string): a string that uniquely identifies a transaction.
 - ``buyer`` (bool): whether the sender of the transaction request is the buyer of the transaction.
@@ -133,13 +133,13 @@ Submit a transaction
 ---------------------
 
 In order to submit a transaction, both parties must submit a transaction request to the controller agent, using the
-:class:`~tac.platform.protocol.Transaction` message.
+:class:`~tac.platform.protocols.tac.message.TACMessage` of type :class:`~tac.platform.protocols.tac.message.TACMessage.Type.TRANSACTION`.
 
 Once the controller receives two matching and valid transaction requests from both parties,
 the transaction is *settled*, which implies:
 
 - The controller agent updates the good holdings and money balances of both the buyer agent and the seller agent.
-- The controller sends a :class:`~tac.platform.protocol.TransactionConfirmation` message to the buyer and the seller.
+- The controller sends a :class:`~tac.platform.protocols.tac.message.TACMessage` of type :class:`~tac.platform.protocols.tac.message.TACMessage.Type.TRANSACTION_CONFIRMATION` to the buyer and the seller.
 
 
 Invalid transaction
@@ -151,7 +151,7 @@ A transaction is *valid* if:
 
 
 As soon as the controller agents receives an invalid transaction request, he will reply with
-a :class:`~tac.platform.protocol.Error` containing a message
+a :class:`~tac.platform.protocols.tac.message.TACMessage` of type :class:`~tac.platform.protocols.tac.message.TACMessage.Type.TAC_ERROR`.
 
 
 Negotiation with other agents
@@ -168,4 +168,4 @@ API exposed by the SDK.
 Handle unexpected disconnection
 --------------------------------
 
-A trading agent can request from the controller agent her current state in the game with the :class:`~tac.platform.protocol.GetStateUpdate` message.
+A trading agent can request from the controller agent her current state in the game with the :class:`~tac.platform.protocols.tac.message.TACMessage` of type :class:`~tac.platform.protocols.tac.message.TACMessage.Type.GET_STATE_UPDATE`.

@@ -44,10 +44,10 @@ Register as 'tac' service
 The controller agent registers itself to the OEF as a service.
 
 The data model name is ``"tac"`` and as attribute we have ``"version"``,
-which is an integer value. The TAC controller agent will register with ``"version"=VERSION_ID``.
+which is a string. The TAC controller agent will register with ``"version"=VERSION_ID`` where ``VERSION_ID`` is set to a string uniquely identifying the version of the TAC.
 
 The controller agent will wait for *registration_timeout*. At the end, if there are enough
-participant, it will start the competition. Otherwise, it will send back a "Cancelled" message to every
+participant, it will start the competition. Otherwise, it will send back a :class:`~tac.platform.protocols.tac.message.TACMessage` of type :class:`~tac.platform.protocols.tac.message.TACMessage.Type.CANCELLED` to every
 registered participant
 
 .. mermaid:: ../diagrams/controller_setup.mmd
@@ -61,7 +61,7 @@ How to register/unregister
 In order to complete a registration, a trading agent should do the following steps:
 
 1. Run a search for ``"tac"`` services, with the query ``"version" == VERSION_ID``.
-2. On the search result, send a `Register` message to the right TAC controller
+2. On the search result, send a :class:`~tac.platform.protocols.tac.message.TACMessage` of type :class:`~tac.platform.protocols.tac.message.TACMessage.Type.REGISTER` to the right TAC controller
 3. Waiting for the :class:`~tac.platform.game.base.GameData` message.
 
 
@@ -76,7 +76,7 @@ Search for controller agent
 Register to TAC
 ^^^^^^^^^^^^^^^^
 
-In order to register, a TAC Agent must send a `Register` message to the controller agent.
+In order to register, a TAC Agent must send a :class:`~tac.platform.protocols.tac.message.TACMessage` of type :class:`~tac.platform.protocols.tac.message.TACMessage.Type.REGISTER` to the controller agent.
 
 The message `Register` is an empty message. In order to undo the effect of
 the registration, the agent can unregister from the competition by sending the `Unregister`

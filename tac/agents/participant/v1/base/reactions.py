@@ -38,8 +38,6 @@ from aea.protocols.default.message import DefaultMessage
 from aea.protocols.default.serialization import DefaultSerializer
 from aea.protocols.fipa.message import FIPAMessage
 from aea.protocols.fipa.serialization import FIPASerializer
-from aea.protocols.tac.message import TACMessage
-from aea.protocols.tac.serialization import TACSerializer
 from tac.agents.participant.v1.base.dialogues import Dialogue
 from tac.agents.participant.v1.base.game_instance import GameInstance, GamePhase
 from tac.agents.participant.v1.base.helpers import dialogue_label_from_transaction_id, TAC_DEMAND_DATAMODEL_NAME
@@ -48,6 +46,8 @@ from tac.agents.participant.v1.base.interfaces import ControllerReactionInterfac
 from tac.agents.participant.v1.base.negotiation_behaviours import FIPABehaviour
 from tac.agents.participant.v1.base.stats_manager import EndState
 from tac.platform.game.base import GameData
+from tac.platform.protocols.tac.message import TACMessage
+from tac.platform.protocols.tac.serialization import TACSerializer
 
 
 logger = logging.getLogger(__name__)

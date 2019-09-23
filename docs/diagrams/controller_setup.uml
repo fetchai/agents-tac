@@ -12,7 +12,7 @@ end note
 activate "Controller"
 
 note right of "Controller"
-    Waiting for 'Register' messages from
+    Waiting for 'REGISTER' messages from
     TAC agents, until 'start time'.
 end note
 
