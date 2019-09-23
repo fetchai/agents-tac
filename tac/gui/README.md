@@ -8,7 +8,7 @@ This displays dynamic information.
 
 ### To run a Visdom server via script to visualise historic data
 
-Set explicit experiment id `version_id` and then run
+Set explicit version id `version_id` and then run
 
     python3 tac/gui/dashboard.py --datadir #{data_output_dir}/#{version_id}
 

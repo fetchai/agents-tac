@@ -74,7 +74,7 @@ Example:
           --service-registration-strategy both
           --uml True
           --data-output-dir data
-          --experiment-id my_experiment
+          --version-id my_experiment
           --plot True
           --money-endowment 200
           --base-good-endowment 2

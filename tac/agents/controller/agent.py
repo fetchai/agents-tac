@@ -219,7 +219,7 @@ def _parse_arguments():
     parser.add_argument("--visdom-addr", default="localhost", help="TCP/IP address of the Visdom server.")
     parser.add_argument("--visdom-port", default=8097, help="TCP/IP port of the Visdom server.")
     parser.add_argument("--data-output-dir", default="data", help="The output directory for the simulation data.")
-    parser.add_argument("--version-id", default=str(random.randint(0, 10000)), type=str, help="The experiment ID.")
+    parser.add_argument("--version-id", default=str(random.randint(0, 10000)), type=str, help="The version ID.")
     parser.add_argument("--seed", default=42, help="The random seed for the generation of the game parameters.")
 
     return parser.parse_args()
