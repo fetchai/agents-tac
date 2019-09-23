@@ -16,7 +16,6 @@ pytest = "*"
 tox = "==3.7.0"
 tox-pipenv = "==1.9.0"
 pytest-cov = "*"
-docker = "*"
 flake8-docstrings = "*"
 pygments = "*"
 mypy = "*"
@@ -38,6 +37,8 @@ wtforms = "*"
 visdom = "*"
 aea = {index = "pypi",version = "==0.1.4"}
 colorlog = "*"
+docker = "*"
+docker-compose = "*"
 
 [requires]
 python_version = "3.7"
