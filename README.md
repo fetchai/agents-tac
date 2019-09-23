@@ -29,7 +29,7 @@ The controller GUI at http://localhost:8097 provides real time insights.
 - [x] Optionally, in another terminal, enter the virtual environment and connect a template agent to the sandbox:
 
       pipenv shell
-      python templates/v1/basic.py --name my_agent --gui
+      python templates/v1/basic.py --name my_agent --dashboard
 
 The sandbox is starting up:
 <p align="center">
