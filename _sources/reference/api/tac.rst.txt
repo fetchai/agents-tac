@@ -8,20 +8,7 @@ Subpackages
 
    tac.agents
    tac.gui
-   tac.helpers
    tac.platform
-
-Submodules
-----------
-
-tac.tac\_pb2 module
--------------------
-
-.. automodule:: tac.tac_pb2
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 
 Module contents
 ---------------

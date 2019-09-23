@@ -1,0 +1,223 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>tac.agents.controller package &#8212; TAC 0.1.5 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="tac.agents.controller.base package" href="tac.agents.controller.base.html" />
+    <link rel="prev" title="tac.agents package" href="tac.agents.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="tac-agents-controller-package">
+<h1>tac.agents.controller package<a class="headerlink" href="#tac-agents-controller-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tac.agents.controller.base.html">tac.agents.controller.base package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tac.agents.controller.base.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tac.agents.controller.base.html#module-tac.agents.controller.base.actions">tac.agents.controller.base.actions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tac.agents.controller.base.html#module-tac.agents.controller.base.handlers">tac.agents.controller.base.handlers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tac.agents.controller.base.html#module-tac.agents.controller.base.helpers">tac.agents.controller.base.helpers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tac.agents.controller.base.html#module-tac.agents.controller.base.interfaces">tac.agents.controller.base.interfaces module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tac.agents.controller.base.html#module-tac.agents.controller.base.reactions">tac.agents.controller.base.reactions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tac.agents.controller.base.html#module-tac.agents.controller.base.states">tac.agents.controller.base.states module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tac.agents.controller.base.html#module-tac.agents.controller.base.tac_parameters">tac.agents.controller.base.tac_parameters module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tac.agents.controller.base.html#module-tac.agents.controller.base">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-tac.agents.controller.agent">
+<span id="tac-agents-controller-agent-module"></span><h2>tac.agents.controller.agent module<a class="headerlink" href="#module-tac.agents.controller.agent" title="Permalink to this headline">¶</a></h2>
+<p>This module contains the ControllerAgent.</p>
+<dl class="class">
+<dt id="tac.agents.controller.agent.ControllerAgent">
+<em class="property">class </em><code class="sig-prename descclassname">tac.agents.controller.agent.</code><code class="sig-name descname">ControllerAgent</code><span class="sig-paren">(</span><em class="sig-param">name: str</em>, <em class="sig-param">oef_addr: str</em>, <em class="sig-param">oef_port: int</em>, <em class="sig-param">tac_parameters: tac.agents.controller.base.tac_parameters.TACParameters</em>, <em class="sig-param">monitor: tac.gui.monitor.Monitor</em>, <em class="sig-param">agent_timeout: Optional[float] = 1.0</em>, <em class="sig-param">max_reactions: int = 100</em>, <em class="sig-param">private_key_pem: Optional[str] = None</em>, <em class="sig-param">debug: bool = False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.agents.controller.agent.ControllerAgent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">aea.agent.Agent</span></code></p>
+<p>The controller agent class implements a controller for TAC.</p>
+<dl class="method">
+<dt id="tac.agents.controller.agent.ControllerAgent.act">
+<code class="sig-name descname">act</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.agent.ControllerAgent.act" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform the agent’s actions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.agent.ControllerAgent.react">
+<code class="sig-name descname">react</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.agent.ControllerAgent.react" title="Permalink to this definition">¶</a></dt>
+<dd><p>React to incoming events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.agent.ControllerAgent.setup">
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.agent.ControllerAgent.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set up the agent.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.agent.ControllerAgent.start">
+<code class="sig-name descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.agent.ControllerAgent.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start the agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.agent.ControllerAgent.stop">
+<code class="sig-name descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.agent.ControllerAgent.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop the agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.agent.ControllerAgent.teardown">
+<code class="sig-name descname">teardown</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.agent.ControllerAgent.teardown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tear down the agent.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.agent.ControllerAgent.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.agent.ControllerAgent.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the state of the agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.agents.controller.agent.main">
+<code class="sig-prename descclassname">tac.agents.controller.agent.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param">name: str = 'controller'</em>, <em class="sig-param">nb_agents: int = 5</em>, <em class="sig-param">nb_goods: int = 5</em>, <em class="sig-param">money_endowment: int = 200</em>, <em class="sig-param">base_good_endowment: int = 2</em>, <em class="sig-param">lower_bound_factor: int = 0</em>, <em class="sig-param">upper_bound_factor: int = 0</em>, <em class="sig-param">tx_fee: float = 1.0</em>, <em class="sig-param">oef_addr: str = '127.0.0.1'</em>, <em class="sig-param">oef_port: int = 10000</em>, <em class="sig-param">start_time: str = '2019-09-23 15:38:53.078291'</em>, <em class="sig-param">registration_timeout: int = 10</em>, <em class="sig-param">inactivity_timeout: int = 60</em>, <em class="sig-param">competition_timeout: int = 240</em>, <em class="sig-param">whitelist_file: Optional[str] = None</em>, <em class="sig-param">verbose: bool = False</em>, <em class="sig-param">dashboard: bool = False</em>, <em class="sig-param">visdom_addr: str = 'localhost'</em>, <em class="sig-param">visdom_port: int = 8097</em>, <em class="sig-param">data_output_dir: str = 'data'</em>, <em class="sig-param">version_id: str = '494'</em>, <em class="sig-param">seed: int = 42</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.agents.controller.agent.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the controller script.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-tac.agents.controller">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-tac.agents.controller" title="Permalink to this headline">¶</a></h2>
+<p>Contains the TAC controller package.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../sections/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/registration_phase.html">Registration Phase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/trading_phase.html">Trading Phase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/controller_protocol.html">Protocol for the Controller - TAC protocol</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/baseline_agent.html">Baseline Agent v1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/develop_agent.html">Developing Your Own Agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/negotiation_guide.html">Step-by-step agent negotiation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/agent_state_management_guide.html">Step-by-step agent state management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/glossary.html">Glossary</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tac.html">tac package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tac.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tac.html#module-tac">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">tac</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tac.html">tac package</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="tac.html">tac package</a><ul>
+  <li><a href="tac.agents.html">tac.agents package</a><ul>
+      <li>Previous: <a href="tac.agents.html" title="previous chapter">tac.agents package</a></li>
+      <li>Next: <a href="tac.agents.controller.base.html" title="next chapter">tac.agents.controller.base package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Fetch.AI.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/reference/api/tac.agents.controller.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

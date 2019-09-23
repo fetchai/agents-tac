@@ -1,0 +1,295 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>tac.platform.protocols.tac package &#8212; TAC 0.1.5 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="tac" href="modules.html" />
+    <link rel="prev" title="tac.platform.protocols package" href="tac.platform.protocols.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="tac-platform-protocols-tac-package">
+<h1>tac.platform.protocols.tac package<a class="headerlink" href="#tac-platform-protocols-tac-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-tac.platform.protocols.tac.message">
+<span id="tac-platform-protocols-tac-message-module"></span><h2>tac.platform.protocols.tac.message module<a class="headerlink" href="#module-tac.platform.protocols.tac.message" title="Permalink to this headline">¶</a></h2>
+<p>This module contains the default message definition.</p>
+<dl class="class">
+<dt id="tac.platform.protocols.tac.message.TACMessage">
+<em class="property">class </em><code class="sig-prename descclassname">tac.platform.protocols.tac.message.</code><code class="sig-name descname">TACMessage</code><span class="sig-paren">(</span><em class="sig-param">tac_type: Optional[tac.platform.protocols.tac.message.TACMessage.Type] = None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">aea.protocols.base.message.Message</span></code></p>
+<p>The TAC message class.</p>
+<dl class="class">
+<dt id="tac.platform.protocols.tac.message.TACMessage.ErrorCode">
+<em class="property">class </em><code class="sig-name descname">ErrorCode</code><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.ErrorCode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>This class defines the error codes.</p>
+<dl class="attribute">
+<dt id="tac.platform.protocols.tac.message.TACMessage.ErrorCode.AGENT_NAME_ALREADY_REGISTERED">
+<code class="sig-name descname">AGENT_NAME_ALREADY_REGISTERED</code><em class="property"> = 3</em><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.ErrorCode.AGENT_NAME_ALREADY_REGISTERED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.platform.protocols.tac.message.TACMessage.ErrorCode.AGENT_NAME_NOT_IN_WHITELIST">
+<code class="sig-name descname">AGENT_NAME_NOT_IN_WHITELIST</code><em class="property"> = 7</em><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.ErrorCode.AGENT_NAME_NOT_IN_WHITELIST" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.platform.protocols.tac.message.TACMessage.ErrorCode.AGENT_NOT_REGISTERED">
+<code class="sig-name descname">AGENT_NOT_REGISTERED</code><em class="property"> = 4</em><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.ErrorCode.AGENT_NOT_REGISTERED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.platform.protocols.tac.message.TACMessage.ErrorCode.AGENT_PBK_ALREADY_REGISTERED">
+<code class="sig-name descname">AGENT_PBK_ALREADY_REGISTERED</code><em class="property"> = 2</em><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.ErrorCode.AGENT_PBK_ALREADY_REGISTERED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.platform.protocols.tac.message.TACMessage.ErrorCode.COMPETITION_NOT_RUNNING">
+<code class="sig-name descname">COMPETITION_NOT_RUNNING</code><em class="property"> = 8</em><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.ErrorCode.COMPETITION_NOT_RUNNING" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.platform.protocols.tac.message.TACMessage.ErrorCode.DIALOGUE_INCONSISTENT">
+<code class="sig-name descname">DIALOGUE_INCONSISTENT</code><em class="property"> = 9</em><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.ErrorCode.DIALOGUE_INCONSISTENT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.platform.protocols.tac.message.TACMessage.ErrorCode.GENERIC_ERROR">
+<code class="sig-name descname">GENERIC_ERROR</code><em class="property"> = 0</em><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.ErrorCode.GENERIC_ERROR" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.platform.protocols.tac.message.TACMessage.ErrorCode.REQUEST_NOT_VALID">
+<code class="sig-name descname">REQUEST_NOT_VALID</code><em class="property"> = 1</em><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.ErrorCode.REQUEST_NOT_VALID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.platform.protocols.tac.message.TACMessage.ErrorCode.TRANSACTION_NOT_MATCHING">
+<code class="sig-name descname">TRANSACTION_NOT_MATCHING</code><em class="property"> = 6</em><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.ErrorCode.TRANSACTION_NOT_MATCHING" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.platform.protocols.tac.message.TACMessage.ErrorCode.TRANSACTION_NOT_VALID">
+<code class="sig-name descname">TRANSACTION_NOT_VALID</code><em class="property"> = 5</em><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.ErrorCode.TRANSACTION_NOT_VALID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tac.platform.protocols.tac.message.TACMessage.Type">
+<em class="property">class </em><code class="sig-name descname">Type</code><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.Type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>TAC Message types.</p>
+<dl class="attribute">
+<dt id="tac.platform.protocols.tac.message.TACMessage.Type.CANCELLED">
+<code class="sig-name descname">CANCELLED</code><em class="property"> = 'cancelled'</em><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.Type.CANCELLED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.platform.protocols.tac.message.TACMessage.Type.GAME_DATA">
+<code class="sig-name descname">GAME_DATA</code><em class="property"> = 'game_data'</em><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.Type.GAME_DATA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.platform.protocols.tac.message.TACMessage.Type.GET_STATE_UPDATE">
+<code class="sig-name descname">GET_STATE_UPDATE</code><em class="property"> = 'get_state_update'</em><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.Type.GET_STATE_UPDATE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.platform.protocols.tac.message.TACMessage.Type.REGISTER">
+<code class="sig-name descname">REGISTER</code><em class="property"> = 'register'</em><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.Type.REGISTER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.platform.protocols.tac.message.TACMessage.Type.STATE_UPDATE">
+<code class="sig-name descname">STATE_UPDATE</code><em class="property"> = 'state_update'</em><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.Type.STATE_UPDATE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.platform.protocols.tac.message.TACMessage.Type.TAC_ERROR">
+<code class="sig-name descname">TAC_ERROR</code><em class="property"> = 'tac_error'</em><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.Type.TAC_ERROR" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.platform.protocols.tac.message.TACMessage.Type.TRANSACTION">
+<code class="sig-name descname">TRANSACTION</code><em class="property"> = 'transaction'</em><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.Type.TRANSACTION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.platform.protocols.tac.message.TACMessage.Type.TRANSACTION_CONFIRMATION">
+<code class="sig-name descname">TRANSACTION_CONFIRMATION</code><em class="property"> = 'transaction_confirmation'</em><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.Type.TRANSACTION_CONFIRMATION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.platform.protocols.tac.message.TACMessage.Type.UNREGISTER">
+<code class="sig-name descname">UNREGISTER</code><em class="property"> = 'unregister'</em><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.Type.UNREGISTER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.platform.protocols.tac.message.TACMessage.check_consistency">
+<code class="sig-name descname">check_consistency</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.check_consistency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the data is consistent.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tac.platform.protocols.tac.message.TACMessage.protocol_id">
+<code class="sig-name descname">protocol_id</code><em class="property"> = 'tac'</em><a class="headerlink" href="#tac.platform.protocols.tac.message.TACMessage.protocol_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-tac.platform.protocols.tac.serialization">
+<span id="tac-platform-protocols-tac-serialization-module"></span><h2>tac.platform.protocols.tac.serialization module<a class="headerlink" href="#module-tac.platform.protocols.tac.serialization" title="Permalink to this headline">¶</a></h2>
+<p>Serialization for the TAC protocol.</p>
+<dl class="class">
+<dt id="tac.platform.protocols.tac.serialization.TACSerializer">
+<em class="property">class </em><code class="sig-prename descclassname">tac.platform.protocols.tac.serialization.</code><code class="sig-name descname">TACSerializer</code><a class="headerlink" href="#tac.platform.protocols.tac.serialization.TACSerializer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">aea.protocols.base.serialization.Serializer</span></code></p>
+<p>Serialization for the TAC protocol.</p>
+<dl class="method">
+<dt id="tac.platform.protocols.tac.serialization.TACSerializer.decode">
+<code class="sig-name descname">decode</code><span class="sig-paren">(</span><em class="sig-param">obj: bytes</em><span class="sig-paren">)</span> &#x2192; aea.protocols.base.message.Message<a class="headerlink" href="#tac.platform.protocols.tac.serialization.TACSerializer.decode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decode the message.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>obj</strong> – the bytes object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the message</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.platform.protocols.tac.serialization.TACSerializer.encode">
+<code class="sig-name descname">encode</code><span class="sig-paren">(</span><em class="sig-param">msg: aea.protocols.base.message.Message</em><span class="sig-paren">)</span> &#x2192; bytes<a class="headerlink" href="#tac.platform.protocols.tac.serialization.TACSerializer.encode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decode the message.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>msg</strong> – the message object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the bytes</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-tac.platform.protocols.tac.tac_pb2">
+<span id="tac-platform-protocols-tac-tac-pb2-module"></span><h2>tac.platform.protocols.tac.tac_pb2 module<a class="headerlink" href="#module-tac.platform.protocols.tac.tac_pb2" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-tac.platform.protocols.tac">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-tac.platform.protocols.tac" title="Permalink to this headline">¶</a></h2>
+<p>This module contains the support resources for the TAC protocol.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../sections/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/registration_phase.html">Registration Phase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/trading_phase.html">Trading Phase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/controller_protocol.html">Protocol for the Controller - TAC protocol</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/baseline_agent.html">Baseline Agent v1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/develop_agent.html">Developing Your Own Agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/negotiation_guide.html">Step-by-step agent negotiation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/agent_state_management_guide.html">Step-by-step agent state management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/glossary.html">Glossary</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tac.html">tac package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tac.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tac.html#module-tac">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">tac</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tac.html">tac package</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="tac.html">tac package</a><ul>
+  <li><a href="tac.platform.html">tac.platform package</a><ul>
+  <li><a href="tac.platform.protocols.html">tac.platform.protocols package</a><ul>
+      <li>Previous: <a href="tac.platform.protocols.html" title="previous chapter">tac.platform.protocols package</a></li>
+      <li>Next: <a href="modules.html" title="next chapter">tac</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Fetch.AI.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/reference/api/tac.platform.protocols.tac.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

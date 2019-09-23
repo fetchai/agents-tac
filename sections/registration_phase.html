@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Registration Phase &#8212; TAC 0.1.3 documentation</title>
+    <title>Registration Phase &#8212; TAC 0.1.5 documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -71,9 +71,9 @@ a special agent that manages the TAC. Specifically, the main tasks are:</p>
 <h2>Register as ‘tac’ service<a class="headerlink" href="#register-as-tac-service" title="Permalink to this headline">¶</a></h2>
 <p>The controller agent registers itself to the OEF as a service.</p>
 <p>The data model name is <code class="docutils literal notranslate"><span class="pre">&quot;tac&quot;</span></code> and as attribute we have <code class="docutils literal notranslate"><span class="pre">&quot;version&quot;</span></code>,
-which is an integer value. The TAC controller agent will register with <code class="docutils literal notranslate"><span class="pre">&quot;version&quot;=1</span></code>.</p>
+which is a string. The TAC controller agent will register with <code class="docutils literal notranslate"><span class="pre">&quot;version&quot;=VERSION_ID</span></code> where <code class="docutils literal notranslate"><span class="pre">VERSION_ID</span></code> is set to a string uniquely identifying the version of the TAC.</p>
 <p>The controller agent will wait for <em>registration_timeout</em>. At the end, if there are enough
-participant, it will start the competition. Otherwise, it will send back a “Cancelled” message to every
+participant, it will start the competition. Otherwise, it will send back a <a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage" title="tac.platform.protocols.tac.message.TACMessage"><code class="xref py py-class docutils literal notranslate"><span class="pre">TACMessage</span></code></a> of type <a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage.Type.CANCELLED" title="tac.platform.protocols.tac.message.TACMessage.Type.CANCELLED"><code class="xref py py-class docutils literal notranslate"><span class="pre">CANCELLED</span></code></a> to every
 registered participant</p>
 <div class="figure align-center" id="id2">
 
@@ -90,12 +90,12 @@ registered participant</p>
 
     Note right of Controller: register as a controller agent.
 
-    Controller-&gt;&gt;OEF: register_service(&quot;tac&quot;, Description{version=1})
+    Controller-&gt;&gt;OEF: register_service(&quot;tac&quot;, Description{version=VERSION_ID})
     Controller-&gt;&gt;Controller: run()
     activate Controller
     deactivate Controller
 
-    Note right of Controller: Waiting for 'Register' messages from TAC agents, until 'start time'.
+    Note right of Controller: Waiting for 'REGISTER' messages from TAC agents, until 'start time'.
         </div><p class="caption"><span class="caption-text">The setup of the controller agent.</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
 </div>
 </div>
@@ -103,19 +103,10 @@ registered participant</p>
 <h2>How to register/unregister<a class="headerlink" href="#how-to-register-unregister" title="Permalink to this headline">¶</a></h2>
 <p>In order to complete a registration, a trading agent should do the following steps:</p>
 <ol class="arabic simple">
-<li><p>Run a search for <code class="docutils literal notranslate"><span class="pre">&quot;tac&quot;</span></code> services, with the query <code class="docutils literal notranslate"><span class="pre">&quot;version&quot;</span> <span class="pre">==</span> <span class="pre">1</span></code>.</p></li>
-<li><p>On the search result, send a <a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.protocol.Register" title="tac.platform.protocol.Register"><code class="xref py py-class docutils literal notranslate"><span class="pre">Register</span></code></a> message to the right TAC controller</p></li>
-<li><p>Waiting for the <a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.protocol.GameData" title="tac.platform.protocol.GameData"><code class="xref py py-class docutils literal notranslate"><span class="pre">GameData</span></code></a> message.</p></li>
+<li><p>Run a search for <code class="docutils literal notranslate"><span class="pre">&quot;tac&quot;</span></code> services, with the query <code class="docutils literal notranslate"><span class="pre">&quot;version&quot;</span> <span class="pre">==</span> <span class="pre">VERSION_ID</span></code>.</p></li>
+<li><p>On the search result, send a <a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage" title="tac.platform.protocols.tac.message.TACMessage"><code class="xref py py-class docutils literal notranslate"><span class="pre">TACMessage</span></code></a> of type <a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage.Type.REGISTER" title="tac.platform.protocols.tac.message.TACMessage.Type.REGISTER"><code class="xref py py-class docutils literal notranslate"><span class="pre">REGISTER</span></code></a> to the right TAC controller</p></li>
+<li><p>Waiting for the <a class="reference internal" href="../reference/api/tac.platform.game.html#tac.platform.game.base.GameData" title="tac.platform.game.base.GameData"><code class="xref py py-class docutils literal notranslate"><span class="pre">GameData</span></code></a> message.</p></li>
 </ol>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>All the communications toward the controller agent must be done
-by using the <a class="reference external" href="https://fetchai.github.io/oef-sdk-python/oef.html#oef.agents.Agent.send_message">send_message</a>,
-that is, to send the general-purpose message in the OEF. In the following, we will see what kind of content the
-message should have in order to be understandable by the controller agent.</p>
-<p>E.g. for sending a <a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.protocol.Register" title="tac.platform.protocol.Register"><code class="xref py py-class docutils literal notranslate"><span class="pre">Register</span></code></a> message, you should first serialize the object by using
-<a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.protocol.Message.serialize" title="tac.platform.protocol.Message.serialize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">serialize()</span></code></a>, and then send the byte-encoded message in a simple message.</p>
-</div>
 <div class="section" id="search-for-controller-agent">
 <h3>Search for controller agent<a class="headerlink" href="#search-for-controller-agent" title="Permalink to this headline">¶</a></h3>
 <div class="figure align-center" id="id3">
@@ -141,9 +132,9 @@ message should have in order to be understandable by the controller agent.</p>
 </div>
 <div class="section" id="register-to-tac">
 <h3>Register to TAC<a class="headerlink" href="#register-to-tac" title="Permalink to this headline">¶</a></h3>
-<p>In order to register, a TAC Agent must send a <a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.protocol.Register" title="tac.platform.protocol.Register"><code class="xref py py-class docutils literal notranslate"><span class="pre">Register</span></code></a> message to the controller agent.</p>
-<p>The message <a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.protocol.Register" title="tac.platform.protocol.Register"><code class="xref py py-class docutils literal notranslate"><span class="pre">Register</span></code></a> is an empty message. In order to undo the effect of
-the registration, the agent can unregister from the competition by sending the <a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.protocol.Unregister" title="tac.platform.protocol.Unregister"><code class="xref py py-class docutils literal notranslate"><span class="pre">Unregister</span></code></a>
+<p>In order to register, a TAC Agent must send a <a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage" title="tac.platform.protocols.tac.message.TACMessage"><code class="xref py py-class docutils literal notranslate"><span class="pre">TACMessage</span></code></a> of type <a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage.Type.REGISTER" title="tac.platform.protocols.tac.message.TACMessage.Type.REGISTER"><code class="xref py py-class docutils literal notranslate"><span class="pre">REGISTER</span></code></a> to the controller agent.</p>
+<p>The message <cite>Register</cite> is an empty message. In order to undo the effect of
+the registration, the agent can unregister from the competition by sending the <cite>Unregister</cite>
 message.</p>
 <div class="figure align-center" id="id4">
 
@@ -168,9 +159,9 @@ message.</p>
 </div>
 <div class="section" id="start-of-the-competition">
 <h2>Start of the competition<a class="headerlink" href="#start-of-the-competition" title="Permalink to this headline">¶</a></h2>
-<p>Once trading agents receive the <a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.protocol.GameData" title="tac.platform.protocol.GameData"><code class="xref py py-class docutils literal notranslate"><span class="pre">GameData</span></code></a> message, the competition starts
+<p>Once trading agents receive the <a class="reference internal" href="../reference/api/tac.platform.game.html#tac.platform.game.base.GameData" title="tac.platform.game.base.GameData"><code class="xref py py-class docutils literal notranslate"><span class="pre">GameData</span></code></a> message, the competition starts
 and the <em>trading phase</em> begins.</p>
-<p>The message <a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.protocol.GameData" title="tac.platform.protocol.GameData"><code class="xref py py-class docutils literal notranslate"><span class="pre">GameData</span></code></a> contains the following information:</p>
+<p>The message <a class="reference internal" href="../reference/api/tac.platform.game.html#tac.platform.game.base.GameData" title="tac.platform.game.base.GameData"><code class="xref py py-class docutils literal notranslate"><span class="pre">GameData</span></code></a> contains the following information:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">money</span></code> (integer): the money amount available to the TAC agent.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">endowment</span></code> (list of integers): the endowment for every good.</p></li>
@@ -251,7 +242,7 @@ and the <em>trading phase</em> begins.</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="trading_phase.html">Trading Phase</a></li>
-<li class="toctree-l1"><a class="reference internal" href="controller_protocol.html">Protocol for the Controller</a></li>
+<li class="toctree-l1"><a class="reference internal" href="controller_protocol.html">Protocol for the Controller - TAC protocol</a></li>
 <li class="toctree-l1"><a class="reference internal" href="baseline_agent.html">Baseline Agent v1</a></li>
 <li class="toctree-l1"><a class="reference internal" href="develop_agent.html">Developing Your Own Agent</a></li>
 <li class="toctree-l1"><a class="reference internal" href="negotiation_guide.html">Step-by-step agent negotiation</a></li>

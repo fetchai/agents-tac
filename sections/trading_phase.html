@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Trading Phase &#8212; TAC 0.1.3 documentation</title>
+    <title>Trading Phase &#8212; TAC 0.1.5 documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -17,7 +17,7 @@
     <script type="text/javascript" src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Protocol for the Controller" href="controller_protocol.html" />
+    <link rel="next" title="Protocol for the Controller - TAC protocol" href="controller_protocol.html" />
     <link rel="prev" title="Registration Phase" href="registration_phase.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -50,7 +50,7 @@
 <h2>Game data<a class="headerlink" href="#game-data" title="Permalink to this headline">¶</a></h2>
 <p>As we said, every agent that registered to the competition will eventually receive their endowment
 in order to devise a strategy and to start playing.</p>
-<p>More precisely, the <a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.protocol.GameData" title="tac.platform.protocol.GameData"><code class="xref py py-class docutils literal notranslate"><span class="pre">GameData</span></code></a> contains the following information:</p>
+<p>More precisely, the <a class="reference internal" href="../reference/api/tac.platform.game.html#tac.platform.game.base.GameData" title="tac.platform.game.base.GameData"><code class="xref py py-class docutils literal notranslate"><span class="pre">GameData</span></code></a> contains the following information:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">money</span></code> (integer): the money amount available to the TAC agent.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">endowment</span></code> (list of integers): the endowment for every good.</p></li>
@@ -159,7 +159,7 @@ the quantity of good <span class="math notranslate nohighlight">\(i\)</span>, an
 <h2>TAC Transaction<a class="headerlink" href="#tac-transaction" title="Permalink to this headline">¶</a></h2>
 <p>A transaction in the TAC competition is an exchange of good instances and money between a buyer and a seller agent.</p>
 <p>The message that represents a transaction request to the controller agent
-is <a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.protocol.Transaction" title="tac.platform.protocol.Transaction"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transaction</span></code></a>. It contains these fields:</p>
+is <a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage" title="tac.platform.protocols.tac.message.TACMessage"><code class="xref py py-class docutils literal notranslate"><span class="pre">TACMessage</span></code></a> of type <a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage.Type.TRANSACTION" title="tac.platform.protocols.tac.message.TACMessage.Type.TRANSACTION"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRANSACTION</span></code></a>. It contains these fields:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">transaction_id</span></code> (string): a string that uniquely identifies a transaction.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">buyer</span></code> (bool): whether the sender of the transaction request is the buyer of the transaction.
@@ -191,12 +191,12 @@ If a good public key is not contained in the set of all good public keys, we ass
 <div class="section" id="submit-a-transaction">
 <h2>Submit a transaction<a class="headerlink" href="#submit-a-transaction" title="Permalink to this headline">¶</a></h2>
 <p>In order to submit a transaction, both parties must submit a transaction request to the controller agent, using the
-<a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.protocol.Transaction" title="tac.platform.protocol.Transaction"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transaction</span></code></a> message.</p>
+<a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage" title="tac.platform.protocols.tac.message.TACMessage"><code class="xref py py-class docutils literal notranslate"><span class="pre">TACMessage</span></code></a> of type <a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage.Type.TRANSACTION" title="tac.platform.protocols.tac.message.TACMessage.Type.TRANSACTION"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRANSACTION</span></code></a>.</p>
 <p>Once the controller receives two matching and valid transaction requests from both parties,
 the transaction is <em>settled</em>, which implies:</p>
 <ul class="simple">
 <li><p>The controller agent updates the good holdings and money balances of both the buyer agent and the seller agent.</p></li>
-<li><p>The controller sends a <a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.protocol.TransactionConfirmation" title="tac.platform.protocol.TransactionConfirmation"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransactionConfirmation</span></code></a> message to the buyer and the seller.</p></li>
+<li><p>The controller sends a <a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage" title="tac.platform.protocols.tac.message.TACMessage"><code class="xref py py-class docutils literal notranslate"><span class="pre">TACMessage</span></code></a> of type <a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage.Type.TRANSACTION_CONFIRMATION" title="tac.platform.protocols.tac.message.TACMessage.Type.TRANSACTION_CONFIRMATION"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRANSACTION_CONFIRMATION</span></code></a> to the buyer and the seller.</p></li>
 </ul>
 <div class="section" id="invalid-transaction">
 <h3>Invalid transaction<a class="headerlink" href="#invalid-transaction" title="Permalink to this headline">¶</a></h3>
@@ -208,7 +208,7 @@ the transaction is <em>settled</em>, which implies:</p>
 </dd>
 </dl>
 <p>As soon as the controller agents receives an invalid transaction request, he will reply with
-a <a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.protocol.Error" title="tac.platform.protocol.Error"><code class="xref py py-class docutils literal notranslate"><span class="pre">Error</span></code></a> containing a message</p>
+a <a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage" title="tac.platform.protocols.tac.message.TACMessage"><code class="xref py py-class docutils literal notranslate"><span class="pre">TACMessage</span></code></a> of type <a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage.Type.TAC_ERROR" title="tac.platform.protocols.tac.message.TACMessage.Type.TAC_ERROR"><code class="xref py py-class docutils literal notranslate"><span class="pre">TAC_ERROR</span></code></a>.</p>
 </div>
 </div>
 <div class="section" id="negotiation-with-other-agents">
@@ -221,7 +221,7 @@ API exposed by the SDK.</p>
 </div>
 <div class="section" id="handle-unexpected-disconnection">
 <h2>Handle unexpected disconnection<a class="headerlink" href="#handle-unexpected-disconnection" title="Permalink to this headline">¶</a></h2>
-<p>A trading agent can request from the controller agent her current state in the game with the <a class="reference internal" href="../reference/api/tac.platform.html#tac.platform.protocol.GetStateUpdate" title="tac.platform.protocol.GetStateUpdate"><code class="xref py py-class docutils literal notranslate"><span class="pre">GetStateUpdate</span></code></a> message.</p>
+<p>A trading agent can request from the controller agent her current state in the game with the <a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage" title="tac.platform.protocols.tac.message.TACMessage"><code class="xref py py-class docutils literal notranslate"><span class="pre">TACMessage</span></code></a> of type <a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage.Type.GET_STATE_UPDATE" title="tac.platform.protocols.tac.message.TACMessage.Type.GET_STATE_UPDATE"><code class="xref py py-class docutils literal notranslate"><span class="pre">GET_STATE_UPDATE</span></code></a>.</p>
 </div>
 </div>
 
@@ -245,7 +245,7 @@ API exposed by the SDK.</p>
 <li class="toctree-l2"><a class="reference internal" href="#handle-unexpected-disconnection">Handle unexpected disconnection</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="controller_protocol.html">Protocol for the Controller</a></li>
+<li class="toctree-l1"><a class="reference internal" href="controller_protocol.html">Protocol for the Controller - TAC protocol</a></li>
 <li class="toctree-l1"><a class="reference internal" href="baseline_agent.html">Baseline Agent v1</a></li>
 <li class="toctree-l1"><a class="reference internal" href="develop_agent.html">Developing Your Own Agent</a></li>
 <li class="toctree-l1"><a class="reference internal" href="negotiation_guide.html">Step-by-step agent negotiation</a></li>
@@ -259,7 +259,7 @@ API exposed by the SDK.</p>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
       <li>Previous: <a href="registration_phase.html" title="previous chapter">Registration Phase</a></li>
-      <li>Next: <a href="controller_protocol.html" title="next chapter">Protocol for the Controller</a></li>
+      <li>Next: <a href="controller_protocol.html" title="next chapter">Protocol for the Controller - TAC protocol</a></li>
   </ul></li>
 </ul>
 </div>

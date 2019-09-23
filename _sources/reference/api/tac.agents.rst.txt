@@ -6,7 +6,8 @@ Subpackages
 
 .. toctree::
 
-   tac.agents.v1
+   tac.agents.controller
+   tac.agents.participant
 
 Module contents
 ---------------

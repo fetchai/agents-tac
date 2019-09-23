@@ -1,0 +1,994 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>tac.agents.controller.base package &#8212; TAC 0.1.5 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="tac.agents.participant package" href="tac.agents.participant.html" />
+    <link rel="prev" title="tac.agents.controller package" href="tac.agents.controller.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="tac-agents-controller-base-package">
+<h1>tac.agents.controller.base package<a class="headerlink" href="#tac-agents-controller-base-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-tac.agents.controller.base.actions">
+<span id="tac-agents-controller-base-actions-module"></span><h2>tac.agents.controller.base.actions module<a class="headerlink" href="#module-tac.agents.controller.base.actions" title="Permalink to this headline">¶</a></h2>
+<p>This module contains the classes which define the actions of an agent.</p>
+<ul class="simple">
+<li><p>OEFActions: The OEFActions class defines the actions of an agent towards the OEF.</p></li>
+</ul>
+<dl class="class">
+<dt id="tac.agents.controller.base.actions.OEFActions">
+<em class="property">class </em><code class="sig-prename descclassname">tac.agents.controller.base.actions.</code><code class="sig-name descname">OEFActions</code><span class="sig-paren">(</span><em class="sig-param">crypto: aea.crypto.base.Crypto</em>, <em class="sig-param">liveness: aea.agent.Liveness</em>, <em class="sig-param">mailbox: aea.mail.base.MailBox</em>, <em class="sig-param">agent_name: str</em>, <em class="sig-param">tac_version_id: str</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.agents.controller.base.actions.OEFActions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tac.agents.controller.base.interfaces.OEFActionInterface" title="tac.agents.controller.base.interfaces.OEFActionInterface"><code class="xref py py-class docutils literal notranslate"><span class="pre">tac.agents.controller.base.interfaces.OEFActionInterface</span></code></a></p>
+<p>The OEFActions class defines the actions of an agent towards the OEF.</p>
+<dl class="method">
+<dt id="tac.agents.controller.base.actions.OEFActions.register_tac">
+<code class="sig-name descname">register_tac</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.base.actions.OEFActions.register_tac" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register on the OEF as a TAC controller agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-tac.agents.controller.base.handlers">
+<span id="tac-agents-controller-base-handlers-module"></span><h2>tac.agents.controller.base.handlers module<a class="headerlink" href="#module-tac.agents.controller.base.handlers" title="Permalink to this headline">¶</a></h2>
+<p>This module contains the classes that implements the Controller agent behaviour.</p>
+<p>The methods are split in three classes:
+- AgentMessageDispatcher: class to wrap the decoding procedure and dispatching the handling of the message to the right function.
+- GameHandler: handles an instance of the game.
+- TACMessageHandler: abstract class for a TACMessage handler.
+- RegisterHandler: class for a register handler.
+- UnregisterHandler: class for an unregister handler
+- TransactionHandler: class for a transaction handler.
+- GetStateUpdateHandler: class for a state update handler.</p>
+<dl class="class">
+<dt id="tac.agents.controller.base.handlers.AgentMessageDispatcher">
+<em class="property">class </em><code class="sig-prename descclassname">tac.agents.controller.base.handlers.</code><code class="sig-name descname">AgentMessageDispatcher</code><span class="sig-paren">(</span><em class="sig-param">controller_agent: ControllerAgent</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.agents.controller.base.handlers.AgentMessageDispatcher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to wrap the decoding procedure and dispatching the handling of the message to the right function.</p>
+<dl class="method">
+<dt id="tac.agents.controller.base.handlers.AgentMessageDispatcher.handle_agent_message">
+<code class="sig-name descname">handle_agent_message</code><span class="sig-paren">(</span><em class="sig-param">envelope: aea.mail.base.Envelope</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.base.handlers.AgentMessageDispatcher.handle_agent_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dispatch the TACMessage to the right handler.</p>
+<p>If no handler is found for the provided type of TACMessage, return an “invalid TACMessage” error.
+If something bad happen, return a “generic” error.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>envelope</strong> – the envelope to handle</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tac.agents.controller.base.handlers.GameHandler">
+<em class="property">class </em><code class="sig-prename descclassname">tac.agents.controller.base.handlers.</code><code class="sig-name descname">GameHandler</code><span class="sig-paren">(</span><em class="sig-param">agent_name: str</em>, <em class="sig-param">crypto: aea.crypto.base.Crypto</em>, <em class="sig-param">mailbox: aea.mail.base.MailBox</em>, <em class="sig-param">monitor: tac.gui.monitor.Monitor</em>, <em class="sig-param">tac_parameters: tac.agents.controller.base.tac_parameters.TACParameters</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.agents.controller.base.handlers.GameHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class to manage a TAC instance.</p>
+<dl class="method">
+<dt id="tac.agents.controller.base.handlers.GameHandler.current_game">
+<em class="property">property </em><code class="sig-name descname">current_game</code><a class="headerlink" href="#tac.agents.controller.base.handlers.GameHandler.current_game" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the game phase.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.handlers.GameHandler.game_phase">
+<em class="property">property </em><code class="sig-name descname">game_phase</code><a class="headerlink" href="#tac.agents.controller.base.handlers.GameHandler.game_phase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the game phase.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.handlers.GameHandler.is_game_running">
+<em class="property">property </em><code class="sig-name descname">is_game_running</code><a class="headerlink" href="#tac.agents.controller.base.handlers.GameHandler.is_game_running" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if an instance of a game is already set up.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Return True if there is a game running, False otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.handlers.GameHandler.notify_competition_cancelled">
+<code class="sig-name descname">notify_competition_cancelled</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tac.agents.controller.base.handlers.GameHandler.notify_competition_cancelled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Notify agents that the TAC is cancelled.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.handlers.GameHandler.reset">
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.base.handlers.GameHandler.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset the game.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.handlers.GameHandler.simulation_dump">
+<code class="sig-name descname">simulation_dump</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.base.handlers.GameHandler.simulation_dump" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dump the details of the simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.handlers.GameHandler.start_competition">
+<code class="sig-name descname">start_competition</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tac.agents.controller.base.handlers.GameHandler.start_competition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a game and send the game setting to every registered agent.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tac.agents.controller.base.handlers.GetStateUpdateHandler">
+<em class="property">class </em><code class="sig-prename descclassname">tac.agents.controller.base.handlers.</code><code class="sig-name descname">GetStateUpdateHandler</code><span class="sig-paren">(</span><em class="sig-param">controller_agent: ControllerAgent</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.agents.controller.base.handlers.GetStateUpdateHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tac.agents.controller.base.handlers.TACMessageHandler" title="tac.agents.controller.base.handlers.TACMessageHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">tac.agents.controller.base.handlers.TACMessageHandler</span></code></a></p>
+<p>Class for a state update handler.</p>
+<dl class="method">
+<dt id="tac.agents.controller.base.handlers.GetStateUpdateHandler.handle">
+<code class="sig-name descname">handle</code><span class="sig-paren">(</span><em class="sig-param">message: tac.platform.protocols.tac.message.TACMessage</em>, <em class="sig-param">sender: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.base.handlers.GetStateUpdateHandler.handle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle a ‘get agent state’ TACMessage.</p>
+<p>If the public key is not registered, answer with an error message.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>message</strong> – the ‘get agent state’ TACMessage.</p></li>
+<li><p><strong>sender</strong> – the public key of the sender</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tac.agents.controller.base.handlers.OEFHandler">
+<em class="property">class </em><code class="sig-prename descclassname">tac.agents.controller.base.handlers.</code><code class="sig-name descname">OEFHandler</code><span class="sig-paren">(</span><em class="sig-param">crypto: aea.crypto.base.Crypto</em>, <em class="sig-param">liveness: aea.agent.Liveness</em>, <em class="sig-param">mailbox: aea.mail.base.MailBox</em>, <em class="sig-param">agent_name: str</em>, <em class="sig-param">tac_version: str</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.agents.controller.base.handlers.OEFHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tac.agents.controller.base.actions.OEFActions" title="tac.agents.controller.base.actions.OEFActions"><code class="xref py py-class docutils literal notranslate"><span class="pre">tac.agents.controller.base.actions.OEFActions</span></code></a>, <a class="reference internal" href="#tac.agents.controller.base.reactions.OEFReactions" title="tac.agents.controller.base.reactions.OEFReactions"><code class="xref py py-class docutils literal notranslate"><span class="pre">tac.agents.controller.base.reactions.OEFReactions</span></code></a></p>
+<p>Handle the message exchange with the OEF.</p>
+<dl class="method">
+<dt id="tac.agents.controller.base.handlers.OEFHandler.handle_oef_message">
+<code class="sig-name descname">handle_oef_message</code><span class="sig-paren">(</span><em class="sig-param">envelope: aea.mail.base.Envelope</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.base.handlers.OEFHandler.handle_oef_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle messages from the oef.</p>
+<p>The oef does not expect a response for any of these messages.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>envelope</strong> – the OEF message</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tac.agents.controller.base.handlers.RegisterHandler">
+<em class="property">class </em><code class="sig-prename descclassname">tac.agents.controller.base.handlers.</code><code class="sig-name descname">RegisterHandler</code><span class="sig-paren">(</span><em class="sig-param">controller_agent: ControllerAgent</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.agents.controller.base.handlers.RegisterHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tac.agents.controller.base.handlers.TACMessageHandler" title="tac.agents.controller.base.handlers.TACMessageHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">tac.agents.controller.base.handlers.TACMessageHandler</span></code></a></p>
+<p>Class for a register handler.</p>
+<dl class="method">
+<dt id="tac.agents.controller.base.handlers.RegisterHandler.handle">
+<code class="sig-name descname">handle</code><span class="sig-paren">(</span><em class="sig-param">message: tac.platform.protocols.tac.message.TACMessage</em>, <em class="sig-param">sender: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.base.handlers.RegisterHandler.handle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle a register message.</p>
+<p>If the public key is already registered, answer with an error message.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>message</strong> – the ‘get agent state’ TACMessage.</p></li>
+<li><p><strong>sender</strong> – the public key of the sender</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tac.agents.controller.base.handlers.TACMessageHandler">
+<em class="property">class </em><code class="sig-prename descclassname">tac.agents.controller.base.handlers.</code><code class="sig-name descname">TACMessageHandler</code><span class="sig-paren">(</span><em class="sig-param">controller_agent: ControllerAgent</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.agents.controller.base.handlers.TACMessageHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Abstract class for a TACMessage handler.</p>
+<dl class="method">
+<dt id="tac.agents.controller.base.handlers.TACMessageHandler.handle">
+<em class="property">abstract </em><code class="sig-name descname">handle</code><span class="sig-paren">(</span><em class="sig-param">message: tac.platform.protocols.tac.message.TACMessage</em>, <em class="sig-param">sender: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.base.handlers.TACMessageHandler.handle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle a TACMessage from an OEF agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>message</strong> – the ‘get agent state’ TACMessage.</p></li>
+<li><p><strong>sender</strong> – the public key of the sender</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tac.agents.controller.base.handlers.TransactionHandler">
+<em class="property">class </em><code class="sig-prename descclassname">tac.agents.controller.base.handlers.</code><code class="sig-name descname">TransactionHandler</code><span class="sig-paren">(</span><em class="sig-param">controller_agent: ControllerAgent</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.agents.controller.base.handlers.TransactionHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tac.agents.controller.base.handlers.TACMessageHandler" title="tac.agents.controller.base.handlers.TACMessageHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">tac.agents.controller.base.handlers.TACMessageHandler</span></code></a></p>
+<p>Class for a transaction handler.</p>
+<dl class="method">
+<dt id="tac.agents.controller.base.handlers.TransactionHandler.handle">
+<code class="sig-name descname">handle</code><span class="sig-paren">(</span><em class="sig-param">message: tac.platform.protocols.tac.message.TACMessage</em>, <em class="sig-param">sender: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.base.handlers.TransactionHandler.handle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle a transaction TACMessage message.</p>
+<p>If the transaction is invalid (e.g. because the state of the game are not consistent), reply with an error.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>message</strong> – the ‘get agent state’ TACMessage.</p></li>
+<li><p><strong>sender</strong> – the public key of the sender</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tac.agents.controller.base.handlers.UnregisterHandler">
+<em class="property">class </em><code class="sig-prename descclassname">tac.agents.controller.base.handlers.</code><code class="sig-name descname">UnregisterHandler</code><span class="sig-paren">(</span><em class="sig-param">controller_agent: ControllerAgent</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.agents.controller.base.handlers.UnregisterHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tac.agents.controller.base.handlers.TACMessageHandler" title="tac.agents.controller.base.handlers.TACMessageHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">tac.agents.controller.base.handlers.TACMessageHandler</span></code></a></p>
+<p>Class for an unregister handler.</p>
+<dl class="method">
+<dt id="tac.agents.controller.base.handlers.UnregisterHandler.handle">
+<code class="sig-name descname">handle</code><span class="sig-paren">(</span><em class="sig-param">message: tac.platform.protocols.tac.message.TACMessage</em>, <em class="sig-param">sender: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.base.handlers.UnregisterHandler.handle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle a unregister message.</p>
+<p>If the public key is not registered, answer with an error message.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>message</strong> – the ‘get agent state’ TACMessage.</p></li>
+<li><p><strong>sender</strong> – the public key of the sender</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-tac.agents.controller.base.helpers">
+<span id="tac-agents-controller-base-helpers-module"></span><h2>tac.agents.controller.base.helpers module<a class="headerlink" href="#module-tac.agents.controller.base.helpers" title="Permalink to this headline">¶</a></h2>
+<p>This module contains the helpers methods for the controller agent.</p>
+<dl class="function">
+<dt id="tac.agents.controller.base.helpers.generate_good_pbk_to_name">
+<code class="sig-prename descclassname">tac.agents.controller.base.helpers.</code><code class="sig-name descname">generate_good_pbk_to_name</code><span class="sig-paren">(</span><em class="sig-param">nb_goods: int</em><span class="sig-paren">)</span> &#x2192; Dict[str, str]<a class="headerlink" href="#tac.agents.controller.base.helpers.generate_good_pbk_to_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate public keys for things.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>nb_goods</strong> – the number of things.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a dictionary mapping goods’ public keys to names.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-tac.agents.controller.base.interfaces">
+<span id="tac-agents-controller-base-interfaces-module"></span><h2>tac.agents.controller.base.interfaces module<a class="headerlink" href="#module-tac.agents.controller.base.interfaces" title="Permalink to this headline">¶</a></h2>
+<p>This module defines the interfaces which a TAC compatible agent must implement.</p>
+<p>It cointains:
+- OEFReactionInterface: This interface contains the methods to react to events from the OEF.
+- OEFActionInterface: This interface contains the methods to interact with the OEF.</p>
+<dl class="class">
+<dt id="tac.agents.controller.base.interfaces.OEFActionInterface">
+<em class="property">class </em><code class="sig-prename descclassname">tac.agents.controller.base.interfaces.</code><code class="sig-name descname">OEFActionInterface</code><a class="headerlink" href="#tac.agents.controller.base.interfaces.OEFActionInterface" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This interface contains the methods to interact with the OEF.</p>
+<dl class="method">
+<dt id="tac.agents.controller.base.interfaces.OEFActionInterface.register_tac">
+<em class="property">abstract </em><code class="sig-name descname">register_tac</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.base.interfaces.OEFActionInterface.register_tac" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register tac to OEF Service Directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tac.agents.controller.base.interfaces.OEFReactionInterface">
+<em class="property">class </em><code class="sig-prename descclassname">tac.agents.controller.base.interfaces.</code><code class="sig-name descname">OEFReactionInterface</code><a class="headerlink" href="#tac.agents.controller.base.interfaces.OEFReactionInterface" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This interface contains the methods to react to events from the OEF.</p>
+<dl class="method">
+<dt id="tac.agents.controller.base.interfaces.OEFReactionInterface.on_dialogue_error">
+<em class="property">abstract </em><code class="sig-name descname">on_dialogue_error</code><span class="sig-paren">(</span><em class="sig-param">dialogue_error: aea.mail.base.Envelope</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.base.interfaces.OEFReactionInterface.on_dialogue_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle a dialogue error message.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dialogue_error_msg</strong> – the dialogue error message</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.interfaces.OEFReactionInterface.on_oef_error">
+<em class="property">abstract </em><code class="sig-name descname">on_oef_error</code><span class="sig-paren">(</span><em class="sig-param">oef_error: aea.mail.base.Envelope</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.base.interfaces.OEFReactionInterface.on_oef_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle an OEF error message.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>oef_error</strong> – the oef error</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-tac.agents.controller.base.reactions">
+<span id="tac-agents-controller-base-reactions-module"></span><h2>tac.agents.controller.base.reactions module<a class="headerlink" href="#module-tac.agents.controller.base.reactions" title="Permalink to this headline">¶</a></h2>
+<p>This module contains the classes which define the reactions of an agent.</p>
+<ul class="simple">
+<li><p>OEFReactions: The OEFReactions class defines the reactions of an agent towards the OEF.</p></li>
+</ul>
+<dl class="class">
+<dt id="tac.agents.controller.base.reactions.OEFReactions">
+<em class="property">class </em><code class="sig-prename descclassname">tac.agents.controller.base.reactions.</code><code class="sig-name descname">OEFReactions</code><span class="sig-paren">(</span><em class="sig-param">crypto: aea.crypto.base.Crypto</em>, <em class="sig-param">liveness: aea.agent.Liveness</em>, <em class="sig-param">mailbox: aea.mail.base.MailBox</em>, <em class="sig-param">agent_name: str</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.agents.controller.base.reactions.OEFReactions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tac.agents.controller.base.interfaces.OEFReactionInterface" title="tac.agents.controller.base.interfaces.OEFReactionInterface"><code class="xref py py-class docutils literal notranslate"><span class="pre">tac.agents.controller.base.interfaces.OEFReactionInterface</span></code></a></p>
+<p>The OEFReactions class defines the reactions of an agent towards the OEF.</p>
+<dl class="method">
+<dt id="tac.agents.controller.base.reactions.OEFReactions.on_dialogue_error">
+<code class="sig-name descname">on_dialogue_error</code><span class="sig-paren">(</span><em class="sig-param">envelope: aea.mail.base.Envelope</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.base.reactions.OEFReactions.on_dialogue_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle a dialogue error message.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>envelope</strong> – the dialogue error message</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.reactions.OEFReactions.on_oef_error">
+<code class="sig-name descname">on_oef_error</code><span class="sig-paren">(</span><em class="sig-param">envelope: aea.mail.base.Envelope</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.base.reactions.OEFReactions.on_oef_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle an OEF error message.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>envelope</strong> – the oef error</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-tac.agents.controller.base.states">
+<span id="tac-agents-controller-base-states-module"></span><h2>tac.agents.controller.base.states module<a class="headerlink" href="#module-tac.agents.controller.base.states" title="Permalink to this headline">¶</a></h2>
+<p>This module contains classes to represent the TAC game.</p>
+<p>Classes:</p>
+<ul class="simple">
+<li><p>GameInitialization: a class to hold the initialization of a game. Immutable.</p></li>
+<li><p>Game: the class that manages an instance of a game (e.g. validate and settling transactions).</p></li>
+</ul>
+<dl class="class">
+<dt id="tac.agents.controller.base.states.Game">
+<em class="property">class </em><code class="sig-prename descclassname">tac.agents.controller.base.states.</code><code class="sig-name descname">Game</code><span class="sig-paren">(</span><em class="sig-param">configuration: tac.platform.game.base.GameConfiguration</em>, <em class="sig-param">initialization: tac.agents.controller.base.states.GameInitialization</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.agents.controller.base.states.Game" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class representing a game instance of TAC.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">version_id</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nb_agents</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nb_goods</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tx_fee</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">agent_pbk_to_name</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tac_agent_0_pbk&#39;</span><span class="p">:</span> <span class="s1">&#39;tac_agent_0&#39;</span><span class="p">,</span> <span class="s1">&#39;tac_agent_1_pbk&#39;</span><span class="p">:</span> <span class="s1">&#39;tac_agent_1&#39;</span><span class="p">,</span> <span class="s1">&#39;tac_agent_2_pbk&#39;</span><span class="p">:</span> <span class="s1">&#39;tac_agent_2&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">good_pbk_to_name</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tac_good_0&#39;</span><span class="p">:</span> <span class="s1">&#39;Good 0&#39;</span><span class="p">,</span> <span class="s1">&#39;tac_good_1&#39;</span><span class="p">:</span> <span class="s1">&#39;Good 1&#39;</span><span class="p">,</span> <span class="s1">&#39;tac_good_2&#39;</span><span class="p">:</span> <span class="s1">&#39;Good 2&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">money_amounts</span> <span class="o">=</span> <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">endowments</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">utility_params</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span><span class="p">[</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">40.0</span><span class="p">,</span> <span class="mf">40.0</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">[</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">50.0</span><span class="p">,</span> <span class="mf">40.0</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">[</span><span class="mf">40.0</span><span class="p">,</span> <span class="mf">30.0</span><span class="p">,</span> <span class="mf">30.0</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eq_prices</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eq_good_holdings</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">[</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eq_money_holdings</span> <span class="o">=</span> <span class="p">[</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">20.0</span><span class="p">,</span> <span class="mf">20.0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">game_configuration</span> <span class="o">=</span> <span class="n">GameConfiguration</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">version_id</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">nb_agents</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">nb_goods</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">tx_fee</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">agent_pbk_to_name</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">good_pbk_to_name</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">game_initialization</span> <span class="o">=</span> <span class="n">GameInitialization</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">money_amounts</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">endowments</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">utility_params</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">eq_prices</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">eq_good_holdings</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">eq_money_holdings</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">game</span> <span class="o">=</span> <span class="n">Game</span><span class="p">(</span><span class="n">game_configuration</span><span class="p">,</span> <span class="n">game_initialization</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Get the scores:
+&gt;&gt;&gt; game.get_scores()
+{‘tac_agent_0_pbk’: 89.31471805599453, ‘tac_agent_1_pbk’: 93.36936913707618, ‘tac_agent_2_pbk’: 101.47867129923947}</p>
+<dl class="method">
+<dt id="tac.agents.controller.base.states.Game.configuration">
+<em class="property">property </em><code class="sig-name descname">configuration</code><a class="headerlink" href="#tac.agents.controller.base.states.Game.configuration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get game configuration.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.Game.from_dict">
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">d: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; tac.agents.controller.base.states.Game<a class="headerlink" href="#tac.agents.controller.base.states.Game.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get class instance from dictionary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.Game.generate_game">
+<em class="property">static </em><code class="sig-name descname">generate_game</code><span class="sig-paren">(</span><em class="sig-param">version_id: str, nb_agents: int, nb_goods: int, tx_fee: float, money_endowment: int, base_good_endowment: int, lower_bound_factor: int, upper_bound_factor: int, agent_pbk_to_name: Dict[str, str], good_pbk_to_name: Dict[str, str]</em><span class="sig-paren">)</span> &#x2192; tac.agents.controller.base.states.Game<a class="headerlink" href="#tac.agents.controller.base.states.Game.generate_game" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a game, the endowments and the utilites.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>version_id</strong> – the version of the game.</p></li>
+<li><p><strong>nb_agents</strong> – the number of agents.</p></li>
+<li><p><strong>nb_goods</strong> – the number of goods.</p></li>
+<li><p><strong>tx_fee</strong> – the fee to pay per transaction.</p></li>
+<li><p><strong>money_endowment</strong> – the initial amount of money for every agent.</p></li>
+<li><p><strong>base_good_endowment</strong> – the base amount of instances per good.</p></li>
+<li><p><strong>lower_bound_factor</strong> – the lower bound of a uniform distribution.</p></li>
+<li><p><strong>upper_bound_factor</strong> – the upper bound of a uniform distribution</p></li>
+<li><p><strong>agent_pbk_to_name</strong> – the mapping of the public keys for the agents to their names.</p></li>
+<li><p><strong>good_pbk_to_name</strong> – the mapping of the public keys for the goods to their names.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a game.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.Game.get_agent_state_from_agent_pbk">
+<code class="sig-name descname">get_agent_state_from_agent_pbk</code><span class="sig-paren">(</span><em class="sig-param">agent_pbk: str</em><span class="sig-paren">)</span> &#x2192; tac.agents.participant.v1.base.states.AgentState<a class="headerlink" href="#tac.agents.controller.base.states.Game.get_agent_state_from_agent_pbk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get agent state from agent pbk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>agent_pbk</strong> – the agent’s pbk.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the agent state of the agent.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.Game.get_balances">
+<code class="sig-name descname">get_balances</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict[str, float]<a class="headerlink" href="#tac.agents.controller.base.states.Game.get_balances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the current balances.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.Game.get_equilibrium_summary">
+<code class="sig-name descname">get_equilibrium_summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#tac.agents.controller.base.states.Game.get_equilibrium_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get equilibrium summary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.Game.get_holdings_matrix">
+<code class="sig-name descname">get_holdings_matrix</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; List[List[int]]<a class="headerlink" href="#tac.agents.controller.base.states.Game.get_holdings_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the holdings matrix of shape (nb_agents, nb_goods).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the holdings matrix.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.Game.get_holdings_summary">
+<code class="sig-name descname">get_holdings_summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#tac.agents.controller.base.states.Game.get_holdings_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get holdings summary.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">version_id</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nb_agents</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nb_goods</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tx_fee</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">agent_pbk_to_name</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tac_agent_0_pbk&#39;</span><span class="p">:</span> <span class="s1">&#39;tac_agent_0&#39;</span><span class="p">,</span> <span class="s1">&#39;tac_agent_1_pbk&#39;</span><span class="p">:</span> <span class="s1">&#39;tac_agent_1&#39;</span><span class="p">,</span> <span class="s1">&#39;tac_agent_2_pbk&#39;</span><span class="p">:</span> <span class="s1">&#39;tac_agent_2&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">good_pbk_to_name</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tac_good_0&#39;</span><span class="p">:</span> <span class="s1">&#39;Good 0&#39;</span><span class="p">,</span> <span class="s1">&#39;tac_good_1&#39;</span><span class="p">:</span> <span class="s1">&#39;Good 1&#39;</span><span class="p">,</span> <span class="s1">&#39;tac_good_2&#39;</span><span class="p">:</span> <span class="s1">&#39;Good 2&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">money_amounts</span> <span class="o">=</span> <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">endowments</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">utility_params</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span><span class="p">[</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">40.0</span><span class="p">,</span> <span class="mf">40.0</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">[</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">50.0</span><span class="p">,</span> <span class="mf">40.0</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">[</span><span class="mf">40.0</span><span class="p">,</span> <span class="mf">30.0</span><span class="p">,</span> <span class="mf">30.0</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eq_prices</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eq_good_holdings</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">[</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eq_money_holdings</span> <span class="o">=</span> <span class="p">[</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">20.0</span><span class="p">,</span> <span class="mf">20.0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">game_configuration</span> <span class="o">=</span> <span class="n">GameConfiguration</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">version_id</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">nb_agents</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">nb_goods</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">tx_fee</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">agent_pbk_to_name</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">good_pbk_to_name</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">game_initialization</span> <span class="o">=</span> <span class="n">GameInitialization</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">money_amounts</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">endowments</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">utility_params</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">eq_prices</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">eq_good_holdings</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">eq_money_holdings</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">game</span> <span class="o">=</span> <span class="n">Game</span><span class="p">(</span><span class="n">game_configuration</span><span class="p">,</span> <span class="n">game_initialization</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">game</span><span class="o">.</span><span class="n">get_holdings_summary</span><span class="p">(),</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="go">tac_agent_0 [1, 1, 1]</span>
+<span class="go">tac_agent_1 [2, 1, 1]</span>
+<span class="go">tac_agent_2 [1, 1, 2]</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a string representing the holdings for every agent.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.Game.get_initial_scores">
+<code class="sig-name descname">get_initial_scores</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; List[float]<a class="headerlink" href="#tac.agents.controller.base.states.Game.get_initial_scores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the initial scores for every agent.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.Game.get_prices">
+<code class="sig-name descname">get_prices</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; List[float]<a class="headerlink" href="#tac.agents.controller.base.states.Game.get_prices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the current prices.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.Game.get_scores">
+<code class="sig-name descname">get_scores</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict[str, float]<a class="headerlink" href="#tac.agents.controller.base.states.Game.get_scores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the current scores for every agent.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.Game.initial_agent_states">
+<em class="property">property </em><code class="sig-name descname">initial_agent_states</code><a class="headerlink" href="#tac.agents.controller.base.states.Game.initial_agent_states" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get initial state of each agent.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.Game.initialization">
+<em class="property">property </em><code class="sig-name descname">initialization</code><a class="headerlink" href="#tac.agents.controller.base.states.Game.initialization" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get game initialization.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.Game.is_transaction_valid">
+<code class="sig-name descname">is_transaction_valid</code><span class="sig-paren">(</span><em class="sig-param">tx: tac.platform.game.base.Transaction</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#tac.agents.controller.base.states.Game.is_transaction_valid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether the transaction is valid given the state of the game.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tx</strong> – the transaction.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the transaction is valid, False otherwise.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p>AssertionError: if the data in the transaction are not allowed (e.g. negative amount).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.Game.settle_transaction">
+<code class="sig-name descname">settle_transaction</code><span class="sig-paren">(</span><em class="sig-param">tx: tac.platform.game.base.Transaction</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.agents.controller.base.states.Game.settle_transaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Settle a valid transaction.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">version_id</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nb_agents</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nb_goods</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tx_fee</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">agent_pbk_to_name</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tac_agent_0_pbk&#39;</span><span class="p">:</span> <span class="s1">&#39;tac_agent_0&#39;</span><span class="p">,</span> <span class="s1">&#39;tac_agent_1_pbk&#39;</span><span class="p">:</span> <span class="s1">&#39;tac_agent_1&#39;</span><span class="p">,</span> <span class="s1">&#39;tac_agent_2_pbk&#39;</span><span class="p">:</span> <span class="s1">&#39;tac_agent_2&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">good_pbk_to_name</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;tac_good_0&#39;</span><span class="p">:</span> <span class="s1">&#39;Good 0&#39;</span><span class="p">,</span> <span class="s1">&#39;tac_good_1&#39;</span><span class="p">:</span> <span class="s1">&#39;Good 1&#39;</span><span class="p">,</span> <span class="s1">&#39;tac_good_2&#39;</span><span class="p">:</span> <span class="s1">&#39;Good 2&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">money_amounts</span> <span class="o">=</span> <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">endowments</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">utility_params</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span><span class="p">[</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">40.0</span><span class="p">,</span> <span class="mf">40.0</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">[</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">50.0</span><span class="p">,</span> <span class="mf">40.0</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">[</span><span class="mf">40.0</span><span class="p">,</span> <span class="mf">30.0</span><span class="p">,</span> <span class="mf">30.0</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eq_prices</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eq_good_holdings</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">[</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eq_money_holdings</span> <span class="o">=</span> <span class="p">[</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">20.0</span><span class="p">,</span> <span class="mf">20.0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">game_configuration</span> <span class="o">=</span> <span class="n">GameConfiguration</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">version_id</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">nb_agents</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">nb_goods</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">tx_fee</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">agent_pbk_to_name</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">good_pbk_to_name</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">game_initialization</span> <span class="o">=</span> <span class="n">GameInitialization</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">money_amounts</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">endowments</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">utility_params</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">eq_prices</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">eq_good_holdings</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">eq_money_holdings</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">game</span> <span class="o">=</span> <span class="n">Game</span><span class="p">(</span><span class="n">game_configuration</span><span class="p">,</span> <span class="n">game_initialization</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">agent_state_0</span> <span class="o">=</span> <span class="n">game</span><span class="o">.</span><span class="n">agent_states</span><span class="p">[</span><span class="s1">&#39;tac_agent_0_pbk&#39;</span><span class="p">]</span> <span class="c1"># agent state of tac_agent_0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">agent_state_1</span> <span class="o">=</span> <span class="n">game</span><span class="o">.</span><span class="n">agent_states</span><span class="p">[</span><span class="s1">&#39;tac_agent_1_pbk&#39;</span><span class="p">]</span> <span class="c1"># agent state of tac_agent_1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">agent_state_2</span> <span class="o">=</span> <span class="n">game</span><span class="o">.</span><span class="n">agent_states</span><span class="p">[</span><span class="s1">&#39;tac_agent_2_pbk&#39;</span><span class="p">]</span> <span class="c1"># agent state of tac_agent_2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">agent_state_0</span><span class="o">.</span><span class="n">balance</span><span class="p">,</span> <span class="n">agent_state_0</span><span class="o">.</span><span class="n">current_holdings</span>
+<span class="go">(20, [1, 1, 1])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">agent_state_1</span><span class="o">.</span><span class="n">balance</span><span class="p">,</span> <span class="n">agent_state_1</span><span class="o">.</span><span class="n">current_holdings</span>
+<span class="go">(20, [2, 1, 1])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">agent_state_2</span><span class="o">.</span><span class="n">balance</span><span class="p">,</span> <span class="n">agent_state_2</span><span class="o">.</span><span class="n">current_holdings</span>
+<span class="go">(20, [1, 1, 2])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tx</span> <span class="o">=</span> <span class="n">Transaction</span><span class="p">(</span><span class="s1">&#39;some_tx_id&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;tac_agent_1_pbk&#39;</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;tac_good_0&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;tac_good_1&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;tac_good_2&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span> <span class="s1">&#39;tac_agent_0_pbk&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">game</span><span class="o">.</span><span class="n">settle_transaction</span><span class="p">(</span><span class="n">tx</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">agent_state_0</span><span class="o">.</span><span class="n">balance</span><span class="p">,</span> <span class="n">agent_state_0</span><span class="o">.</span><span class="n">current_holdings</span>
+<span class="go">(4.5, [2, 1, 1])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">agent_state_1</span><span class="o">.</span><span class="n">balance</span><span class="p">,</span> <span class="n">agent_state_1</span><span class="o">.</span><span class="n">current_holdings</span>
+<span class="go">(34.5, [1, 1, 1])</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tx</strong> – the game transaction.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p>AssertionError if the transaction is not valid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.Game.to_dict">
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict[str, Any]<a class="headerlink" href="#tac.agents.controller.base.states.Game.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a dictionary from the object.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="tac.agents.controller.base.states.GameInitialization">
+<em class="property">class </em><code class="sig-prename descclassname">tac.agents.controller.base.states.</code><code class="sig-name descname">GameInitialization</code><span class="sig-paren">(</span><em class="sig-param">initial_money_amounts: List[float], endowments: List[List[int]], utility_params: List[List[float]], eq_prices: List[float], eq_good_holdings: List[List[float]], eq_money_holdings: List[float]</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.agents.controller.base.states.GameInitialization" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class containing the game initialization of a TAC instance.</p>
+<dl class="method">
+<dt id="tac.agents.controller.base.states.GameInitialization.endowments">
+<em class="property">property </em><code class="sig-name descname">endowments</code><a class="headerlink" href="#tac.agents.controller.base.states.GameInitialization.endowments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get endowments of the agents.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.GameInitialization.eq_good_holdings">
+<em class="property">property </em><code class="sig-name descname">eq_good_holdings</code><a class="headerlink" href="#tac.agents.controller.base.states.GameInitialization.eq_good_holdings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get theoretical equilibrium good holdings (a benchmark).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.GameInitialization.eq_money_holdings">
+<em class="property">property </em><code class="sig-name descname">eq_money_holdings</code><a class="headerlink" href="#tac.agents.controller.base.states.GameInitialization.eq_money_holdings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get theoretical equilibrium money holdings (a benchmark).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.GameInitialization.eq_prices">
+<em class="property">property </em><code class="sig-name descname">eq_prices</code><a class="headerlink" href="#tac.agents.controller.base.states.GameInitialization.eq_prices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get theoretical equilibrium prices (a benchmark).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.GameInitialization.from_dict">
+<em class="property">classmethod </em><code class="sig-name descname">from_dict</code><span class="sig-paren">(</span><em class="sig-param">d: Dict[str, Any]</em><span class="sig-paren">)</span> &#x2192; tac.agents.controller.base.states.GameInitialization<a class="headerlink" href="#tac.agents.controller.base.states.GameInitialization.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate an object from the dictionary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.GameInitialization.initial_money_amounts">
+<em class="property">property </em><code class="sig-name descname">initial_money_amounts</code><a class="headerlink" href="#tac.agents.controller.base.states.GameInitialization.initial_money_amounts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get list of the initial amount of money of every agent.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.GameInitialization.to_dict">
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict[str, Any]<a class="headerlink" href="#tac.agents.controller.base.states.GameInitialization.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a dictionary from the object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.states.GameInitialization.utility_params">
+<em class="property">property </em><code class="sig-name descname">utility_params</code><a class="headerlink" href="#tac.agents.controller.base.states.GameInitialization.utility_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get utility parameter list of the agents.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-tac.agents.controller.base.tac_parameters">
+<span id="tac-agents-controller-base-tac-parameters-module"></span><h2>tac.agents.controller.base.tac_parameters module<a class="headerlink" href="#module-tac.agents.controller.base.tac_parameters" title="Permalink to this headline">¶</a></h2>
+<p>TACParameters: this class contains the parameters for the TAC.</p>
+<dl class="class">
+<dt id="tac.agents.controller.base.tac_parameters.TACParameters">
+<em class="property">class </em><code class="sig-prename descclassname">tac.agents.controller.base.tac_parameters.</code><code class="sig-name descname">TACParameters</code><span class="sig-paren">(</span><em class="sig-param">min_nb_agents: int = 5</em>, <em class="sig-param">money_endowment: int = 200</em>, <em class="sig-param">nb_goods: int = 5</em>, <em class="sig-param">tx_fee: float = 1.0</em>, <em class="sig-param">base_good_endowment: int = 2</em>, <em class="sig-param">lower_bound_factor: int = 1</em>, <em class="sig-param">upper_bound_factor: int = 1</em>, <em class="sig-param">start_time: datetime.datetime = datetime.datetime(2019</em>, <em class="sig-param">9</em>, <em class="sig-param">23</em>, <em class="sig-param">15</em>, <em class="sig-param">38</em>, <em class="sig-param">43</em>, <em class="sig-param">50038)</em>, <em class="sig-param">registration_timeout: int = 10</em>, <em class="sig-param">competition_timeout: int = 20</em>, <em class="sig-param">inactivity_timeout: int = 10</em>, <em class="sig-param">whitelist: Optional[Set[str]] = None</em>, <em class="sig-param">data_output_dir: str = 'data'</em>, <em class="sig-param">version_id: str = '9763'</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.agents.controller.base.tac_parameters.TACParameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This class contains the parameters for the TAC.</p>
+<dl class="method">
+<dt id="tac.agents.controller.base.tac_parameters.TACParameters.base_good_endowment">
+<em class="property">property </em><code class="sig-name descname">base_good_endowment</code><a class="headerlink" href="#tac.agents.controller.base.tac_parameters.TACParameters.base_good_endowment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimum endowment of each agent for each good.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.tac_parameters.TACParameters.competition_timedelta">
+<em class="property">property </em><code class="sig-name descname">competition_timedelta</code><a class="headerlink" href="#tac.agents.controller.base.tac_parameters.TACParameters.competition_timedelta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time delta of the competition timeout.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.tac_parameters.TACParameters.competition_timeout">
+<em class="property">property </em><code class="sig-name descname">competition_timeout</code><a class="headerlink" href="#tac.agents.controller.base.tac_parameters.TACParameters.competition_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timeout of competition.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.tac_parameters.TACParameters.data_output_dir">
+<em class="property">property </em><code class="sig-name descname">data_output_dir</code><a class="headerlink" href="#tac.agents.controller.base.tac_parameters.TACParameters.data_output_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get data output dir.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.tac_parameters.TACParameters.end_time">
+<em class="property">property </em><code class="sig-name descname">end_time</code><a class="headerlink" href="#tac.agents.controller.base.tac_parameters.TACParameters.end_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>TAC end time.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.tac_parameters.TACParameters.inactivity_timedelta">
+<em class="property">property </em><code class="sig-name descname">inactivity_timedelta</code><a class="headerlink" href="#tac.agents.controller.base.tac_parameters.TACParameters.inactivity_timedelta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time delta of the inactivity timeout.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.tac_parameters.TACParameters.inactivity_timeout">
+<em class="property">property </em><code class="sig-name descname">inactivity_timeout</code><a class="headerlink" href="#tac.agents.controller.base.tac_parameters.TACParameters.inactivity_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timeout of agent inactivity from controller perspective (no received transactions).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.tac_parameters.TACParameters.lower_bound_factor">
+<em class="property">property </em><code class="sig-name descname">lower_bound_factor</code><a class="headerlink" href="#tac.agents.controller.base.tac_parameters.TACParameters.lower_bound_factor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lower bound of a uniform distribution.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.tac_parameters.TACParameters.min_nb_agents">
+<em class="property">property </em><code class="sig-name descname">min_nb_agents</code><a class="headerlink" href="#tac.agents.controller.base.tac_parameters.TACParameters.min_nb_agents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimum number of agents required for a TAC instance.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.tac_parameters.TACParameters.money_endowment">
+<em class="property">property </em><code class="sig-name descname">money_endowment</code><a class="headerlink" href="#tac.agents.controller.base.tac_parameters.TACParameters.money_endowment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Money endowment per agent for a TAC instance.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.tac_parameters.TACParameters.nb_goods">
+<em class="property">property </em><code class="sig-name descname">nb_goods</code><a class="headerlink" href="#tac.agents.controller.base.tac_parameters.TACParameters.nb_goods" title="Permalink to this definition">¶</a></dt>
+<dd><p>Good number for a TAC instance.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.tac_parameters.TACParameters.registration_timedelta">
+<em class="property">property </em><code class="sig-name descname">registration_timedelta</code><a class="headerlink" href="#tac.agents.controller.base.tac_parameters.TACParameters.registration_timedelta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time delta of the registration timeout.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.tac_parameters.TACParameters.registration_timeout">
+<em class="property">property </em><code class="sig-name descname">registration_timeout</code><a class="headerlink" href="#tac.agents.controller.base.tac_parameters.TACParameters.registration_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timeout of registration.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.tac_parameters.TACParameters.start_time">
+<em class="property">property </em><code class="sig-name descname">start_time</code><a class="headerlink" href="#tac.agents.controller.base.tac_parameters.TACParameters.start_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>TAC start time.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.tac_parameters.TACParameters.tx_fee">
+<em class="property">property </em><code class="sig-name descname">tx_fee</code><a class="headerlink" href="#tac.agents.controller.base.tac_parameters.TACParameters.tx_fee" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transaction fee for a TAC instance.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.tac_parameters.TACParameters.upper_bound_factor">
+<em class="property">property </em><code class="sig-name descname">upper_bound_factor</code><a class="headerlink" href="#tac.agents.controller.base.tac_parameters.TACParameters.upper_bound_factor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Upper bound of a uniform distribution.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.tac_parameters.TACParameters.version_id">
+<em class="property">property </em><code class="sig-name descname">version_id</code><a class="headerlink" href="#tac.agents.controller.base.tac_parameters.TACParameters.version_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Version id.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tac.agents.controller.base.tac_parameters.TACParameters.whitelist">
+<em class="property">property </em><code class="sig-name descname">whitelist</code><a class="headerlink" href="#tac.agents.controller.base.tac_parameters.TACParameters.whitelist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whitelist of agent public keys allowed into the TAC instance.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-tac.agents.controller.base">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-tac.agents.controller.base" title="Permalink to this headline">¶</a></h2>
+<p>This module contains the modules of a base implementation of a controller agent for TAC.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../sections/introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/registration_phase.html">Registration Phase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/trading_phase.html">Trading Phase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/controller_protocol.html">Protocol for the Controller - TAC protocol</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/baseline_agent.html">Baseline Agent v1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/develop_agent.html">Developing Your Own Agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/negotiation_guide.html">Step-by-step agent negotiation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/agent_state_management_guide.html">Step-by-step agent state management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/glossary.html">Glossary</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tac.html">tac package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tac.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tac.html#module-tac">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">tac</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tac.html">tac package</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="tac.html">tac package</a><ul>
+  <li><a href="tac.agents.html">tac.agents package</a><ul>
+  <li><a href="tac.agents.controller.html">tac.agents.controller package</a><ul>
+      <li>Previous: <a href="tac.agents.controller.html" title="previous chapter">tac.agents.controller package</a></li>
+      <li>Next: <a href="tac.agents.participant.html" title="next chapter">tac.agents.participant package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Fetch.AI.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/reference/api/tac.agents.controller.base.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

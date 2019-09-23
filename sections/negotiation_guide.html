@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Step-by-step agent negotiation &#8212; TAC 0.1.3 documentation</title>
+    <title>Step-by-step agent negotiation &#8212; TAC 0.1.5 documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -322,8 +322,8 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">tac.agents.v1.examples.baseline</span> <span class="k">import</span> <span class="n">BaselineAgent</span>
-<span class="kn">from</span> <span class="nn">tac.agents.v1.examples.strategy</span> <span class="k">import</span> <span class="n">BaselineStrategy</span>
+<span></span><span class="kn">from</span> <span class="nn">tac.agents.participant.v1.examples.baseline</span> <span class="k">import</span> <span class="n">BaselineAgent</span>
+<span class="kn">from</span> <span class="nn">tac.agents.participant.v1.examples.strategy</span> <span class="k">import</span> <span class="n">BaselineStrategy</span>
 
 <span class="n">strategy</span> <span class="o">=</span> <span class="n">BaselineStrategy</span><span class="p">()</span>
 <span class="n">agent</span> <span class="o">=</span> <span class="n">BaselineAgent</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;tac_agent&quot;</span><span class="p">,</span> <span class="n">oef_addr</span><span class="o">=</span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="n">oef_port</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="n">strategy</span><span class="p">)</span>
@@ -381,7 +381,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">tac.agents.v1.examples.strategy</span> <span class="k">import</span> <span class="n">BaselineStrategy</span>
+<span></span><span class="kn">from</span> <span class="nn">tac.agents.participant.v1.examples.strategy</span> <span class="k">import</span> <span class="n">BaselineStrategy</span>
 <span class="n">baseline_strategy</span> <span class="o">=</span> <span class="n">BaselineStrategy</span><span class="p">()</span>
 
 <span class="n">current_holdings</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
@@ -426,7 +426,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 
-<span></span><span class="kn">from</span> <span class="nn">tac.agents.v1.examples.strategy</span> <span class="k">import</span> <span class="n">BaselineStrategy</span>
+<span></span><span class="kn">from</span> <span class="nn">tac.agents.participant.v1.examples.strategy</span> <span class="k">import</span> <span class="n">BaselineStrategy</span>
 <span class="n">baseline_strategy</span> <span class="o">=</span> <span class="n">BaselineStrategy</span><span class="p">()</span>
 
 <span class="n">good_pbks</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;tac_good_0_pbk&quot;</span><span class="p">,</span> <span class="s2">&quot;tac_good_1_pbk&quot;</span><span class="p">,</span> <span class="s2">&quot;tac_good_2_pbk&quot;</span><span class="p">,</span> <span class="s2">&quot;tac_good_3_pbk&quot;</span><span class="p">]</span>
@@ -473,7 +473,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">tac.agents.v1.examples.strategy</span> <span class="k">import</span> <span class="n">BaselineStrategy</span>
+<span></span><span class="kn">from</span> <span class="nn">tac.agents.participant.v1.examples.strategy</span> <span class="k">import</span> <span class="n">BaselineStrategy</span>
 <span class="n">baseline_strategy</span> <span class="o">=</span> <span class="n">BaselineStrategy</span><span class="p">()</span>
 <span class="n">proposals</span> <span class="o">=</span> <span class="n">baseline_strategy</span><span class="o">.</span><span class="n">get_proposals</span><span class="p">(</span>
     <span class="n">good_pbks</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;tac_good_0_pbk&quot;</span><span class="p">,</span> <span class="s2">&quot;tac_good_1_pbk&quot;</span><span class="p">],</span>
@@ -527,7 +527,7 @@ div.rendered_html tbody tr:hover {
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="registration_phase.html">Registration Phase</a></li>
 <li class="toctree-l1"><a class="reference internal" href="trading_phase.html">Trading Phase</a></li>
-<li class="toctree-l1"><a class="reference internal" href="controller_protocol.html">Protocol for the Controller</a></li>
+<li class="toctree-l1"><a class="reference internal" href="controller_protocol.html">Protocol for the Controller - TAC protocol</a></li>
 <li class="toctree-l1"><a class="reference internal" href="baseline_agent.html">Baseline Agent v1</a></li>
 <li class="toctree-l1"><a class="reference internal" href="develop_agent.html">Developing Your Own Agent</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Step-by-step agent negotiation</a><ul>

@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>tac.gui.dashboards package &#8212; TAC 0.1.3 documentation</title>
+    <title>tac.gui.dashboards package &#8212; TAC 0.1.5 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
@@ -51,7 +51,7 @@
 (default: <a class="reference external" href="http://localhost:8097">http://localhost:8097</a>)</p>
 <dl class="method">
 <dt id="tac.gui.dashboards.agent.AgentDashboard.add_transaction">
-<code class="sig-name descname">add_transaction</code><span class="sig-paren">(</span><em class="sig-param">new_tx: tac.platform.protocol.Transaction</em>, <em class="sig-param">agent_name: Optional[str] = None</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.gui.dashboards.agent.AgentDashboard.add_transaction" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_transaction</code><span class="sig-paren">(</span><em class="sig-param">new_tx: tac.platform.game.base.Transaction</em>, <em class="sig-param">agent_name: Optional[str] = None</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.gui.dashboards.agent.AgentDashboard.add_transaction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a transaction to the transaction table.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -74,13 +74,13 @@
 
 <dl class="method">
 <dt id="tac.gui.dashboards.agent.AgentDashboard.update_from_agent_state">
-<code class="sig-name descname">update_from_agent_state</code><span class="sig-paren">(</span><em class="sig-param">agent_state: tac.platform.game.AgentState</em>, <em class="sig-param">append: bool = True</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.gui.dashboards.agent.AgentDashboard.update_from_agent_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">update_from_agent_state</code><span class="sig-paren">(</span><em class="sig-param">agent_state: tac.agents.participant.v1.base.states.AgentState</em>, <em class="sig-param">append: bool = True</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.gui.dashboards.agent.AgentDashboard.update_from_agent_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the dashboard from the agent state.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="tac.gui.dashboards.agent.AgentDashboard.update_from_stats_manager">
-<code class="sig-name descname">update_from_stats_manager</code><span class="sig-paren">(</span><em class="sig-param">stats_manager: tac.agents.v1.base.stats_manager.StatsManager</em>, <em class="sig-param">append: bool = True</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.gui.dashboards.agent.AgentDashboard.update_from_stats_manager" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">update_from_stats_manager</code><span class="sig-paren">(</span><em class="sig-param">stats_manager: tac.agents.participant.v1.base.stats_manager.StatsManager</em>, <em class="sig-param">append: bool = True</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.gui.dashboards.agent.AgentDashboard.update_from_stats_manager" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the dashboard from the stats manager.</p>
 </dd></dl>
 
@@ -93,7 +93,7 @@
 <p>Class maintaining a html table of transactions.</p>
 <dl class="method">
 <dt id="tac.gui.dashboards.agent.TransactionTable.add_transaction">
-<code class="sig-name descname">add_transaction</code><span class="sig-paren">(</span><em class="sig-param">tx: tac.platform.protocol.Transaction</em>, <em class="sig-param">agent_name: Optional[str] = None</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.gui.dashboards.agent.TransactionTable.add_transaction" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_transaction</code><span class="sig-paren">(</span><em class="sig-param">tx: tac.platform.game.base.Transaction</em>, <em class="sig-param">agent_name: Optional[str] = None</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.gui.dashboards.agent.TransactionTable.add_transaction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a transaction to the table.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -137,6 +137,12 @@
 <dd><p>Stop the dashboard.</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="tac.gui.dashboards.base.Dashboard.viz">
+<em class="property">property </em><code class="sig-name descname">viz</code><a class="headerlink" href="#tac.gui.dashboards.base.Dashboard.viz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the visdom server.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="function">
@@ -151,7 +157,7 @@
 <p>Module containing the controller dashboard and related classes.</p>
 <dl class="class">
 <dt id="tac.gui.dashboards.controller.ControllerDashboard">
-<em class="property">class </em><code class="sig-prename descclassname">tac.gui.dashboards.controller.</code><code class="sig-name descname">ControllerDashboard</code><span class="sig-paren">(</span><em class="sig-param">game_stats: Optional[tac.platform.stats.GameStats] = None</em>, <em class="sig-param">visdom_addr: str = 'localhost'</em>, <em class="sig-param">visdom_port: int = 8097</em>, <em class="sig-param">env_name: Optional[str] = 'tac_controller'</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.gui.dashboards.controller.ControllerDashboard" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">tac.gui.dashboards.controller.</code><code class="sig-name descname">ControllerDashboard</code><span class="sig-paren">(</span><em class="sig-param">game_stats: Optional[tac.platform.game.stats.GameStats] = None</em>, <em class="sig-param">visdom_addr: str = 'localhost'</em>, <em class="sig-param">visdom_port: int = 8097</em>, <em class="sig-param">env_name: Optional[str] = 'tac_controller'</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.gui.dashboards.controller.ControllerDashboard" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#tac.gui.dashboards.base.Dashboard" title="tac.gui.dashboards.base.Dashboard"><code class="xref py py-class docutils literal notranslate"><span class="pre">tac.gui.dashboards.base.Dashboard</span></code></a></p>
 <p>Class to manage a Visdom dashboard for the controller agent.</p>
 <p>It assumes that a Visdom server is running at the address and port provided in input
@@ -188,6 +194,44 @@
 </dd></dl>
 
 </div>
+<div class="section" id="module-tac.gui.dashboards.helpers">
+<span id="tac-gui-dashboards-helpers-module"></span><h2>tac.gui.dashboards.helpers module<a class="headerlink" href="#module-tac.gui.dashboards.helpers" title="Permalink to this headline">¶</a></h2>
+<p>A module containing helpers for dashboard.</p>
+<dl class="function">
+<dt id="tac.gui.dashboards.helpers.escape_html">
+<code class="sig-prename descclassname">tac.gui.dashboards.helpers.</code><code class="sig-name descname">escape_html</code><span class="sig-paren">(</span><em class="sig-param">string: str</em>, <em class="sig-param">quote=True</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#tac.gui.dashboards.helpers.escape_html" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace special characters “&amp;”, “&lt;” and “&gt;” to HTML-safe sequences.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>string</strong> – the string</p></li>
+<li><p><strong>quote</strong> – If the optional flag quote is true (the default), the quotation mark characters, both double quote (“) and single quote (‘) characters are also translated.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the escaped string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tac.gui.dashboards.helpers.generate_html_table_from_dict">
+<code class="sig-prename descclassname">tac.gui.dashboards.helpers.</code><code class="sig-name descname">generate_html_table_from_dict</code><span class="sig-paren">(</span><em class="sig-param">dictionary: Dict[str, List[str]], title=''</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#tac.gui.dashboards.helpers.generate_html_table_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a html table from a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dictionary</strong> – the dictionary</p></li>
+<li><p><strong>title</strong> – the title</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a html string</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
 <div class="section" id="module-tac.gui.dashboards.leaderboard">
 <span id="tac-gui-dashboards-leaderboard-module"></span><h2>tac.gui.dashboards.leaderboard module<a class="headerlink" href="#module-tac.gui.dashboards.leaderboard" title="Permalink to this headline">¶</a></h2>
 <p>Module containing the controller dashboard and related classes.</p>
@@ -208,7 +252,7 @@
 
 <dl class="function">
 <dt id="tac.gui.dashboards.leaderboard.compute_aggregate_scores">
-<code class="sig-prename descclassname">tac.gui.dashboards.leaderboard.</code><code class="sig-name descname">compute_aggregate_scores</code><span class="sig-paren">(</span><em class="sig-param">all_game_stats: List[tac.platform.stats.GameStats]</em><span class="sig-paren">)</span> &#x2192; Dict[str, float]<a class="headerlink" href="#tac.gui.dashboards.leaderboard.compute_aggregate_scores" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">tac.gui.dashboards.leaderboard.</code><code class="sig-name descname">compute_aggregate_scores</code><span class="sig-paren">(</span><em class="sig-param">all_game_stats: List[tac.platform.game.stats.GameStats]</em><span class="sig-paren">)</span> &#x2192; Dict[str, float]<a class="headerlink" href="#tac.gui.dashboards.leaderboard.compute_aggregate_scores" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the sum of all scores for every agents.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -246,7 +290,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../sections/introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/registration_phase.html">Registration Phase</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/trading_phase.html">Trading Phase</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../sections/controller_protocol.html">Protocol for the Controller</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sections/controller_protocol.html">Protocol for the Controller - TAC protocol</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/baseline_agent.html">Baseline Agent v1</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/develop_agent.html">Developing Your Own Agent</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sections/negotiation_guide.html">Step-by-step agent negotiation</a></li>
@@ -254,8 +298,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../sections/glossary.html">Glossary</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="tac.html">tac package</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="tac.html#subpackages">Subpackages</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tac.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tac.html#module-tac.tac_pb2">tac.tac_pb2 module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tac.html#module-tac">Module contents</a></li>
 </ul>
 </li>
