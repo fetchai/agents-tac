@@ -37,3 +37,12 @@ Release History
 - Bump to latest aea version 0.1.2
 - Static type checking with Mypy
 - Test/bug fixes
+
+0.1.6 (2019-09-23)
+-------------------
+
+- Updates docs to latest code base
+- Bumps to latest aea version 0.1.4
+- Adds versioning to TAC via `version_id`
+- Ports `tac` protocol from aea repo
+- Multiple small fixes
