@@ -46,8 +46,6 @@ from aea.crypto.base import Crypto
 from aea.mail.base import Address, Envelope, MailBox
 from aea.protocols.oef.message import OEFMessage
 from aea.protocols.oef.serialization import OEFSerializer
-from aea.protocols.tac.message import TACMessage
-from aea.protocols.tac.serialization import TACSerializer
 from tac.agents.controller.base.actions import OEFActions
 from tac.agents.controller.base.helpers import generate_good_pbk_to_name
 from tac.agents.controller.base.reactions import OEFReactions
@@ -56,6 +54,8 @@ from tac.agents.controller.base.tac_parameters import TACParameters
 from tac.gui.monitor import Monitor
 from tac.platform.game.base import GameData, GamePhase, Transaction
 from tac.platform.game.stats import GameStats
+from tac.platform.protocols.tac.message import TACMessage
+from tac.platform.protocols.tac.serialization import TACSerializer
 
 if TYPE_CHECKING:
     from tac.agents.controller.agent import ControllerAgent

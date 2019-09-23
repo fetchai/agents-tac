@@ -27,7 +27,6 @@ from typing import Any, List, Optional, Set, Tuple, Dict, Union, Sequence, cast
 from aea.channels.oef.connection import MailStats
 from aea.mail.base import Address
 from aea.protocols.oef.models import Description, Query
-from aea.protocols.tac.message import TACMessage
 
 from tac.agents.participant.v1.base.dialogues import Dialogues, Dialogue
 from tac.agents.participant.v1.base.helpers import build_dict, build_query, get_goods_quantities_description
@@ -38,6 +37,7 @@ from tac.agents.participant.v1.base.transaction_manager import TransactionManage
 from tac.gui.dashboards.agent import AgentDashboard
 from tac.platform.game.base import GamePhase, GameConfiguration
 from tac.platform.game.base import GameData, Transaction
+from tac.platform.protocols.tac.message import TACMessage
 
 
 class Search:

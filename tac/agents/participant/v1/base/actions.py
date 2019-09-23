@@ -36,11 +36,11 @@ from aea.crypto.base import Crypto
 from aea.mail.base import MailBox
 from aea.protocols.oef.message import OEFMessage
 from aea.protocols.oef.serialization import OEFSerializer, DEFAULT_OEF
-from aea.protocols.tac.message import TACMessage
-from aea.protocols.tac.serialization import TACSerializer
 from tac.agents.participant.v1.base.game_instance import GameInstance
 from tac.agents.participant.v1.base.interfaces import ControllerActionInterface, OEFActionInterface, \
     DialogueActionInterface
+from tac.platform.protocols.tac.message import TACMessage
+from tac.platform.protocols.tac.serialization import TACSerializer
 
 logger = logging.getLogger(__name__)
 
