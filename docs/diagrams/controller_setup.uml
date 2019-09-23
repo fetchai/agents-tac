@@ -7,7 +7,7 @@ note right of "Controller"
     register as a controller agent.
 end note
 
-"Controller"->"OEF Node": register_service("tac", Description{version=1})
+"Controller"->"OEF Node": register_service("tac", Description{version=VERSION_ID})
 "Controller"->"Controller": run()
 activate "Controller"
 

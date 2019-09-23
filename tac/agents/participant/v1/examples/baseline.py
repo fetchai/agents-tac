@@ -23,6 +23,7 @@
 
 import argparse
 import logging
+import random
 from typing import Optional
 
 from tac.agents.participant.v1.agent import ParticipantAgent
@@ -36,8 +37,8 @@ logger = logging.getLogger(__name__)
 class BaselineAgent(ParticipantAgent):
     """A baseline agent implementation for TAC."""
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int, strategy: Strategy, agent_timeout: float = 1.0,
-                 max_reactions: int = 100, services_interval: int = 10,
+    def __init__(self, name: str, oef_addr: str, oef_port: int, strategy: Strategy, expected_version_id: str,
+                 agent_timeout: float = 1.0, max_reactions: int = 100, services_interval: int = 10,
                  pending_transaction_timeout: int = 30, dashboard: Optional[AgentDashboard] = None,
                  private_key_pem: Optional[str] = None):
         """
@@ -47,6 +48,7 @@ class BaselineAgent(ParticipantAgent):
         :param oef_addr: TCP/IP address of the OEF Agent
         :param oef_port: TCP/IP port of the OEF Agent
         :param strategy: the strategy of the agent
+        :param expected_version_id: the expected version id of the TAC
         :param agent_timeout: the time in (fractions of) seconds to time out an agent between act and react.
         :param max_reactions: the maximum number of reactions (messages processed) per call to react.
         :param services_interval: the number of seconds to wait before updating services (doing another search, registering services).
@@ -56,7 +58,7 @@ class BaselineAgent(ParticipantAgent):
 
         :return: None
         """
-        super().__init__(name, oef_addr, oef_port, strategy, agent_timeout, max_reactions, services_interval, pending_transaction_timeout, dashboard, private_key_pem)
+        super().__init__(name, oef_addr, oef_port, strategy, expected_version_id, agent_timeout, max_reactions, services_interval, pending_transaction_timeout, dashboard, private_key_pem)
 
 
 def _parse_arguments():
@@ -76,6 +78,7 @@ def _parse_arguments():
     parser.add_argument("--dashboard", action="store_true", help="Show the agent dashboard.")
     parser.add_argument("--visdom_addr", type=str, default="localhost", help="Address of the Visdom server.")
     parser.add_argument("--visdom_port", type=int, default=8097, help="Port of the Visdom server.")
+    parser.add_argument("--expected-version-id", type=str, default=str(random.randint(0, 10000)), help="The expected version id of the TAC.")
     return parser.parse_args()
 
 
@@ -95,6 +98,7 @@ def main(
         dashboard: bool = False,
         visdom_addr: str = "127.0.0.1",
         visdom_port: int = 8097,
+        expected_version_id: str = str(random.randint(0, 10000))
 ):
     """
     Launch a baseline agent.
@@ -107,7 +111,7 @@ def main(
         agent_dashboard = AgentDashboard(agent_name=name, env_name=name, visdom_addr=visdom_addr, visdom_port=visdom_port)
 
     strategy = BaselineStrategy(register_as=RegisterAs(register_as), search_for=SearchFor(search_for), is_world_modeling=is_world_modeling)
-    agent = BaselineAgent(name=name, oef_addr=oef_addr, oef_port=oef_port, strategy=strategy,
+    agent = BaselineAgent(name=name, oef_addr=oef_addr, oef_port=oef_port, strategy=strategy, expected_version_id=expected_version_id,
                           agent_timeout=agent_timeout, max_reactions=max_reactions, services_interval=services_interval,
                           pending_transaction_timeout=pending_transaction_timeout, dashboard=agent_dashboard,
                           private_key_pem=private_key_pem)

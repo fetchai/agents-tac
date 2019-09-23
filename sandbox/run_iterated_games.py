@@ -62,16 +62,16 @@ def parse_args() -> argparse.Namespace:
     return arguments
 
 
-def build_tac_env_variables(tournament_id: str, experiment_id: str, seed: int) -> str:
+def build_tac_env_variables(tournament_id: str, version_id: str, seed: int) -> str:
     """
     Return a sequence of 'VARIABLE_1=VALUE_1 VARIABLE_2=VALUE_2 ...'.
 
     :param tournament_id: the id of the tournament
-    :param experiment_id: the id of the experiment
+    :param version_id: the id of the experiment
     :param seed: the seed for the random module
     :return: a string encapsulating the params
     """
-    return "DATA_OUTPUT_DIR={} EXPERIMENT_ID={} SEED={}".format(tournament_id, experiment_id, seed)
+    return "DATA_OUTPUT_DIR={} VERSION_ID={} SEED={}".format(tournament_id, version_id, seed)
 
 
 def ask_for_continuation(iteration: int) -> bool:

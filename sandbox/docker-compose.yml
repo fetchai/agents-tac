@@ -10,8 +10,8 @@ services:
     networks:
       main_net:
         ipv4_address: 172.28.1.1
-    logging:
-      driver: none
+    # logging:
+    #   driver: none
     volumes:
       - "../scripts/oef/:/config"
       - "../data/oef-logs:/logs/"
@@ -27,6 +27,7 @@ services:
       - "127.0.0.1"
       - "10000"
       timeout: 5s
+    restart: on-failure
 
   visdom:
     image: "hypnosapos/visdom:latest"
@@ -74,8 +75,8 @@ services:
       - "${OEF_PORT}"
       - "--data-output-dir"
       - "sandbox/${DATA_OUTPUT_DIR}"
-      - "--experiment-id"
-      - "${EXPERIMENT_ID}"
+      - "--version-id"
+      - "${VERSION_ID}"
       - "--lower-bound-factor"
       - "${LOWER_BOUND_FACTOR}"
       - "--upper-bound-factor"

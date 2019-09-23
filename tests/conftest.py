@@ -129,3 +129,4 @@ def network_node(oef_addr, oef_port, pytestconfig):
             logger.info("Stopping the OEF node...")
             c.stop()
             c.remove()
+            logger.info("Stopped the OEF node.")

@@ -59,6 +59,7 @@ class GameConfiguration:
     """Class containing the game configuration of a TAC instance."""
 
     def __init__(self,
+                 version_id: str,
                  nb_agents: int,
                  nb_goods: int,
                  tx_fee: float,
@@ -67,12 +68,14 @@ class GameConfiguration:
         """
         Instantiate a game configuration.
 
+        :param version_id: the version of the game.
         :param nb_agents: the number of agents.
         :param nb_goods: the number of goods.
         :param tx_fee: the fee for a transaction.
         :param agent_pbk_to_name: a dictionary mapping agent public keys to agent names (as strings).
         :param good_pbk_to_name: a dictionary mapping good public keys to good names (as strings).
         """
+        self._version_id = version_id
         self._nb_agents = nb_agents
         self._nb_goods = nb_goods
         self._tx_fee = tx_fee
@@ -80,6 +83,11 @@ class GameConfiguration:
         self._good_pbk_to_name = good_pbk_to_name
 
         self._check_consistency()
+
+    @property
+    def version_id(self) -> str:
+        """Agent number of a TAC instance."""
+        return self._version_id
 
     @property
     def nb_agents(self) -> int:
@@ -133,6 +141,7 @@ class GameConfiguration:
         :return: None
         :raises: AssertionError: if some constraint is not satisfied.
         """
+        assert self.version_id is not None, "A version id must be set."
         assert self.tx_fee >= 0, "Tx fee must be non-negative."
         assert self.nb_agents > 1, "Must have at least two agents."
         assert self.nb_goods > 1, "Must have at least two goods."
@@ -144,6 +153,7 @@ class GameConfiguration:
     def to_dict(self) -> Dict[str, Any]:
         """Get a dictionary from the object."""
         return {
+            "version_id": self.version_id,
             "nb_agents": self.nb_agents,
             "nb_goods": self.nb_goods,
             "tx_fee": self.tx_fee,
@@ -155,6 +165,7 @@ class GameConfiguration:
     def from_dict(cls, d: Dict[str, Any]) -> 'GameConfiguration':
         """Instantiate an object from the dictionary."""
         obj = cls(
+            d["version_id"],
             d["nb_agents"],
             d["nb_goods"],
             d["tx_fee"],
@@ -166,6 +177,7 @@ class GameConfiguration:
     def __eq__(self, other):
         """Compare equality of two objects."""
         return isinstance(other, GameConfiguration) and \
+            self.version_id == other.version_id and \
             self.nb_agents == other.nb_agents and \
             self.nb_goods == other.nb_goods and \
             self.tx_fee == other.tx_fee and \
@@ -343,7 +355,7 @@ class GameData:
     """Convenience representation of the game data."""
 
     def __init__(self, sender: Address, money: float, endowment: List[int], utility_params: List[float],
-                 nb_agents: int, nb_goods: int, tx_fee: float, agent_pbk_to_name: Dict[str, str], good_pbk_to_name: Dict[str, str]) -> None:
+                 nb_agents: int, nb_goods: int, tx_fee: float, agent_pbk_to_name: Dict[str, str], good_pbk_to_name: Dict[str, str], version_id: str) -> None:
         """
         Initialize a game data object.
 
@@ -356,6 +368,7 @@ class GameData:
         :param tx_fee: the transaction fee.
         :param agent_pbk_to_name: the mapping from the public keys to the names of the agents.
         :param good_pbk_to_name: the mapping from the public keys to the names of the goods.
+        :param version_id: the version id of the game
         :return: None
         """
         assert len(endowment) == len(utility_params)
@@ -368,3 +381,4 @@ class GameData:
         self.tx_fee = tx_fee
         self.agent_pbk_to_name = agent_pbk_to_name
         self.good_pbk_to_name = good_pbk_to_name
+        self.version_id = version_id

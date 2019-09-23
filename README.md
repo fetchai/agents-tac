@@ -10,7 +10,7 @@ This repository contains submodules. Clone with recursive strategy:
 
 ## Quick Start:
 
-- [x] You have followed the steps under 'Dependencies' and 'Preliminaries' below
+- [x] Follow the steps under 'Dependencies' and 'Preliminaries' below
 - [x] Enter the virtual environment and launched the script:
 
       pipenv shell
@@ -96,11 +96,11 @@ The [competition sandbox](../master/sandbox) provides the code to build the dock
 
       pipenv --python 3.7 && pipenv shell
       
-- Install dependencies
+- Install the dependencies:
 
       pipenv install
 
-- Install the package:
+- Install the tac package:
 
       python setup.py install
 

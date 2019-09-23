@@ -33,7 +33,7 @@ class SandboxForm(Form):
     nb_baseline_agents = IntegerField('No. Baseline Agents', default=5, widget=widgets.Input(input_type="number"), validators=[wtforms.validators.NumberRange(min=2, message="At least two baseline agents.")],)
     services_interval = IntegerField('Services interval', default=5, widget=widgets.Input(input_type="number"), validators=[wtforms.validators.NumberRange(min=2, message="At least two baseline agents.")],)
     # data_output_dir = FileField("Data output directory", default="./data")
-    # experiment_id = StringField("Experiment ID", [wtforms.validators.Required()], default="exp_1")
+    # version_id = StringField("Version ID", [wtforms.validators.Required()], default="exp_1")
     lower_bound_factor = IntegerField('Lower bound factor', default=0, widget=widgets.Input(input_type="number"), validators=[wtforms.validators.NumberRange(min=0, message="Must be non-negative")],)
     upper_bound_factor = IntegerField('Upper bound factor', default=0, widget=widgets.Input(input_type="number"), validators=[wtforms.validators.NumberRange(min=0, message="Must be non-negative")],)
     tx_fee = FloatField("Transaction fee", default=0.1, validators=[wtforms.validators.NumberRange(min=0, message="Must be non-negative")],)

@@ -80,9 +80,10 @@ if __name__ == '__main__':
     try:
         # Create an agent
         # Creating an agent is straightforward. You simply import the `BaselineAgent` and `BaselineStrategy` and instantiate them.
+        version_id = '1'
         strategy = BaselineStrategy()
-        agent_one = BaselineAgent(name='agent_one', oef_addr='127.0.0.1', oef_port=10000, strategy=strategy)
-        agent_two = BaselineAgent(name='agent_two', oef_addr='127.0.0.1', oef_port=10000, strategy=strategy)
+        agent_one = BaselineAgent(name='agent_one', oef_addr='127.0.0.1', oef_port=10000, strategy=strategy, expected_version_id=version_id)
+        agent_two = BaselineAgent(name='agent_two', oef_addr='127.0.0.1', oef_port=10000, strategy=strategy, expected_version_id=version_id)
 
         # Feed the agent some game data
         # To start, we require some game data to feed to the agent:
@@ -104,7 +105,8 @@ if __name__ == '__main__':
                                  nb_goods,
                                  tx_fee,
                                  agent_pbk_to_name,
-                                 good_pbk_to_name)
+                                 good_pbk_to_name,
+                                 version_id)
         agent_one.game_instance.init(game_data_one, agent_one.crypto.public_key)
 
         game_data_two = GameData(agent_two.crypto.public_key,
@@ -115,7 +117,8 @@ if __name__ == '__main__':
                                  nb_goods,
                                  tx_fee,
                                  agent_pbk_to_name,
-                                 good_pbk_to_name)
+                                 good_pbk_to_name,
+                                 version_id)
         agent_two.game_instance.init(game_data_two, agent_two.crypto.public_key)
 
         # Set the debugger
