@@ -55,8 +55,8 @@ def kill_oef():
 
 def launch_oef():
     """Launch an OEF node instance."""
-    script_path = os.path.join("oef_search_pluto_scripts", "launch.py")
-    configuration_file_path = os.path.join("oef_search_pluto_scripts", "launch_config.json")
+    script_path = os.path.join("scripts", "oef", "launch.py")
+    configuration_file_path = os.path.join("scripts", "oef", "launch_config.json")
     print("Launching new OEF Node...")
     subprocess.Popen(["python3", script_path, "-c", configuration_file_path, "--background"],
                      stdout=subprocess.PIPE, env=os.environ, cwd=ROOT_DIR)

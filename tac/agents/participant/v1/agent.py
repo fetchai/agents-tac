@@ -25,7 +25,7 @@ import time
 from typing import Optional
 
 from aea.agent import Agent
-from aea.channels.oef import OEFMailBox
+from aea.channels.oef.connection import OEFMailBox
 from aea.mail.base import Envelope
 from tac.agents.participant.v1.base.game_instance import GameInstance
 from tac.agents.participant.v1.base.handlers import ControllerHandler, DialogueHandler, OEFHandler

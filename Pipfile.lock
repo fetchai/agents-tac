@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "d1928f34028d7094fa600b7868589202139043d33473822c945aa253a3841293"
+            "sha256": "be6d025918cabe32c2faed312b04fcc9ed0cdc1fa991c47a7f939fc449235c21"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -23,11 +23,11 @@
     "default": {
         "aea": {
             "hashes": [
-                "sha256:127d9cad4e9fa38a0ea830ac56f85721e335df13600f8f41390c33b780bbf561",
-                "sha256:ef562485c9840f3aa74ba8aac1de304979875383e7104fecbf799b5770076204"
+                "sha256:2a8e8e0acd0c94a238fa8e128a95f090968059d5fe212d31c6b5f56633622e24",
+                "sha256:7e56ac6d3ea54bb77de53586d9e11b6875fb58ca45f7c9bb84b4acd413d84bef"
             ],
-            "index": "test-pypi",
-            "version": "==0.1.2"
+            "index": "pypi",
+            "version": "==0.1.4"
         },
         "alabaster": {
             "hashes": [

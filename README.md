@@ -141,7 +141,7 @@ The following steps are only relevant if you intend to contribute to the reposit
 
 - We recommend you use the latest OEF build:
 
-	  python oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config.json
+	  python scripts/oef/launch.py -c ./scripts/oef/launch_config.json
 
 ## Resources
 

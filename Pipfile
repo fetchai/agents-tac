@@ -36,7 +36,7 @@ sphinxcontrib-apidoc = "*"
 sphinx = "*"
 wtforms = "*"
 visdom = "*"
-aea = {index = "test-pypi",version = "==0.1.2"}
+aea = {index = "pypi",version = "==0.1.4"}
 colorlog = "*"
 
 [requires]

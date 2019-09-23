@@ -85,10 +85,10 @@ def _wait_for_oef(max_attempts: int = 15, sleep_rate: float = 1.0):
 def _create_oef_docker_image(oef_addr_, oef_port_) -> Container:
     client = docker.from_env()
 
-    logger.info(ROOT_DIR + '/oef_search_pluto_scripts')
+    logger.info(ROOT_DIR + '/scripts/oef')
     ports = {'20000/tcp': ("0.0.0.0", 20000), '30000/tcp': ("0.0.0.0", 30000),
              '{}/tcp'.format(oef_port_): ("0.0.0.0", oef_port_)}
-    volumes = {ROOT_DIR + '/oef_search_pluto_scripts': {'bind': '/config', 'mode': 'rw'}, ROOT_DIR + '/data/oef-logs': {'bind': '/logs', 'mode': 'rw'}}
+    volumes = {ROOT_DIR + '/scripts/oef': {'bind': '/config', 'mode': 'rw'}, ROOT_DIR + '/data/oef-logs': {'bind': '/logs', 'mode': 'rw'}}
     c = client.containers.run("fetchai/oef-search:0.7",
                               "/config/node_config.json",
                               detach=True, ports=ports, volumes=volumes)

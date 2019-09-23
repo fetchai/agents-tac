@@ -41,7 +41,7 @@ If you want to use the same cryptographic key, you can follow these steps:
 
 - First, start the oef:
 
-      python oef_search_pluto_scripts/launch.py -c ./oef_search_pluto_scripts/launch_config.json
+      python scripts/oef/launch.py -c ./scripts/oef/launch_config.json
 
 - Second, start the visdom server in shell:
 

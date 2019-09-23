@@ -26,7 +26,7 @@ import logging
 from typing import Optional
 
 from aea.agent import Agent
-from aea.channels.oef import OEFMailBox
+from aea.channels.oef.connection import OEFMailBox
 
 logger = logging.getLogger(__name__)
 
