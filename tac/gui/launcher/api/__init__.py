@@ -24,6 +24,8 @@ from flask_restful import Api
 from .resources.sandboxes import SandboxList, Sandbox
 from .resources.agents import Agent
 
+from tac.platform.shared_sim_status import register_shared_dir
+import os
 
 def create_api(app):
     """Wrap the Flask app with the Flask-RESTful Api object."""
@@ -33,3 +35,4 @@ def create_api(app):
     api.add_resource(Sandbox, "/sandboxes/<int:sandbox_id>")
     api.add_resource(Agent, "/agent")
 
+    register_shared_dir(os.path.join(os.path.dirname(__file__), '../../../../shared_folder'))

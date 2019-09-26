@@ -108,7 +108,7 @@ services:
       - "${WHITELIST}"
     volumes:
       - type: bind
-        source: /Users/diarmidcampbell/Projects/agents-tac/shared_folder
+        source: ./../shared_folder
         target: /build/shared_folder
 networks:
     main_net:

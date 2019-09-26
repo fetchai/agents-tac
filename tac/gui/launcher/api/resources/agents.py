@@ -27,6 +27,7 @@ from enum import Enum
 from typing import Dict, Any, Optional
 
 from flask_restful import Resource, reqparse
+from tac.platform.shared_sim_status import get_shared_status
 
 from tac import ROOT_DIR
 
@@ -118,29 +119,11 @@ class AgentRunner:
             raise ValueError("Unexpected return code.")
 
 
-    def construct_temp_filename(self) -> str:
-        shared_dir = os.path.join(os.path.dirname(__file__), '../../../../../shared_folder')
-        if shared_dir is not None and os.path.isdir(shared_dir):
-            return os.path.join(shared_dir, 'temp_agent_status.txt')
-        return None
-
-
-    def get_shared_status(self):
-        temp_file_path = self.construct_temp_filename()
-        if temp_file_path is not None:
-            if (os.path.isfile(temp_file_path)):
-                f = open(temp_file_path, "r")
-                status = f.read()
-                f.close()
-                return str(status)
-
-        return "Invalid status"
-
     def to_dict(self):
         """Serialize the object into a dictionary."""
         return {
             "id": self.id,
-            "status": self.get_shared_status(),
+            "status": get_shared_status("agent"),
             # "status": self.status.value,
             "params": self.params
         }

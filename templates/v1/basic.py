@@ -32,6 +32,9 @@ from tac.agents.participant.v1.examples.baseline import BaselineAgent
 from tac.agents.participant.v1.examples.strategy import BaselineStrategy
 from tac.gui.dashboards.agent import AgentDashboard
 
+
+from tac.platform.shared_sim_status import set_shared_status
+
 logger = logging.getLogger(__name__)
 
 
@@ -88,7 +91,7 @@ def main():
     else:
         agent_dashboard = None
 
-    set_shared_status("Starting agent")
+    set_shared_status("agent", "Starting agent")
 
     strategy = BaselineStrategy(register_as=RegisterAs(args.register_as), search_for=SearchFor(args.search_for), is_world_modeling=args.is_world_modeling)
     agent = BaselineAgent(name=args.name, oef_addr=args.oef_addr, oef_port=args.oef_port, agent_timeout=args.agent_timeout, strategy=strategy,
@@ -109,7 +112,7 @@ def main():
     kill_event.set()
     status_thread.join(120)
 
-    set_shared_status("Agent Stopped")
+    set_shared_status("agent", "Starting Stopped")
 
 
 if __name__ == '__main__':

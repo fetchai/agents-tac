@@ -29,12 +29,11 @@ from queue import Queue
 from typing import Dict, Any, Optional
 
 from flask_restful import Resource, reqparse
-import json
+from tac.platform.shared_sim_status import set_shared_status, get_shared_status, get_last_status_time
 
 from tac import ROOT_DIR
 import time
 import math
-
 
 
 logger = logging.getLogger(__name__)
@@ -89,7 +88,7 @@ class SandboxRunner:
 
         self.process = None  # type: Optional[subprocess.Popen]
 
-        self.set_shared_status("Not started yet")
+        set_shared_status("sandbox", "Not started yet")
 
     def __call__(self):
         """Launch the sandbox."""
@@ -120,7 +119,7 @@ class SandboxRunner:
             **os.environ
         }
         self.rec_registration_timeout = args["registration_timeout"];
-        self.set_shared_status("Starting docker container")
+        set_shared_status("sandbox", "Starting docker container")
         self.process = subprocess.Popen([
             "docker-compose",
             "-f",
@@ -146,36 +145,34 @@ class SandboxRunner:
 
     def update_status(self) -> None:
         if self.process is None:
-            # self.set_shared_status("Stopped")
             return
         returncode = self.process.poll()
         if returncode is None:
             return
         elif returncode == 0:
-            self.set_shared_status("Finished")
+            set_shared_status("sandbox", "Finished")
         elif returncode > 0:
-             self.set_shared_status("Failed")
+            set_shared_status("sandbox", "Failed")
         else:
-            self.set_shared_status("Unexpected return code.")
+            set_shared_status("sandbox", "Unexpected return code.")
 
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize the object into a dictionary."""
         self.update_status()
 
-        mod_time = os.path.getmtime(self.construct_temp_filename())
-        duration = time.time() - mod_time;
+        duration = time.time() - get_last_status_time("sandbox")
 
 
         # if we are open to registering - figure out how long we have been in this state for:
-        additional_text = ""
-        if self.get_shared_status() == "Registration open":
-            additional_text = ": " + str(1+math.floor(self.rec_registration_timeout - duration))
+        status_text = get_shared_status("sandbox")
+        if status_text == "Registration open":
+            status_text += ": " + str(1 + math.floor(self.rec_registration_timeout - duration))
 
 
         return {
             "id": self.id,
-            "status": self.get_shared_status() + additional_text,
+            "status": status_text,
             "params": self.params
         }
 
@@ -185,45 +182,17 @@ class SandboxRunner:
         if self.process is None:
             return
         try:
-            self.set_shared_status("Stopping sandbox")
+            set_shared_status("sandbox", "Stopping sandbox")
             self.process.terminate()
             self.process.wait()
             return
         except Exception:
-            self.set_shared_status("Filed to stop sandbox")
+            set_shared_status("sandbox", "Filed to stop sandbox")
             raise
 
     def wait(self):
         """Wait for the completion of the sandbox."""
         return self.process.wait()
-
-
-    def construct_temp_filename(self) -> str:
-        shared_dir = os.path.join(os.path.dirname(__file__), '../../../../../shared_folder')
-        if shared_dir is not None and os.path.isdir(shared_dir):
-            return os.path.join(shared_dir, 'temp_sandbox_status.txt')
-        return None
-
-
-
-    def set_shared_status(self, status):
-        temp_file_path = self.construct_temp_filename()
-        if temp_file_path is not None:
-            f = open(temp_file_path, "w+")
-            f.write(status);
-            f.close()
-
-    def get_shared_status(self):
-        temp_file_path = self.construct_temp_filename()
-        if temp_file_path is not None:
-            if (os.path.isfile(temp_file_path)):
-                f = open(temp_file_path, "r")
-                status = f.read()
-                f.close()
-                return status
-
-        return "Invalid status"
-
 
 
 

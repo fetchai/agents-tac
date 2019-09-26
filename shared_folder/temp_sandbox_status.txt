@@ -1,1 +1,1 @@
-Simulation running
+Simulation finished - Inactivity timeout
