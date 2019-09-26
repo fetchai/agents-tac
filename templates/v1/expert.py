@@ -39,6 +39,7 @@ def parse_arguments():
     parser.add_argument("--oef-port", default=10000, help="TCP/IP port of the OEF Agent")
     parser.add_argument("--agent-timeout", type=float, default=1.0, help="The time in (fractions of) seconds to time out an agent between act and react.")
     parser.add_argument("--private-key-pem", default=None, help="Path to a file containing a private key in PEM format.")
+    parser.add_argument("--expected-version-id", type=str, help="The epected version id of the TAC.")
 
     return parser.parse_args()
 
@@ -46,10 +47,11 @@ def parse_arguments():
 class MyAgent(Agent):
     """My agent implementation."""
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int, agent_timeout: float = 1.0, private_key_pem_path: Optional[str] = None):
+    def __init__(self, name: str, oef_addr: str, oef_port: int, agent_timeout: float = 1.0, private_key_pem_path: Optional[str] = None, expected_version_id: str):
         """Agent initialization."""
         super().__init__(name, private_key_pem_path, agent_timeout)
         self.mailbox = OEFMailBox(self.crypto.public_key, oef_addr, oef_port)
+        self.expected_version_id = expected_version_id
 
         raise NotImplementedError("Your agent must implement the interface defined in Agent.")
 
@@ -58,7 +60,7 @@ def main():
     """Run the script."""
     args = parse_arguments()
 
-    agent = MyAgent(name=args.name, oef_addr=args.oef_addr, oef_port=args.oef_port, agent_timeout=args.agent_timeout, private_key_pem_path=args.private_key_pem)
+    agent = MyAgent(name=args.name, oef_addr=args.oef_addr, oef_port=args.oef_port, agent_timeout=args.agent_timeout, private_key_pem_path=args.private_key_pem, expected_version_id=args.expected_version_id)
 
     try:
         agent.start()

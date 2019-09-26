@@ -80,11 +80,11 @@ def wait_for_oef():
         ":"
     ], env=os.environ, cwd=ROOT_DIR)
 
-    wait_for_oef.wait(30)
+    wait_for_oef.wait(60)
 
 
 if __name__ == '__main__':
 
     with Sandbox():
         wait_for_oef()
-        participant_agent_main(name="my_agent", dashboard=True)
+        participant_agent_main(name="my_agent", dashboard=True, expected_version_id='tac_v1')
