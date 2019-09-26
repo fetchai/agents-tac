@@ -23,6 +23,7 @@
 
 import argparse
 import logging
+import random
 from typing import Optional
 
 from aea.agent import Agent
@@ -47,7 +48,7 @@ def parse_arguments():
 class MyAgent(Agent):
     """My agent implementation."""
 
-    def __init__(self, name: str, oef_addr: str, oef_port: int, agent_timeout: float = 1.0, private_key_pem_path: Optional[str] = None, expected_version_id: str):
+    def __init__(self, name: str, oef_addr: str, oef_port: int, agent_timeout: float = 1.0, private_key_pem_path: Optional[str] = None, expected_version_id: str = str(random.randint(0, 10000))):
         """Agent initialization."""
         super().__init__(name, private_key_pem_path, agent_timeout)
         self.mailbox = OEFMailBox(self.crypto.public_key, oef_addr, oef_port)
