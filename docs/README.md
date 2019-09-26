@@ -36,3 +36,10 @@ firefox _build/html/index.html
 ```
 open _build/html/index.html
 ```
+
+## Publish
+
+```
+./publish_to_ghpages.sh VERSION_TAG
+```
+where `VERSION_TAG` is the version tag of the release.

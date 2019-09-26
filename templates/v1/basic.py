@@ -52,6 +52,7 @@ def parse_arguments():
     parser.add_argument("--services-interval", type=int, default=5, help="The number of seconds to wait before doing another search.")
     parser.add_argument("--pending-transaction-timeout", type=int, default=30, help="The timeout in seconds to wait for pending transaction/negotiations.")
     parser.add_argument("--private-key-pem", default=None, help="Path to a file containing a private key in PEM format.")
+    parser.add_argument("--expected-version-id", type=str, help="The epected version id of the TAC.")
     parser.add_argument("--rejoin", action="store_true", default=False, help="Whether the agent is joining a running TAC.")
     parser.add_argument("--dashboard", action="store_true", help="Show the agent dashboard.")
     parser.add_argument("--visdom-addr", type=str, default="localhost", help="IP address to the Visdom server")
@@ -96,7 +97,7 @@ def main():
     strategy = BaselineStrategy(register_as=RegisterAs(args.register_as), search_for=SearchFor(args.search_for), is_world_modeling=args.is_world_modeling)
     agent = BaselineAgent(name=args.name, oef_addr=args.oef_addr, oef_port=args.oef_port, agent_timeout=args.agent_timeout, strategy=strategy,
                           max_reactions=args.max_reactions, services_interval=args.services_interval, pending_transaction_timeout=args.pending_transaction_timeout,
-                          dashboard=agent_dashboard, private_key_pem=args.private_key_pem, expected_version_id="1")
+                          dashboard=agent_dashboard, private_key_pem=args.private_key_pem, expected_version_id=args.expected_version_id)
 
     # Create thread to pull status
     kill_event = threading.Event()

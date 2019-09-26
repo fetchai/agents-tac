@@ -8,7 +8,7 @@ This repository contains submodules. Clone with recursive strategy:
 
 	  git clone git@github.com:fetchai/agents-tac.git --recursive && cd agents-tac
 
-## Quick Start:
+## Option 1: Quick Start:
 
 - [x] Follow the steps under 'Dependencies' and 'Preliminaries' below
 - [x] Enter the virtual environment and launched the script:
@@ -18,18 +18,18 @@ This repository contains submodules. Clone with recursive strategy:
 
 The controller GUI at http://localhost:8097 provides real time insights.
 
-## Step by step:
+## Option 2: Step by step:
 
-- [x] You have followed the steps under 'Dependencies' and 'Preliminaries' below
+- [x] Follow the steps under 'Dependencies' and 'Preliminaries' below
 - [x] In one terminal, build the sandbox and then launch it:
 
       cd sandbox && docker-compose build
       docker-compose up
 
-- [x] In another terminal, enter the virtual environment and connect a template agent to the sandbox:
+- [x] Optionally, in another terminal, enter the virtual environment and connect a template agent to the sandbox:
 
       pipenv shell
-      python templates/v1/basic.py --name my_agent --gui
+      python templates/v1/basic.py --name my_agent --dashboard --expected-version-id tac_v1
 
 The sandbox is starting up:
 <p align="center">
@@ -88,7 +88,7 @@ The [competition sandbox](../master/sandbox) provides the code to build the dock
 - The package requires that you install [Docker](https://www.docker.com/) and the sandbox requires that in addition, you install [Docker Compose](https://docs.docker.com/compose/).
 - The project requires oef-search-pluto which can be pulled here:
 	
-	  docker pull fetchai/oef-search:latest
+	  docker pull fetchai/oef-search:0.7
 
 ## Preliminaries
 
