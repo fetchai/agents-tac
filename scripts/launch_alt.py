@@ -103,7 +103,7 @@ class OEFNode:
 
 
 if __name__ == '__main__':
-    sys.argv += ['--dashboard']
+    sys.argv += ['--dashboard', '--version-id', 'tac_v1']
     args = parse_arguments()
     simulation_params = build_simulation_parameters(args)
 
