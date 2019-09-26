@@ -20,7 +20,7 @@
 # ------------------------------------------------------------------------------
 
 """This module contains the ControllerAgent."""
-
+import os;
 import argparse
 import datetime
 import logging
@@ -83,6 +83,24 @@ class ControllerAgent(Agent):
 
         logger.debug("[{}]: Initialized myself as Controller Agent :\n{}".format(self.name, pprint.pformat(vars())))
 
+
+    def construct_temp_filename(self) -> None:
+        shared_dir = os.getenv('SANDBOX_SHARED_DIR')
+        if shared_dir is not None and os.path.isdir(shared_dir):
+            return os.path.join(shared_dir, 'temp_sandbox_status.txt')
+        return None
+
+
+
+
+    def set_shared_status(self, status):
+        temp_file_path = self.construct_temp_filename()
+        if temp_file_path is not None:
+            f = open(temp_file_path, "w+")
+            f.write(status);
+            f.close()
+
+
     def act(self) -> None:
         """
         Perform the agent's actions.
@@ -96,10 +114,16 @@ class ControllerAgent(Agent):
             logger.debug("[{}]: waiting for starting the competition: start_time={}, current_time={}, timedelta ={}s"
                          .format(self.name, str(self.game_handler.tac_parameters.start_time), str(now), seconds_to_wait))
             self.game_handler.competition_start = now + datetime.timedelta(seconds=seconds_to_wait + self.game_handler.tac_parameters.registration_timedelta.seconds)
+
             time.sleep(seconds_to_wait)
             logger.debug("[{}]: Register competition with parameters: {}"
                          .format(self.name, pprint.pformat(self.game_handler.tac_parameters.__dict__)))
             self.oef_handler.register_tac()
+
+            self.set_shared_status("Registration open")
+
+
+
             self.game_handler._game_phase = GamePhase.GAME_SETUP
         elif self.game_handler.game_phase == GamePhase.GAME_SETUP:
             assert self.game_handler.competition_start is not None, "No competition start time set!"
@@ -108,6 +132,10 @@ class ControllerAgent(Agent):
                 logger.debug("[{}]: Checking if we can start the competition.".format(self.name))
                 min_nb_agents = self.game_handler.tac_parameters.min_nb_agents
                 nb_reg_agents = len(self.game_handler.registered_agents)
+
+                # Remove temporary file (temporary measure to communicate)
+                self.set_shared_status("Simulation running")
+
                 if nb_reg_agents >= min_nb_agents:
                     logger.debug("[{}]: Start competition. Registered agents: {}, minimum number of agents: {}."
                                  .format(self.name, nb_reg_agents, min_nb_agents))
@@ -115,6 +143,7 @@ class ControllerAgent(Agent):
                 else:
                     logger.debug("[{}]: Not enough agents to start TAC. Registered agents: {}, minimum number of agents: {}."
                                  .format(self.name, nb_reg_agents, min_nb_agents))
+                    self.set_shared_status("Simulation Stopping - not enough agents registered")
                     self.stop()
                     return
         elif self.game_handler.game_phase == GamePhase.GAME:
@@ -122,10 +151,12 @@ class ControllerAgent(Agent):
             inactivity_duration = current_time - self.last_activity
             if inactivity_duration > self.game_handler.tac_parameters.inactivity_timedelta:
                 logger.debug("[{}]: Inactivity timeout expired. Terminating...".format(self.name))
+                self.set_shared_status("Simulation finished - Inactivity timeout")
                 self.stop()
                 return
             elif current_time > self.game_handler.tac_parameters.end_time:
                 logger.debug("[{}]: Competition timeout expired. Terminating...".format(self.name))
+                self.set_shared_status("Simulation finished - Game  timeout")
                 self.stop()
                 return
 

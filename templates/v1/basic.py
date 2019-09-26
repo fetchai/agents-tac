@@ -23,6 +23,9 @@
 
 import argparse
 import logging
+import threading
+import time
+import os
 
 from tac.agents.participant.v1.base.strategy import RegisterAs, SearchFor
 from tac.agents.participant.v1.examples.baseline import BaselineAgent
@@ -54,6 +57,28 @@ def parse_arguments():
     return parser.parse_args()
 
 
+def monitor_status(agent):
+    while True:
+        # print("agent: status = {}".format(agent.agent_state))
+        set_shared_status("{}".format(agent.agent_state))
+        time.sleep(1)
+
+
+def construct_temp_filename() -> str:
+    shared_dir = os.path.join(os.path.dirname(__file__), '../../shared_folder')
+    if shared_dir is not None and os.path.isdir(shared_dir):
+        return os.path.join(shared_dir, 'temp_agent_status.txt')
+    return None
+
+
+
+def set_shared_status(status) -> None:
+    temp_file_path = construct_temp_filename()
+    if temp_file_path is not None:
+        f = open(temp_file_path, "w+")
+        f.write(status);
+        f.close()
+
 def main():
     """Run the script."""
     args = parse_arguments()
@@ -63,15 +88,28 @@ def main():
     else:
         agent_dashboard = None
 
+    set_shared_status("Starting agent")
+
     strategy = BaselineStrategy(register_as=RegisterAs(args.register_as), search_for=SearchFor(args.search_for), is_world_modeling=args.is_world_modeling)
     agent = BaselineAgent(name=args.name, oef_addr=args.oef_addr, oef_port=args.oef_port, agent_timeout=args.agent_timeout, strategy=strategy,
                           max_reactions=args.max_reactions, services_interval=args.services_interval, pending_transaction_timeout=args.pending_transaction_timeout,
-                          dashboard=agent_dashboard, private_key_pem=args.private_key_pem)
+                          dashboard=agent_dashboard, private_key_pem=args.private_key_pem, expected_version_id="1")
+
+    # Create thread to pull status
+    kill_event = threading.Event()
+    status_thread = threading.Thread(target=monitor_status, args=(agent, ))
+    status_thread.start()
 
     try:
         agent.start(rejoin=args.rejoin)
     finally:
         agent.stop()
+
+    # Stop the status monitoring thread
+    kill_event.set()
+    status_thread.join(120)
+
+    set_shared_status("Agent Stopped")
 
 
 if __name__ == '__main__':

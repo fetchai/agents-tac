@@ -43,6 +43,7 @@ parser.add_argument("services_interval", type=int, default=5, help="The number o
 parser.add_argument("pending_transaction_timeout", type=int, default=30, help="The timeout in seconds to wait for pending transaction/negotiations.")
 parser.add_argument("private_key_pem", default=None, help="Path to a file containing a private key in PEM format.")
 parser.add_argument("rejoin", type=bool, default=False, help="Whether the agent is joining a running TAC.")
+parser.add_argument("btn-start-agent", default="Test", help="Test")
 
 current_agent = None  # type: Optional[AgentRunner]
 
@@ -116,11 +117,31 @@ class AgentRunner:
         else:
             raise ValueError("Unexpected return code.")
 
+
+    def construct_temp_filename(self) -> str:
+        shared_dir = os.path.join(os.path.dirname(__file__), '../../../../../shared_folder')
+        if shared_dir is not None and os.path.isdir(shared_dir):
+            return os.path.join(shared_dir, 'temp_agent_status.txt')
+        return None
+
+
+    def get_shared_status(self):
+        temp_file_path = self.construct_temp_filename()
+        if temp_file_path is not None:
+            if (os.path.isfile(temp_file_path)):
+                f = open(temp_file_path, "r")
+                status = f.read()
+                f.close()
+                return str(status)
+
+        return "Invalid status"
+
     def to_dict(self):
         """Serialize the object into a dictionary."""
         return {
             "id": self.id,
-            "status": self.status.value,
+            "status": self.get_shared_status(),
+            # "status": self.status.value,
             "params": self.params
         }
 
@@ -143,7 +164,7 @@ class Agent(Resource):
         if current_agent is not None:
             return current_agent.to_dict(), 200
         else:
-            return None, 200
+            return "", 200
 
     def post(self):
         """Create an agent instance."""

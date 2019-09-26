@@ -19,10 +19,13 @@
 # ------------------------------------------------------------------------------
 
 """Spawn several TAC agents."""
+import os
 
 from tac.platform.simulation import parse_arguments, build_simulation_parameters, run
 
 if __name__ == '__main__':
+    os.environ['SANDBOX_SHARED_DIR'] = os.path.join(os.path.dirname(__file__), '../../shared_folder')
+
     arguments = parse_arguments()
     simulation_parameters = build_simulation_parameters(arguments)
     run(simulation_parameters)

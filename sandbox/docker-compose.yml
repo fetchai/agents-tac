@@ -106,6 +106,10 @@ services:
       - "${SEED}"
       - "--whitelist-file"
       - "${WHITELIST}"
+    volumes:
+      - type: bind
+        source: /Users/diarmidcampbell/Projects/agents-tac/shared_folder
+        target: /build/shared_folder
 networks:
     main_net:
         ipam:
