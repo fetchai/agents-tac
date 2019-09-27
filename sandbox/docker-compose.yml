@@ -106,10 +106,12 @@ services:
       - "${SEED}"
       - "--whitelist-file"
       - "${WHITELIST}"
+      - "--version-id"
+      - "${VERSION_ID}"
     volumes:
       - type: bind
-        source: ./../shared_folder
-        target: /build/shared_folder
+        source: ./../data/shared
+        target: /build/data/shared
 networks:
     main_net:
         ipam:

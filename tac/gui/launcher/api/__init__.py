@@ -24,7 +24,7 @@ from flask_restful import Api
 from .resources.sandboxes import SandboxList, Sandbox
 from .resources.agents import Agent
 
-from tac.platform.shared_sim_status import register_shared_dir
+from tac.platform.shared_sim_status import register_shared_dir, clear_temp_dir
 import os
 
 def create_api(app):
@@ -35,4 +35,5 @@ def create_api(app):
     api.add_resource(Sandbox, "/sandboxes/<int:sandbox_id>")
     api.add_resource(Agent, "/agent")
 
-    register_shared_dir(os.path.join(os.path.dirname(__file__), '../../../../shared_folder'))
+    register_shared_dir(os.path.join(os.path.dirname(__file__), '../../../../data/shared'))
+    clear_temp_dir()

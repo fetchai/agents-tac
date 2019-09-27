@@ -39,7 +39,7 @@ from tac.agents.controller.base.tac_parameters import TACParameters
 from tac.platform.game.base import GamePhase
 from tac.gui.monitor import Monitor, NullMonitor, VisdomMonitor
 
-from tac.platform.shared_sim_status import set_shared_status
+from tac.platform.shared_sim_status import set_controller_state, ControllerAgentState
 
 if __name__ != "__main__":
     logger = logging.getLogger(__name__)
@@ -84,6 +84,7 @@ class ControllerAgent(Agent):
         self.last_activity = datetime.datetime.now()
 
         logger.debug("[{}]: Initialized myself as Controller Agent :\n{}".format(self.name, pprint.pformat(vars())))
+        set_controller_state(self.game_handler.tac_parameters.version_id, ControllerAgentState.STARTING)
 
 
 
@@ -106,7 +107,7 @@ class ControllerAgent(Agent):
                          .format(self.name, pprint.pformat(self.game_handler.tac_parameters.__dict__)))
             self.oef_handler.register_tac()
 
-            set_shared_status("sandbox", "Registration open")
+            set_controller_state(self.game_handler.tac_parameters.version_id, ControllerAgentState.REGISTRATION_OPEN)
 
 
 
@@ -120,7 +121,7 @@ class ControllerAgent(Agent):
                 nb_reg_agents = len(self.game_handler.registered_agents)
 
                 # Remove temporary file (temporary measure to communicate)
-                set_shared_status("sandbox", "Simulation running")
+                set_controller_state(self.game_handler.tac_parameters.version_id, ControllerAgentState.RUNNING)
 
                 if nb_reg_agents >= min_nb_agents:
                     logger.debug("[{}]: Start competition. Registered agents: {}, minimum number of agents: {}."
@@ -129,7 +130,7 @@ class ControllerAgent(Agent):
                 else:
                     logger.debug("[{}]: Not enough agents to start TAC. Registered agents: {}, minimum number of agents: {}."
                                  .format(self.name, nb_reg_agents, min_nb_agents))
-                    set_shared_status("sandbox", "Simulation Stopping - not enough agents registered")
+                    set_controller_state(self.game_handler.tac_parameters.version_id, ControllerAgentState.STOPPING_UNSUFFICIENT_AGENTS)
                     self.stop()
                     return
         elif self.game_handler.game_phase == GamePhase.GAME:
@@ -137,12 +138,12 @@ class ControllerAgent(Agent):
             inactivity_duration = current_time - self.last_activity
             if inactivity_duration > self.game_handler.tac_parameters.inactivity_timedelta:
                 logger.debug("[{}]: Inactivity timeout expired. Terminating...".format(self.name))
-                set_shared_status("sandbox", "Simulation finished - Inactivity timeout")
+                set_controller_state(self.game_handler.tac_parameters.version_id, ControllerAgentState.FINISHED_INACTIVITY)
                 self.stop()
                 return
             elif current_time > self.game_handler.tac_parameters.end_time:
                 logger.debug("[{}]: Competition timeout expired. Terminating...".format(self.name))
-                set_shared_status("sandbox", "Simulation finished - Game  timeout")
+                set_controller_state(self.game_handler.tac_parameters.version_id, ControllerAgentState.FINISHED_GAME_TIMEOUT)
                 self.stop()
                 return
 

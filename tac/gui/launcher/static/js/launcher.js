@@ -2,13 +2,16 @@
 
     // the ID of the current sandbox running/finished/stopped. 'null' if no sandbox has been started yet.
     let currentSandboxID = null;
+    let currentGameId = ""
 
     let configureSandboxForm = function () {
 
         let form = document.getElementById("form-sandbox");
         let startBtn = document.getElementById("btn-start-sandbox");
         let stopBtn = document.getElementById("btn-stop-sandbox");
-        let statusBtn = document.getElementById("btn-info-sandbox");
+        let process_statusBtn = document.getElementById("process-status-sandbox");
+        let controller_statusBtn = document.getElementById("controller-status-sandbox");
+        let game_id = document.getElementById("info-game-id");
 
         stopBtn.disabled = true;
 
@@ -89,7 +92,10 @@
                     if (XHR.response != null && XHR.response != "null" && XHR.response != ""){
                         let jsonResponse = JSON.parse(XHR.response);
                         if (this.readyState == 4 && this.status == 200) {
-                            statusBtn.innerHTML = "<br>Status: " + jsonResponse["status"];
+                            process_statusBtn.innerHTML = "Process Status: " + jsonResponse["process_status"];
+                            controller_statusBtn.innerHTML = "Controller Status: " + jsonResponse["controller_status"];
+                            currentGameId = jsonResponse["game_id"]
+                            game_id.innerHTML = "Game Id: " + currentGameId
                         }
                     }
                 };
@@ -105,7 +111,8 @@
         let form = document.getElementById("form-agent");
         let startBtn = document.getElementById("btn-start-agent");
         let stopBtn = document.getElementById("btn-stop-agent");
-        let statusBtn = document.getElementById("btn-info-agent");
+        let process_statusBtn = document.getElementById("process-status-agent");
+        let agent_statusBtn = document.getElementById("agent-status-agent");
 
         stopBtn.disabled = true;
 
@@ -145,6 +152,8 @@
                 startBtn.disabled = false;
                 stopBtn.disabled = true;
             });
+            // Add the game id
+            FD.append("expected_version_id", currentGameId)
             // Display the key/value pairs
             console.log("Form data");
             for (var pair of FD.entries()) {
@@ -187,7 +196,8 @@
                 if (XHR.response != null && XHR.response != "null" && XHR.response != ""){
                     let jsonResponse = JSON.parse(XHR.response);
                     if (this.readyState == 4 && this.status == 200) {
-                        statusBtn.innerHTML = "<br>Status: " + jsonResponse["status"];
+                        process_statusBtn.innerHTML = "Process Status: " + jsonResponse["process_status"];
+                        agent_statusBtn.innerHTML = "Agent Status: " + jsonResponse["agent_status"];
                     }
                 }
             };

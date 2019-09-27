@@ -37,7 +37,7 @@ class SandboxForm(Form):
     lower_bound_factor = IntegerField('Lower bound factor', default=0, widget=widgets.Input(input_type="number"), validators=[wtforms.validators.NumberRange(min=0, message="Must be non-negative")],)
     upper_bound_factor = IntegerField('Upper bound factor', default=0, widget=widgets.Input(input_type="number"), validators=[wtforms.validators.NumberRange(min=0, message="Must be non-negative")],)
     tx_fee = FloatField("Transaction fee", default=0.1, validators=[wtforms.validators.NumberRange(min=0, message="Must be non-negative")],)
-    registration_timeout = IntegerField("Registration timeout", default=10, validators=[wtforms.validators.NumberRange(min=0, message="Must be non-negative")])
+    registration_timeout = IntegerField("Registration timeout", default=20, validators=[wtforms.validators.NumberRange(min=0, message="Must be non-negative")])
     inactivity_timeout = IntegerField("Inactivity timeout", default=60, validators=[wtforms.validators.NumberRange(min=0, message="Must be non-negative")])
     competition_timeout = IntegerField("Competition timeout", default=240, validators=[wtforms.validators.NumberRange(min=0, message="Must be non-negative")])
     # start_time = DateTimeField("Start time", id='datepick', validators=[wtforms.validators.Required()])

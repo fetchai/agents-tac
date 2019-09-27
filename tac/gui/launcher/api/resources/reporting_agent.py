@@ -32,9 +32,10 @@ from tac.agents.participant.v1.examples.baseline import BaselineAgent
 from tac.agents.participant.v1.examples.strategy import BaselineStrategy
 from tac.gui.dashboards.agent import AgentDashboard
 
-
-
+from aea.agent import AgentState
 logger = logging.getLogger(__name__)
+
+from tac.platform.shared_sim_status import set_agent_state
 
 def parse_arguments():
     """Arguments parsing."""
@@ -59,6 +60,12 @@ def parse_arguments():
     return parser.parse_args()
 
 
+def monitor_status(agent):
+    while True:
+        set_agent_state(str(agent._game_instance.expected_version_id), agent.agent_state)
+        time.sleep(1)
+
+
 def main():
     """Run the script."""
     args = parse_arguments()
@@ -68,17 +75,28 @@ def main():
     else:
         agent_dashboard = None
 
+    set_agent_state(args.expected_version_id, None)
+
     strategy = BaselineStrategy(register_as=RegisterAs(args.register_as), search_for=SearchFor(args.search_for), is_world_modeling=args.is_world_modeling)
     agent = BaselineAgent(name=args.name, oef_addr=args.oef_addr, oef_port=args.oef_port, agent_timeout=args.agent_timeout, strategy=strategy,
                           max_reactions=args.max_reactions, services_interval=args.services_interval, pending_transaction_timeout=args.pending_transaction_timeout,
                           dashboard=agent_dashboard, private_key_pem=args.private_key_pem, expected_version_id=args.expected_version_id)
 
+    # Create thread to pull status
+    kill_event = threading.Event()
+    status_thread = threading.Thread(target=monitor_status, args=(agent, ))
+    status_thread.start()
 
     try:
         agent.start(rejoin=args.rejoin)
     finally:
         agent.stop()
 
+    # Stop the status monitoring thread
+    kill_event.set()
+    status_thread.join(120)
+
+    set_agent_state(args.expected_version_id, None)
 
 
 if __name__ == '__main__':

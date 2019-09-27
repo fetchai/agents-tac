@@ -27,7 +27,7 @@ from enum import Enum
 from typing import Dict, Any, Optional
 
 from flask_restful import Resource, reqparse
-from tac.platform.shared_sim_status import get_shared_status
+from tac.platform.shared_sim_status import get_agent_state, remove_agent_state
 
 from tac import ROOT_DIR
 
@@ -39,10 +39,11 @@ parser.add_argument("agent_timeout", type=float, default=1.0, help="The time in 
 parser.add_argument("max_reactions", type=int, default=100, help="The maximum number of reactions (messages processed) per call to react.")
 parser.add_argument("register_as", choices=['seller', 'buyer', 'both'], default='both', help="The string indicates whether the baseline agent registers as seller, buyer or both on the oef.")
 parser.add_argument("search_for", choices=['sellers', 'buyers', 'both'], default='both', help="The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.")
-parser.add_argument("is_world_modeling", type=bool, default=False, help="Whether the agent uses a workd model or not.")
+parser.add_argument("is_world_modeling", type=bool, default=False, help="Whether the agent uses a world model or not.")
 parser.add_argument("services_interval", type=int, default=5, help="The number of seconds to wait before doing another search.")
 parser.add_argument("pending_transaction_timeout", type=int, default=30, help="The timeout in seconds to wait for pending transaction/negotiations.")
 parser.add_argument("private_key_pem", default=None, help="Path to a file containing a private key in PEM format.")
+parser.add_argument("expected_version_id", default="", help="Version id of the game we are trying to connect to")
 parser.add_argument("rejoin", type=bool, default=False, help="Whether the agent is joining a running TAC.")
 parser.add_argument("btn-start-agent", default="Test", help="Test")
 
@@ -84,7 +85,8 @@ class AgentRunner:
                 "--register-as", str(self.params["register_as"]),
                 "--search-for", str(self.params["search_for"]),
                 "--services-interval", str(self.params["services_interval"]),
-                "--pending-transaction-timeout", str(self.params["pending_transaction_timeout"])]
+                "--pending-transaction-timeout", str(self.params["pending_transaction_timeout"]),
+                "--expected-version-id", str(self.params["expected_version_id"])]
 
         if self.params["is_world_modeling"]:
             args.append("--is-world-modeling")
@@ -94,9 +96,11 @@ class AgentRunner:
             args.append("--private-key-pem")
             args.append(self.params["--private-key-pem"])
 
+
+
         self.process = subprocess.Popen([
             "python3",
-            os.path.join(ROOT_DIR, "templates", "v1", "basic.py"),
+            os.path.join(ROOT_DIR, "tac", "gui", "launcher", "api", "resources", "reporting_agent.py"),
             *args,
             "--dashboard",
             "--visdom-addr", "127.0.0.1",
@@ -121,15 +125,23 @@ class AgentRunner:
 
     def to_dict(self):
         """Serialize the object into a dictionary."""
+        game_id = self.params["expected_version_id"]
+        agent_status = get_agent_state(game_id)
+        if (agent_status is not None):
+            agent_status_text = agent_status.value
+        else:
+            agent_status_text = "Uninitialised"
+
         return {
             "id": self.id,
-            "status": get_shared_status("agent"),
-            # "status": self.status.value,
+            "process_status": self.status.value,
+            "agent_status": agent_status_text,
             "params": self.params
         }
 
     def stop(self):
         """Stop the execution of the sandbox."""
+        remove_agent_state(self.params["expected_version_id"])
         try:
             self.process.terminate()
             self.process.wait()
