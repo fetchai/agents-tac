@@ -21,6 +21,7 @@
 
 """Pass status of systems between docker images and processes using the file system and a bind mount in docker."""
 
+import glob
 import os
 import shutil
 from enum import Enum
@@ -49,8 +50,15 @@ def register_shared_dir(temp_dir) -> None:
 def clear_temp_dir() -> None:
     """Call this once at the beginning (after registering the temp director) - cleans out dir of old status files."""
     shared_dir = str(os.getenv('TAC_SHARED_DIR'))
-    shutil.rmtree(shared_dir)
-    os.mkdir(shared_dir)
+    # Get a list of all the file paths that ends with .txt from in specified directory
+    file_list = glob.glob(os.path.join(shared_dir, '*.txt'))
+
+    # Iterate over the list of filepaths & remove each file.
+    for filePath in file_list:
+        try:
+            os.remove(filePath)
+        except:
+            print("Error while deleting file : ", filePath)
 
 
 def set_controller_state(game_id: str, state: ControllerAgentState) -> None:

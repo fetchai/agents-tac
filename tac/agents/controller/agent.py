@@ -115,7 +115,6 @@ class ControllerAgent(Agent):
                 min_nb_agents = self.game_handler.tac_parameters.min_nb_agents
                 nb_reg_agents = len(self.game_handler.registered_agents)
 
-                # Remove temporary file (temporary measure to communicate)
                 set_controller_state(self.game_handler.tac_parameters.version_id, ControllerAgentState.RUNNING)
 
                 if nb_reg_agents >= min_nb_agents:

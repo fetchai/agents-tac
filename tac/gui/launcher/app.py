@@ -19,9 +19,13 @@
 # ------------------------------------------------------------------------------
 
 """The main entrypoint for the launcher app."""
+import os
 
 from tac.gui.launcher import create_app
+from tac.platform.shared_sim_status import register_shared_dir
 
 if __name__ == '__main__':
+    register_shared_dir(os.path.join(os.path.dirname(__file__), '../../../data/shared'))
+
     app = create_app()
     app.run("127.0.0.1", 5000, debug=True, use_reloader=False)
