@@ -17,15 +17,16 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+"""Register the resources with flask and set up the shared status file."""
 
-"""Define the REST APIs for the launcher app."""
+import os
+
 from flask_restful import Api
 
 from .resources.sandboxes import SandboxList, Sandbox
 from .resources.agents import Agent
-
 from tac.platform.shared_sim_status import register_shared_dir, clear_temp_dir
-import os
+
 
 def create_api(app):
     """Wrap the Flask app with the Flask-RESTful Api object."""

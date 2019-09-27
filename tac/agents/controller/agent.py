@@ -20,16 +20,16 @@
 # ------------------------------------------------------------------------------
 
 """This module contains the ControllerAgent."""
-import os;
 import argparse
 import datetime
+import dateutil.parser
 import logging
 import pprint
 import random
 import time
 from typing import Optional
 
-import dateutil.parser
+
 from aea.agent import Agent
 from aea.channels.oef.connection import OEFMailBox
 from aea.mail.base import Envelope
@@ -37,9 +37,8 @@ from aea.mail.base import Envelope
 from tac.agents.controller.base.handlers import OEFHandler, GameHandler, AgentMessageDispatcher
 from tac.agents.controller.base.tac_parameters import TACParameters
 from tac.platform.game.base import GamePhase
-from tac.gui.monitor import Monitor, NullMonitor, VisdomMonitor
-
 from tac.platform.shared_sim_status import set_controller_state, ControllerAgentState
+from tac.gui.monitor import Monitor, NullMonitor, VisdomMonitor
 
 if __name__ != "__main__":
     logger = logging.getLogger(__name__)
@@ -86,8 +85,6 @@ class ControllerAgent(Agent):
         logger.debug("[{}]: Initialized myself as Controller Agent :\n{}".format(self.name, pprint.pformat(vars())))
         set_controller_state(self.game_handler.tac_parameters.version_id, ControllerAgentState.STARTING)
 
-
-
     def act(self) -> None:
         """
         Perform the agent's actions.
@@ -108,8 +105,6 @@ class ControllerAgent(Agent):
             self.oef_handler.register_tac()
 
             set_controller_state(self.game_handler.tac_parameters.version_id, ControllerAgentState.REGISTRATION_OPEN)
-
-
 
             self.game_handler._game_phase = GamePhase.GAME_SETUP
         elif self.game_handler.game_phase == GamePhase.GAME_SETUP:

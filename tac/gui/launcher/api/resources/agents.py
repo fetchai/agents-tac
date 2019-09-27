@@ -20,15 +20,15 @@
 
 """Implement the agent resource and other utility classes."""
 
+from enum import Enum
 import logging
 import os
 import subprocess
-from enum import Enum
 from typing import Dict, Any, Optional
 
 from flask_restful import Resource, reqparse
-from tac.platform.shared_sim_status import get_agent_state, remove_agent_state
 
+from tac.platform.shared_sim_status import get_agent_state, remove_agent_state
 from tac import ROOT_DIR
 
 logger = logging.getLogger(__name__)
@@ -96,8 +96,6 @@ class AgentRunner:
             args.append("--private-key-pem")
             args.append(self.params["--private-key-pem"])
 
-
-
         self.process = subprocess.Popen([
             "python3",
             os.path.join(ROOT_DIR, "tac", "gui", "launcher", "api", "resources", "reporting_agent.py"),
@@ -121,7 +119,6 @@ class AgentRunner:
             return AgentState.FAILED
         else:
             raise ValueError("Unexpected return code.")
-
 
     def to_dict(self):
         """Serialize the object into a dictionary."""

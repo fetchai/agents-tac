@@ -37,4 +37,3 @@ class AgentForm(Form):
     pending_transaction_timeout = IntegerField("Pending transaction timeout", default=30, validators=[wtforms.validators.NumberRange(min=0.0)])
     private_key_pem = FileField("Private key PEM file path", default=None, validators=[wtforms.validators.Optional])
     rejoin = wtforms.BooleanField("Is rejoining?", default=False)
-

@@ -21,20 +21,20 @@
 """Implement the sandbox resource and other utility classes."""
 
 # import datetime
-import logging
-import os
-import subprocess
 from enum import Enum
+import logging
+import math
+import os
 from queue import Queue
+import random
+import subprocess
+import time
 from typing import Dict, Any, Optional
 
 from flask_restful import Resource, reqparse
-from tac.platform.shared_sim_status import set_controller_state, get_controller_state, get_controller_last_time, remove_controller_state, ControllerAgentState
 
+from tac.platform.shared_sim_status import set_controller_state, get_controller_state, get_controller_last_time, remove_controller_state, ControllerAgentState
 from tac import ROOT_DIR
-import time
-import math
-import random
 
 
 logger = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ class SandboxProcessState(Enum):
 class SandboxRunner:
     """Wrapper class to track the execution of a sandbox."""
 
-    def __init__(self, id: int, params: Dict[str, Any],  game_id: str):
+    def __init__(self, id: int, params: Dict[str, Any], game_id: str):
         """
         Initialize the sandbox runner.
 
@@ -109,7 +109,6 @@ class SandboxRunner:
             "OEF_ADDR": "172.28.1.1",
             "OEF_PORT": "10000",
             "DATA_OUTPUT_DIR": str(args["data_output_dir"]),
-            "VERSION_ID": str(args["version_id"]),
             "LOWER_BOUND_FACTOR": str(args["lower_bound_factor"]),
             "UPPER_BOUND_FACTOR": str(args["upper_bound_factor"]),
             "TX_FEE": str(args["tx_fee"]),
@@ -153,20 +152,17 @@ class SandboxRunner:
         else:
             raise ValueError("Unexpected return code.")
 
-
     def to_dict(self) -> Dict[str, Any]:
-
+        """Convert class data into dictionary so we can jasonise it and send it to web frontend."""
         controller_status = get_controller_state(self.game_id)
-        if (controller_status is not None):
+        if controller_status is not None:
             controller_status_text = controller_status.value
         else:
             controller_status_text = "Uninitialised"
 
-
         if controller_status == ControllerAgentState.REGISTRATION_OPEN:
             duration = time.time() - get_controller_last_time(self.game_id)
             controller_status_text += ": " + str(1 + math.floor(self.rec_registration_timeout - duration))
-
 
         return {
             "id": self.id,
@@ -176,8 +172,8 @@ class SandboxRunner:
             "params": self.params
         }
 
-
     def stop(self) -> None:
+        """Stop the sandbox."""
         self.ui_is_starting = False
         """Stop the execution of the sandbox."""
         remove_controller_state(self.game_id)
@@ -194,7 +190,6 @@ class SandboxRunner:
     def wait(self):
         """Wait for the completion of the sandbox."""
         return self.process.wait()
-
 
 
 class Sandbox(Resource):
@@ -225,7 +220,6 @@ class SandboxList(Resource):
         return {sandbox_id: sandbox.to_dict() for sandbox_id, sandbox in sandboxes.items()}
 
     def post(self):
-
         """Create a sandbox instance."""
         # parse the arguments
         args = parser.parse_args()

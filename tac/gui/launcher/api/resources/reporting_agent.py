@@ -19,23 +19,22 @@
 #
 # ------------------------------------------------------------------------------
 
-"""Template agent, no modification required."""
+"""Like the basic agents but with thread to report on status to shared file."""
 
 import argparse
 import logging
 import threading
 import time
-import os
+
 
 from tac.agents.participant.v1.base.strategy import RegisterAs, SearchFor
 from tac.agents.participant.v1.examples.baseline import BaselineAgent
 from tac.agents.participant.v1.examples.strategy import BaselineStrategy
 from tac.gui.dashboards.agent import AgentDashboard
+from tac.platform.shared_sim_status import set_agent_state
 
-from aea.agent import AgentState
 logger = logging.getLogger(__name__)
 
-from tac.platform.shared_sim_status import set_agent_state
 
 def parse_arguments():
     """Arguments parsing."""
@@ -61,6 +60,7 @@ def parse_arguments():
 
 
 def monitor_status(agent):
+    """Poll agent and reports on status."""
     while True:
         set_agent_state(str(agent._game_instance.expected_version_id), agent.agent_state)
         time.sleep(1)

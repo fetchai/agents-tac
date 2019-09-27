@@ -23,9 +23,6 @@
 
 import argparse
 import logging
-import threading
-import time
-import os
 
 from tac.agents.participant.v1.base.strategy import RegisterAs, SearchFor
 from tac.agents.participant.v1.examples.baseline import BaselineAgent
@@ -33,8 +30,8 @@ from tac.agents.participant.v1.examples.strategy import BaselineStrategy
 from tac.gui.dashboards.agent import AgentDashboard
 
 
-
 logger = logging.getLogger(__name__)
+
 
 def parse_arguments():
     """Arguments parsing."""
@@ -73,12 +70,10 @@ def main():
                           max_reactions=args.max_reactions, services_interval=args.services_interval, pending_transaction_timeout=args.pending_transaction_timeout,
                           dashboard=agent_dashboard, private_key_pem=args.private_key_pem, expected_version_id=args.expected_version_id)
 
-
     try:
         agent.start(rejoin=args.rejoin)
     finally:
         agent.stop()
-
 
 
 if __name__ == '__main__':
