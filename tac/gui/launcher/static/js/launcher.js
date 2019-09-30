@@ -99,6 +99,7 @@
                         }
                     }
                 };
+                console.log(" XHR Open: /api/sandboxes/" + currentSandboxID)
                 XHR.open("GET", "/api/sandboxes/" + currentSandboxID, true);
                 XHR.send();
             }
@@ -190,7 +191,6 @@
             return XHR.responseText;
         };
         let getAgentStatus = function () {
-            console.log("getAgentStatus called");
             let XHR = new XMLHttpRequest();
             XHR.onreadystatechange = function () {
                 if (XHR.response != null && XHR.response != "null" && XHR.response != ""){
