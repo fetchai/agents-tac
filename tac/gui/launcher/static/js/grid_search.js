@@ -90,12 +90,15 @@
         let result = [];
         for (let sandboxId in sandboxes){
             let inputs = sandboxes[sandboxId].jqueryObj.find('.card-body :input');
-            let values = {};
+            let values = new FormData();
             inputs.each(function() {
-                values[this.name] = $(this).val();
+                let key = this.name;
+                let val = $(this).val()
+                values.append(key, val);
             });
             result.push(values);
         }
+
         return result
     }
 
@@ -115,10 +118,10 @@
             });
             XHR.open("POST", "/api/sandboxes", true);
                         // Display the key/value pairs
-            console.log("Form data");
             let FD = sandboxObjectList[i];
-            for (var pair in FD) {
-                console.log(pair);
+            console.log("Form data");
+            for (var pair of FD.entries()) {
+                console.log(pair[0]+ ', ' + pair[1]);
             }
             XHR.send(FD);
 
