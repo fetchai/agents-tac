@@ -37,7 +37,7 @@ from typing import List, Dict, Any
 
 from tac.platform.game.stats import GameStats
 
-OUR_DIRECTORY = os.path.dirname(inspect.getfile(inspect.currentframe()))
+OUR_DIRECTORY = os.path.dirname(inspect.getfile(inspect.currentframe()))  # type: ignore
 ROOT_DIR = os.path.join(OUR_DIRECTORY, "..")
 
 logging.basicConfig(level=logging.INFO)

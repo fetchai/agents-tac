@@ -19,8 +19,6 @@
 # ------------------------------------------------------------------------------
 """Register the resources with flask and set up the shared status file."""
 
-import os
-
 from flask_restful import Api
 
 from .resources.sandboxes import SandboxList, Sandbox

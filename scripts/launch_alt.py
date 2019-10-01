@@ -35,7 +35,7 @@ import tac
 from tac.platform.oef_health_check import OEFHealthCheck
 from tac.platform.simulation import parse_arguments, build_simulation_parameters
 
-CUR_PATH = inspect.getfile(inspect.currentframe())
+CUR_PATH = inspect.getfile(inspect.currentframe())  # type: ignore
 ROOT_DIR = os.path.join(os.path.dirname(CUR_PATH), "..")
 stack_tracer = importlib.import_module("stack_tracer", package=CUR_PATH)
 

@@ -23,7 +23,6 @@
 
 import glob
 import os
-import shutil
 from enum import Enum
 
 from aea.agent import AgentState
@@ -55,10 +54,7 @@ def clear_temp_dir() -> None:
 
     # Iterate over the list of filepaths & remove each file.
     for filePath in file_list:
-        try:
-            os.remove(filePath)
-        except:
-            print("Error while deleting file : ", filePath)
+        os.remove(filePath)
 
 
 def set_controller_state(game_id: str, state: ControllerAgentState) -> None:

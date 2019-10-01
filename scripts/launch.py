@@ -31,7 +31,7 @@ import docker
 
 from tac.agents.participant.v1.examples.baseline import main as participant_agent_main
 
-CUR_PATH = inspect.getfile(inspect.currentframe())
+CUR_PATH = inspect.getfile(inspect.currentframe())  # type: ignore
 ROOT_DIR = os.path.join(os.path.dirname(CUR_PATH), "..")
 
 
