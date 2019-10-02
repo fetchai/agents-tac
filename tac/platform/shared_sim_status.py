@@ -23,6 +23,7 @@
 
 import glob
 import os
+
 from enum import Enum
 
 from aea.agent import AgentState
@@ -43,7 +44,15 @@ class ControllerAgentState(Enum):
 
 def register_shared_dir(temp_dir) -> None:
     """Call this from somewhere near the entry point of the program to set he location of the temp directory."""
+    # print("register_shared_dir: " + temp_dir)
+    # logging.error("register_shared_dir: " + temp_dir)
+
     os.environ['TAC_SHARED_DIR'] = temp_dir
+
+
+def get_shared_dir() -> str:
+    """Call this to return the bases shared folder location."""
+    return os.environ['TAC_SHARED_DIR']
 
 
 def clear_temp_dir() -> None:
@@ -116,7 +125,7 @@ def _get_last_status_time(id_name) -> float:
 def _construct_temp_filename(id_name) -> str:
     shared_dir = os.getenv('TAC_SHARED_DIR')
 
-    # Actually it is fine not to set this up - should just faile gracefull as
+    # Actually it is fine not to set this up - should just fail gracefully as
     # this is only needed when using the GUI launcher
     # assert shared_dir is not None, "must call register_shared_dir() from entry point of program"
 

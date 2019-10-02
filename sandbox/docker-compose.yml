@@ -110,7 +110,7 @@ services:
       - "${VERSION_ID}"
     volumes:
       - type: bind
-        source: ./../data/shared
+        source: ${SHARED_DIR}
         target: /build/data/shared
 networks:
     main_net:

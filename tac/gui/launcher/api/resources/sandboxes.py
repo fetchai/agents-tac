@@ -33,7 +33,7 @@ from typing import Dict, Any, Optional
 
 from flask_restful import Resource, reqparse
 
-from tac.platform.shared_sim_status import set_controller_state, get_controller_state, get_controller_last_time, remove_controller_state, ControllerAgentState
+from tac.platform.shared_sim_status import set_controller_state, get_controller_state, get_controller_last_time, remove_controller_state, ControllerAgentState, get_shared_dir
 from tac import ROOT_DIR
 
 
@@ -118,9 +118,11 @@ class SandboxRunner:
             "SEED": str(args["seed"]),
             "VERSION_ID": self.game_id,
             "WHITELIST": str(args["whitelist_file"]),
+            "SHARED_DIR": str(get_shared_dir()),
             **os.environ
         }
 
+        # print("env[SHARED_DIR] = {}".format(env["SHARED_DIR"]))
         # Needed for UI countdown
         self.rec_registration_timeout = args["registration_timeout"]
 
