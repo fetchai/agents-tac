@@ -33,7 +33,7 @@ from tac.platform.oef_health_check import OEFHealthCheck
 
 logger = logging.getLogger(__name__)
 
-CUR_PATH = inspect.getfile(inspect.currentframe())
+CUR_PATH = inspect.getfile(inspect.currentframe())  # type: ignore
 ROOT_DIR = os.path.join(os.path.dirname(CUR_PATH), "..")
 
 

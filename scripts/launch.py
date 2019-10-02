@@ -30,8 +30,9 @@ from typing import Optional
 import docker
 
 from tac.agents.participant.v1.examples.baseline import main as participant_agent_main
+from tac.platform.shared_sim_status import register_shared_dir, get_shared_dir
 
-CUR_PATH = inspect.getfile(inspect.currentframe())
+CUR_PATH = inspect.getfile(inspect.currentframe())  # type: ignore
 ROOT_DIR = os.path.join(os.path.dirname(CUR_PATH), "..")
 
 
@@ -58,6 +59,9 @@ class Sandbox:
         """Define what the context manager should do at the beginning of the block."""
         self._stop_oef_search_images()
         self._build_sandbox()
+
+        register_shared_dir(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../data/shared'))
+        os.environ['SHARED_DIR'] = get_shared_dir()
 
         print("Launching sandbox...")
         self.sandbox_process = subprocess.Popen(["docker-compose", "up", "--abort-on-container-exit"],

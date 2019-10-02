@@ -40,7 +40,7 @@ from tac.agents.participant.v1.examples.baseline import BaselineAgent
 from tac.agents.participant.v1.examples.strategy import BaselineStrategy
 from tac.platform.game.base import GameData
 
-CUR_PATH = inspect.getfile(inspect.currentframe())
+CUR_PATH = inspect.getfile(inspect.currentframe())  # type: ignore
 ROOT_DIR = os.path.join(os.path.dirname(CUR_PATH), "..")
 
 

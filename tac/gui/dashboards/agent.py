@@ -32,7 +32,7 @@ from tac.gui.dashboards.base import Dashboard
 from tac.gui.dashboards.helpers import generate_html_table_from_dict, escape_html
 from tac.platform.game.base import Transaction
 
-CUR_PATH = inspect.getfile(inspect.currentframe())
+CUR_PATH = inspect.getfile(inspect.currentframe())  # type: ignore
 CUR_DIR = os.path.dirname(CUR_PATH)
 ROOT_PATH = os.path.join(CUR_DIR, "..", "..")
 

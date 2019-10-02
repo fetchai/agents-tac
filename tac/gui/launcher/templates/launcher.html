@@ -16,11 +16,16 @@
                onclick='this.form.target="btn-start-sandbox";'>
           <input type="submit" class="btn btn-danger" id="btn-stop-sandbox" name="btn-stop-sandbox" value="Stop Sandbox"
                  onclick='this.form.target="btn-stop-sandbox";'>
-          <button class="btn btn-primary" type="button" disabled id="btn-info-sandbox">
-            Not started yet
-          </button>
         </div>
       </form>
+      <br>
+      <div id="process-status-sandbox">
+        Process Status: Uninitialised
+      </div>
+      <div id="controller-status-sandbox">
+        Controller Status: Uninitialised
+      </div>
+      <br><div id="info-game-id">Game Id: </div>
     </div>
     <div class="col-xs-6">
       <h4>Agent Configurations</h4>
@@ -35,12 +40,16 @@
                  onclick='this.form.target="btn-start-agent";'>
           <input type="submit" class="btn btn-danger" id="btn-stop-agent" name="btn-stop-agent" value="Stop Agent"
                  onclick='this.form.target="btn-stop-agent";'>
-<!--          <button class="btn btn-primary" type="button" disabled id="btn-info-agent">-->
-<!--            Not started yet-->
-<!--          </button>-->
+
         </div>
       </form>
-    </div>
+      <br>
+      <div id="process-status-agent">
+        Process Status: Uninitialised
+      </div>
+      <div id="agent-status-agent">
+        Controller Status: Uninitialised
+      </div>
   </div>
 </div>
 {% endblock %}
