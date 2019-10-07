@@ -46,3 +46,9 @@ Release History
 - Adds versioning to TAC via `version_id`
 - Ports `tac` protocol from aea repo
 - Multiple small fixes
+
+0.1.7 (2019-10-02)
+-------------------
+
+- Improves launcher gui
+- Multiple small fixes 
