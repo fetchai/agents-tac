@@ -30,8 +30,9 @@ from typing import Optional
 import docker
 
 from tac.agents.participant.v1.examples.baseline import main as participant_agent_main
+from tac.platform.shared_sim_status import register_shared_dir, get_shared_dir
 
-CUR_PATH = inspect.getfile(inspect.currentframe())
+CUR_PATH = inspect.getfile(inspect.currentframe())  # type: ignore
 ROOT_DIR = os.path.join(os.path.dirname(CUR_PATH), "..")
 
 
@@ -59,6 +60,9 @@ class Sandbox:
         self._stop_oef_search_images()
         self._build_sandbox()
 
+        register_shared_dir(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../data/shared'))
+        os.environ['SHARED_DIR'] = get_shared_dir()
+
         print("Launching sandbox...")
         self.sandbox_process = subprocess.Popen(["docker-compose", "up", "--abort-on-container-exit"],
                                                 env=os.environ,
@@ -80,11 +84,11 @@ def wait_for_oef():
         ":"
     ], env=os.environ, cwd=ROOT_DIR)
 
-    wait_for_oef.wait(30)
+    wait_for_oef.wait(60)
 
 
 if __name__ == '__main__':
 
     with Sandbox():
         wait_for_oef()
-        participant_agent_main(name="my_agent", dashboard=True)
+        participant_agent_main(name="my_agent", dashboard=True, expected_version_id='tac_v1')

@@ -21,16 +21,21 @@
 """Implement the sandbox resource and other utility classes."""
 
 # import datetime
-import logging
-import os
-import subprocess
 from enum import Enum
+import logging
+import math
+import os
 from queue import Queue
+import random
+import subprocess
+import time
 from typing import Dict, Any, Optional
 
 from flask_restful import Resource, reqparse
 
+from tac.platform.shared_sim_status import set_controller_state, get_controller_state, get_controller_last_time, remove_controller_state, ControllerAgentState, get_shared_dir
 from tac import ROOT_DIR
+
 
 logger = logging.getLogger(__name__)
 
@@ -60,11 +65,12 @@ sandboxes = {}  # type: Dict[int, SandboxRunner]
 sandbox_queue = Queue()  # type: Queue
 
 
-class SandboxState(Enum):
+class SandboxProcessState(Enum):
     """The state of execution of a sandbox."""
 
     NOT_STARTED = "Not started yet"
     RUNNING = "Running"
+    STOPPING = "Stopping"
     FINISHED = "Finished"
     FAILED = "Failed"
 
@@ -72,7 +78,7 @@ class SandboxState(Enum):
 class SandboxRunner:
     """Wrapper class to track the execution of a sandbox."""
 
-    def __init__(self, id: int, params: Dict[str, Any]):
+    def __init__(self, id: int, params: Dict[str, Any], game_id: str):
         """
         Initialize the sandbox runner.
 
@@ -81,12 +87,14 @@ class SandboxRunner:
         """
         self.id = id
         self.params = params
+        self.game_id = game_id
+        self.ui_is_starting = False     # set to true if the UI is trying to start the sandbox
 
         self.process = None  # type: Optional[subprocess.Popen]
 
     def __call__(self):
         """Launch the sandbox."""
-        if self.status != SandboxState.NOT_STARTED:
+        if self.status != SandboxProcessState.NOT_STARTED:
             return
 
         args = self.params
@@ -101,7 +109,6 @@ class SandboxRunner:
             "OEF_ADDR": "172.28.1.1",
             "OEF_PORT": "10000",
             "DATA_OUTPUT_DIR": str(args["data_output_dir"]),
-            "VERSION_ID": str(args["version_id"]),
             "LOWER_BOUND_FACTOR": str(args["lower_bound_factor"]),
             "UPPER_BOUND_FACTOR": str(args["upper_bound_factor"]),
             "TX_FEE": str(args["tx_fee"]),
@@ -109,9 +116,18 @@ class SandboxRunner:
             "INACTIVITY_TIMEOUT": str(args["inactivity_timeout"]),
             "COMPETITION_TIMEOUT": str(args["competition_timeout"]),
             "SEED": str(args["seed"]),
+            "VERSION_ID": self.game_id,
             "WHITELIST": str(args["whitelist_file"]),
+            "SHARED_DIR": str(get_shared_dir()),
             **os.environ
         }
+
+        # print("env[SHARED_DIR] = {}".format(env["SHARED_DIR"]))
+        # Needed for UI countdown
+        self.rec_registration_timeout = args["registration_timeout"]
+
+        self.ui_is_starting = True
+        set_controller_state(self.game_id, ControllerAgentState.STARTING_DOCKER)
         self.process = subprocess.Popen([
             "docker-compose",
             "-f",
@@ -121,30 +137,49 @@ class SandboxRunner:
             env=env)
 
     @property
-    def status(self) -> SandboxState:
+    def status(self) -> SandboxProcessState:
         """Return the state of the execution."""
         if self.process is None:
-            return SandboxState.NOT_STARTED
+            return SandboxProcessState.NOT_STARTED
         returncode = self.process.poll()
         if returncode is None:
-            return SandboxState.RUNNING
+            if self.ui_is_starting:
+                return SandboxProcessState.RUNNING
+            else:
+                return SandboxProcessState.STOPPING
         elif returncode == 0:
-            return SandboxState.FINISHED
+            return SandboxProcessState.FINISHED
         elif returncode > 0:
-            return SandboxState.FAILED
+            return SandboxProcessState.FAILED
         else:
             raise ValueError("Unexpected return code.")
 
     def to_dict(self) -> Dict[str, Any]:
-        """Serialize the object into a dictionary."""
+        """Convert class data into dictionary so we can jasonise it and send it to web frontend."""
+        controller_status = get_controller_state(self.game_id)
+        if controller_status is not None:
+            controller_status_text = controller_status.value
+        else:
+            controller_status_text = "Uninitialised"
+
+        if controller_status == ControllerAgentState.REGISTRATION_OPEN:
+            duration = time.time() - get_controller_last_time(self.game_id)
+            controller_status_text += ": " + str(1 + math.floor(self.rec_registration_timeout - duration))
+
         return {
             "id": self.id,
-            "status": self.status.value,
+            "controller_status": controller_status_text,
+            "process_status": self.status.value,
+            "game_id": self.game_id,
             "params": self.params
         }
 
     def stop(self) -> None:
+        """Stop the sandbox."""
+        self.ui_is_starting = False
         """Stop the execution of the sandbox."""
+        remove_controller_state(self.game_id)
+        self.game_id = ""
         if self.process is None:
             return
         try:
@@ -167,7 +202,7 @@ class Sandbox(Resource):
         if sandbox_id in sandboxes:
             return sandboxes[sandbox_id].to_dict(), 200
         else:
-            return None, 404
+            return "", 200
 
     def delete(self, sandbox_id):
         """Delete the current sandbox instance."""
@@ -195,7 +230,8 @@ class SandboxList(Resource):
         args = self._post_args_preprocessing(args, sandbox_id)
 
         # create the simulation runner wrapper
-        simulation_runner = SandboxRunner(sandbox_id, args)
+        game_id = "game_id_" + str(random.randrange(0, 10000))
+        simulation_runner = SandboxRunner(sandbox_id, args, game_id)
 
         # save the created simulation to the global state
         sandboxes[sandbox_id] = simulation_runner

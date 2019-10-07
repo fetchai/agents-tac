@@ -19,10 +19,14 @@
 # ------------------------------------------------------------------------------
 
 """Spawn several TAC agents."""
+import os
+from tac.platform.shared_sim_status import register_shared_dir
 
 from tac.platform.simulation import parse_arguments, build_simulation_parameters, run
 
 if __name__ == '__main__':
+    register_shared_dir(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../data/shared'))
+
     arguments = parse_arguments()
     simulation_parameters = build_simulation_parameters(arguments)
     run(simulation_parameters)

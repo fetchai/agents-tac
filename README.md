@@ -18,9 +18,23 @@ This repository contains submodules. Clone with recursive strategy:
 
 The controller GUI at http://localhost:8097 provides real time insights.
 
-## Option 2: Step by step:
+## Option 2: Launcher GUI:
 
-- [x] You have followed the steps under 'Dependencies' and 'Preliminaries' below
+- [x] Follow the steps under 'Dependencies' and 'Preliminaries' below
+- [x] Build the sandbox:
+
+      cd sandbox && docker-compose build && cd ..
+
+- [x] Enter the virtual environment and start the launcher GUI. Then launch the sandbox with your prefered configs:
+
+      pipenv shell
+      python tac/gui/launcher/app.py
+
+The controller GUI at http://localhost:8097 provides real time insights.
+
+## Option 3: Step by step:
+
+- [x] Follow the steps under 'Dependencies' and 'Preliminaries' below
 - [x] In one terminal, build the sandbox and then launch it:
 
       cd sandbox && docker-compose build
@@ -29,7 +43,7 @@ The controller GUI at http://localhost:8097 provides real time insights.
 - [x] Optionally, in another terminal, enter the virtual environment and connect a template agent to the sandbox:
 
       pipenv shell
-      python templates/v1/basic.py --name my_agent --dashboard
+      python templates/v1/basic.py --name my_agent --dashboard --expected-version-id tac_v1
 
 The sandbox is starting up:
 <p align="center">

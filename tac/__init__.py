@@ -36,5 +36,5 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
 
-ROOT_DIR = os.path.join(os.path.dirname(inspect.getfile(inspect.currentframe())), "..")
+ROOT_DIR = os.path.join(os.path.dirname(inspect.getfile(inspect.currentframe())), "..") # type: ignore
 

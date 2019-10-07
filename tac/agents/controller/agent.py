@@ -20,16 +20,16 @@
 # ------------------------------------------------------------------------------
 
 """This module contains the ControllerAgent."""
-
 import argparse
 import datetime
+import dateutil.parser
 import logging
 import pprint
 import random
 import time
 from typing import Optional
 
-import dateutil.parser
+
 from aea.agent import Agent
 from aea.channels.oef.connection import OEFMailBox
 from aea.mail.base import Envelope
@@ -37,6 +37,7 @@ from aea.mail.base import Envelope
 from tac.agents.controller.base.handlers import OEFHandler, GameHandler, AgentMessageDispatcher
 from tac.agents.controller.base.tac_parameters import TACParameters
 from tac.platform.game.base import GamePhase
+from tac.platform.shared_sim_status import set_controller_state, ControllerAgentState
 from tac.gui.monitor import Monitor, NullMonitor, VisdomMonitor
 
 if __name__ != "__main__":
@@ -82,6 +83,7 @@ class ControllerAgent(Agent):
         self.last_activity = datetime.datetime.now()
 
         logger.debug("[{}]: Initialized myself as Controller Agent :\n{}".format(self.name, pprint.pformat(vars())))
+        set_controller_state(self.game_handler.tac_parameters.version_id, ControllerAgentState.STARTING)
 
     def act(self) -> None:
         """
@@ -96,10 +98,14 @@ class ControllerAgent(Agent):
             logger.debug("[{}]: waiting for starting the competition: start_time={}, current_time={}, timedelta ={}s"
                          .format(self.name, str(self.game_handler.tac_parameters.start_time), str(now), seconds_to_wait))
             self.game_handler.competition_start = now + datetime.timedelta(seconds=seconds_to_wait + self.game_handler.tac_parameters.registration_timedelta.seconds)
+
             time.sleep(seconds_to_wait)
             logger.debug("[{}]: Register competition with parameters: {}"
                          .format(self.name, pprint.pformat(self.game_handler.tac_parameters.__dict__)))
             self.oef_handler.register_tac()
+
+            set_controller_state(self.game_handler.tac_parameters.version_id, ControllerAgentState.REGISTRATION_OPEN)
+
             self.game_handler._game_phase = GamePhase.GAME_SETUP
         elif self.game_handler.game_phase == GamePhase.GAME_SETUP:
             assert self.game_handler.competition_start is not None, "No competition start time set!"
@@ -108,6 +114,9 @@ class ControllerAgent(Agent):
                 logger.debug("[{}]: Checking if we can start the competition.".format(self.name))
                 min_nb_agents = self.game_handler.tac_parameters.min_nb_agents
                 nb_reg_agents = len(self.game_handler.registered_agents)
+
+                set_controller_state(self.game_handler.tac_parameters.version_id, ControllerAgentState.RUNNING)
+
                 if nb_reg_agents >= min_nb_agents:
                     logger.debug("[{}]: Start competition. Registered agents: {}, minimum number of agents: {}."
                                  .format(self.name, nb_reg_agents, min_nb_agents))
@@ -115,6 +124,7 @@ class ControllerAgent(Agent):
                 else:
                     logger.debug("[{}]: Not enough agents to start TAC. Registered agents: {}, minimum number of agents: {}."
                                  .format(self.name, nb_reg_agents, min_nb_agents))
+                    set_controller_state(self.game_handler.tac_parameters.version_id, ControllerAgentState.STOPPING_UNSUFFICIENT_AGENTS)
                     self.stop()
                     return
         elif self.game_handler.game_phase == GamePhase.GAME:
@@ -122,10 +132,12 @@ class ControllerAgent(Agent):
             inactivity_duration = current_time - self.last_activity
             if inactivity_duration > self.game_handler.tac_parameters.inactivity_timedelta:
                 logger.debug("[{}]: Inactivity timeout expired. Terminating...".format(self.name))
+                set_controller_state(self.game_handler.tac_parameters.version_id, ControllerAgentState.FINISHED_INACTIVITY)
                 self.stop()
                 return
             elif current_time > self.game_handler.tac_parameters.end_time:
                 logger.debug("[{}]: Competition timeout expired. Terminating...".format(self.name))
+                set_controller_state(self.game_handler.tac_parameters.version_id, ControllerAgentState.FINISHED_GAME_TIMEOUT)
                 self.stop()
                 return
 

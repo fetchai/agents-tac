@@ -17,12 +17,13 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
+"""Register the resources with flask and set up the shared status file."""
 
-"""Define the REST APIs for the launcher app."""
 from flask_restful import Api
 
 from .resources.sandboxes import SandboxList, Sandbox
 from .resources.agents import Agent
+from tac.platform.shared_sim_status import clear_temp_dir
 
 
 def create_api(app):
@@ -32,3 +33,5 @@ def create_api(app):
     api.add_resource(SandboxList, "/sandboxes")
     api.add_resource(Sandbox, "/sandboxes/<int:sandbox_id>")
     api.add_resource(Agent, "/agent")
+
+    clear_temp_dir()

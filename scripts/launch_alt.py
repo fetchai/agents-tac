@@ -33,9 +33,10 @@ import docker
 
 import tac
 from tac.platform.oef_health_check import OEFHealthCheck
+from tac.platform.shared_sim_status import register_shared_dir, get_shared_dir
 from tac.platform.simulation import parse_arguments, build_simulation_parameters
 
-CUR_PATH = inspect.getfile(inspect.currentframe())
+CUR_PATH = inspect.getfile(inspect.currentframe())  # type: ignore
 ROOT_DIR = os.path.join(os.path.dirname(CUR_PATH), "..")
 stack_tracer = importlib.import_module("stack_tracer", package=CUR_PATH)
 
@@ -83,6 +84,10 @@ class OEFNode:
         self._stop_oef_search_images()
         script_path = os.path.join("scripts", "oef", "launch.py")
         configuration_file_path = os.path.join("scripts", "oef", "launch_config.json")
+
+        register_shared_dir(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../data/shared'))
+        os.environ['SHARED_DIR'] = get_shared_dir()
+
         print("Launching new OEF Node...")
         self.oef_process = subprocess.Popen(["python3", script_path, "-c", configuration_file_path, "--background"],
                                             stdout=subprocess.PIPE, env=os.environ, cwd=ROOT_DIR)
@@ -103,7 +108,7 @@ class OEFNode:
 
 
 if __name__ == '__main__':
-    sys.argv += ['--dashboard']
+    sys.argv += ['--dashboard', '--version-id', 'tac_v1']
     args = parse_arguments()
     simulation_params = build_simulation_parameters(args)
 

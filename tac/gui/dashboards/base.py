@@ -28,7 +28,7 @@ from typing import Optional
 
 from visdom import Visdom
 
-CUR_PATH = inspect.getfile(inspect.currentframe())
+CUR_PATH = inspect.getfile(inspect.currentframe())  # type: ignore
 CUR_DIR = os.path.dirname(CUR_PATH)
 
 

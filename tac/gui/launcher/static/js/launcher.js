@@ -2,13 +2,16 @@
 
     // the ID of the current sandbox running/finished/stopped. 'null' if no sandbox has been started yet.
     let currentSandboxID = null;
+    let currentGameId = ""
 
     let configureSandboxForm = function () {
 
         let form = document.getElementById("form-sandbox");
         let startBtn = document.getElementById("btn-start-sandbox");
         let stopBtn = document.getElementById("btn-stop-sandbox");
-        let statusBtn = document.getElementById("btn-info-sandbox");
+        let process_statusBtn = document.getElementById("process-status-sandbox");
+        let controller_statusBtn = document.getElementById("controller-status-sandbox");
+        let game_id = document.getElementById("info-game-id");
 
         stopBtn.disabled = true;
 
@@ -45,6 +48,11 @@
             });
 
             XHR.open("POST", "/api/sandboxes", false);
+            // Display the key/value pairs
+            console.log("Form data");
+            for (var pair of FD.entries()) {
+                console.log(pair[0]+ ', ' + pair[1]);
+            }
             XHR.send(FD);
             let jsonResponse = JSON.parse(XHR.response);
             console.log("ID=" + jsonResponse["id"]);
@@ -81,26 +89,36 @@
             if (currentSandboxID != null) {
                 let XHR = new XMLHttpRequest();
                 XHR.onreadystatechange = function () {
-                    let jsonResponse = JSON.parse(XHR.response);
-                    if (this.readyState == 4 && this.status == 200) {
-                        statusBtn.innerHTML = jsonResponse["status"];
+                    if (XHR.response != null && XHR.response != "null" && XHR.response != ""){
+                        let jsonResponse = JSON.parse(XHR.response);
+                        if (this.readyState == 4 && this.status == 200) {
+                            process_statusBtn.innerHTML = "Process Status: " + jsonResponse["process_status"];
+                            controller_statusBtn.innerHTML = "Controller Status: " + jsonResponse["controller_status"];
+                            currentGameId = jsonResponse["game_id"]
+                            game_id.innerHTML = "Game Id: " + currentGameId
+                        }
                     }
                 };
+                console.log(" XHR Open: /api/sandboxes/" + currentSandboxID)
                 XHR.open("GET", "/api/sandboxes/" + currentSandboxID, true);
                 XHR.send();
             }
-            setTimeout(getSandboxStatus, 1000);
+            setTimeout(getSandboxStatus, 500);
         };
         getSandboxStatus();
     };
+
     let configureAgentForm = function () {
         let form = document.getElementById("form-agent");
         let startBtn = document.getElementById("btn-start-agent");
         let stopBtn = document.getElementById("btn-stop-agent");
+        let process_statusBtn = document.getElementById("process-status-agent");
+        let agent_statusBtn = document.getElementById("agent-status-agent");
 
         stopBtn.disabled = true;
 
         form.addEventListener("submit", function (ev) {
+
             ev.preventDefault();
 
             let clickedBtnId = ev.target.target;
@@ -115,6 +133,9 @@
         });
 
         let startAgent = function () {
+            console.log("******* startAgent")
+
+
             let XHR = new XMLHttpRequest();
 
             // Bind the FormData object and the form element
@@ -132,11 +153,19 @@
                 startBtn.disabled = false;
                 stopBtn.disabled = true;
             });
+            // Add the game id
+            FD.append("expected_version_id", currentGameId)
+            // Display the key/value pairs
+            console.log("Form data");
+            for (var pair of FD.entries()) {
+                console.log(pair[0]+ ', ' + pair[1]);
+            }
 
             XHR.open("POST", "/api/agent", true);
             XHR.send(FD);
             return XHR.responseText;
         };
+
 
         let stopAgent = function () {
             let XHR = new XMLHttpRequest();
@@ -161,6 +190,22 @@
             XHR.send(FD);
             return XHR.responseText;
         };
+        let getAgentStatus = function () {
+            let XHR = new XMLHttpRequest();
+            XHR.onreadystatechange = function () {
+                if (XHR.response != null && XHR.response != "null" && XHR.response != ""){
+                    let jsonResponse = JSON.parse(XHR.response);
+                    if (this.readyState == 4 && this.status == 200) {
+                        process_statusBtn.innerHTML = "Process Status: " + jsonResponse["process_status"];
+                        agent_statusBtn.innerHTML = "Agent Status: " + jsonResponse["agent_status"];
+                    }
+                }
+            };
+            XHR.open("GET", "/api/agent", true);
+            XHR.send();
+            setTimeout(getAgentStatus, 2000);
+        };
+        getAgentStatus();
 
     };
 
