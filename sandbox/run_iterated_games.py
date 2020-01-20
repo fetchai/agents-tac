@@ -23,12 +23,14 @@
 
 import argparse
 import datetime
+import docker
 import inspect
 import json
 import logging
 import os
 import pprint
 import random
+import re
 import shutil
 import subprocess
 import time
@@ -126,6 +128,48 @@ def wait_at_least_n_minutes(n: int):
     time.sleep(seconds_to_sleep)
     logging.info("... Done.")
 
+# import psutil
+# def _show_running_processes():
+#     # Iterate over all running process
+#     for proc in psutil.process_iter():
+#         try:
+#             # Get process name & pid from process object.
+#             processName = proc.name()
+#             processID = proc.pid
+#             print(processName , ' ::: ', processID)
+#         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+#             pass
+
+# import re
+# import socket
+# def _close_socket(hostname, port):
+#     so = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#     import pdb; pdb.set_trace()
+#     try:
+#         so.bind((hostname, port))
+
+#     except socket.error:
+#         logging.info("Closing socket!")
+#     finally:
+#         so.close()
+
+
+def _stop_oef_search_images():
+    """Stop any running OEF nodes."""
+    client = docker.from_env()
+    for container in client.containers.list():
+        if any(re.match("fetchai/oef-search", tag) for tag in container.image.tags):
+            print("Stopping existing OEF Node...")
+            container.stop()
+
+
+def shutdown_running_oef_or_visdom_servers():
+    """Stop running services."""
+    # _show_running_processes()
+    # _close_socket("localhost", 8097)
+    # _close_socket("8097", 8097)
+    _stop_oef_search_images()
+
 
 def run_games(game_names: List[str], seeds: List[int], output_data_dir: str = "data", interval: int = 5, skip: bool = False) -> List[str]:
     """
@@ -147,6 +191,8 @@ def run_games(game_names: List[str], seeds: List[int], output_data_dir: str = "d
             shall_continue: bool = ask_for_continuation(i)
             if not shall_continue:
                 break
+
+        shutdown_running_oef_or_visdom_servers()
 
         wait_at_least_n_minutes(interval)
 
@@ -235,6 +281,8 @@ def main():
     output_dir = args_dict["output_dir"]
     logging.info("Removing directory {}...".format(repr(output_dir)))
     shutil.rmtree(output_dir, ignore_errors=True)
+    logging.info("Creating directory {}...".format(repr(output_dir)))
+    os.makedirs(output_dir, exist_ok=True)
 
     # do the job
     correctly_executed_games: List[str] = run_games(game_names, seeds, output_data_dir=output_dir, interval=args_dict["interval"], skip=args_dict["skip"])

@@ -58,10 +58,10 @@ class SimulationParams:
     def __init__(self,
                  oef_addr: str = "localhost",
                  oef_port: int = 10000,
-                 nb_baseline_agents: int = 5,
+                 nb_baseline_agents: int = 10,
                  register_as: RegisterAs = RegisterAs.BOTH,
                  search_for: SearchFor = SearchFor.BOTH,
-                 services_interval: int = 5,
+                 services_interval: int = 1,
                  pending_transaction_timeout: int = 120,
                  verbose: bool = False,
                  dashboard: bool = False,
@@ -70,7 +70,7 @@ class SimulationParams:
                  data_output_dir: Optional[str] = "data",
                  version_id: str = str(random.randint(0, 10000)),
                  seed: int = 42,
-                 nb_baseline_agents_world_modeling: int = 1,
+                 nb_baseline_agents_world_modeling: int = 0,
                  tac_parameters: Optional[TACParameters] = None):
         """
         Initialize a SimulationParams class.
@@ -188,8 +188,8 @@ def parse_arguments():
     parser.add_argument("--start-time", default=str(datetime.datetime.now() + datetime.timedelta(0, 10)), type=str, help="The start time for the competition (in UTC format).")
     parser.add_argument("--registration-timeout", default=20, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
     parser.add_argument("--inactivity-timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
-    parser.add_argument("--competition-timeout", default=240, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
-    parser.add_argument("--services-interval", default=5, type=int, help="The amount of time (in seconds) the baseline agents wait until it updates services again.")
+    parser.add_argument("--competition-timeout", default=300, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
+    parser.add_argument("--services-interval", default=1, type=int, help="The amount of time (in seconds) the baseline agents wait until it updates services again.")
     parser.add_argument("--pending-transaction-timeout", default=120, type=int, help="The amount of time (in seconds) the baseline agents wait until the transaction confirmation.")
     parser.add_argument("--register-as", choices=['seller', 'buyer', 'both'], default='both', help="The string indicates whether the baseline agent registers as seller, buyer or both on the oef.")
     parser.add_argument("--search-for", choices=['sellers', 'buyers', 'both'], default='both', help="The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.")
@@ -199,7 +199,7 @@ def parse_arguments():
     parser.add_argument("--visdom-addr", default="localhost", help="TCP/IP address of the Visdom server")
     parser.add_argument("--visdom-port", default=8097, help="TCP/IP port of the Visdom server")
     parser.add_argument("--seed", default=42, help="The random seed of the simulation.")
-    parser.add_argument("--fraction-world-modeling", default=0.1, type=float, choices=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0], help="The fraction of world modelling baseline agents.")
+    parser.add_argument("--fraction-world-modeling", default=0.0, type=float, choices=[0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0], help="The fraction of world modelling baseline agents.")
     parser.add_argument("--whitelist-file", nargs="?", default=None, type=str, help="The file that contains the list of agent names to be whitelisted.")
 
     arguments = parser.parse_args()

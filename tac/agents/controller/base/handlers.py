@@ -493,6 +493,7 @@ class GameHandler:
             logger.warning("[{}]: Game not present. Using empty dictionary.".format(self.agent_name))
             game_dict = {}  # type: Dict[str, Any]
         else:
+            logger.info("[{}]: Dumping simulation.".format(self.agent_name))
             game_dict = self.current_game.to_dict()
 
         os.makedirs(version_dir, exist_ok=True)

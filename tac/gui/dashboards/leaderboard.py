@@ -77,6 +77,8 @@ class LeaderboardDashboard(Dashboard):
         game_dirs = sorted(os.listdir(self.competition_directory))
         for game_dir in game_dirs:
             game_data_json_filepath = os.path.join(self.competition_directory, game_dir, "game.json")
+            if not os.path.exists(game_data_json_filepath):
+                continue
             game_data = json.load(open(game_data_json_filepath))
             game = Game.from_dict(game_data)
             game_stats = GameStats(game)

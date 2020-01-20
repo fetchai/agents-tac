@@ -491,7 +491,14 @@ class Game:
         """
         result = ""
         for agent_pbk, agent_state in self.agent_states.items():
-            result = result + self.configuration.agent_pbk_to_name[agent_pbk] + " " + str(agent_state._current_holdings) + "\n"
+            result = result + self.configuration.agent_pbk_to_name[agent_pbk] + " " + str(agent_state.current_holdings) + "\n"
+        return result
+
+    def get_holdings_dict(self) -> Dict[str, List[int]]:
+        """Get a dictionary of current holdings."""
+        result = {}
+        for agent_pbk, agent_state in self.agent_states.items():
+            result[agent_pbk] = agent_state.current_holdings
         return result
 
     def get_equilibrium_summary(self) -> str:
