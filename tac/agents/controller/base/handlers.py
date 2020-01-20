@@ -56,6 +56,7 @@ from tac.platform.game.base import GameData, GamePhase, Transaction
 from tac.platform.game.stats import GameStats
 from tac.platform.protocols.tac.message import TACMessage
 from tac.platform.protocols.tac.serialization import TACSerializer
+from tac.platform.shared_sim_status import get_shared_dir
 
 if TYPE_CHECKING:
     from tac.agents.controller.agent import ControllerAgent
@@ -487,7 +488,8 @@ class GameHandler:
 
         :return: None.
         """
-        version_dir = self.tac_parameters.data_output_dir + "/" + self.tac_parameters.version_id
+        shared_dir = get_shared_dir()
+        version_dir = shared_dir + "/" + self.tac_parameters.data_output_dir + "/" + self.tac_parameters.version_id
 
         if not self.is_game_running:
             logger.warning("[{}]: Game not present. Using empty dictionary.".format(self.agent_name))
