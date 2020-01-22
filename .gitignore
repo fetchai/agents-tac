@@ -122,6 +122,9 @@ data/oef-logs/*
 data/shared/*
 !data/shared/.gitkeep
 scripts/data/*
+!data/shared/EX_1/*
+!data/shared/EX_2/*
+!data/shared/EX_3/*
 
 
 notebooks/.ipynb_checkpoints
