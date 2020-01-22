@@ -288,7 +288,8 @@ def main():
     correctly_executed_games: List[str] = run_games(game_names, seeds, output_data_dir=output_dir, interval=args_dict["interval"], skip=args_dict["skip"])
 
     # process the output
-    all_game_stats = collect_data(output_dir, correctly_executed_games)
+    target_dir = os.path.join('data', 'shared', output_dir)
+    all_game_stats = collect_data(target_dir, correctly_executed_games)
     scores_by_name = compute_aggregate_scores(all_game_stats)
     print_aggregate_scores(scores_by_name)
 

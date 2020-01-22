@@ -22,6 +22,8 @@
 
 import argparse
 import json
+import numpy as np
+import pandas as pd
 import os
 from collections import defaultdict
 from typing import Optional, Dict, List
@@ -48,6 +50,73 @@ def compute_aggregate_scores(all_game_stats: List[GameStats]) -> Dict[str, float
             name = pbk_to_name[pbk]
             result[name] += score
     return result
+
+
+def compute_statistics(all_game_stats: List[GameStats]) -> None:
+    """Compute statistics and dump them."""
+    results = []
+    tx_results = {}
+    tx_results_seller = []
+    tx_results_buyer = []
+    tx_prices = {name: [] for name in all_game_stats[0].game.configuration.agent_pbk_to_name.values()}
+    name_to_idx = {}
+    first = True
+    for game_stats in all_game_stats:
+        pbk_to_name = game_stats.game.configuration.agent_pbk_to_name
+        pbk_to_score = game_stats.game.get_scores()
+        count = 0
+        result = [0.0] * len(pbk_to_name)
+        for pbk, score in pbk_to_score.items():
+            if first:
+                idx = count
+                name = pbk_to_name[pbk]
+                name_to_idx[name] = idx
+            else:
+                name = pbk_to_name[pbk]
+                idx = name_to_idx[name]
+            result[idx] = score
+            count += 1
+        results.append(result)
+        counts = game_stats.tx_counts()
+        first = False
+        if tx_results == {}:
+            tx_results = counts.copy()
+        else:
+            for key, value in counts['seller'].items():
+                tx_results['seller'][key] += value
+            for key, value in counts['buyer'].items():
+                tx_results['buyer'][key] += value
+        result = [0] * len(pbk_to_name)
+        for name, count in counts['seller'].items():
+            idx = name_to_idx[name]
+            result[idx] = count
+        tx_results_seller.append(result)
+        result = [0] * len(pbk_to_name)
+        for name, count in counts['buyer'].items():
+            idx = name_to_idx[name]
+            result[idx] = count
+        tx_results_buyer.append(result)
+        prices = game_stats.tx_prices()
+        for name, price in prices.items():
+            tx_prices[name].extend(price)
+    scores = np.asarray(results)
+    df1 = pd.DataFrame(scores, columns=[key for key in name_to_idx.keys()])
+    df1.to_csv('scores.csv')
+    df2 = pd.DataFrame(np.asarray(tx_results_buyer), columns=[key for key in name_to_idx.keys()])
+    df2.to_csv('transactions_buyer.csv')
+    df3 = pd.DataFrame(np.asarray(tx_results_seller), columns=[key for key in name_to_idx.keys()])
+    df3.to_csv('transactions_seller.csv')
+    df4 = pd.DataFrame(dict([ (k,pd.Series(v)) for k,v in tx_prices.items() ]))
+    prices_w = []
+    prices_b = []
+    for column_name, pricess in tx_prices.items():
+        if column_name[-3:] == '_wm':
+            prices_w.extend(pricess)
+        else:
+            prices_b.extend(pricess)
+    data_dict = {'w_model': pd.Series(prices_w), 'baseline': pd.Series(prices_b)}
+    df5 = pd.DataFrame(data_dict)
+    df5.to_csv('prices.csv')
 
 
 class LeaderboardDashboard(Dashboard):
@@ -80,6 +149,9 @@ class LeaderboardDashboard(Dashboard):
             if not os.path.exists(game_data_json_filepath):
                 continue
             game_data = json.load(open(game_data_json_filepath))
+            if game_data == {}:
+                print("Found incomplete data!")
+                continue
             game = Game.from_dict(game_data)
             game_stats = GameStats(game)
             result.append(game_stats)
@@ -108,6 +180,7 @@ class LeaderboardDashboard(Dashboard):
     def display(self):
         """Display the leaderboard."""
         self._display_ranking()
+        compute_statistics(self.game_stats_list)
 
 
 def parse_args():

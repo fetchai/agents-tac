@@ -139,6 +139,38 @@ class GameStats:
 
         return result
 
+    def tx_counts(self) -> Dict[str, Dict[str, int]]:
+        """Get the tx counts."""
+        agent_pbk_to_name = self.game.configuration.agent_pbk_to_name
+        result = {agent_name: 0 for agent_name in agent_pbk_to_name.values()}
+        results = {'seller': result.copy(), 'buyer': result.copy()}
+
+        temp_game = Game(self.game.configuration, self.game.initialization)
+
+        # compute the partial scores for every agent after every transaction
+        # (remember that indexes of the transaction start from one, because index 0 is reserved for the initial scores)
+        for idx, tx in enumerate(self.game.transactions):
+            temp_game.settle_transaction(tx)
+            results['seller'][agent_pbk_to_name[tx.seller_pbk]] += 1
+            results['buyer'][agent_pbk_to_name[tx.buyer_pbk]] += 1
+
+        return results
+
+    def tx_prices(self) -> Dict[str, Dict[str, List[float]]]:
+        """Get the tx counts."""
+        agent_pbk_to_name = self.game.configuration.agent_pbk_to_name
+        results = {agent_name: [] for agent_name in agent_pbk_to_name.values()}
+
+        temp_game = Game(self.game.configuration, self.game.initialization)
+
+        # compute the partial scores for every agent after every transaction
+        # (remember that indexes of the transaction start from one, because index 0 is reserved for the initial scores)
+        for idx, tx in enumerate(self.game.transactions):
+            temp_game.settle_transaction(tx)
+            results[agent_pbk_to_name[tx.seller_pbk]].append(tx.amount)
+
+        return results
+
     def eq_vs_mean_price(self) -> Tuple[List[str], np.ndarray]:
         """
         Compute the mean price of each good and display it together with the equilibrium price.
