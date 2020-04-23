@@ -19,6 +19,7 @@ pytest-cov = "*"
 flake8-docstrings = "*"
 pygments = "*"
 mypy = "*"
+black = "*"
 
 [packages]
 fetchai-ledger-api = {git = "https://github.com/fetchai/ledger-api-py.git"}
@@ -27,9 +28,12 @@ cryptography = "*"
 flask-restful = "*"
 nbsphinx = "*"
 numpy = "*"
+pandas = "*"
 matplotlib = "*"
 oef = {index = "test-pypi",version = "==0.6.10"}
 python-dateutil = "*"
+scipy = "*"
+seaborn = "*"
 sphinxcontrib-mermaid = "*"
 sphinxcontrib-apidoc = "*"
 sphinx = "==2.1.2"
