@@ -65,4 +65,4 @@ jobs:
         brew install protobuf
     - name: Unit tests
       run: |
-        tox -e py${{ matrix.python-version }}
+        tox -e py${{ matrix.python-version }} -- --ci --no-oef
