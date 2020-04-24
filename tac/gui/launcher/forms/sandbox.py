@@ -42,4 +42,4 @@ class SandboxForm(Form):
     competition_timeout = IntegerField("Competition timeout", default=240, validators=[wtforms.validators.NumberRange(min=0, message="Must be non-negative")])
     # start_time = DateTimeField("Start time", id='datepick', validators=[wtforms.validators.Required()])
     seed = IntegerField("Seed", default=42)
-    whitelist_file = FileField("Whitelist file", default=None, validators=[wtforms.validators.Optional])
+    whitelist_file = FileField("Whitelist file", default=None, validators=[wtforms.validators.Optional()])
