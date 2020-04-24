@@ -128,31 +128,6 @@ def wait_at_least_n_minutes(n: int):
     time.sleep(seconds_to_sleep)
     logging.info("... Done.")
 
-# import psutil
-# def _show_running_processes():
-#     # Iterate over all running process
-#     for proc in psutil.process_iter():
-#         try:
-#             # Get process name & pid from process object.
-#             processName = proc.name()
-#             processID = proc.pid
-#             print(processName , ' ::: ', processID)
-#         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-#             pass
-
-# import re
-# import socket
-# def _close_socket(hostname, port):
-#     so = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#     import pdb; pdb.set_trace()
-#     try:
-#         so.bind((hostname, port))
-
-#     except socket.error:
-#         logging.info("Closing socket!")
-#     finally:
-#         so.close()
-
 
 def _stop_oef_search_images():
     """Stop any running OEF nodes."""
@@ -165,9 +140,6 @@ def _stop_oef_search_images():
 
 def shutdown_running_oef_or_visdom_servers():
     """Stop running services."""
-    # _show_running_processes()
-    # _close_socket("localhost", 8097)
-    # _close_socket("8097", 8097)
     _stop_oef_search_images()
 
 
