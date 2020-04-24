@@ -139,6 +139,38 @@ class GameStats:
 
         return result
 
+    def tx_counts(self) -> Dict[str, Dict[str, int]]:
+        """Get the tx counts."""
+        agent_pbk_to_name = self.game.configuration.agent_pbk_to_name
+        result = {agent_name: 0 for agent_name in agent_pbk_to_name.values()}
+        results = {'seller': result.copy(), 'buyer': result.copy()}
+
+        temp_game = Game(self.game.configuration, self.game.initialization)
+
+        # compute the partial scores for every agent after every transaction
+        # (remember that indexes of the transaction start from one, because index 0 is reserved for the initial scores)
+        for idx, tx in enumerate(self.game.transactions):
+            temp_game.settle_transaction(tx)
+            results['seller'][agent_pbk_to_name[tx.seller_pbk]] += 1
+            results['buyer'][agent_pbk_to_name[tx.buyer_pbk]] += 1
+
+        return results
+
+    def tx_prices(self) -> Dict[str, List[float]]:
+        """Get the tx counts."""
+        agent_pbk_to_name = self.game.configuration.agent_pbk_to_name
+        results = {agent_name: [] for agent_name in agent_pbk_to_name.values()}  # type: Dict[str, List[float]]
+
+        temp_game = Game(self.game.configuration, self.game.initialization)
+
+        # compute the partial scores for every agent after every transaction
+        # (remember that indexes of the transaction start from one, because index 0 is reserved for the initial scores)
+        for idx, tx in enumerate(self.game.transactions):
+            temp_game.settle_transaction(tx)
+            results[agent_pbk_to_name[tx.seller_pbk]].append(tx.amount)
+
+        return results
+
     def eq_vs_mean_price(self) -> Tuple[List[str], np.ndarray]:
         """
         Compute the mean price of each good and display it together with the equilibrium price.
@@ -210,6 +242,34 @@ class GameStats:
         result = np.transpose(result)
 
         return keys, result
+
+    def get_eq_scores(self) -> Dict[str, float]:
+        """
+        Get the equilibrium score for all agents.
+
+        :return: dictionary mapping agent name to equilibrium score.
+        """
+        eq_agent_states = dict(
+            (agent_pbk,
+                AgentState(
+                    self.game.initialization.eq_money_holdings[i],
+                    [int(h) for h in self.game.initialization.eq_good_holdings[i]],
+                    self.game.initialization.utility_params[i]
+                ))
+            for agent_pbk, i in zip(self.game.configuration.agent_pbks, range(self.game.configuration.nb_agents)))  # type: Dict[str, AgentState]
+
+        result = {self.game.configuration.agent_pbk_to_name[agent_pbk]: eq_agent_state.get_score() for agent_pbk, eq_agent_state in eq_agent_states.items()}
+        return result
+
+    def get_initial_scores(self) -> Dict[str, float]:
+        """
+        Get the initial score for all agents.
+
+        :return: dictionary mapping agent name to initial score.
+        """
+        temp_game = Game(self.game.configuration, self.game.initialization)
+        scores_dict = {self.game.configuration.agent_pbk_to_name[agent_pbk]: score for agent_pbk, score in temp_game.get_scores().items()}
+        return scores_dict
 
     def adjusted_score(self) -> Tuple[List[str], np.ndarray]:
         """

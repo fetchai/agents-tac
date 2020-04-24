@@ -74,7 +74,7 @@ services:
       - "--oef-port"
       - "${OEF_PORT}"
       - "--data-output-dir"
-      - "sandbox/${DATA_OUTPUT_DIR}"
+      - "${DATA_OUTPUT_DIR}"
       - "--version-id"
       - "${VERSION_ID}"
       - "--lower-bound-factor"

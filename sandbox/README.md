@@ -10,6 +10,8 @@ This folder lets you run the sandbox for the competition.
   - [x] You are connected to the internet (to pull the latest docker images).
   - [x] Your terminal is in the folder (`cd sandbox`).
 
+- Then, update the `SHARED_DIR` path in `.env` to include the absolue path to `agents-tac/data/shared`.
+
 - Then, ensure that the sandbox has been built:
 
 ```

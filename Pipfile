@@ -39,6 +39,9 @@ aea = {index = "pypi",version = "==0.1.4"}
 colorlog = "*"
 docker = "*"
 docker-compose = "*"
+pandas = "*"
+scipy = "*"
+seaborn = "*"
 
 [requires]
 python_version = "3.7"

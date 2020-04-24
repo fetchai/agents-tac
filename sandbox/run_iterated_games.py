@@ -23,12 +23,14 @@
 
 import argparse
 import datetime
+import docker
 import inspect
 import json
 import logging
 import os
 import pprint
 import random
+import re
 import shutil
 import subprocess
 import time
@@ -127,6 +129,20 @@ def wait_at_least_n_minutes(n: int):
     logging.info("... Done.")
 
 
+def _stop_oef_search_images():
+    """Stop any running OEF nodes."""
+    client = docker.from_env()
+    for container in client.containers.list():
+        if any(re.match("fetchai/oef-search", tag) for tag in container.image.tags):
+            print("Stopping existing OEF Node...")
+            container.stop()
+
+
+def shutdown_running_oef_or_visdom_servers():
+    """Stop running services."""
+    _stop_oef_search_images()
+
+
 def run_games(game_names: List[str], seeds: List[int], output_data_dir: str = "data", interval: int = 5, skip: bool = False) -> List[str]:
     """
     Run a TAC for every game name in the input list.
@@ -147,6 +163,8 @@ def run_games(game_names: List[str], seeds: List[int], output_data_dir: str = "d
             shall_continue: bool = ask_for_continuation(i)
             if not shall_continue:
                 break
+
+        shutdown_running_oef_or_visdom_servers()
 
         wait_at_least_n_minutes(interval)
 
@@ -235,12 +253,15 @@ def main():
     output_dir = args_dict["output_dir"]
     logging.info("Removing directory {}...".format(repr(output_dir)))
     shutil.rmtree(output_dir, ignore_errors=True)
+    logging.info("Creating directory {}...".format(repr(output_dir)))
+    os.makedirs(output_dir, exist_ok=True)
 
     # do the job
     correctly_executed_games: List[str] = run_games(game_names, seeds, output_data_dir=output_dir, interval=args_dict["interval"], skip=args_dict["skip"])
 
     # process the output
-    all_game_stats = collect_data(output_dir, correctly_executed_games)
+    target_dir = os.path.join('data', 'shared', output_dir)
+    all_game_stats = collect_data(target_dir, correctly_executed_games)
     scores_by_name = compute_aggregate_scores(all_game_stats)
     print_aggregate_scores(scores_by_name)
 
