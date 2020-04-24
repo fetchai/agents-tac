@@ -23,6 +23,8 @@ import inspect
 import logging
 import os
 # import subprocess
+import shutil
+import tempfile
 import time
 
 import docker
@@ -130,3 +132,12 @@ def network_node(oef_addr, oef_port, pytestconfig):
             c.stop()
             c.remove()
             logger.info("Stopped the OEF node.")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def environ():
+    """Set the environment."""
+    d = tempfile.mkdtemp()
+    os.environ["TAC_SHARED_DIR"] = d
+    yield
+    shutil.rmtree(d, ignore_errors=False)
