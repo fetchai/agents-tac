@@ -63,6 +63,6 @@ jobs:
         pip install pipenv
         pip install tox
         brew install protobuf
-    - name: Unit tests and coverage
+    - name: Unit tests
       run: |
         tox -e py${{ matrix.python-version }}
