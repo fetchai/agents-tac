@@ -138,6 +138,6 @@ def network_node(oef_addr, oef_port, pytestconfig):
 def environ():
     """Set the environment."""
     d = tempfile.mkdtemp()
-    os.environ["TAC_SHARED_DIR"] = d
+    os.environ["SHARED_DIR"] = d
     yield
     shutil.rmtree(d, ignore_errors=False)
