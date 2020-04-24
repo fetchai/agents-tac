@@ -114,18 +114,11 @@ tac/gui/static/tmp/*
 !tac/gui/static/tmp/.gitkeep
 
 *.sqlite3
-data/*
-!data/oef-logs
+!data/oef-logs/.gitkeep
 data/oef-logs/*
-!data/.gitkeep
-!data/shared
-data/shared/*
 !data/shared/.gitkeep
+data/shared/*
 scripts/data/*
-!data/shared/EX_1/*
-!data/shared/EX_2/*
-!data/shared/EX_3/*
-
 
 notebooks/.ipynb_checkpoints
 
