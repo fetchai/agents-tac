@@ -178,7 +178,7 @@ class ControllerAgent(Agent):
         """
         try:
             super().start()
-            logger.debug("[{}]: Starting myself...".format(self.name))
+            logger.debug("[{}]: Stopping myself...".format(self.name))
             return
         except Exception as e:
             logger.exception(e)
@@ -200,7 +200,6 @@ class ControllerAgent(Agent):
         if self.game_handler.game_phase == GamePhase.GAME or self.game_handler.game_phase == GamePhase.GAME_SETUP:
             self.game_handler.notify_competition_cancelled()
         super().stop()
-        self.teardown()
 
     def teardown(self) -> None:
         """Tear down the agent."""
