@@ -27,12 +27,9 @@ cryptography = "*"
 flask-restful = "*"
 nbsphinx = "*"
 numpy = "*"
-pandas = "*"
 matplotlib = "*"
 oef = {index = "test-pypi",version = "==0.6.10"}
 python-dateutil = "*"
-scipy = "*"
-seaborn = "*"
 sphinxcontrib-mermaid = "*"
 sphinxcontrib-apidoc = "*"
 sphinx = "==2.1.2"
@@ -42,6 +39,9 @@ aea = {index = "pypi",version = "==0.1.4"}
 colorlog = "*"
 docker = "*"
 docker-compose = "*"
+pandas = "*"
+scipy = "*"
+seaborn = "*"
 
 [requires]
 python_version = "3.7"
