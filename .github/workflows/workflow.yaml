@@ -17,7 +17,7 @@ jobs:
        - uses: actions/checkout@master
        - uses: actions/setup-python@master
          with:
-           python-version: 3.6
+           python-version: 3.7
        - name: Install dependencies (ubuntu-latest)
          run: |
            sudo apt-get update --fix-missing
@@ -37,7 +37,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python-version: [3.6, 3.7]
+        python-version: [3.7]
 
     timeout-minutes: 30
 
@@ -65,4 +65,4 @@ jobs:
         brew install protobuf
     - name: Unit tests
       run: |
-        tox -e py${{ matrix.python-version }}
+        tox -e py${{ matrix.python-version }} -- --ci --no-oef

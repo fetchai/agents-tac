@@ -46,18 +46,17 @@ def register_shared_dir(temp_dir) -> None:
     """Call this from somewhere near the entry point of the program to set he location of the temp directory."""
     # print("register_shared_dir: " + temp_dir)
     # logging.error("register_shared_dir: " + temp_dir)
-
-    os.environ['TAC_SHARED_DIR'] = temp_dir
+    os.environ['SHARED_DIR'] = temp_dir
 
 
 def get_shared_dir() -> str:
     """Call this to return the bases shared folder location."""
-    return os.environ['TAC_SHARED_DIR']
+    return os.environ['SHARED_DIR']
 
 
 def clear_temp_dir() -> None:
     """Call this once at the beginning (after registering the temp director) - cleans out dir of old status files."""
-    shared_dir = str(os.getenv('TAC_SHARED_DIR'))
+    shared_dir = str(os.getenv('SHARED_DIR'))
     # Get a list of all the file paths that ends with .txt from in specified directory
     file_list = glob.glob(os.path.join(shared_dir, '*.txt'))
 
@@ -123,7 +122,7 @@ def _get_last_status_time(id_name) -> float:
 
 
 def _construct_temp_filename(id_name) -> str:
-    shared_dir = os.getenv('TAC_SHARED_DIR')
+    shared_dir = os.getenv('SHARED_DIR')
 
     # Actually it is fine not to set this up - should just fail gracefully as
     # this is only needed when using the GUI launcher

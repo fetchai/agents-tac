@@ -47,8 +47,6 @@ services:
     depends_on:
       - oef-node
       - visdom
-    volumes:
-      - ../:/build
     build:
       context: ../
       dockerfile: docker-tac-develop/Dockerfile

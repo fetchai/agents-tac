@@ -145,6 +145,7 @@ class ParticipantAgent(Agent):
             self.oef_handler.rejoin = rejoin
             super().start()
             self.oef_handler.rejoin = False
+            self.stop()
             return
         except Exception as e:
             logger.exception(e)
