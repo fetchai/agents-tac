@@ -58,7 +58,7 @@ COPY . /build
 RUN sudo make clean
 
 RUN pipenv --python python3.7
-RUN pipenv install --dev 
+RUN pipenv run pip install -r requirements.txt
 RUN pipenv run pip3 install .
 
 ENTRYPOINT []
