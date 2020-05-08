@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:19.10
 
 USER root
 
@@ -39,26 +39,17 @@ RUN apt-get install protobuf-compiler -y &&\
 
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/lib
 
-
-# install Pipenv
-ENV DEBIAN_FRONTEND noninteractive
-ENV LC_ALL C.UTF-8
-ENV LANG C.UTF-8
-
 USER default
 
-RUN sudo apt install python3.7-dev -y
-RUN sudo apt install python3-pip -y
-RUN sudo pip install pipenv
+RUN sudo apt-get install python3.7-dev -y
 
 RUN sudo mkdir /build
 WORKDIR /build
 COPY . /build
 
 RUN sudo make clean
-
-RUN pipenv --python python3.7
-RUN pipenv run pip install -r requirements.txt
-RUN pipenv run pip3 install .
+RUN python3.7 -m pip install -r requirements.txt
+RUN python3.7 -m pip install -i https://test.pypi.org/simple/ oef==0.6.10 --no-deps
+RUN python3.7 -m pip install .
 
 ENTRYPOINT []

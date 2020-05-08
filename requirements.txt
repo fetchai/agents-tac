@@ -66,7 +66,6 @@ nbformat==5.0.6
 nbsphinx==0.6.1
 notebook==6.0.3
 numpy==1.18.3
-oef==0.6.10
 packaging==20.3
 pandas==1.0.3
 pandocfilters==1.4.2
@@ -100,7 +99,7 @@ PyYAML==5.3.1
 pyzmq==19.0.0
 qtconsole==4.7.3
 QtPy==1.9.0
-requests==2.23.0
+requests>=2.22.0
 scipy==1.4.1
 seaborn==0.10.0
 semver==2.9.0
@@ -116,7 +115,6 @@ sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-mermaid==0.4.0
 sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-serializinghtml==1.1.4
--e git+git@github.com:fetchai/agents-tac.git@2a490b863f79325936d8236a5adc7d2753bf1c57#egg=tac
 terminado==0.8.3
 testpath==0.4.4
 texttable==1.6.2
