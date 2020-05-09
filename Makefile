@@ -24,11 +24,11 @@ clean-test:
 	find . -name 'log.*.txt' -exec rm -fr {} +
 
 lint:
-	black sandbox scripts simulation/v1 tac templates tests
-	flake8 sandbox scripts simulation/v1 tac templates tests --exclude=tac/gui/static,tac/gui/templates,.md,tac/*_pb2.py,tac/gui/.visdom_env,tac/__init__.py,scripts/oef/launch.py --ignore=E501,E701,W503
+	black sandbox scripts setup.py simulation/v1 tac templates tests
+	flake8 sandbox scripts setup.py simulation/v1 tac templates tests --exclude=tac/gui/static,tac/gui/templates,.md,tac/*_pb2.py,tac/gui/.visdom_env,tac/__init__.py,scripts/oef/launch.py --ignore=E501,E701,W503
 
 static:
-	mypy sandbox scripts simulation/v1 tac templates tests --config-file mypy.ini
+	mypy sandbox scripts setup.py simulation/v1 tac templates tests --config-file mypy.ini
 
 test-all:
 	tox
