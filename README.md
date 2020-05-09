@@ -64,7 +64,8 @@ The controller GUI at http://localhost:8097 provides real time insights:
 
 ## Quick Links
 
-### 📝 📝 📝 Publications 📝 📝 📝 
+
+### 📝 📝 📝 Publications 📝 📝 📝 
 
 The following publication relates to this repository:
 
