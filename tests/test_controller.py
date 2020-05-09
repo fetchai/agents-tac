@@ -37,6 +37,7 @@ from .common import TOEFAgent
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.integration
 class TestCompetitionStopsNoAgentRegistered:
     """Test the case when the controller starts, and no agent registers."""
 
@@ -68,6 +69,7 @@ class TestCompetitionStopsNoAgentRegistered:
         cls.controller_agent.stop()
 
 
+@pytest.mark.integration
 class TestCompetitionStopsTooFewAgentRegistered:
     """Test the case when the controller starts, and not enough agents register for TAC."""
 

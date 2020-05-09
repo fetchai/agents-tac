@@ -104,7 +104,6 @@ def _create_oef_docker_image(oef_addr_, oef_port_) -> Container:
     return c
 
 
-@pytest.mark.integration
 @pytest.fixture(scope="session")
 def network_node(oef_addr, oef_port, pytestconfig):
     """Network node initialization."""

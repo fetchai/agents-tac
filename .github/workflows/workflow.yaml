@@ -27,6 +27,7 @@ jobs:
           pip install tox
       - name: Code style check
         run: |
+          tox -e black-check
           tox -e flake8
       - name: Static type check
         run: tox -e mypy
@@ -52,7 +53,7 @@ jobs:
 
       - name: Unit tests
         run: |
-          tox -e py${{ matrix.python-version }} -- -m 'integration'
+          tox -e py3.7 -- -m 'integration'
 
   platform_checks:
     runs-on: ${{ matrix.os }}

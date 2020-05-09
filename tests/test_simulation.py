@@ -71,6 +71,7 @@ def baseline_version(request):
     return request.param
 
 
+@pytest.mark.integration
 class TestSimulation:
     """Class to test the simulation."""
 

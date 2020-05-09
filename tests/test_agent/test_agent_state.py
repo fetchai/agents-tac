@@ -59,6 +59,7 @@ def test_agent_initiated():
     assert test_agent.agent_state == AgentState.INITIATED
 
 
+@pytest.mark.integration
 def test_agent_connected(network_node):
     """Test that when the agent is connected, her state is AgentState.CONNECTED."""
     test_agent = TAgent()
@@ -67,6 +68,7 @@ def test_agent_connected(network_node):
     test_agent.mailbox.disconnect()
 
 
+@pytest.mark.integration
 def test_agent_running(network_node):
     """Test that when the agent is running, her state is AgentState.RUNNING."""
     test_agent = TAgent()

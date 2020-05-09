@@ -29,6 +29,7 @@ from aea.protocols.default.serialization import DefaultSerializer
 from aea.protocols.fipa.serialization import FIPASerializer
 
 
+@pytest.mark.integration
 def test_example(network_node):
     """Test the mailbox."""
     crypto1 = Crypto()

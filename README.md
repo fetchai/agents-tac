@@ -1,5 +1,7 @@
 # agents-tac
 
+![TAC sanity checks and tests](https://github.com/fetchai/agents-tac/workflows/TAC%20sanity%20checks%20and%20tests/badge.svg)
+
 Competition and Agent Frameworks for the Trading Agents Competition
 
 ## Cloning
