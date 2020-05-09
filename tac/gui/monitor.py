@@ -97,7 +97,9 @@ class VisdomMonitor(Monitor):
         """Start the monitor."""
         if self.is_running:
             raise Exception("A dashboard is already running.")
-        self._dashboard = ControllerDashboard(game_stats, self.visdom_addr, self.visdom_port)
+        self._dashboard = ControllerDashboard(
+            game_stats, self.visdom_addr, self.visdom_port
+        )
         self.dashboard.start()
 
     def update(self):

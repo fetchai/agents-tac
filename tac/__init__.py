@@ -27,7 +27,7 @@ from tac.__version__ import __author__, __license__, __copyright__
 
 import logging
 
-_DEFAULT_LOG_FORMAT = '[%(asctime)s][%(name)s][%(funcName)s][%(levelname)s] %(message)s'
+_DEFAULT_LOG_FORMAT = "[%(asctime)s][%(name)s][%(funcName)s][%(levelname)s] %(message)s"
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 handler = logging.StreamHandler()
@@ -36,5 +36,4 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
 
-ROOT_DIR = os.path.join(os.path.dirname(inspect.getfile(inspect.currentframe())), "..") # type: ignore
-
+ROOT_DIR = os.path.join(os.path.dirname(inspect.getfile(inspect.currentframe())), "..")  # type: ignore

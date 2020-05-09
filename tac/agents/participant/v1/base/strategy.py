@@ -32,23 +32,28 @@ from tac.agents.participant.v1.base.states import WorldState
 class RegisterAs(Enum):
     """This class defines the service registration options."""
 
-    SELLER = 'seller'
-    BUYER = 'buyer'
-    BOTH = 'both'
+    SELLER = "seller"
+    BUYER = "buyer"
+    BOTH = "both"
 
 
 class SearchFor(Enum):
     """This class defines the service search options."""
 
-    SELLERS = 'sellers'
-    BUYERS = 'buyers'
-    BOTH = 'both'
+    SELLERS = "sellers"
+    BUYERS = "buyers"
+    BOTH = "both"
 
 
 class Strategy:
     """This class defines an abstract strategy for the agent."""
 
-    def __init__(self, register_as: RegisterAs = RegisterAs.BOTH, search_for: SearchFor = SearchFor.BOTH, is_world_modeling: bool = False) -> None:
+    def __init__(
+        self,
+        register_as: RegisterAs = RegisterAs.BOTH,
+        search_for: SearchFor = SearchFor.BOTH,
+        is_world_modeling: bool = False,
+    ) -> None:
         """
         Initialize the strategy of the agent.
 
@@ -70,22 +75,32 @@ class Strategy:
     @property
     def is_registering_as_seller(self) -> bool:
         """Check if the agent registers as a seller on the OEF."""
-        return self._register_as == RegisterAs.SELLER or self._register_as == RegisterAs.BUYER
+        return (
+            self._register_as == RegisterAs.SELLER
+            or self._register_as == RegisterAs.BUYER
+        )
 
     @property
     def is_searching_for_sellers(self) -> bool:
         """Check if the agent searches for sellers on the OEF."""
-        return self._search_for == SearchFor.SELLERS or self._search_for == SearchFor.BOTH
+        return (
+            self._search_for == SearchFor.SELLERS or self._search_for == SearchFor.BOTH
+        )
 
     @property
     def is_registering_as_buyer(self) -> bool:
         """Check if the agent registers as a buyer on the OEF."""
-        return self._register_as == RegisterAs.BUYER or self._register_as == RegisterAs.BOTH
+        return (
+            self._register_as == RegisterAs.BUYER
+            or self._register_as == RegisterAs.BOTH
+        )
 
     @property
     def is_searching_for_buyers(self) -> bool:
         """Check if the agent searches for buyers on the OEF."""
-        return self._search_for == SearchFor.BUYERS or self._search_for == SearchFor.BOTH
+        return (
+            self._search_for == SearchFor.BUYERS or self._search_for == SearchFor.BOTH
+        )
 
     @abstractmethod
     def supplied_good_quantities(self, current_holdings: List[int]) -> List[int]:
@@ -98,7 +113,9 @@ class Strategy:
         """
 
     @abstractmethod
-    def supplied_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
+    def supplied_good_pbks(
+        self, good_pbks: List[str], current_holdings: List[int]
+    ) -> Set[str]:
         """
         Generate a set of good public keys which are supplied by the agent.
 
@@ -119,7 +136,9 @@ class Strategy:
         """
 
     @abstractmethod
-    def demanded_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
+    def demanded_good_pbks(
+        self, good_pbks: List[str], current_holdings: List[int]
+    ) -> Set[str]:
         """
         Generate a set of good public keys which are demanded by the agent.
 
@@ -130,8 +149,15 @@ class Strategy:
         """
 
     @abstractmethod
-    def get_proposals(self, good_pbks: List[str], current_holdings: List[int], utility_params: List[float],
-                      tx_fee: float, is_seller: bool, world_state: Optional[WorldState]) -> List[Description]:
+    def get_proposals(
+        self,
+        good_pbks: List[str],
+        current_holdings: List[int],
+        utility_params: List[float],
+        tx_fee: float,
+        is_seller: bool,
+        world_state: Optional[WorldState],
+    ) -> List[Description]:
         """
         Generate proposals from the agent in the role of seller/buyer.
 

@@ -35,13 +35,24 @@ from tac.agents.participant.v1.examples.strategy import BaselineStrategy
 from tac.gui.monitor import NullMonitor
 
 
-def _init_baseline_agents(n: int, agent_version: str, oef_addr: str, oef_port: int, tac_version_id: str) -> List[BaselineAgentV1]:
+def _init_baseline_agents(
+    n: int, agent_version: str, oef_addr: str, oef_port: int, tac_version_id: str
+) -> List[BaselineAgentV1]:
     """Baseline agents initialization."""
     if agent_version == "v1":
-        return [BaselineAgentV1("baseline_{:02}".format(i), "127.0.0.1", 10000,
-                                BaselineStrategy(search_for=SearchFor.BOTH, register_as=RegisterAs.BOTH),
-                                expected_version_id=tac_version_id,
-                                pending_transaction_timeout=120) for i in range(n)]
+        return [
+            BaselineAgentV1(
+                "baseline_{:02}".format(i),
+                "127.0.0.1",
+                10000,
+                BaselineStrategy(
+                    search_for=SearchFor.BOTH, register_as=RegisterAs.BOTH
+                ),
+                expected_version_id=tac_version_id,
+                pending_transaction_timeout=120,
+            )
+            for i in range(n)
+        ]
     else:
         raise ValueError("Invalid version.")
 
@@ -70,31 +81,39 @@ class TestSimulation:
     @classmethod
     def setup_class(cls):
         """Class setup."""
-        cls.tac_version_id = '1'
-        cls.agent_version = 'v1'
-        cls.baseline_agents = _init_baseline_agents(5, cls.agent_version, "127.0.0.1", 10000, cls.tac_version_id)
+        cls.tac_version_id = "1"
+        cls.agent_version = "v1"
+        cls.baseline_agents = _init_baseline_agents(
+            5, cls.agent_version, "127.0.0.1", 10000, cls.tac_version_id
+        )
 
-        cls.tac_parameters = TACParameters(min_nb_agents=5,
-                                           money_endowment=200,
-                                           nb_goods=5,
-                                           tx_fee=1.0,
-                                           base_good_endowment=2,
-                                           lower_bound_factor=0,
-                                           upper_bound_factor=0,
-                                           start_time=datetime.datetime.now() + datetime.timedelta(0, 2),
-                                           registration_timeout=8,
-                                           competition_timeout=20,
-                                           inactivity_timeout=15,
-                                           version_id=cls.tac_version_id)
+        cls.tac_parameters = TACParameters(
+            min_nb_agents=5,
+            money_endowment=200,
+            nb_goods=5,
+            tx_fee=1.0,
+            base_good_endowment=2,
+            lower_bound_factor=0,
+            upper_bound_factor=0,
+            start_time=datetime.datetime.now() + datetime.timedelta(0, 2),
+            registration_timeout=8,
+            competition_timeout=20,
+            inactivity_timeout=15,
+            version_id=cls.tac_version_id,
+        )
 
-        cls.tac_controller = ControllerAgent('controller', '127.0.0.1', 10000, cls.tac_parameters, NullMonitor())
+        cls.tac_controller = ControllerAgent(
+            "controller", "127.0.0.1", 10000, cls.tac_parameters, NullMonitor()
+        )
 
         # run the simulation
         try:
             controller_thread = Thread(target=cls.tac_controller.start)
 
-            baseline_threads = [Thread(target=_run_baseline_agent, args=[baseline_agent, "v1"])
-                                for baseline_agent in cls.baseline_agents]
+            baseline_threads = [
+                Thread(target=_run_baseline_agent, args=[baseline_agent, "v1"])
+                for baseline_agent in cls.baseline_agents
+            ]
 
             # launch all thread.
             all_threads = [controller_thread] + baseline_threads

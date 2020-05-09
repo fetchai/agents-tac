@@ -37,8 +37,11 @@ from aea.mail.base import MailBox
 from aea.protocols.oef.message import OEFMessage
 from aea.protocols.oef.serialization import OEFSerializer, DEFAULT_OEF
 from tac.agents.participant.v1.base.game_instance import GameInstance
-from tac.agents.participant.v1.base.interfaces import ControllerActionInterface, OEFActionInterface, \
-    DialogueActionInterface
+from tac.agents.participant.v1.base.interfaces import (
+    ControllerActionInterface,
+    OEFActionInterface,
+    DialogueActionInterface,
+)
 from tac.platform.protocols.tac.message import TACMessage
 from tac.platform.protocols.tac.serialization import TACSerializer
 
@@ -50,7 +53,14 @@ DEFAULT_MSG_ID = 1
 class ControllerActions(ControllerActionInterface):
     """The ControllerActions class defines the actions of an agent towards the ControllerAgent."""
 
-    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, mailbox: MailBox, agent_name: str) -> None:
+    def __init__(
+        self,
+        crypto: Crypto,
+        liveness: Liveness,
+        game_instance: GameInstance,
+        mailbox: MailBox,
+        agent_name: str,
+    ) -> None:
         """
         Instantiate the ControllerActions.
 
@@ -76,14 +86,25 @@ class ControllerActions(ControllerActionInterface):
         """
         tac_msg = TACMessage(tac_type=TACMessage.Type.GET_STATE_UPDATE)
         tac_bytes = TACSerializer().encode(tac_msg)
-        self.mailbox.outbox.put_message(to=self.game_instance.controller_pbk, sender=self.crypto.public_key,
-                                        protocol_id=TACMessage.protocol_id, message=tac_bytes)
+        self.mailbox.outbox.put_message(
+            to=self.game_instance.controller_pbk,
+            sender=self.crypto.public_key,
+            protocol_id=TACMessage.protocol_id,
+            message=tac_bytes,
+        )
 
 
 class OEFActions(OEFActionInterface):
     """The OEFActions class defines the actions of an agent towards the OEF."""
 
-    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, mailbox: MailBox, agent_name: str) -> None:
+    def __init__(
+        self,
+        crypto: Crypto,
+        liveness: Liveness,
+        game_instance: GameInstance,
+        mailbox: MailBox,
+        agent_name: str,
+    ) -> None:
         """
         Instantiate the OEFActions.
 
@@ -110,13 +131,22 @@ class OEFActions(OEFActionInterface):
 
         :return: None
         """
-        query = Query([Constraint("version", GtEq(self.game_instance.expected_version_id))])
+        query = Query(
+            [Constraint("version", GtEq(self.game_instance.expected_version_id))]
+        )
         search_id = self.game_instance.search.get_next_id()
         self.game_instance.search.ids_for_tac.add(search_id)
 
-        msg = OEFMessage(oef_type=OEFMessage.Type.SEARCH_SERVICES, id=search_id, query=query)
+        msg = OEFMessage(
+            oef_type=OEFMessage.Type.SEARCH_SERVICES, id=search_id, query=query
+        )
         msg_bytes = OEFSerializer().encode(msg)
-        self.mailbox.outbox.put_message(to=DEFAULT_OEF, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
+        self.mailbox.outbox.put_message(
+            to=DEFAULT_OEF,
+            sender=self.crypto.public_key,
+            protocol_id=OEFMessage.protocol_id,
+            message=msg_bytes,
+        )
 
     def update_services(self) -> None:
         """
@@ -134,13 +164,33 @@ class OEFActions(OEFActionInterface):
         :return: None
         """
         if self.game_instance.goods_demanded_description is not None:
-            msg = OEFMessage(oef_type=OEFMessage.Type.UNREGISTER_SERVICE, id=DEFAULT_MSG_ID, service_description=self.game_instance.goods_demanded_description, service_id="")
+            msg = OEFMessage(
+                oef_type=OEFMessage.Type.UNREGISTER_SERVICE,
+                id=DEFAULT_MSG_ID,
+                service_description=self.game_instance.goods_demanded_description,
+                service_id="",
+            )
             msg_bytes = OEFSerializer().encode(msg)
-            self.mailbox.outbox.put_message(to=DEFAULT_OEF, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
+            self.mailbox.outbox.put_message(
+                to=DEFAULT_OEF,
+                sender=self.crypto.public_key,
+                protocol_id=OEFMessage.protocol_id,
+                message=msg_bytes,
+            )
         if self.game_instance.goods_supplied_description is not None:
-            msg = OEFMessage(oef_type=OEFMessage.Type.UNREGISTER_SERVICE, id=DEFAULT_MSG_ID, service_description=self.game_instance.goods_supplied_description, service_id="")
+            msg = OEFMessage(
+                oef_type=OEFMessage.Type.UNREGISTER_SERVICE,
+                id=DEFAULT_MSG_ID,
+                service_description=self.game_instance.goods_supplied_description,
+                service_id="",
+            )
             msg_bytes = OEFSerializer().encode(msg)
-            self.mailbox.outbox.put_message(to=DEFAULT_OEF, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
+            self.mailbox.outbox.put_message(
+                to=DEFAULT_OEF,
+                sender=self.crypto.public_key,
+                protocol_id=OEFMessage.protocol_id,
+                message=msg_bytes,
+            )
 
     def register_service(self) -> None:
         """
@@ -154,19 +204,51 @@ class OEFActions(OEFActionInterface):
         :return: None
         """
         if self.game_instance.strategy.is_registering_as_seller:
-            logger.debug("[{}]: Updating service directory as seller with goods supplied.".format(self.agent_name))
-            goods_supplied_description = self.game_instance.get_service_description(is_supply=True)
+            logger.debug(
+                "[{}]: Updating service directory as seller with goods supplied.".format(
+                    self.agent_name
+                )
+            )
+            goods_supplied_description = self.game_instance.get_service_description(
+                is_supply=True
+            )
             self.game_instance.goods_supplied_description = goods_supplied_description
-            msg = OEFMessage(oef_type=OEFMessage.Type.REGISTER_SERVICE, id=DEFAULT_MSG_ID, service_description=goods_supplied_description, service_id="")
+            msg = OEFMessage(
+                oef_type=OEFMessage.Type.REGISTER_SERVICE,
+                id=DEFAULT_MSG_ID,
+                service_description=goods_supplied_description,
+                service_id="",
+            )
             msg_bytes = OEFSerializer().encode(msg)
-            self.mailbox.outbox.put_message(to=DEFAULT_OEF, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
+            self.mailbox.outbox.put_message(
+                to=DEFAULT_OEF,
+                sender=self.crypto.public_key,
+                protocol_id=OEFMessage.protocol_id,
+                message=msg_bytes,
+            )
         if self.game_instance.strategy.is_registering_as_buyer:
-            logger.debug("[{}]: Updating service directory as buyer with goods demanded.".format(self.agent_name))
-            goods_demanded_description = self.game_instance.get_service_description(is_supply=False)
+            logger.debug(
+                "[{}]: Updating service directory as buyer with goods demanded.".format(
+                    self.agent_name
+                )
+            )
+            goods_demanded_description = self.game_instance.get_service_description(
+                is_supply=False
+            )
             self.game_instance.goods_demanded_description = goods_demanded_description
-            msg = OEFMessage(oef_type=OEFMessage.Type.REGISTER_SERVICE, id=DEFAULT_MSG_ID, service_description=goods_demanded_description, service_id="")
+            msg = OEFMessage(
+                oef_type=OEFMessage.Type.REGISTER_SERVICE,
+                id=DEFAULT_MSG_ID,
+                service_description=goods_demanded_description,
+                service_id="",
+            )
             msg_bytes = OEFSerializer().encode(msg)
-            self.mailbox.outbox.put_message(to=DEFAULT_OEF, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
+            self.mailbox.outbox.put_message(
+                to=DEFAULT_OEF,
+                sender=self.crypto.public_key,
+                protocol_id=OEFMessage.protocol_id,
+                message=msg_bytes,
+            )
 
     def search_services(self) -> None:
         """
@@ -180,37 +262,78 @@ class OEFActions(OEFActionInterface):
         :return: None
         """
         if self.game_instance.strategy.is_searching_for_sellers:
-            query = self.game_instance.build_services_query(is_searching_for_sellers=True)
+            query = self.game_instance.build_services_query(
+                is_searching_for_sellers=True
+            )
             if query is None:
-                logger.warning("[{}]: Not searching the OEF for sellers because the agent demands no goods.".format(self.agent_name))
+                logger.warning(
+                    "[{}]: Not searching the OEF for sellers because the agent demands no goods.".format(
+                        self.agent_name
+                    )
+                )
                 return None
             else:
-                logger.debug("[{}]: Searching for sellers which match the demand of the agent.".format(self.agent_name))
+                logger.debug(
+                    "[{}]: Searching for sellers which match the demand of the agent.".format(
+                        self.agent_name
+                    )
+                )
                 search_id = self.game_instance.search.get_next_id()
                 self.game_instance.search.ids_for_sellers.add(search_id)
 
-                msg = OEFMessage(oef_type=OEFMessage.Type.SEARCH_SERVICES, id=search_id, query=query)
+                msg = OEFMessage(
+                    oef_type=OEFMessage.Type.SEARCH_SERVICES, id=search_id, query=query
+                )
                 msg_bytes = OEFSerializer().encode(msg)
-                self.mailbox.outbox.put_message(to=DEFAULT_OEF, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
+                self.mailbox.outbox.put_message(
+                    to=DEFAULT_OEF,
+                    sender=self.crypto.public_key,
+                    protocol_id=OEFMessage.protocol_id,
+                    message=msg_bytes,
+                )
         if self.game_instance.strategy.is_searching_for_buyers:
-            query = self.game_instance.build_services_query(is_searching_for_sellers=False)
+            query = self.game_instance.build_services_query(
+                is_searching_for_sellers=False
+            )
             if query is None:
-                logger.warning("[{}]: Not searching the OEF for buyers because the agent supplies no goods.".format(self.agent_name))
+                logger.warning(
+                    "[{}]: Not searching the OEF for buyers because the agent supplies no goods.".format(
+                        self.agent_name
+                    )
+                )
                 return None
             else:
-                logger.debug("[{}]: Searching for buyers which match the supply of the agent.".format(self.agent_name))
+                logger.debug(
+                    "[{}]: Searching for buyers which match the supply of the agent.".format(
+                        self.agent_name
+                    )
+                )
                 search_id = self.game_instance.search.get_next_id()
                 self.game_instance.search.ids_for_buyers.add(search_id)
 
-                msg = OEFMessage(oef_type=OEFMessage.Type.SEARCH_SERVICES, id=search_id, query=query)
+                msg = OEFMessage(
+                    oef_type=OEFMessage.Type.SEARCH_SERVICES, id=search_id, query=query
+                )
                 msg_bytes = OEFSerializer().encode(msg)
-                self.mailbox.outbox.put_message(to=DEFAULT_OEF, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
+                self.mailbox.outbox.put_message(
+                    to=DEFAULT_OEF,
+                    sender=self.crypto.public_key,
+                    protocol_id=OEFMessage.protocol_id,
+                    message=msg_bytes,
+                )
 
 
 class DialogueActions(DialogueActionInterface):
     """The DialogueActions class defines the actions of an agent in the context of a Dialogue."""
 
-    def __init__(self, crypto: Crypto, liveness: Liveness, game_instance: GameInstance, mailbox: MailBox, agent_name: str) -> None:
+    def __init__(
+        self,
+        crypto: Crypto,
+        liveness: Liveness,
+        game_instance: GameInstance,
+        mailbox: MailBox,
+        agent_name: str,
+    ) -> None:
         """
         Instantiate the DialogueActions.
 

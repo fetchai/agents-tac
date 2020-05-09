@@ -56,11 +56,15 @@ class CustomFlask(Flask):
             logger.debug("Waiting for sandbox to execute...")
             try:
                 sandbox_runner = sandbox_queue.get(timeout=5.0)  # type: SandboxRunner
-                logger.debug("Launching the sandbox with id: {}".format(sandbox_runner.id))
+                logger.debug(
+                    "Launching the sandbox with id: {}".format(sandbox_runner.id)
+                )
                 sandbox_runner()
                 logger.debug("Waiting until it completes.")
                 sandbox_runner.wait()
-                logger.debug("Sandbox with ID={} has been completed.".format(sandbox_runner.id))
+                logger.debug(
+                    "Sandbox with ID={} has been completed.".format(sandbox_runner.id)
+                )
             except Empty:
                 pass
         logger.debug("Exiting from the job loop...")

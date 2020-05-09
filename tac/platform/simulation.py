@@ -55,23 +55,25 @@ logger = logging.getLogger(__name__)
 class SimulationParams:
     """Class to hold simulation parameters."""
 
-    def __init__(self,
-                 oef_addr: str = "localhost",
-                 oef_port: int = 10000,
-                 nb_baseline_agents: int = 10,
-                 register_as: RegisterAs = RegisterAs.BOTH,
-                 search_for: SearchFor = SearchFor.BOTH,
-                 services_interval: int = 1,
-                 pending_transaction_timeout: int = 120,
-                 verbose: bool = False,
-                 dashboard: bool = False,
-                 visdom_addr: str = "localhost",
-                 visdom_port: int = 8097,
-                 data_output_dir: Optional[str] = "data",
-                 version_id: str = str(random.randint(0, 10000)),
-                 seed: int = 42,
-                 nb_baseline_agents_world_modeling: int = 0,
-                 tac_parameters: Optional[TACParameters] = None):
+    def __init__(
+        self,
+        oef_addr: str = "localhost",
+        oef_port: int = 10000,
+        nb_baseline_agents: int = 10,
+        register_as: RegisterAs = RegisterAs.BOTH,
+        search_for: SearchFor = SearchFor.BOTH,
+        services_interval: int = 1,
+        pending_transaction_timeout: int = 120,
+        verbose: bool = False,
+        dashboard: bool = False,
+        visdom_addr: str = "localhost",
+        visdom_port: int = 8097,
+        data_output_dir: Optional[str] = "data",
+        version_id: str = str(random.randint(0, 10000)),
+        seed: int = 42,
+        nb_baseline_agents_world_modeling: int = 0,
+        tac_parameters: Optional[TACParameters] = None,
+    ):
         """
         Initialize a SimulationParams class.
 
@@ -92,7 +94,9 @@ class SimulationParams:
         :param nb_baseline_agents_world_modeling: the number of world modelling baseline agents.
         :param tac_parameters: the parameters for the TAC.
         """
-        self.tac_parameters = tac_parameters if tac_parameters is not None else TACParameters()
+        self.tac_parameters = (
+            tac_parameters if tac_parameters is not None else TACParameters()
+        )
         self.oef_addr = oef_addr
         self.oef_port = oef_port
         self.nb_baseline_agents = nb_baseline_agents
@@ -117,30 +121,33 @@ def spawn_controller_agent(params: SimulationParams) -> multiprocessing.Process:
     :param params: the simulation params.
     :return: the process running the controller.
     """
-    process = multiprocessing.Process(target=controller_main, kwargs=dict(
-        name="tac_controller",
-        nb_agents=params.tac_parameters.min_nb_agents,
-        nb_goods=params.tac_parameters.nb_goods,
-        money_endowment=params.tac_parameters.money_endowment,
-        base_good_endowment=params.tac_parameters.base_good_endowment,
-        lower_bound_factor=params.tac_parameters.lower_bound_factor,
-        upper_bound_factor=params.tac_parameters.upper_bound_factor,
-        tx_fee=params.tac_parameters.tx_fee,
-        oef_addr=params.oef_addr,
-        oef_port=params.oef_port,
-        start_time=params.tac_parameters.start_time,
-        registration_timeout=params.tac_parameters.registration_timeout,
-        inactivity_timeout=params.tac_parameters.inactivity_timeout,
-        competition_timeout=params.tac_parameters.competition_timeout,
-        whitelist_file=params.tac_parameters.whitelist,
-        verbose=True,
-        dashboard=params.dashboard,
-        visdom_addr=params.visdom_addr,
-        visdom_port=params.visdom_port,
-        data_output_dir=params.data_output_dir,
-        version_id=params.version_id,
-        seed=params.seed,
-    ))
+    process = multiprocessing.Process(
+        target=controller_main,
+        kwargs=dict(
+            name="tac_controller",
+            nb_agents=params.tac_parameters.min_nb_agents,
+            nb_goods=params.tac_parameters.nb_goods,
+            money_endowment=params.tac_parameters.money_endowment,
+            base_good_endowment=params.tac_parameters.base_good_endowment,
+            lower_bound_factor=params.tac_parameters.lower_bound_factor,
+            upper_bound_factor=params.tac_parameters.upper_bound_factor,
+            tx_fee=params.tac_parameters.tx_fee,
+            oef_addr=params.oef_addr,
+            oef_port=params.oef_port,
+            start_time=params.tac_parameters.start_time,
+            registration_timeout=params.tac_parameters.registration_timeout,
+            inactivity_timeout=params.tac_parameters.inactivity_timeout,
+            competition_timeout=params.tac_parameters.competition_timeout,
+            whitelist_file=params.tac_parameters.whitelist,
+            verbose=True,
+            dashboard=params.dashboard,
+            visdom_addr=params.visdom_addr,
+            visdom_port=params.visdom_port,
+            data_output_dir=params.data_output_dir,
+            version_id=params.version_id,
+            seed=params.seed,
+        ),
+    )
     process.start()
     return process
 
@@ -152,19 +159,30 @@ def spawn_baseline_agents(params: SimulationParams) -> List[multiprocessing.Proc
     :param params: the simulation params.
     :return: the processes running the agents (as a list).
     """
-    processes = [multiprocessing.Process(target=baseline_main, kwargs=dict(
-        name=make_agent_name(i, i < params.nb_baseline_agents_world_modeling, params.nb_baseline_agents),
-        oef_addr=params.oef_addr,
-        oef_port=params.oef_port,
-        register_as=params.register_as,
-        search_for=params.search_for,
-        is_world_modeling=i < params.nb_baseline_agents_world_modeling,
-        services_interval=params.services_interval,
-        pending_transaction_timeout=params.pending_transaction_timeout,
-        dashboard=params.dashboard,
-        visdom_addr=params.visdom_addr,
-        visdom_port=params.visdom_port,
-        expected_version_id=params.version_id)) for i in range(params.nb_baseline_agents)]
+    processes = [
+        multiprocessing.Process(
+            target=baseline_main,
+            kwargs=dict(
+                name=make_agent_name(
+                    i,
+                    i < params.nb_baseline_agents_world_modeling,
+                    params.nb_baseline_agents,
+                ),
+                oef_addr=params.oef_addr,
+                oef_port=params.oef_port,
+                register_as=params.register_as,
+                search_for=params.search_for,
+                is_world_modeling=i < params.nb_baseline_agents_world_modeling,
+                services_interval=params.services_interval,
+                pending_transaction_timeout=params.pending_transaction_timeout,
+                dashboard=params.dashboard,
+                visdom_addr=params.visdom_addr,
+                visdom_port=params.visdom_port,
+                expected_version_id=params.version_id,
+            ),
+        )
+        for i in range(params.nb_baseline_agents)
+    ]
 
     for process in processes:
         process.start()
@@ -175,32 +193,134 @@ def spawn_baseline_agents(params: SimulationParams) -> List[multiprocessing.Proc
 def parse_arguments():
     """Arguments parsing."""
     parser = argparse.ArgumentParser("tac_agent_spawner")
-    parser.add_argument("--nb-agents", type=int, default=10, help="(minimum) number of TAC agent to wait for the competition.")
-    parser.add_argument("--nb-goods", type=int, default=10, help="Number of TAC agent to run.")
-    parser.add_argument("--money-endowment", type=int, default=200, help="Initial amount of money.")
-    parser.add_argument("--base-good-endowment", default=2, type=int, help="The base amount of per good instances every agent receives.")
-    parser.add_argument("--lower-bound-factor", default=0, type=int, help="The lower bound factor of a uniform distribution.")
-    parser.add_argument("--upper-bound-factor", default=0, type=int, help="The upper bound factor of a uniform distribution.")
-    parser.add_argument("--tx-fee", default=0.1, type=float, help="The transaction fee.")
-    parser.add_argument("--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent")
-    parser.add_argument("--oef-port", default=10000, help="TCP/IP port of the OEF Agent")
-    parser.add_argument("--nb-baseline-agents", type=int, default=10, help="Number of baseline agent to run. Defaults to the number of agents of the competition.")
-    parser.add_argument("--start-time", default=str(datetime.datetime.now() + datetime.timedelta(0, 10)), type=str, help="The start time for the competition (in UTC format).")
-    parser.add_argument("--registration-timeout", default=20, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
-    parser.add_argument("--inactivity-timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
-    parser.add_argument("--competition-timeout", default=300, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
-    parser.add_argument("--services-interval", default=1, type=int, help="The amount of time (in seconds) the baseline agents wait until it updates services again.")
-    parser.add_argument("--pending-transaction-timeout", default=120, type=int, help="The amount of time (in seconds) the baseline agents wait until the transaction confirmation.")
-    parser.add_argument("--register-as", choices=['seller', 'buyer', 'both'], default='both', help="The string indicates whether the baseline agent registers as seller, buyer or both on the oef.")
-    parser.add_argument("--search-for", choices=['sellers', 'buyers', 'both'], default='both', help="The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.")
-    parser.add_argument("--dashboard", action="store_true", help="Enable the agent dashboard.")
-    parser.add_argument("--data-output-dir", default="data", help="The output directory for the simulation data.")
-    parser.add_argument("--version-id", default=str(random.randint(0, 10000)), type=str, help="The version ID.")
-    parser.add_argument("--visdom-addr", default="localhost", help="TCP/IP address of the Visdom server")
-    parser.add_argument("--visdom-port", default=8097, help="TCP/IP port of the Visdom server")
+    parser.add_argument(
+        "--nb-agents",
+        type=int,
+        default=10,
+        help="(minimum) number of TAC agent to wait for the competition.",
+    )
+    parser.add_argument(
+        "--nb-goods", type=int, default=10, help="Number of TAC agent to run."
+    )
+    parser.add_argument(
+        "--money-endowment", type=int, default=200, help="Initial amount of money."
+    )
+    parser.add_argument(
+        "--base-good-endowment",
+        default=2,
+        type=int,
+        help="The base amount of per good instances every agent receives.",
+    )
+    parser.add_argument(
+        "--lower-bound-factor",
+        default=0,
+        type=int,
+        help="The lower bound factor of a uniform distribution.",
+    )
+    parser.add_argument(
+        "--upper-bound-factor",
+        default=0,
+        type=int,
+        help="The upper bound factor of a uniform distribution.",
+    )
+    parser.add_argument(
+        "--tx-fee", default=0.1, type=float, help="The transaction fee."
+    )
+    parser.add_argument(
+        "--oef-addr", default="127.0.0.1", help="TCP/IP address of the OEF Agent"
+    )
+    parser.add_argument(
+        "--oef-port", default=10000, help="TCP/IP port of the OEF Agent"
+    )
+    parser.add_argument(
+        "--nb-baseline-agents",
+        type=int,
+        default=10,
+        help="Number of baseline agent to run. Defaults to the number of agents of the competition.",
+    )
+    parser.add_argument(
+        "--start-time",
+        default=str(datetime.datetime.now() + datetime.timedelta(0, 10)),
+        type=str,
+        help="The start time for the competition (in UTC format).",
+    )
+    parser.add_argument(
+        "--registration-timeout",
+        default=20,
+        type=int,
+        help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.",
+    )
+    parser.add_argument(
+        "--inactivity-timeout",
+        default=60,
+        type=int,
+        help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.",
+    )
+    parser.add_argument(
+        "--competition-timeout",
+        default=300,
+        type=int,
+        help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.",
+    )
+    parser.add_argument(
+        "--services-interval",
+        default=1,
+        type=int,
+        help="The amount of time (in seconds) the baseline agents wait until it updates services again.",
+    )
+    parser.add_argument(
+        "--pending-transaction-timeout",
+        default=120,
+        type=int,
+        help="The amount of time (in seconds) the baseline agents wait until the transaction confirmation.",
+    )
+    parser.add_argument(
+        "--register-as",
+        choices=["seller", "buyer", "both"],
+        default="both",
+        help="The string indicates whether the baseline agent registers as seller, buyer or both on the oef.",
+    )
+    parser.add_argument(
+        "--search-for",
+        choices=["sellers", "buyers", "both"],
+        default="both",
+        help="The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.",
+    )
+    parser.add_argument(
+        "--dashboard", action="store_true", help="Enable the agent dashboard."
+    )
+    parser.add_argument(
+        "--data-output-dir",
+        default="data",
+        help="The output directory for the simulation data.",
+    )
+    parser.add_argument(
+        "--version-id",
+        default=str(random.randint(0, 10000)),
+        type=str,
+        help="The version ID.",
+    )
+    parser.add_argument(
+        "--visdom-addr", default="localhost", help="TCP/IP address of the Visdom server"
+    )
+    parser.add_argument(
+        "--visdom-port", default=8097, help="TCP/IP port of the Visdom server"
+    )
     parser.add_argument("--seed", default=42, help="The random seed of the simulation.")
-    parser.add_argument("--fraction-world-modeling", default=0.5, type=float, choices=[0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0], help="The fraction of world modelling baseline agents.")
-    parser.add_argument("--whitelist-file", nargs="?", default=None, type=str, help="The file that contains the list of agent names to be whitelisted.")
+    parser.add_argument(
+        "--fraction-world-modeling",
+        default=0.5,
+        type=float,
+        choices=[0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+        help="The fraction of world modelling baseline agents.",
+    )
+    parser.add_argument(
+        "--whitelist-file",
+        nargs="?",
+        default=None,
+        type=str,
+        help="The file that contains the list of agent names to be whitelisted.",
+    )
 
     arguments = parser.parse_args()
     logger.debug("Arguments: {}".format(pprint.pformat(arguments.__dict__)))
@@ -229,7 +349,7 @@ def build_simulation_parameters(arguments: argparse.Namespace) -> SimulationPara
         inactivity_timeout=arguments.inactivity_timeout,
         whitelist=arguments.whitelist_file,
         data_output_dir=arguments.data_output_dir,
-        version_id=arguments.version_id
+        version_id=arguments.version_id,
     )
 
     simulation_params = SimulationParams(
@@ -242,8 +362,10 @@ def build_simulation_parameters(arguments: argparse.Namespace) -> SimulationPara
         data_output_dir=arguments.data_output_dir,
         version_id=arguments.version_id,
         seed=arguments.seed,
-        nb_baseline_agents_world_modeling=round(arguments.nb_baseline_agents * arguments.fraction_world_modeling),
-        tac_parameters=tac_parameters
+        nb_baseline_agents_world_modeling=round(
+            arguments.nb_baseline_agents * arguments.fraction_world_modeling
+        ),
+        tac_parameters=tac_parameters,
     )
 
     return simulation_params
@@ -284,7 +406,7 @@ def run(params: SimulationParams) -> None:
             process.terminate()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     arguments = parse_arguments()
     simulation_parameters = build_simulation_parameters(arguments)
     run(simulation_parameters)

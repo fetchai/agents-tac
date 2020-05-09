@@ -44,7 +44,9 @@ UtilityParams = List[float]  # an element u_j is the utility value of good j.
 class AgentState(BaseAgentState):
     """Represent the state of an agent during the game."""
 
-    def __init__(self, money: float, endowment: Endowment, utility_params: UtilityParams):
+    def __init__(
+        self, money: float, endowment: Endowment, utility_params: UtilityParams
+    ):
         """
         Instantiate an agent state object.
 
@@ -112,7 +114,7 @@ class AgentState(BaseAgentState):
                 result = result and (self._current_holdings[good_id] >= quantity)
         return result
 
-    def apply(self, transactions: List[Transaction], tx_fee: float) -> 'AgentState':
+    def apply(self, transactions: List[Transaction], tx_fee: float) -> "AgentState":
         """
         Apply a list of transactions to the current state.
 
@@ -151,26 +153,35 @@ class AgentState(BaseAgentState):
 
     def __str__(self):
         """From object to string."""
-        return "AgentState{}".format(pprint.pformat({
-            "money": self.balance,
-            "utility_params": self.utility_params,
-            "current_holdings": self._current_holdings
-        }))
+        return "AgentState{}".format(
+            pprint.pformat(
+                {
+                    "money": self.balance,
+                    "utility_params": self.utility_params,
+                    "current_holdings": self._current_holdings,
+                }
+            )
+        )
 
     def __eq__(self, other) -> bool:
         """Compare equality of two instances of the class."""
-        return isinstance(other, AgentState) and \
-            self.balance == other.balance and \
-            self.utility_params == other.utility_params and \
-            self._current_holdings == other._current_holdings
+        return (
+            isinstance(other, AgentState)
+            and self.balance == other.balance
+            and self.utility_params == other.utility_params
+            and self._current_holdings == other._current_holdings
+        )
 
 
 class WorldState(BaseWorldState):
     """Represent the state of the world from the perspective of the agent."""
 
-    def __init__(self, opponent_pbks: List[str],
-                 good_pbks: List[str],
-                 initial_agent_state: AgentState) -> None:
+    def __init__(
+        self,
+        opponent_pbks: List[str],
+        good_pbks: List[str],
+        initial_agent_state: AgentState,
+    ) -> None:
         """
         Instantiate an agent state object.
 
@@ -181,18 +192,22 @@ class WorldState(BaseWorldState):
         """
         BaseWorldState.__init__(self)
         self.opponent_states = dict(
-            (agent_pbk,
+            (
+                agent_pbk,
                 AgentState(
                     self._expected_initial_money_amount(initial_agent_state.balance),
-                    self._expected_good_endowments(initial_agent_state.current_holdings),
-                    self._expected_utility_params(initial_agent_state.utility_params)
-                ))
-            for agent_pbk in opponent_pbks)  # type: Dict[str, AgentState]
+                    self._expected_good_endowments(
+                        initial_agent_state.current_holdings
+                    ),
+                    self._expected_utility_params(initial_agent_state.utility_params),
+                ),
+            )
+            for agent_pbk in opponent_pbks
+        )  # type: Dict[str, AgentState]
 
         self.good_price_models = dict(
-            (good_pbk,
-                GoodPriceModel())
-            for good_pbk in good_pbks)
+            (good_pbk, GoodPriceModel()) for good_pbk in good_pbks
+        )
 
     def update_on_cfp(self, query) -> None:
         """Update the world state when a new cfp is received."""
@@ -211,7 +226,9 @@ class WorldState(BaseWorldState):
         """
         self._from_transaction_update_price(transaction, is_accepted=False)
 
-    def _from_transaction_update_price(self, transaction: Transaction, is_accepted: bool) -> None:
+    def _from_transaction_update_price(
+        self, transaction: Transaction, is_accepted: bool
+    ) -> None:
         """
         Update the good price model based on a transaction.
 
@@ -270,7 +287,13 @@ class WorldState(BaseWorldState):
         expected_utility_params = utility_params
         return expected_utility_params
 
-    def expected_price(self, good_pbk: Address, marginal_utility: float, is_seller: bool, share_of_tx_fee: float) -> float:
+    def expected_price(
+        self,
+        good_pbk: Address,
+        marginal_utility: float,
+        is_seller: bool,
+        share_of_tx_fee: float,
+    ) -> float:
         """
         Compute expectation of the price for the good given a constraint.
 
@@ -280,7 +303,11 @@ class WorldState(BaseWorldState):
         :param share_of_tx_fee: the share of the tx fee the agent pays
         :return: the expected price
         """
-        constraint = round(marginal_utility + share_of_tx_fee, 1) if is_seller else round(marginal_utility - share_of_tx_fee, 1)
+        constraint = (
+            round(marginal_utility + share_of_tx_fee, 1)
+            if is_seller
+            else round(marginal_utility - share_of_tx_fee, 1)
+        )
         good_price_model = self.good_price_models[good_pbk]
         expected_price = good_price_model.get_price_expectation(constraint, is_seller)
         return expected_price

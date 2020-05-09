@@ -33,7 +33,12 @@ from tac.platform.game.helpers import marginal_utility
 class BaselineStrategy(Strategy):
     """This class defines a baseline strategy for the agent."""
 
-    def __init__(self, register_as: RegisterAs = RegisterAs.BOTH, search_for: SearchFor = SearchFor.BOTH, is_world_modeling: bool = False) -> None:
+    def __init__(
+        self,
+        register_as: RegisterAs = RegisterAs.BOTH,
+        search_for: SearchFor = SearchFor.BOTH,
+        is_world_modeling: bool = False,
+    ) -> None:
         """
         Initialize the strategy of the agent.
 
@@ -54,7 +59,9 @@ class BaselineStrategy(Strategy):
         """
         return [quantity - 1 for quantity in current_holdings]
 
-    def supplied_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
+    def supplied_good_pbks(
+        self, good_pbks: List[str], current_holdings: List[int]
+    ) -> Set[str]:
         """
         Generate a set of good public keys which are supplied.
 
@@ -63,7 +70,11 @@ class BaselineStrategy(Strategy):
 
         :return: a set of public keys
         """
-        return {good_pbk for good_pbk, quantity in zip(good_pbks, current_holdings) if quantity > 1}
+        return {
+            good_pbk
+            for good_pbk, quantity in zip(good_pbks, current_holdings)
+            if quantity > 1
+        }
 
     def demanded_good_quantities(self, current_holdings: List[int]) -> List[int]:
         """
@@ -75,7 +86,9 @@ class BaselineStrategy(Strategy):
         """
         return [1 for _ in current_holdings]
 
-    def demanded_good_pbks(self, good_pbks: List[str], current_holdings: List[int]) -> Set[str]:
+    def demanded_good_pbks(
+        self, good_pbks: List[str], current_holdings: List[int]
+    ) -> Set[str]:
         """
         Generate a set of good public keys which are demanded.
 
@@ -86,7 +99,15 @@ class BaselineStrategy(Strategy):
         """
         return {good_pbk for good_pbk, quantity in zip(good_pbks, current_holdings)}
 
-    def get_proposals(self, good_pbks: List[str], current_holdings: List[int], utility_params: List[float], tx_fee: float, is_seller: bool, world_state: Optional[WorldState]) -> List[Description]:
+    def get_proposals(
+        self,
+        good_pbks: List[str],
+        current_holdings: List[int],
+        utility_params: List[float],
+        tx_fee: float,
+        is_seller: bool,
+        world_state: Optional[WorldState],
+    ) -> List[Description]:
         """
         Generate a proposals from the seller/buyer.
 
@@ -99,26 +120,52 @@ class BaselineStrategy(Strategy):
 
         :return: a list of proposals in Description form
         """
-        quantities = self.supplied_good_quantities(current_holdings) if is_seller else self.demanded_good_quantities(current_holdings)
+        quantities = (
+            self.supplied_good_quantities(current_holdings)
+            if is_seller
+            else self.demanded_good_quantities(current_holdings)
+        )
         share_of_tx_fee = round(tx_fee / 2.0, 2)
         rounding_adjustment = 0.01
         proposals = []
         for good_id, good_pbk in zip(range(len(quantities)), good_pbks):
-            if is_seller and quantities[good_id] == 0: continue
+            if is_seller and quantities[good_id] == 0:
+                continue
             proposal = [0] * len(quantities)
             proposal[good_id] = 1
-            desc = get_goods_quantities_description(good_pbks, proposal, is_supply=is_seller)
+            desc = get_goods_quantities_description(
+                good_pbks, proposal, is_supply=is_seller
+            )
             delta_holdings = [i * -1 for i in proposal] if is_seller else proposal
             switch = -1 if is_seller else 1
-            marginal_utility_from_delta_holdings = marginal_utility(utility_params, current_holdings, delta_holdings) * switch
+            marginal_utility_from_delta_holdings = (
+                marginal_utility(utility_params, current_holdings, delta_holdings)
+                * switch
+            )
             if self.is_world_modeling:
-                assert world_state is not None, "Need to provide world state if is_world_modeling=True."
-                desc.values["price"] = world_state.expected_price(good_pbk, round(marginal_utility_from_delta_holdings, 2), is_seller, share_of_tx_fee)
+                assert (
+                    world_state is not None
+                ), "Need to provide world state if is_world_modeling=True."
+                desc.values["price"] = world_state.expected_price(
+                    good_pbk,
+                    round(marginal_utility_from_delta_holdings, 2),
+                    is_seller,
+                    share_of_tx_fee,
+                )
             else:
                 if is_seller:
-                    desc.values["price"] = round(marginal_utility_from_delta_holdings, 2) + share_of_tx_fee + rounding_adjustment
+                    desc.values["price"] = (
+                        round(marginal_utility_from_delta_holdings, 2)
+                        + share_of_tx_fee
+                        + rounding_adjustment
+                    )
                 else:
-                    desc.values["price"] = round(marginal_utility_from_delta_holdings, 2) - share_of_tx_fee - rounding_adjustment
-            if not desc.values["price"] > 0: continue
+                    desc.values["price"] = (
+                        round(marginal_utility_from_delta_holdings, 2)
+                        - share_of_tx_fee
+                        - rounding_adjustment
+                    )
+            if not desc.values["price"] > 0:
+                continue
             proposals.append(desc)
         return proposals

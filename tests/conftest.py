@@ -22,6 +22,7 @@
 import inspect
 import logging
 import os
+
 # import subprocess
 import shutil
 import tempfile
@@ -37,12 +38,6 @@ logger = logging.getLogger(__name__)
 
 CUR_PATH = inspect.getfile(inspect.currentframe())  # type: ignore
 ROOT_DIR = os.path.join(os.path.dirname(CUR_PATH), "..")
-
-
-def pytest_addoption(parser):
-    """Add options to the parser."""
-    parser.addoption("--ci", action="store_true", default=False)
-    parser.addoption("--no-oef", action="store_true", default=False, help="Skip tests that require the OEF.")
 
 
 @pytest.fixture(scope="session")
@@ -78,7 +73,9 @@ def _wait_for_oef(max_attempts: int = 15, sleep_rate: float = 1.0):
         if result:
             success = True
         else:
-            logger.info("OEF not available yet - sleeping for {} second...".format(sleep_rate))
+            logger.info(
+                "OEF not available yet - sleeping for {} second...".format(sleep_rate)
+            )
             time.sleep(sleep_rate)
 
     return success
@@ -87,51 +84,49 @@ def _wait_for_oef(max_attempts: int = 15, sleep_rate: float = 1.0):
 def _create_oef_docker_image(oef_addr_, oef_port_) -> Container:
     client = docker.from_env()
 
-    logger.info(ROOT_DIR + '/scripts/oef')
-    ports = {'20000/tcp': ("0.0.0.0", 20000), '30000/tcp': ("0.0.0.0", 30000),
-             '{}/tcp'.format(oef_port_): ("0.0.0.0", oef_port_)}
-    volumes = {ROOT_DIR + '/scripts/oef': {'bind': '/config', 'mode': 'rw'}, ROOT_DIR + '/data/oef-logs': {'bind': '/logs', 'mode': 'rw'}}
-    c = client.containers.run("fetchai/oef-search:0.7",
-                              "/config/node_config.json",
-                              detach=True, ports=ports, volumes=volumes)
+    logger.info(ROOT_DIR + "/scripts/oef")
+    ports = {
+        "20000/tcp": ("0.0.0.0", 20000),
+        "30000/tcp": ("0.0.0.0", 30000),
+        "{}/tcp".format(oef_port_): ("0.0.0.0", oef_port_),
+    }
+    volumes = {
+        ROOT_DIR + "/scripts/oef": {"bind": "/config", "mode": "rw"},
+        ROOT_DIR + "/data/oef-logs": {"bind": "/logs", "mode": "rw"},
+    }
+    c = client.containers.run(
+        "fetchai/oef-search:0.7",
+        "/config/node_config.json",
+        detach=True,
+        ports=ports,
+        volumes=volumes,
+    )
     return c
 
 
+@pytest.mark.integration
 @pytest.fixture(scope="session")
 def network_node(oef_addr, oef_port, pytestconfig):
     """Network node initialization."""
-    if pytestconfig.getoption("no_oef"):
-        pytest.skip('skipped: no OEF running')
-        return
+    _stop_oef_search_images()
+    c = _create_oef_docker_image(oef_addr, oef_port)
 
-    if pytestconfig.getoption("ci"):
-        logger.warning("Skipping creation of OEF Docker image...")
-        success = _wait_for_oef(max_attempts=10, sleep_rate=2.0)
-        if not success:
-            pytest.fail("OEF doesn't work. Exiting...")
-        else:
-            yield
-            return
+    # wait for the setup...
+    logger.info("Setting up the OEF node...")
+    success = _wait_for_oef(max_attempts=10, sleep_rate=2.0)
+
+    if not success:
+        c.stop()
+        c.remove()
+        pytest.fail("OEF doesn't work. Exiting...")
     else:
-        _stop_oef_search_images()
-        c = _create_oef_docker_image(oef_addr, oef_port)
-
-        # wait for the setup...
-        logger.info("Setting up the OEF node...")
-        success = _wait_for_oef(max_attempts=10, sleep_rate=2.0)
-
-        if not success:
-            c.stop()
-            c.remove()
-            pytest.fail("OEF doesn't work. Exiting...")
-        else:
-            logger.info("Done!")
-            time.sleep(1.0)
-            yield
-            logger.info("Stopping the OEF node...")
-            c.stop()
-            c.remove()
-            logger.info("Stopped the OEF node.")
+        logger.info("Done!")
+        time.sleep(1.0)
+        yield
+        logger.info("Stopping the OEF node...")
+        c.stop()
+        c.remove()
+        logger.info("Stopped the OEF node.")
 
 
 @pytest.fixture(scope="session", autouse=True)

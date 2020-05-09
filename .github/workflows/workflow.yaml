@@ -9,35 +9,58 @@ on:
 
 jobs:
   common_checks:
-     runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-     timeout-minutes: 30
+    timeout-minutes: 30
 
-     steps:
-       - uses: actions/checkout@master
-       - uses: actions/setup-python@master
-         with:
-           python-version: 3.7
-       - name: Install dependencies (ubuntu-latest)
-         run: |
-           sudo apt-get update --fix-missing
-           sudo apt-get autoremove
-           sudo apt-get autoclean
-           pip install pipenv
-           pip install tox
-       - name: Code style check
-         run: |
-           tox -e flake8
-       - name: Static type check
-         run: tox -e mypy
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-python@master
+        with:
+          python-version: 3.7
+      - name: Install dependencies (ubuntu-latest)
+        run: |
+          sudo apt-get update --fix-missing
+          sudo apt-get autoremove
+          sudo apt-get autoclean
+          pip install pipenv
+          pip install tox
+      - name: Code style check
+        run: |
+          tox -e flake8
+      - name: Static type check
+        run: tox -e mypy
+
+  integration_checks:
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-python@master
+        with:
+          python-version: 3.7
+      - name: Install dependencies (ubuntu-latest)
+        run: |
+          sudo apt-get update --fix-missing
+          sudo apt-get autoremove
+          sudo apt-get autoclean
+          pip install pipenv
+          pip install tox
+          sudo apt-get install -y protobuf-compiler
+
+      - name: Unit tests
+        run: |
+          tox -e py${{ matrix.python-version }} -- -m 'integration'
 
   platform_checks:
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        python-version: [3.7]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: [3.7, 3.8]
 
     timeout-minutes: 30
 
@@ -65,4 +88,4 @@ jobs:
         brew install protobuf
     - name: Unit tests
       run: |
-        tox -e py${{ matrix.python-version }} -- --ci --no-oef
+        tox -e py${{ matrix.python-version }} -- -m 'not integration'

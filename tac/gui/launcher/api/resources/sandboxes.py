@@ -33,33 +33,113 @@ from typing import Dict, Any, Optional
 
 from flask_restful import Resource, reqparse
 
-from tac.platform.shared_sim_status import set_controller_state, get_controller_state, get_controller_last_time, remove_controller_state, ControllerAgentState, get_shared_dir
+from tac.platform.shared_sim_status import (
+    set_controller_state,
+    get_controller_state,
+    get_controller_last_time,
+    remove_controller_state,
+    ControllerAgentState,
+    get_shared_dir,
+)
 from tac import ROOT_DIR
 
 
 logger = logging.getLogger(__name__)
 
 parser = reqparse.RequestParser()
-parser.add_argument("nb_agents", type=int, default=10, help="(minimum) number of TAC agent to wait for the competition.")
-parser.add_argument("nb_goods", type=int, default=10, help="Number of TAC agent to run.")
-parser.add_argument("money_endowment", type=int, default=200, help="Initial amount of money.")
-parser.add_argument("base_good_endowment", default=2, type=int, help="The base amount of per good instances every agent receives.")
-parser.add_argument("lower_bound_factor", default=0, type=int, help="The lower bound factor of a uniform distribution.")
-parser.add_argument("upper_bound_factor", default=0, type=int, help="The upper bound factor of a uniform distribution.")
+parser.add_argument(
+    "nb_agents",
+    type=int,
+    default=10,
+    help="(minimum) number of TAC agent to wait for the competition.",
+)
+parser.add_argument(
+    "nb_goods", type=int, default=10, help="Number of TAC agent to run."
+)
+parser.add_argument(
+    "money_endowment", type=int, default=200, help="Initial amount of money."
+)
+parser.add_argument(
+    "base_good_endowment",
+    default=2,
+    type=int,
+    help="The base amount of per good instances every agent receives.",
+)
+parser.add_argument(
+    "lower_bound_factor",
+    default=0,
+    type=int,
+    help="The lower bound factor of a uniform distribution.",
+)
+parser.add_argument(
+    "upper_bound_factor",
+    default=0,
+    type=int,
+    help="The upper bound factor of a uniform distribution.",
+)
 parser.add_argument("tx_fee", default=0.1, type=float, help="The transaction fee.")
 # parser.add_argument("start_time", default=str(datetime.datetime.now() + datetime.timedelta(0, 10)), type=str, help="The start time for the competition (in UTC format).")
-parser.add_argument("registration_timeout", default=10, type=int, help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.")
-parser.add_argument("inactivity_timeout", default=60, type=int, help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.")
-parser.add_argument("competition_timeout", default=240, type=int, help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.")
-parser.add_argument("nb_baseline_agents", type=int, default=10, help="Number of baseline agent to run. Defaults to the number of agents of the competition.")
-parser.add_argument("data_output_dir", default="data", help="The output directory for the simulation data.")
+parser.add_argument(
+    "registration_timeout",
+    default=10,
+    type=int,
+    help="The amount of time (in seconds) to wait for agents to register before attempting to start the competition.",
+)
+parser.add_argument(
+    "inactivity_timeout",
+    default=60,
+    type=int,
+    help="The amount of time (in seconds) to wait during inactivity until the termination of the competition.",
+)
+parser.add_argument(
+    "competition_timeout",
+    default=240,
+    type=int,
+    help="The amount of time (in seconds) to wait from the start of the competition until the termination of the competition.",
+)
+parser.add_argument(
+    "nb_baseline_agents",
+    type=int,
+    default=10,
+    help="Number of baseline agent to run. Defaults to the number of agents of the competition.",
+)
+parser.add_argument(
+    "data_output_dir",
+    default="data",
+    help="The output directory for the simulation data.",
+)
 parser.add_argument("version_id", default=None, help="The version ID.")
 parser.add_argument("seed", default=42, help="The random seed of the simulation.")
-parser.add_argument("whitelist_file", default="", type=str, help="The file that contains the list of agent names to be whitelisted.")
-parser.add_argument("services_interval", default=5, type=int, help="The amount of time (in seconds) the baseline agents wait until it updates services again.")
-parser.add_argument("pending_transaction_timeout", default=120, type=int, help="The amount of time (in seconds) the baseline agents wait until the transaction confirmation.")
-parser.add_argument("register_as", choices=['seller', 'buyer', 'both'], default='both', help="The string indicates whether the baseline agent registers as seller, buyer or both on the oef.")
-parser.add_argument("search_for", choices=['sellers', 'buyers', 'both'], default='both', help="The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.")
+parser.add_argument(
+    "whitelist_file",
+    default="",
+    type=str,
+    help="The file that contains the list of agent names to be whitelisted.",
+)
+parser.add_argument(
+    "services_interval",
+    default=5,
+    type=int,
+    help="The amount of time (in seconds) the baseline agents wait until it updates services again.",
+)
+parser.add_argument(
+    "pending_transaction_timeout",
+    default=120,
+    type=int,
+    help="The amount of time (in seconds) the baseline agents wait until the transaction confirmation.",
+)
+parser.add_argument(
+    "register_as",
+    choices=["seller", "buyer", "both"],
+    default="both",
+    help="The string indicates whether the baseline agent registers as seller, buyer or both on the oef.",
+)
+parser.add_argument(
+    "search_for",
+    choices=["sellers", "buyers", "both"],
+    default="both",
+    help="The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.",
+)
 
 sandboxes = {}  # type: Dict[int, SandboxRunner]
 sandbox_queue = Queue()  # type: Queue
@@ -88,7 +168,9 @@ class SandboxRunner:
         self.id = id
         self.params = params
         self.game_id = game_id
-        self.ui_is_starting = False     # set to true if the UI is trying to start the sandbox
+        self.ui_is_starting = (
+            False  # set to true if the UI is trying to start the sandbox
+        )
 
         self.process = None  # type: Optional[subprocess.Popen]
 
@@ -119,7 +201,7 @@ class SandboxRunner:
             "VERSION_ID": self.game_id,
             "WHITELIST": str(args["whitelist_file"]),
             "SHARED_DIR": str(get_shared_dir()),
-            **os.environ
+            **os.environ,
         }
 
         # print("env[SHARED_DIR] = {}".format(env["SHARED_DIR"]))
@@ -128,13 +210,16 @@ class SandboxRunner:
 
         self.ui_is_starting = True
         set_controller_state(self.game_id, ControllerAgentState.STARTING_DOCKER)
-        self.process = subprocess.Popen([
-            "docker-compose",
-            "-f",
-            os.path.join(ROOT_DIR, "sandbox", "docker-compose.yml"),
-            "up",
-            "--abort-on-container-exit"],
-            env=env)
+        self.process = subprocess.Popen(
+            [
+                "docker-compose",
+                "-f",
+                os.path.join(ROOT_DIR, "sandbox", "docker-compose.yml"),
+                "up",
+                "--abort-on-container-exit",
+            ],
+            env=env,
+        )
 
     @property
     def status(self) -> SandboxProcessState:
@@ -164,14 +249,16 @@ class SandboxRunner:
 
         if controller_status == ControllerAgentState.REGISTRATION_OPEN:
             duration = time.time() - get_controller_last_time(self.game_id)
-            controller_status_text += ": " + str(1 + math.floor(self.rec_registration_timeout - duration))
+            controller_status_text += ": " + str(
+                1 + math.floor(self.rec_registration_timeout - duration)
+            )
 
         return {
             "id": self.id,
             "controller_status": controller_status_text,
             "process_status": self.status.value,
             "game_id": self.game_id,
-            "params": self.params
+            "params": self.params,
         }
 
     def stop(self) -> None:
@@ -219,7 +306,9 @@ class SandboxList(Resource):
 
     def get(self):
         """Get all the sandboxes."""
-        return {sandbox_id: sandbox.to_dict() for sandbox_id, sandbox in sandboxes.items()}
+        return {
+            sandbox_id: sandbox.to_dict() for sandbox_id, sandbox in sandboxes.items()
+        }
 
     def post(self):
         """Create a sandbox instance."""

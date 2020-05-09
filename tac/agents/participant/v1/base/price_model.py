@@ -64,8 +64,8 @@ class GoodPriceModel(object):
     def __init__(self):
         """Instantiate a good price model."""
         self.price_bandits = dict(
-            (price, PriceBandit(price))
-            for price in [i / 10 for i in range(201)])
+            (price, PriceBandit(price)) for price in [i / 10 for i in range(201)]
+        )
 
     def update(self, outcome: bool, price: float) -> None:
         """
@@ -89,7 +89,10 @@ class GoodPriceModel(object):
         maxsample = -1
         winning_price = 20.0
         for price, bandit in self.price_bandits.items():
-            if (is_seller and price <= constraint) or (not is_seller and price >= constraint): continue
+            if (is_seller and price <= constraint) or (
+                not is_seller and price >= constraint
+            ):
+                continue
             sample = bandit.sample()
             if sample > maxsample:
                 maxsample = sample

@@ -28,7 +28,11 @@ from aea.agent import Agent
 from aea.channels.oef.connection import OEFMailBox
 from aea.mail.base import Envelope
 from tac.agents.participant.v1.base.game_instance import GameInstance
-from tac.agents.participant.v1.base.handlers import ControllerHandler, DialogueHandler, OEFHandler
+from tac.agents.participant.v1.base.handlers import (
+    ControllerHandler,
+    DialogueHandler,
+    OEFHandler,
+)
 from tac.agents.participant.v1.base.strategy import Strategy
 from tac.gui.dashboards.agent import AgentDashboard
 from tac.platform.game.base import GamePhase
@@ -39,18 +43,21 @@ logger = logging.getLogger(__name__)
 class ParticipantAgent(Agent):
     """The participant agent class implements a base agent for TAC."""
 
-    def __init__(self, name: str,
-                 oef_addr: str,
-                 oef_port: int,
-                 strategy: Strategy,
-                 expected_version_id: str,
-                 agent_timeout: float = 1.0,
-                 max_reactions: int = 100,
-                 services_interval: int = 10,
-                 pending_transaction_timeout: int = 30,
-                 dashboard: Optional[AgentDashboard] = None,
-                 private_key_pem: Optional[str] = None,
-                 debug: bool = False):
+    def __init__(
+        self,
+        name: str,
+        oef_addr: str,
+        oef_port: int,
+        strategy: Strategy,
+        expected_version_id: str,
+        agent_timeout: float = 1.0,
+        max_reactions: int = 100,
+        services_interval: int = 10,
+        pending_transaction_timeout: int = 30,
+        dashboard: Optional[AgentDashboard] = None,
+        private_key_pem: Optional[str] = None,
+        debug: bool = False,
+    ):
         """
         Initialize a participant agent.
 
@@ -70,12 +77,26 @@ class ParticipantAgent(Agent):
         super().__init__(name, private_key_pem, agent_timeout, debug=debug)
         self.mailbox = OEFMailBox(self.crypto.public_key, oef_addr, oef_port)
 
-        self._game_instance = GameInstance(name, strategy, self.mailbox.mail_stats, expected_version_id, services_interval, pending_transaction_timeout, dashboard)
+        self._game_instance = GameInstance(
+            name,
+            strategy,
+            self.mailbox.mail_stats,
+            expected_version_id,
+            services_interval,
+            pending_transaction_timeout,
+            dashboard,
+        )
         self.max_reactions = max_reactions
 
-        self.controller_handler = ControllerHandler(self.crypto, self.liveness, self.game_instance, self.mailbox, self.name)
-        self.oef_handler = OEFHandler(self.crypto, self.liveness, self.game_instance, self.mailbox, self.name)
-        self.dialogue_handler = DialogueHandler(self.crypto, self.liveness, self.game_instance, self.mailbox, self.name)
+        self.controller_handler = ControllerHandler(
+            self.crypto, self.liveness, self.game_instance, self.mailbox, self.name
+        )
+        self.oef_handler = OEFHandler(
+            self.crypto, self.liveness, self.game_instance, self.mailbox, self.name
+        )
+        self.dialogue_handler = DialogueHandler(
+            self.crypto, self.liveness, self.game_instance, self.mailbox, self.name
+        )
 
     @property
     def game_instance(self) -> GameInstance:
@@ -103,12 +124,14 @@ class ParticipantAgent(Agent):
         :return: None
         """
         counter = 0
-        while (not self.mailbox.inbox.empty() and counter < self.max_reactions):
+        while not self.mailbox.inbox.empty() and counter < self.max_reactions:
             counter += 1
             envelope = self.mailbox.inbox.get_nowait()  # type: Optional[Envelope]
 
             if envelope is not None:
-                logger.debug("processing message of protocol={}".format(envelope.protocol_id))
+                logger.debug(
+                    "processing message of protocol={}".format(envelope.protocol_id)
+                )
                 if envelope.protocol_id == "oef":
                     self.oef_handler.handle_oef_message(envelope)
                 elif envelope.protocol_id == "tac":
@@ -116,7 +139,9 @@ class ParticipantAgent(Agent):
                 elif envelope.protocol_id == "fipa":
                     self.dialogue_handler.handle_dialogue_message(envelope)
                 else:
-                    logger.warning("Message type not recognized: sender={}".format(envelope.sender))
+                    logger.warning(
+                        "Message type not recognized: sender={}".format(envelope.sender)
+                    )
 
     def update(self) -> None:
         """

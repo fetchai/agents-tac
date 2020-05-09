@@ -47,8 +47,12 @@ class TestCompetitionStopsNoAgentRegistered:
     @classmethod
     def setup_class(cls):
         """Test that if the controller agent does not receive enough registrations, it stops."""
-        tac_parameters = TACParameters(min_nb_agents=2, start_time=datetime.datetime.now(), registration_timeout=5)
-        cls.controller_agent = ControllerAgent('controller', '127.0.0.1', 10000, tac_parameters, NullMonitor())
+        tac_parameters = TACParameters(
+            min_nb_agents=2, start_time=datetime.datetime.now(), registration_timeout=5
+        )
+        cls.controller_agent = ControllerAgent(
+            "controller", "127.0.0.1", 10000, tac_parameters, NullMonitor()
+        )
 
     def test_no_registered_agents(self):
         """Test no agent is registered."""
@@ -74,20 +78,31 @@ class TestCompetitionStopsTooFewAgentRegistered:
     @classmethod
     def setup_class(cls):
         """Test that if the controller agent does not receive enough registrations, it stops."""
-        tac_parameters = TACParameters(min_nb_agents=2, start_time=datetime.datetime.now(), registration_timeout=5)
-        cls.controller_agent = ControllerAgent('controller', '127.0.0.1', 10000, tac_parameters, NullMonitor())
+        tac_parameters = TACParameters(
+            min_nb_agents=2, start_time=datetime.datetime.now(), registration_timeout=5
+        )
+        cls.controller_agent = ControllerAgent(
+            "controller", "127.0.0.1", 10000, tac_parameters, NullMonitor()
+        )
 
         cls.controller_agent.mailbox.connect()
         job = Thread(target=cls.controller_agent.start)
         job.start()
 
         cls.crypto = Crypto()
-        cls.agent1 = TOEFAgent(cls.crypto.public_key, oef_addr='127.0.0.1', oef_port=10000)
+        cls.agent1 = TOEFAgent(
+            cls.crypto.public_key, oef_addr="127.0.0.1", oef_port=10000
+        )
         cls.agent1.connect()
 
-        tac_msg = TACMessage(tac_type=TACMessage.Type.REGISTER, agent_name='agent_name')
+        tac_msg = TACMessage(tac_type=TACMessage.Type.REGISTER, agent_name="agent_name")
         tac_bytes = TACSerializer().encode(tac_msg)
-        cls.agent1.outbox.put_message(to=cls.controller_agent.crypto.public_key, sender=cls.crypto.public_key, protocol_id=TACMessage.protocol_id, message=tac_bytes)
+        cls.agent1.outbox.put_message(
+            to=cls.controller_agent.crypto.public_key,
+            sender=cls.crypto.public_key,
+            protocol_id=TACMessage.protocol_id,
+            message=tac_bytes,
+        )
 
         job.join()
 
@@ -103,7 +118,10 @@ class TestCompetitionStopsTooFewAgentRegistered:
         while not self.agent1.inbox.empty():
             counter += 1
             msg = self.agent1.inbox.get_nowait()
-            assert msg is not None and msg.sender == self.controller_agent.crypto.public_key
+            assert (
+                msg is not None
+                and msg.sender == self.controller_agent.crypto.public_key
+            )
         assert counter == 1
 
     @classmethod

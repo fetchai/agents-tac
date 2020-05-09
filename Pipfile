@@ -9,39 +9,40 @@ verify_ssl = true
 name = "test-pypi"
 
 [dev-packages]
+black = "==19.10b0"
 flake8 = "*"
+flake8-docstrings = "*"
 ipython = "*"
 jupyter = "*"
+mypy = "*"
+pygments = "*"
 pytest = "*"
+pytest-cov = "*"
 tox = "==3.7.0"
 tox-pipenv = "==1.9.0"
-pytest-cov = "*"
-flake8-docstrings = "*"
-pygments = "*"
-mypy = "*"
 
 [packages]
-fetchai-ledger-api = {git = "https://github.com/fetchai/ledger-api-py.git"}
+aea = {index = "pypi",version = "==0.1.4"}
 base58 = "*"
+colorlog = "*"
 cryptography = "*"
+docker = "*"
+docker-compose = "*"
+fetchai-ledger-api = {git = "https://github.com/fetchai/ledger-api-py.git"}
 flask-restful = "*"
 nbsphinx = "*"
 numpy = "*"
 matplotlib = "*"
 oef = {index = "test-pypi",version = "==0.6.10"}
+pandas = "*"
 python-dateutil = "*"
+scipy = "*"
+seaborn = "*"
 sphinxcontrib-mermaid = "*"
 sphinxcontrib-apidoc = "*"
 sphinx = "==2.1.2"
-wtforms = "*"
 visdom = "*"
-aea = {index = "pypi",version = "==0.1.4"}
-colorlog = "*"
-docker = "*"
-docker-compose = "*"
-pandas = "*"
-scipy = "*"
-seaborn = "*"
+wtforms = "*"
 
 [requires]
 python_version = "3.7"

@@ -34,7 +34,7 @@ parser.add_argument("addr", type=str, help="IP address of the OEF node.")
 parser.add_argument("port", type=int, help="Port of the OEF node.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         args = parser.parse_args()
         host = args.addr
