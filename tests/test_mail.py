@@ -28,6 +28,8 @@ from aea.protocols.fipa.message import FIPAMessage
 from aea.protocols.default.serialization import DefaultSerializer
 from aea.protocols.fipa.serialization import FIPASerializer
 
+import pytest
+
 
 @pytest.mark.integration
 def test_example(network_node):

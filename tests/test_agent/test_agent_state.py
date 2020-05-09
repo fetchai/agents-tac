@@ -26,6 +26,8 @@ from threading import Thread
 from aea.agent import Agent, AgentState
 from aea.channels.oef.connection import OEFMailBox
 
+import pytest
+
 
 class TAgent(Agent):
     """A class to implement an agent for testing."""
