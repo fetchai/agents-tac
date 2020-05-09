@@ -8,7 +8,7 @@ Competition and Agent Frameworks for the Trading Agents Competition
 
 This repository contains submodules. Clone with recursive strategy:
 
-      git clone git@github.com:fetchai/agents-tac.git --recursive && cd agents-tac
+    git clone git@github.com:fetchai/agents-tac.git --recursive && cd agents-tac
 
 ## Option 1: Quick Start:
 
@@ -64,6 +64,12 @@ The controller GUI at http://localhost:8097 provides real time insights:
 
 ## Quick Links
 
+### 📝 📝 📝 Publications 📝 📝 📝 
+
+The following publication relates to this repository:
+
+- [Trading Agent Competition with Autonomous Economic Agents](http://ifaamas.org/Proceedings/aamas2020/pdfs/p2107.pdf)
+
 ### 📜 📜 📜 Documentation 📜 📜 📜
 
 The [package documentation](../master/docs) introduces the key components of the agent and competition frameworks and helps agent developers getting started. _This is **required** reading material if you want to build your own agent._
@@ -83,6 +89,10 @@ The [agent templates](../master/templates) provide starting points for agent dev
 ### 🏆 🏆 🏆 Competition 🏆 🏆 🏆
 
 The [competition sandbox](../master/sandbox) provides the code to build the docker image to run the competiton.
+
+### 🚀🚀🚀 AEA Framework 🚀🚀🚀
+
+This project has sparked the development of an Autonomous Economic Agent framework. The project is available [here](https://github.com/fetchai/agents-aea) and we recomment you check it out!
 
 ## Repository structure
 
@@ -163,3 +173,16 @@ The following steps are only relevant if you intend to contribute to the reposit
 ## Resources
 
 - Detailed documentation of the OEF Python SDK is available [here](https://fetchai.github.io/oef-sdk-python/oef.html).
+
+## Cite
+
+If you are using our software in a publication, please 
+consider to cite it with the following BibTex entry:
+
+```
+@misc{agents-aea,
+  Author = {Marco Favorito and David Minarsch and Diarmid Campbell},
+  Title = {Trading Agent Competition with Autonomous Economic Agents},
+  Year = {2019},
+}
+```
