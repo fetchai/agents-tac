@@ -33,14 +33,23 @@ logger = logging.getLogger(__name__)
 
 
 parser = argparse.ArgumentParser("oef_healthcheck", description=__doc__)
-parser.add_argument("--oef-addr", default="127.0.0.1", type=str, help="TCP/IP address of the OEF Agent")
-parser.add_argument("--oef-port", default=10000, type=int, help="TCP/IP port of the OEF Agent")
+parser.add_argument(
+    "--oef-addr", default="127.0.0.1", type=str, help="TCP/IP address of the OEF Agent"
+)
+parser.add_argument(
+    "--oef-port", default=10000, type=int, help="TCP/IP port of the OEF Agent"
+)
 
 
 class OEFHealthCheck(object):
     """A health check class."""
 
-    def __init__(self, oef_addr: str, oef_port: int, loop: Optional[asyncio.AbstractEventLoop] = None):
+    def __init__(
+        self,
+        oef_addr: str,
+        oef_port: int,
+        loop: Optional[asyncio.AbstractEventLoop] = None,
+    ):
         """
         Initialize.
 
@@ -53,7 +62,9 @@ class OEFHealthCheck(object):
         self._result = False
         self._stop = False
         self._core = AsyncioCore()
-        self.agent = OEFAgent("check", core=self._core, oef_addr=self.oef_addr, oef_port=self.oef_port)
+        self.agent = OEFAgent(
+            "check", core=self._core, oef_addr=self.oef_addr, oef_port=self.oef_port
+        )
         self.agent.on_connect_success = self.on_connect_ok
         self.agent.on_connection_terminated = self.on_connect_terminated
         self.agent.on_connect_failed = self.exception_handler
@@ -87,7 +98,7 @@ class OEFHealthCheck(object):
             if self.agent.state == "connecting":
                 self.agent.state = "failed"
 
-        t = Timer(1.5, stop_connection_attempt, args=(self, ))
+        t = Timer(1.5, stop_connection_attempt, args=(self,))
 
         try:
             print("Connecting to {}:{}...".format(self.oef_addr, self.oef_port))

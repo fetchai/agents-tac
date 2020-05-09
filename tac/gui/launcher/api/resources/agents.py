@@ -35,16 +35,64 @@ logger = logging.getLogger(__name__)
 
 parser = reqparse.RequestParser()
 parser.add_argument("name", default="my_baseline_agent", help="Name of the agent.")
-parser.add_argument("agent_timeout", type=float, default=1.0, help="The time in (fractions of) seconds to time out an agent between act and react.")
-parser.add_argument("max_reactions", type=int, default=100, help="The maximum number of reactions (messages processed) per call to react.")
-parser.add_argument("register_as", choices=['seller', 'buyer', 'both'], default='both', help="The string indicates whether the baseline agent registers as seller, buyer or both on the oef.")
-parser.add_argument("search_for", choices=['sellers', 'buyers', 'both'], default='both', help="The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.")
-parser.add_argument("is_world_modeling", type=bool, default=False, help="Whether the agent uses a world model or not.")
-parser.add_argument("services_interval", type=int, default=5, help="The number of seconds to wait before doing another search.")
-parser.add_argument("pending_transaction_timeout", type=int, default=30, help="The timeout in seconds to wait for pending transaction/negotiations.")
-parser.add_argument("private_key_pem", default=None, help="Path to a file containing a private key in PEM format.")
-parser.add_argument("expected_version_id", default="", help="Version id of the game we are trying to connect to")
-parser.add_argument("rejoin", type=bool, default=False, help="Whether the agent is joining a running TAC.")
+parser.add_argument(
+    "agent_timeout",
+    type=float,
+    default=1.0,
+    help="The time in (fractions of) seconds to time out an agent between act and react.",
+)
+parser.add_argument(
+    "max_reactions",
+    type=int,
+    default=100,
+    help="The maximum number of reactions (messages processed) per call to react.",
+)
+parser.add_argument(
+    "register_as",
+    choices=["seller", "buyer", "both"],
+    default="both",
+    help="The string indicates whether the baseline agent registers as seller, buyer or both on the oef.",
+)
+parser.add_argument(
+    "search_for",
+    choices=["sellers", "buyers", "both"],
+    default="both",
+    help="The string indicates whether the baseline agent searches for sellers, buyers or both on the oef.",
+)
+parser.add_argument(
+    "is_world_modeling",
+    type=bool,
+    default=False,
+    help="Whether the agent uses a world model or not.",
+)
+parser.add_argument(
+    "services_interval",
+    type=int,
+    default=5,
+    help="The number of seconds to wait before doing another search.",
+)
+parser.add_argument(
+    "pending_transaction_timeout",
+    type=int,
+    default=30,
+    help="The timeout in seconds to wait for pending transaction/negotiations.",
+)
+parser.add_argument(
+    "private_key_pem",
+    default=None,
+    help="Path to a file containing a private key in PEM format.",
+)
+parser.add_argument(
+    "expected_version_id",
+    default="",
+    help="Version id of the game we are trying to connect to",
+)
+parser.add_argument(
+    "rejoin",
+    type=bool,
+    default=False,
+    help="Whether the agent is joining a running TAC.",
+)
 parser.add_argument("btn-start-agent", default="Test", help="Test")
 
 current_agent = None  # type: Optional[AgentRunner]
@@ -79,14 +127,24 @@ class AgentRunner:
         if self.status != AgentState.NOT_STARTED:
             return
 
-        args = ["--name", str(self.params["name"]),
-                "--agent-timeout", str(self.params["agent_timeout"]),
-                "--max-reactions", str(self.params["max_reactions"]),
-                "--register-as", str(self.params["register_as"]),
-                "--search-for", str(self.params["search_for"]),
-                "--services-interval", str(self.params["services_interval"]),
-                "--pending-transaction-timeout", str(self.params["pending_transaction_timeout"]),
-                "--expected-version-id", str(self.params["expected_version_id"])]
+        args = [
+            "--name",
+            str(self.params["name"]),
+            "--agent-timeout",
+            str(self.params["agent_timeout"]),
+            "--max-reactions",
+            str(self.params["max_reactions"]),
+            "--register-as",
+            str(self.params["register_as"]),
+            "--search-for",
+            str(self.params["search_for"]),
+            "--services-interval",
+            str(self.params["services_interval"]),
+            "--pending-transaction-timeout",
+            str(self.params["pending_transaction_timeout"]),
+            "--expected-version-id",
+            str(self.params["expected_version_id"]),
+        ]
 
         if self.params["is_world_modeling"]:
             args.append("--is-world-modeling")
@@ -96,14 +154,27 @@ class AgentRunner:
             args.append("--private-key-pem")
             args.append(self.params["--private-key-pem"])
 
-        self.process = subprocess.Popen([
-            "python3",
-            os.path.join(ROOT_DIR, "tac", "gui", "launcher", "api", "resources", "reporting_agent.py"),
-            *args,
-            "--dashboard",
-            "--visdom-addr", "127.0.0.1",
-            "--visdom-port", "8097",
-        ], stdout=subprocess.PIPE)
+        self.process = subprocess.Popen(
+            [
+                "python3",
+                os.path.join(
+                    ROOT_DIR,
+                    "tac",
+                    "gui",
+                    "launcher",
+                    "api",
+                    "resources",
+                    "reporting_agent.py",
+                ),
+                *args,
+                "--dashboard",
+                "--visdom-addr",
+                "127.0.0.1",
+                "--visdom-port",
+                "8097",
+            ],
+            stdout=subprocess.PIPE,
+        )
 
     @property
     def status(self) -> AgentState:
@@ -124,7 +195,7 @@ class AgentRunner:
         """Serialize the object into a dictionary."""
         game_id = self.params["expected_version_id"]
         agent_status = get_agent_state(game_id)
-        if (agent_status is not None):
+        if agent_status is not None:
             agent_status_text = agent_status.value
         else:
             agent_status_text = "Uninitialised"
@@ -133,7 +204,7 @@ class AgentRunner:
             "id": self.id,
             "process_status": self.status.value,
             "agent_status": agent_status_text,
-            "params": self.params
+            "params": self.params,
         }
 
     def stop(self):

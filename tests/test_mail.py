@@ -28,7 +28,10 @@ from aea.protocols.fipa.message import FIPAMessage
 from aea.protocols.default.serialization import DefaultSerializer
 from aea.protocols.fipa.serialization import FIPASerializer
 
+import pytest
 
+
+@pytest.mark.integration
 def test_example(network_node):
     """Test the mailbox."""
     crypto1 = Crypto()
@@ -42,23 +45,80 @@ def test_example(network_node):
 
     msg = DefaultMessage(type=DefaultMessage.Type.BYTES, content=b"hello")
     msg_bytes = DefaultSerializer().encode(msg)
-    mailbox1.outbox.put(Envelope(to=crypto2.public_key, sender=crypto1.public_key, protocol_id=DefaultMessage.protocol_id, message=msg_bytes))
+    mailbox1.outbox.put(
+        Envelope(
+            to=crypto2.public_key,
+            sender=crypto1.public_key,
+            protocol_id=DefaultMessage.protocol_id,
+            message=msg_bytes,
+        )
+    )
 
-    msg = FIPAMessage(message_id=0, dialogue_id=0, target=0, performative=FIPAMessage.Performative.CFP, query=None)
+    msg = FIPAMessage(
+        message_id=0,
+        dialogue_id=0,
+        target=0,
+        performative=FIPAMessage.Performative.CFP,
+        query=None,
+    )
     msg_bytes = FIPASerializer().encode(msg)
-    mailbox1.outbox.put(Envelope(to=crypto2.public_key, sender=crypto1.public_key, protocol_id=FIPAMessage.protocol_id, message=msg_bytes))
+    mailbox1.outbox.put(
+        Envelope(
+            to=crypto2.public_key,
+            sender=crypto1.public_key,
+            protocol_id=FIPAMessage.protocol_id,
+            message=msg_bytes,
+        )
+    )
 
-    msg = FIPAMessage(message_id=0, dialogue_id=0, target=0, performative=FIPAMessage.Performative.PROPOSE, proposal=[])
+    msg = FIPAMessage(
+        message_id=0,
+        dialogue_id=0,
+        target=0,
+        performative=FIPAMessage.Performative.PROPOSE,
+        proposal=[],
+    )
     msg_bytes = FIPASerializer().encode(msg)
-    mailbox1.outbox.put(Envelope(to=crypto2.public_key, sender=crypto1.public_key, protocol_id=FIPAMessage.protocol_id, message=msg_bytes))
+    mailbox1.outbox.put(
+        Envelope(
+            to=crypto2.public_key,
+            sender=crypto1.public_key,
+            protocol_id=FIPAMessage.protocol_id,
+            message=msg_bytes,
+        )
+    )
 
-    msg = FIPAMessage(message_id=0, dialogue_id=0, target=0, performative=FIPAMessage.Performative.ACCEPT)
+    msg = FIPAMessage(
+        message_id=0,
+        dialogue_id=0,
+        target=0,
+        performative=FIPAMessage.Performative.ACCEPT,
+    )
     msg_bytes = FIPASerializer().encode(msg)
-    mailbox1.outbox.put(Envelope(to=crypto2.public_key, sender=crypto1.public_key, protocol_id=FIPAMessage.protocol_id, message=msg_bytes))
+    mailbox1.outbox.put(
+        Envelope(
+            to=crypto2.public_key,
+            sender=crypto1.public_key,
+            protocol_id=FIPAMessage.protocol_id,
+            message=msg_bytes,
+        )
+    )
 
-    msg = FIPAMessage(message_id=0, dialogue_id=0, target=0, performative=FIPAMessage.Performative.DECLINE)
+    msg = FIPAMessage(
+        message_id=0,
+        dialogue_id=0,
+        target=0,
+        performative=FIPAMessage.Performative.DECLINE,
+    )
     msg_bytes = FIPASerializer().encode(msg)
-    mailbox1.outbox.put(Envelope(to=crypto2.public_key, sender=crypto1.public_key, protocol_id=FIPAMessage.protocol_id, message=msg_bytes))
+    mailbox1.outbox.put(
+        Envelope(
+            to=crypto2.public_key,
+            sender=crypto1.public_key,
+            protocol_id=FIPAMessage.protocol_id,
+            message=msg_bytes,
+        )
+    )
 
     time.sleep(5.0)
 

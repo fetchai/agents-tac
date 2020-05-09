@@ -20,10 +20,10 @@
 
 """Specifies the version of the TAC package."""
 
-__title__ = 'tac'
-__description__ = 'Trading Agent Competition agents'
-__url__ = 'https://github.com/fetchai/agents-tac.git'
-__version__ = '0.1.7'
-__author__ = 'Fetch.AI Limited'
-__license__ = 'Apache 2.0'
-__copyright__ = '2019 Fetch.AI Limited'
+__title__ = "tac"
+__description__ = "Trading Agent Competition agents"
+__url__ = "https://github.com/fetchai/agents-tac.git"
+__version__ = "0.1.7"
+__author__ = "Fetch.AI Limited"
+__license__ = "Apache 2.0"
+__copyright__ = "2019 Fetch.AI Limited"

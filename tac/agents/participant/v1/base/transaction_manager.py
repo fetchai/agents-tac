@@ -48,8 +48,12 @@ class TransactionManager(object):
         """
         self.agent_name = agent_name
 
-        self.pending_proposals = defaultdict(lambda: {})  # type: Dict[DialogueLabel, Dict[MESSAGE_ID, Transaction]]
-        self.pending_initial_acceptances = defaultdict(lambda: {})  # type: Dict[DialogueLabel, Dict[MESSAGE_ID, Transaction]]
+        self.pending_proposals = defaultdict(
+            lambda: {}
+        )  # type: Dict[DialogueLabel, Dict[MESSAGE_ID, Transaction]]
+        self.pending_initial_acceptances = defaultdict(
+            lambda: {}
+        )  # type: Dict[DialogueLabel, Dict[MESSAGE_ID, Transaction]]
 
         self.locked_txs = {}  # type: Dict[TRANSACTION_ID, Transaction]
         self.locked_txs_as_buyer = {}  # type: Dict[TRANSACTION_ID, Transaction]
@@ -57,7 +61,9 @@ class TransactionManager(object):
 
         self.pending_transaction_timeout = pending_transaction_timeout
 
-        self._last_update_for_transactions = deque()  # type: Deque[Tuple[datetime.datetime, TRANSACTION_ID]]
+        self._last_update_for_transactions = (
+            deque()
+        )  # type: Deque[Tuple[datetime.datetime, TRANSACTION_ID]]
 
     def cleanup_pending_transactions(self) -> None:
         """
@@ -80,7 +86,9 @@ class TransactionManager(object):
 
             # extract dialogue label and message id
             transaction_id = next_item
-            logger.debug("[{}]: Removing transaction: {}".format(self.agent_name, transaction_id))
+            logger.debug(
+                "[{}]: Removing transaction: {}".format(self.agent_name, transaction_id)
+            )
 
             # remove (safely) the associated pending proposal (if present)
             self.locked_txs.pop(transaction_id, None)
@@ -103,7 +111,9 @@ class TransactionManager(object):
         now = datetime.datetime.now()
         self._last_update_for_transactions.append((now, transaction_id))
 
-    def add_pending_proposal(self, dialogue_label: DialogueLabel, proposal_id: int, transaction: Transaction) -> None:
+    def add_pending_proposal(
+        self, dialogue_label: DialogueLabel, proposal_id: int, transaction: Transaction
+    ) -> None:
         """
         Add a proposal (in the form of a transaction) to the pending list.
 
@@ -114,10 +124,15 @@ class TransactionManager(object):
 
         :return: None
         """
-        assert dialogue_label not in self.pending_proposals and proposal_id not in self.pending_proposals[dialogue_label]
+        assert (
+            dialogue_label not in self.pending_proposals
+            and proposal_id not in self.pending_proposals[dialogue_label]
+        )
         self.pending_proposals[dialogue_label][proposal_id] = transaction
 
-    def pop_pending_proposal(self, dialogue_label: DialogueLabel, proposal_id: int) -> Transaction:
+    def pop_pending_proposal(
+        self, dialogue_label: DialogueLabel, proposal_id: int
+    ) -> Transaction:
         """
         Remove a proposal (in the form of a transaction) from the pending list.
 
@@ -127,11 +142,16 @@ class TransactionManager(object):
 
         :return: the transaction
         """
-        assert dialogue_label in self.pending_proposals and proposal_id in self.pending_proposals[dialogue_label]
+        assert (
+            dialogue_label in self.pending_proposals
+            and proposal_id in self.pending_proposals[dialogue_label]
+        )
         transaction = self.pending_proposals[dialogue_label].pop(proposal_id)
         return transaction
 
-    def add_pending_initial_acceptance(self, dialogue_label: DialogueLabel, proposal_id: int, transaction: Transaction) -> None:
+    def add_pending_initial_acceptance(
+        self, dialogue_label: DialogueLabel, proposal_id: int, transaction: Transaction
+    ) -> None:
         """
         Add an acceptance (in the form of a transaction) to the pending list.
 
@@ -142,10 +162,15 @@ class TransactionManager(object):
 
         :return: None
         """
-        assert dialogue_label not in self.pending_initial_acceptances and proposal_id not in self.pending_initial_acceptances[dialogue_label]
+        assert (
+            dialogue_label not in self.pending_initial_acceptances
+            and proposal_id not in self.pending_initial_acceptances[dialogue_label]
+        )
         self.pending_initial_acceptances[dialogue_label][proposal_id] = transaction
 
-    def pop_pending_initial_acceptance(self, dialogue_label: DialogueLabel, proposal_id: int) -> Transaction:
+    def pop_pending_initial_acceptance(
+        self, dialogue_label: DialogueLabel, proposal_id: int
+    ) -> Transaction:
         """
         Remove an acceptance (in the form of a transaction) from the pending list.
 
@@ -155,7 +180,10 @@ class TransactionManager(object):
 
         :return: the transaction
         """
-        assert dialogue_label in self.pending_initial_acceptances and proposal_id in self.pending_initial_acceptances[dialogue_label]
+        assert (
+            dialogue_label in self.pending_initial_acceptances
+            and proposal_id in self.pending_initial_acceptances[dialogue_label]
+        )
         transaction = self.pending_initial_acceptances[dialogue_label].pop(proposal_id)
         return transaction
 

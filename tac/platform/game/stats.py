@@ -66,7 +66,9 @@ class GameStats:
         # (remember that indexes of the transaction start from one, because index 0 is reserved for the initial scores)
         for idx, tx in enumerate(self.game.transactions):
             temp_game.settle_transaction(tx)
-            result[idx + 1, :] = np.asarray(temp_game.get_holdings_matrix(), dtype=np.int32)
+            result[idx + 1, :] = np.asarray(
+                temp_game.get_holdings_matrix(), dtype=np.int32
+            )
 
         return result
 
@@ -118,7 +120,9 @@ class GameStats:
         for idx, tx in enumerate(self.game.transactions):
             temp_game.settle_transaction(tx)
             balances_dict = temp_game.get_balances()
-            result[idx + 1, :] = np.asarray(list(balances_dict.values()), dtype=np.int32)
+            result[idx + 1, :] = np.asarray(
+                list(balances_dict.values()), dtype=np.int32
+            )
 
         return keys, result
 
@@ -143,7 +147,7 @@ class GameStats:
         """Get the tx counts."""
         agent_pbk_to_name = self.game.configuration.agent_pbk_to_name
         result = {agent_name: 0 for agent_name in agent_pbk_to_name.values()}
-        results = {'seller': result.copy(), 'buyer': result.copy()}
+        results = {"seller": result.copy(), "buyer": result.copy()}
 
         temp_game = Game(self.game.configuration, self.game.initialization)
 
@@ -151,15 +155,17 @@ class GameStats:
         # (remember that indexes of the transaction start from one, because index 0 is reserved for the initial scores)
         for idx, tx in enumerate(self.game.transactions):
             temp_game.settle_transaction(tx)
-            results['seller'][agent_pbk_to_name[tx.seller_pbk]] += 1
-            results['buyer'][agent_pbk_to_name[tx.buyer_pbk]] += 1
+            results["seller"][agent_pbk_to_name[tx.seller_pbk]] += 1
+            results["buyer"][agent_pbk_to_name[tx.buyer_pbk]] += 1
 
         return results
 
     def tx_prices(self) -> Dict[str, List[float]]:
         """Get the tx counts."""
         agent_pbk_to_name = self.game.configuration.agent_pbk_to_name
-        results = {agent_name: [] for agent_name in agent_pbk_to_name.values()}  # type: Dict[str, List[float]]
+        results = {
+            agent_name: [] for agent_name in agent_pbk_to_name.values()
+        }  # type: Dict[str, List[float]]
 
         temp_game = Game(self.game.configuration, self.game.initialization)
 
@@ -184,7 +190,9 @@ class GameStats:
         result = np.zeros((2, nb_goods), dtype=np.float32)
         result[0, :] = np.asarray(eq_prices, dtype=np.float32)
 
-        prices_by_transactions = np.zeros((nb_transactions + 1, nb_goods), dtype=np.float32)
+        prices_by_transactions = np.zeros(
+            (nb_transactions + 1, nb_goods), dtype=np.float32
+        )
 
         # initial prices
         prices_by_transactions[0, :] = np.asarray(0, dtype=np.float32)
@@ -193,7 +201,9 @@ class GameStats:
 
         for idx, tx in enumerate(self.game.transactions):
             temp_game.settle_transaction(tx)
-            prices_by_transactions[idx + 1, :] = np.asarray(temp_game.get_prices(), dtype=np.float32)
+            prices_by_transactions[idx + 1, :] = np.asarray(
+                temp_game.get_prices(), dtype=np.float32
+            )
 
         denominator = (prices_by_transactions != 0).sum(0)
         result[1, :] = np.true_divide(prices_by_transactions.sum(0), denominator)
@@ -213,16 +223,24 @@ class GameStats:
         current_scores = np.zeros((1, nb_agents), dtype=np.float32)
 
         eq_agent_states = dict(
-            (agent_pbk,
+            (
+                agent_pbk,
                 AgentState(
                     self.game.initialization.eq_money_holdings[i],
                     [int(h) for h in self.game.initialization.eq_good_holdings[i]],
-                    self.game.initialization.utility_params[i]
-                ))
-            for agent_pbk, i in zip(self.game.configuration.agent_pbks, range(self.game.configuration.nb_agents)))  # type: Dict[str, AgentState]
+                    self.game.initialization.utility_params[i],
+                ),
+            )
+            for agent_pbk, i in zip(
+                self.game.configuration.agent_pbks,
+                range(self.game.configuration.nb_agents),
+            )
+        )  # type: Dict[str, AgentState]
 
         result = np.zeros((2, nb_agents), dtype=np.float32)
-        result[0, :] = [eq_agent_state.get_score() for eq_agent_state in eq_agent_states.values()]
+        result[0, :] = [
+            eq_agent_state.get_score() for eq_agent_state in eq_agent_states.values()
+        ]
 
         temp_game = Game(self.game.configuration, self.game.initialization)
 
@@ -250,15 +268,26 @@ class GameStats:
         :return: dictionary mapping agent name to equilibrium score.
         """
         eq_agent_states = dict(
-            (agent_pbk,
+            (
+                agent_pbk,
                 AgentState(
                     self.game.initialization.eq_money_holdings[i],
                     [int(h) for h in self.game.initialization.eq_good_holdings[i]],
-                    self.game.initialization.utility_params[i]
-                ))
-            for agent_pbk, i in zip(self.game.configuration.agent_pbks, range(self.game.configuration.nb_agents)))  # type: Dict[str, AgentState]
+                    self.game.initialization.utility_params[i],
+                ),
+            )
+            for agent_pbk, i in zip(
+                self.game.configuration.agent_pbks,
+                range(self.game.configuration.nb_agents),
+            )
+        )  # type: Dict[str, AgentState]
 
-        result = {self.game.configuration.agent_pbk_to_name[agent_pbk]: eq_agent_state.get_score() for agent_pbk, eq_agent_state in eq_agent_states.items()}
+        result = {
+            self.game.configuration.agent_pbk_to_name[
+                agent_pbk
+            ]: eq_agent_state.get_score()
+            for agent_pbk, eq_agent_state in eq_agent_states.items()
+        }
         return result
 
     def get_initial_scores(self) -> Dict[str, float]:
@@ -268,7 +297,10 @@ class GameStats:
         :return: dictionary mapping agent name to initial score.
         """
         temp_game = Game(self.game.configuration, self.game.initialization)
-        scores_dict = {self.game.configuration.agent_pbk_to_name[agent_pbk]: score for agent_pbk, score in temp_game.get_scores().items()}
+        scores_dict = {
+            self.game.configuration.agent_pbk_to_name[agent_pbk]: score
+            for agent_pbk, score in temp_game.get_scores().items()
+        }
         return scores_dict
 
     def adjusted_score(self) -> Tuple[List[str], np.ndarray]:
@@ -281,18 +313,26 @@ class GameStats:
         current_scores = np.zeros((1, nb_agents), dtype=np.float32)
 
         eq_agent_states = dict(
-            (agent_pbk,
+            (
+                agent_pbk,
                 AgentState(
                     self.game.initialization.eq_money_holdings[i],
                     [int(h) for h in self.game.initialization.eq_good_holdings[i]],
-                    self.game.initialization.utility_params[i]
-                ))
-            for agent_pbk, i in zip(self.game.configuration.agent_pbks, range(self.game.configuration.nb_agents)))  # type: Dict[str, AgentState]
+                    self.game.initialization.utility_params[i],
+                ),
+            )
+            for agent_pbk, i in zip(
+                self.game.configuration.agent_pbks,
+                range(self.game.configuration.nb_agents),
+            )
+        )  # type: Dict[str, AgentState]
 
         result = np.zeros((1, nb_agents), dtype=np.float32)
 
         eq_scores = np.zeros((1, nb_agents), dtype=np.float32)
-        eq_scores[0, :] = [eq_agent_state.get_score() for eq_agent_state in eq_agent_states.values()]
+        eq_scores[0, :] = [
+            eq_agent_state.get_score() for eq_agent_state in eq_agent_states.values()
+        ]
 
         temp_game = Game(self.game.configuration, self.game.initialization)
 
@@ -311,7 +351,10 @@ class GameStats:
             scores_dict = temp_game.get_scores()
             current_scores[0, :] = list(scores_dict.values())
 
-        result[0, :] = np.divide(np.subtract(current_scores, initial_scores), np.subtract(eq_scores, initial_scores))
+        result[0, :] = np.divide(
+            np.subtract(current_scores, initial_scores),
+            np.subtract(eq_scores, initial_scores),
+        )
         result = np.transpose(result)
 
         return keys, result

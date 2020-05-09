@@ -58,32 +58,47 @@ def launch_oef():
     script_path = os.path.join("scripts", "oef", "launch.py")
     configuration_file_path = os.path.join("scripts", "oef", "launch_config.json")
     print("Launching new OEF Node...")
-    subprocess.Popen(["python3", script_path, "-c", configuration_file_path, "--background"],
-                     stdout=subprocess.PIPE, env=os.environ, cwd=ROOT_DIR)
+    subprocess.Popen(
+        ["python3", script_path, "-c", configuration_file_path, "--background"],
+        stdout=subprocess.PIPE,
+        env=os.environ,
+        cwd=ROOT_DIR,
+    )
 
     # Wait for OEF
     print("Waiting for the OEF to be operative...")
-    wait_for_oef = subprocess.Popen([
-        os.path.join("sandbox", "wait-for-oef.sh"),
-        "127.0.0.1",
-        "10000",
-        ":"
-    ], env=os.environ, cwd=ROOT_DIR)
+    wait_for_oef = subprocess.Popen(
+        [os.path.join("sandbox", "wait-for-oef.sh"), "127.0.0.1", "10000", ":"],
+        env=os.environ,
+        cwd=ROOT_DIR,
+    )
 
     wait_for_oef.wait(30)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     kill_oef()
     launch_oef()
     try:
         # Create an agent
         # Creating an agent is straightforward. You simply import the `BaselineAgent` and `BaselineStrategy` and instantiate them.
-        version_id = '1'
+        version_id = "1"
         strategy = BaselineStrategy()
-        agent_one = BaselineAgent(name='agent_one', oef_addr='127.0.0.1', oef_port=10000, strategy=strategy, expected_version_id=version_id)
-        agent_two = BaselineAgent(name='agent_two', oef_addr='127.0.0.1', oef_port=10000, strategy=strategy, expected_version_id=version_id)
+        agent_one = BaselineAgent(
+            name="agent_one",
+            oef_addr="127.0.0.1",
+            oef_port=10000,
+            strategy=strategy,
+            expected_version_id=version_id,
+        )
+        agent_two = BaselineAgent(
+            name="agent_two",
+            oef_addr="127.0.0.1",
+            oef_port=10000,
+            strategy=strategy,
+            expected_version_id=version_id,
+        )
 
         # Feed the agent some game data
         # To start, we require some game data to feed to the agent:
@@ -94,31 +109,43 @@ if __name__ == '__main__':
         nb_agents = 2
         nb_goods = 4
         tx_fee = 0.01
-        agent_pbk_to_name = {agent_one.crypto.public_key: agent_one.name, agent_two.crypto.public_key: agent_two.name}
-        good_pbk_to_name = {'good_1_pbk': 'good_1', 'good_2_pbk': 'good_2', 'good_3_pbk': 'good_3', 'good_4_pbk': 'good_4'}
+        agent_pbk_to_name = {
+            agent_one.crypto.public_key: agent_one.name,
+            agent_two.crypto.public_key: agent_two.name,
+        }
+        good_pbk_to_name = {
+            "good_1_pbk": "good_1",
+            "good_2_pbk": "good_2",
+            "good_3_pbk": "good_3",
+            "good_4_pbk": "good_4",
+        }
 
-        game_data_one = GameData(agent_one.crypto.public_key,
-                                 money,
-                                 initial_endowments,
-                                 utility_params_one,
-                                 nb_agents,
-                                 nb_goods,
-                                 tx_fee,
-                                 agent_pbk_to_name,
-                                 good_pbk_to_name,
-                                 version_id)
+        game_data_one = GameData(
+            agent_one.crypto.public_key,
+            money,
+            initial_endowments,
+            utility_params_one,
+            nb_agents,
+            nb_goods,
+            tx_fee,
+            agent_pbk_to_name,
+            good_pbk_to_name,
+            version_id,
+        )
         agent_one.game_instance.init(game_data_one, agent_one.crypto.public_key)
 
-        game_data_two = GameData(agent_two.crypto.public_key,
-                                 money,
-                                 initial_endowments,
-                                 utility_params_one,
-                                 nb_agents,
-                                 nb_goods,
-                                 tx_fee,
-                                 agent_pbk_to_name,
-                                 good_pbk_to_name,
-                                 version_id)
+        game_data_two = GameData(
+            agent_two.crypto.public_key,
+            money,
+            initial_endowments,
+            utility_params_one,
+            nb_agents,
+            nb_goods,
+            tx_fee,
+            agent_pbk_to_name,
+            good_pbk_to_name,
+            version_id,
+        )
         agent_two.game_instance.init(game_data_two, agent_two.crypto.public_key)
 
         # Set the debugger
@@ -127,17 +154,30 @@ if __name__ == '__main__':
 
         # agent_one initiates a dialogue
         is_seller = True
-        dialogue = agent_one.game_instance.dialogues.create_self_initiated(agent_two.crypto.public_key, agent_one.crypto.public_key, is_seller)  # type: Dialogue
+        dialogue = agent_one.game_instance.dialogues.create_self_initiated(
+            agent_two.crypto.public_key, agent_one.crypto.public_key, is_seller
+        )  # type: Dialogue
 
         # agent_one creates a CFP and enqueues it in the outbox
         starting_message_id = 1
         starting_message_target = 0
-        services = agent_one.game_instance.build_services_dict(is_supply=is_seller)  # type: Optional[Dict[str, Sequence[str]]]
-        cfp = FIPAMessage(message_id=starting_message_id, dialogue_id=dialogue.dialogue_label.dialogue_id,
-                          target=starting_message_target, performative=FIPAMessage.Performative.CFP,
-                          query=json.dumps(services).encode('utf-8'))
+        services = agent_one.game_instance.build_services_dict(
+            is_supply=is_seller
+        )  # type: Optional[Dict[str, Sequence[str]]]
+        cfp = FIPAMessage(
+            message_id=starting_message_id,
+            dialogue_id=dialogue.dialogue_label.dialogue_id,
+            target=starting_message_target,
+            performative=FIPAMessage.Performative.CFP,
+            query=json.dumps(services).encode("utf-8"),
+        )
         cfp_bytes = FIPASerializer().encode(cfp)
-        envelope = Envelope(to=agent_two.crypto.public_key, sender=agent_one.crypto.public_key, protocol_id=FIPAMessage.protocol_id, message=cfp_bytes)
+        envelope = Envelope(
+            to=agent_two.crypto.public_key,
+            sender=agent_one.crypto.public_key,
+            protocol_id=FIPAMessage.protocol_id,
+            message=cfp_bytes,
+        )
         dialogue.outgoing_extend([cfp])
         agent_one.outbox.out_queue.put(envelope)
 
@@ -157,8 +197,14 @@ if __name__ == '__main__':
 
         in_envelope = agent_two.inbox.get_nowait()  # type: Optional[Envelope]
         if in_envelope is not None:
-            performative = cast(FIPAMessage.Performative, in_envelope.get("performative"))
-            print("The msg is a CFP: {}".format(performative == FIPAMessage.Performative.CFP))
+            performative = cast(
+                FIPAMessage.Performative, in_envelope.get("performative")
+            )
+            print(
+                "The msg is a CFP: {}".format(
+                    performative == FIPAMessage.Performative.CFP
+                )
+            )
         else:
             print("No message received!")
 

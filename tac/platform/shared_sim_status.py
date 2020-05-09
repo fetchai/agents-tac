@@ -46,19 +46,19 @@ def register_shared_dir(temp_dir) -> None:
     """Call this from somewhere near the entry point of the program to set he location of the temp directory."""
     # print("register_shared_dir: " + temp_dir)
     # logging.error("register_shared_dir: " + temp_dir)
-    os.environ['SHARED_DIR'] = temp_dir
+    os.environ["SHARED_DIR"] = temp_dir
 
 
 def get_shared_dir() -> str:
     """Call this to return the bases shared folder location."""
-    return os.environ['SHARED_DIR']
+    return os.environ["SHARED_DIR"]
 
 
 def clear_temp_dir() -> None:
     """Call this once at the beginning (after registering the temp director) - cleans out dir of old status files."""
-    shared_dir = str(os.getenv('SHARED_DIR'))
+    shared_dir = str(os.getenv("SHARED_DIR"))
     # Get a list of all the file paths that ends with .txt from in specified directory
-    file_list = glob.glob(os.path.join(shared_dir, '*.txt'))
+    file_list = glob.glob(os.path.join(shared_dir, "*.txt"))
 
     # Iterate over the list of filepaths & remove each file.
     for filePath in file_list:
@@ -79,7 +79,7 @@ def get_controller_state(game_id: str) -> ControllerAgentState:
         return ControllerAgentState.NONE
 
 
-def get_controller_last_time(game_id: str, ) -> float:
+def get_controller_last_time(game_id: str,) -> float:
     """Return the last time the controller state was changed as UTC time."""
     return _get_last_status_time("controller_" + game_id)
 
@@ -122,7 +122,7 @@ def _get_last_status_time(id_name) -> float:
 
 
 def _construct_temp_filename(id_name) -> str:
-    shared_dir = os.getenv('SHARED_DIR')
+    shared_dir = os.getenv("SHARED_DIR")
 
     # Actually it is fine not to set this up - should just fail gracefully as
     # this is only needed when using the GUI launcher
@@ -144,7 +144,7 @@ def _set_str_status(id_name, status) -> None:
 def _get_str_status(id_name):
     temp_file_path = _construct_temp_filename(id_name)
     if temp_file_path != "":
-        if (os.path.isfile(temp_file_path)):
+        if os.path.isfile(temp_file_path):
             f = open(temp_file_path, "r")
             status = f.read()
             f.close()

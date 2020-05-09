@@ -60,7 +60,10 @@ def compute_statistics(all_game_stats: List[GameStats]) -> None:
     tx_results = {}  # type: Dict[str, Dict[str, int]]
     tx_results_seller = []
     tx_results_buyer = []
-    tx_prices = {name: [] for name in all_game_stats[0].game.configuration.agent_pbk_to_name.values()}  # type: Dict[str, List[float]]
+    tx_prices = {
+        name: []
+        for name in all_game_stats[0].game.configuration.agent_pbk_to_name.values()
+    }  # type: Dict[str, List[float]]
     name_to_idx = {}
     first = True
     for game_stats in all_game_stats:
@@ -94,17 +97,17 @@ def compute_statistics(all_game_stats: List[GameStats]) -> None:
         if tx_results == {}:
             tx_results = counts.copy()
         else:
-            for key, value in counts['seller'].items():
-                tx_results['seller'][key] += value
-            for key, value in counts['buyer'].items():
-                tx_results['buyer'][key] += value
+            for key, value in counts["seller"].items():
+                tx_results["seller"][key] += value
+            for key, value in counts["buyer"].items():
+                tx_results["buyer"][key] += value
         result = [0] * len(pbk_to_name)
-        for name, count in counts['seller'].items():
+        for name, count in counts["seller"].items():
             idx = name_to_idx[name]
             result[idx] = count
         tx_results_seller.append(result)
         result = [0] * len(pbk_to_name)
-        for name, count in counts['buyer'].items():
+        for name, count in counts["buyer"].items():
             idx = name_to_idx[name]
             result[idx] = count
         tx_results_buyer.append(result)
@@ -113,26 +116,33 @@ def compute_statistics(all_game_stats: List[GameStats]) -> None:
             tx_prices[name].extend(price)
     scores = np.asarray(results)
     df1 = pd.DataFrame(scores, columns=[key for key in name_to_idx.keys()])
-    df1.to_csv('scores_final.csv')
+    df1.to_csv("scores_final.csv")
     df2 = pd.DataFrame(equilibrium, columns=[key for key in name_to_idx.keys()])
-    df2.to_csv('scores_equilibrium.csv')
+    df2.to_csv("scores_equilibrium.csv")
     df3 = pd.DataFrame(initial, columns=[key for key in name_to_idx.keys()])
-    df3.to_csv('scores_initial.csv')
-    df4 = pd.DataFrame(np.asarray(tx_results_buyer), columns=[key for key in name_to_idx.keys()])
-    df4.to_csv('transactions_buyer.csv')
-    df5 = pd.DataFrame(np.asarray(tx_results_seller), columns=[key for key in name_to_idx.keys()])
-    df5.to_csv('transactions_seller.csv')
+    df3.to_csv("scores_initial.csv")
+    df4 = pd.DataFrame(
+        np.asarray(tx_results_buyer), columns=[key for key in name_to_idx.keys()]
+    )
+    df4.to_csv("transactions_buyer.csv")
+    df5 = pd.DataFrame(
+        np.asarray(tx_results_seller), columns=[key for key in name_to_idx.keys()]
+    )
+    df5.to_csv("transactions_seller.csv")
     # df6 = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in tx_prices.items()]))
     prices_w = []
     prices_b = []
     for column_name, pricess in tx_prices.items():
-        if column_name[-3:] == '_wm':
+        if column_name[-3:] == "_wm":
             prices_w.extend(pricess)
         else:
             prices_b.extend(pricess)
-    data_dict = {'w_model': pd.Series(prices_w, dtype=np.float64), 'baseline': pd.Series(prices_b, dtype=np.float64)}
+    data_dict = {
+        "w_model": pd.Series(prices_w, dtype=np.float64),
+        "baseline": pd.Series(prices_b, dtype=np.float64),
+    }
     df7 = pd.DataFrame(data_dict)
-    df7.to_csv('prices.csv')
+    df7.to_csv("prices.csv")
 
 
 class LeaderboardDashboard(Dashboard):
@@ -143,11 +153,14 @@ class LeaderboardDashboard(Dashboard):
     (default: http://localhost:8097)
     """
 
-    def __init__(self, competition_directory: str,
-                 visdom_addr: str = "localhost",
-                 visdom_port: int = 8097,
-                 env_name: Optional[str] = "leaderboard",
-                 dump_stats: bool = False):
+    def __init__(
+        self,
+        competition_directory: str,
+        visdom_addr: str = "localhost",
+        visdom_port: int = 8097,
+        env_name: Optional[str] = "leaderboard",
+        dump_stats: bool = False,
+    ):
         """Instantiate a LeaderboardDashboard.
 
         :param competition_directory: the path where to find the history of the games.
@@ -163,7 +176,9 @@ class LeaderboardDashboard(Dashboard):
 
         game_dirs = sorted(os.listdir(self.competition_directory))
         for game_dir in game_dirs:
-            game_data_json_filepath = os.path.join(self.competition_directory, game_dir, "game.json")
+            game_data_json_filepath = os.path.join(
+                self.competition_directory, game_dir, "game.json"
+            )
             if not os.path.exists(game_data_json_filepath):
                 continue
             game_data = json.load(open(game_data_json_filepath))
@@ -190,10 +205,17 @@ class LeaderboardDashboard(Dashboard):
 
         aggregated_scores = compute_aggregate_scores(self.game_stats_list)
         properties = []
-        for name, score in sorted(aggregated_scores.items(), key=lambda x: x[1], reverse=True):
-            properties.append({'type': 'number', 'name': name, 'value': str(score)})
+        for name, score in sorted(
+            aggregated_scores.items(), key=lambda x: x[1], reverse=True
+        ):
+            properties.append({"type": "number", "name": name, "value": str(score)})
 
-        self.viz.properties(properties, env=self.env_name, win=window_name, opts=dict(title="Configuration"))
+        self.viz.properties(
+            properties,
+            env=self.env_name,
+            win=window_name,
+            opts=dict(title="Configuration"),
+        )
 
     def display(self):
         """Display the leaderboard."""
@@ -204,20 +226,36 @@ class LeaderboardDashboard(Dashboard):
 
 def parse_args():
     """Parse the arguments."""
-    parser = argparse.ArgumentParser("dashboard", description="Data Visualization for the simulation outcome")
-    parser.add_argument("--datadir", type=str, required=True, help="The path to the simulation data folder.")
-    parser.add_argument("--env_name", type=str, default=None, help="The name of the environment to create.")
-    parser.add_argument("--dump_stats", action="store_true", help="Dump some game stats.")
+    parser = argparse.ArgumentParser(
+        "dashboard", description="Data Visualization for the simulation outcome"
+    )
+    parser.add_argument(
+        "--datadir",
+        type=str,
+        required=True,
+        help="The path to the simulation data folder.",
+    )
+    parser.add_argument(
+        "--env_name",
+        type=str,
+        default=None,
+        help="The name of the environment to create.",
+    )
+    parser.add_argument(
+        "--dump_stats", action="store_true", help="Dump some game stats."
+    )
 
     arguments = parser.parse_args()
     return arguments
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     arguments = parse_args()
     process = start_visdom_server()
-    d = LeaderboardDashboard(arguments.datadir, env_name=arguments.env_name, dump_stats=arguments.dump_stats)
+    d = LeaderboardDashboard(
+        arguments.datadir, env_name=arguments.env_name, dump_stats=arguments.dump_stats
+    )
 
     d.start()
     d.display()

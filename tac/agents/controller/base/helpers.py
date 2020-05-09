@@ -33,5 +33,8 @@ def generate_good_pbk_to_name(nb_goods: int) -> Dict[str, str]:
     :return: a dictionary mapping goods' public keys to names.
     """
     max_number_of_digits = math.ceil(math.log10(nb_goods))
-    string_format = 'tac_good_{:0' + str(max_number_of_digits) + '}'
-    return {string_format.format(i) + '_pbk': string_format.format(i) for i in range(nb_goods)}
+    string_format = "tac_good_{:0" + str(max_number_of_digits) + "}"
+    return {
+        string_format.format(i) + "_pbk": string_format.format(i)
+        for i in range(nb_goods)
+    }

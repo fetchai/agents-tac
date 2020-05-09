@@ -37,15 +37,23 @@ from tac.agents.controller.base.interfaces import OEFActionInterface
 
 logger = logging.getLogger(__name__)
 
-CONTROLLER_DATAMODEL = DataModel("tac", [
-    Attribute("version", str, True, "Version number of the TAC Controller Agent."),
-])
+CONTROLLER_DATAMODEL = DataModel(
+    "tac",
+    [Attribute("version", str, True, "Version number of the TAC Controller Agent.")],
+)
 
 
 class OEFActions(OEFActionInterface):
     """The OEFActions class defines the actions of an agent towards the OEF."""
 
-    def __init__(self, crypto: Crypto, liveness: Liveness, mailbox: MailBox, agent_name: str, tac_version_id: str) -> None:
+    def __init__(
+        self,
+        crypto: Crypto,
+        liveness: Liveness,
+        mailbox: MailBox,
+        agent_name: str,
+        tac_version_id: str,
+    ) -> None:
         """
         Instantiate the OEFActions.
 
@@ -69,8 +77,24 @@ class OEFActions(OEFActionInterface):
 
         :return: None.
         """
-        desc = Description({"version": self.tac_version_id}, data_model=CONTROLLER_DATAMODEL)
-        logger.debug("[{}]: Registering with {} data model".format(self.agent_name, desc.data_model.name))
-        msg = OEFMessage(oef_type=OEFMessage.Type.REGISTER_SERVICE, id=1, service_description=desc, service_id="")
+        desc = Description(
+            {"version": self.tac_version_id}, data_model=CONTROLLER_DATAMODEL
+        )
+        logger.debug(
+            "[{}]: Registering with {} data model".format(
+                self.agent_name, desc.data_model.name
+            )
+        )
+        msg = OEFMessage(
+            oef_type=OEFMessage.Type.REGISTER_SERVICE,
+            id=1,
+            service_description=desc,
+            service_id="",
+        )
         msg_bytes = OEFSerializer().encode(msg)
-        self.mailbox.outbox.put_message(to=DEFAULT_OEF, sender=self.crypto.public_key, protocol_id=OEFMessage.protocol_id, message=msg_bytes)
+        self.mailbox.outbox.put_message(
+            to=DEFAULT_OEF,
+            sender=self.crypto.public_key,
+            protocol_id=OEFMessage.protocol_id,
+            message=msg_bytes,
+        )

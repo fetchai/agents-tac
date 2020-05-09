@@ -62,5 +62,5 @@ def escape_html(string: str, quote=True) -> str:
     string = string.replace(">", "&gt;")
     if quote:
         string = string.replace('"', "&quot;")
-        string = string.replace('\'', "&#x27;")
+        string = string.replace("'", "&#x27;")
     return string

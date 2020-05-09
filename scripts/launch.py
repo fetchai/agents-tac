@@ -42,9 +42,11 @@ class Sandbox:
     def _build_sandbox(self):
         """Build sandbox."""
         sandbox_build_process = None  # type: Optional[subprocess.Popen]
-        sandbox_build_process = subprocess.Popen(["docker-compose", "build"],
-                                                 env=os.environ,
-                                                 cwd=os.path.join(ROOT_DIR, "sandbox"))
+        sandbox_build_process = subprocess.Popen(
+            ["docker-compose", "build"],
+            env=os.environ,
+            cwd=os.path.join(ROOT_DIR, "sandbox"),
+        )
         sandbox_build_process.wait()
 
     def _stop_oef_search_images(self):
@@ -60,13 +62,17 @@ class Sandbox:
         self._stop_oef_search_images()
         self._build_sandbox()
 
-        register_shared_dir(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../data/shared'))
-        os.environ['SHARED_DIR'] = get_shared_dir()
+        register_shared_dir(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "../data/shared")
+        )
+        os.environ["SHARED_DIR"] = get_shared_dir()
 
         print("Launching sandbox...")
-        self.sandbox_process = subprocess.Popen(["docker-compose", "up", "--abort-on-container-exit"],
-                                                env=os.environ,
-                                                cwd=os.path.join(ROOT_DIR, "sandbox"))
+        self.sandbox_process = subprocess.Popen(
+            ["docker-compose", "up", "--abort-on-container-exit"],
+            env=os.environ,
+            cwd=os.path.join(ROOT_DIR, "sandbox"),
+        )
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Define what the context manager should do after the block has been executed."""
@@ -77,18 +83,19 @@ class Sandbox:
 def wait_for_oef():
     """Wait for the OEF to come live."""
     print("Waiting for the OEF to be operative...")
-    wait_for_oef = subprocess.Popen([
-        os.path.join("sandbox", "wait-for-oef.sh"),
-        "127.0.0.1",
-        "10000",
-        ":"
-    ], env=os.environ, cwd=ROOT_DIR)
+    wait_for_oef = subprocess.Popen(
+        [os.path.join("sandbox", "wait-for-oef.sh"), "127.0.0.1", "10000", ":"],
+        env=os.environ,
+        cwd=ROOT_DIR,
+    )
 
     wait_for_oef.wait(60)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     with Sandbox():
         wait_for_oef()
-        participant_agent_main(name="my_agent", dashboard=True, expected_version_id='tac_v1')
+        participant_agent_main(
+            name="my_agent", dashboard=True, expected_version_id="tac_v1"
+        )
