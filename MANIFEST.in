@@ -1,11 +1,9 @@
-include README.md LICENSE Pipfile Pipfile.lock
+include README.md LICENSE HISTORY.md AUTHORS.md CODE_OF_CONDUCT.md Pipfile Pipfile.lock tox.ini pytest.ini mypy.ini
 
 recursive-include tac *
-recursive-include proto *
 recursive-include tests *
 recursive-include docs *
 recursive-include templates *
 recursive-include sandbox *
 recursive-include simulation *
 recursive-include scripts *
-recursive-include oef_search_pluto_scripts *
