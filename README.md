@@ -56,7 +56,8 @@ Once agent is connected and searching for the competition:
 </p>
 
 The controller GUI at http://localhost:8097 provides real time insights:
-![Controller GUI](../master/docs/controller_gui.png)
+<!--![Controller GUI](../master/docs/controller_gui.png)-->
+![Controller GUI](../master/docs/controller_gui.gif)
 
 - [x] Have a look at the documentation and start developing your first agent.
 
