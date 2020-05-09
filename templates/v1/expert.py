@@ -54,7 +54,10 @@ def parse_arguments():
         help="Path to a file containing a private key in PEM format.",
     )
     parser.add_argument(
-        "--expected-version-id", type=str, help="The epected version id of the TAC."
+        "--expected-version-id",
+        type=str,
+        help="The epected version id of the TAC.",
+        default="tac_v1",
     )
 
     return parser.parse_args()
