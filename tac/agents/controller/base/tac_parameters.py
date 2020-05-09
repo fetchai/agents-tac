@@ -30,20 +30,23 @@ from typing import Set, Optional
 class TACParameters(object):
     """This class contains the parameters for the TAC."""
 
-    def __init__(self, min_nb_agents: int = 5,
-                 money_endowment: int = 200,
-                 nb_goods: int = 5,
-                 tx_fee: float = 1.0,
-                 base_good_endowment: int = 2,
-                 lower_bound_factor: int = 1,
-                 upper_bound_factor: int = 1,
-                 start_time: datetime.datetime = datetime.datetime.now(),
-                 registration_timeout: int = 10,
-                 competition_timeout: int = 20,
-                 inactivity_timeout: int = 10,
-                 whitelist: Optional[Set[str]] = None,
-                 data_output_dir: str = "data",
-                 version_id: str = str(random.randint(0, 10000))):
+    def __init__(
+        self,
+        min_nb_agents: int = 5,
+        money_endowment: int = 200,
+        nb_goods: int = 5,
+        tx_fee: float = 1.0,
+        base_good_endowment: int = 2,
+        lower_bound_factor: int = 1,
+        upper_bound_factor: int = 1,
+        start_time: datetime.datetime = datetime.datetime.now(),
+        registration_timeout: int = 10,
+        competition_timeout: int = 20,
+        inactivity_timeout: int = 10,
+        whitelist: Optional[Set[str]] = None,
+        data_output_dir: str = "data",
+        version_id: str = str(random.randint(0, 10000)),
+    ):
         """
         Initialize parameters for TAC.
 
@@ -130,7 +133,9 @@ class TACParameters(object):
     @property
     def end_time(self) -> datetime.datetime:
         """TAC end time."""
-        return self._start_time + self.registration_timedelta + self.competition_timedelta
+        return (
+            self._start_time + self.registration_timedelta + self.competition_timedelta
+        )
 
     @property
     def registration_timeout(self):

@@ -22,24 +22,102 @@
 
 # from datetime import datetime
 import wtforms
-from wtforms import Form, IntegerField, FileField, widgets, FloatField  # , DateTimeField, StringField
+from wtforms import (
+    Form,
+    IntegerField,
+    FileField,
+    widgets,
+    FloatField,
+)  # , DateTimeField, StringField
 
 
 class SandboxForm(Form):
     """The form to set the sandbox parameters."""
 
-    nb_agents = IntegerField('No. Agents', default=5, widget=widgets.Input(input_type="number"), validators=[wtforms.validators.NumberRange(min=2, message="At least two agents.")])
-    nb_goods = IntegerField('No. Goods', default=5, widget=widgets.Input(input_type="number"), validators=[wtforms.validators.NumberRange(min=2, message="At least two goods.")],)
-    nb_baseline_agents = IntegerField('No. Baseline Agents', default=5, widget=widgets.Input(input_type="number"), validators=[wtforms.validators.NumberRange(min=2, message="At least two baseline agents.")],)
-    services_interval = IntegerField('Services interval', default=5, widget=widgets.Input(input_type="number"), validators=[wtforms.validators.NumberRange(min=2, message="At least two baseline agents.")],)
+    nb_agents = IntegerField(
+        "No. Agents",
+        default=5,
+        widget=widgets.Input(input_type="number"),
+        validators=[
+            wtforms.validators.NumberRange(min=2, message="At least two agents.")
+        ],
+    )
+    nb_goods = IntegerField(
+        "No. Goods",
+        default=5,
+        widget=widgets.Input(input_type="number"),
+        validators=[
+            wtforms.validators.NumberRange(min=2, message="At least two goods.")
+        ],
+    )
+    nb_baseline_agents = IntegerField(
+        "No. Baseline Agents",
+        default=5,
+        widget=widgets.Input(input_type="number"),
+        validators=[
+            wtforms.validators.NumberRange(
+                min=2, message="At least two baseline agents."
+            )
+        ],
+    )
+    services_interval = IntegerField(
+        "Services interval",
+        default=5,
+        widget=widgets.Input(input_type="number"),
+        validators=[
+            wtforms.validators.NumberRange(
+                min=2, message="At least two baseline agents."
+            )
+        ],
+    )
     # data_output_dir = FileField("Data output directory", default="./data")
     # version_id = StringField("Version ID", [wtforms.validators.Required()], default="exp_1")
-    lower_bound_factor = IntegerField('Lower bound factor', default=0, widget=widgets.Input(input_type="number"), validators=[wtforms.validators.NumberRange(min=0, message="Must be non-negative")],)
-    upper_bound_factor = IntegerField('Upper bound factor', default=0, widget=widgets.Input(input_type="number"), validators=[wtforms.validators.NumberRange(min=0, message="Must be non-negative")],)
-    tx_fee = FloatField("Transaction fee", default=0.1, validators=[wtforms.validators.NumberRange(min=0, message="Must be non-negative")],)
-    registration_timeout = IntegerField("Registration timeout", default=20, validators=[wtforms.validators.NumberRange(min=0, message="Must be non-negative")])
-    inactivity_timeout = IntegerField("Inactivity timeout", default=60, validators=[wtforms.validators.NumberRange(min=0, message="Must be non-negative")])
-    competition_timeout = IntegerField("Competition timeout", default=240, validators=[wtforms.validators.NumberRange(min=0, message="Must be non-negative")])
+    lower_bound_factor = IntegerField(
+        "Lower bound factor",
+        default=0,
+        widget=widgets.Input(input_type="number"),
+        validators=[
+            wtforms.validators.NumberRange(min=0, message="Must be non-negative")
+        ],
+    )
+    upper_bound_factor = IntegerField(
+        "Upper bound factor",
+        default=0,
+        widget=widgets.Input(input_type="number"),
+        validators=[
+            wtforms.validators.NumberRange(min=0, message="Must be non-negative")
+        ],
+    )
+    tx_fee = FloatField(
+        "Transaction fee",
+        default=0.1,
+        validators=[
+            wtforms.validators.NumberRange(min=0, message="Must be non-negative")
+        ],
+    )
+    registration_timeout = IntegerField(
+        "Registration timeout",
+        default=20,
+        validators=[
+            wtforms.validators.NumberRange(min=0, message="Must be non-negative")
+        ],
+    )
+    inactivity_timeout = IntegerField(
+        "Inactivity timeout",
+        default=60,
+        validators=[
+            wtforms.validators.NumberRange(min=0, message="Must be non-negative")
+        ],
+    )
+    competition_timeout = IntegerField(
+        "Competition timeout",
+        default=240,
+        validators=[
+            wtforms.validators.NumberRange(min=0, message="Must be non-negative")
+        ],
+    )
     # start_time = DateTimeField("Start time", id='datepick', validators=[wtforms.validators.Required()])
     seed = IntegerField("Seed", default=42)
-    whitelist_file = FileField("Whitelist file", default=None, validators=[wtforms.validators.Optional])
+    whitelist_file = FileField(
+        "Whitelist file", default=None, validators=[wtforms.validators.Optional()]
+    )

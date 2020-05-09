@@ -82,7 +82,9 @@ class TACSerializer(Serializer):
             tac_msg.is_sender_buyer = msg.get("is_sender_buyer")
             tac_msg.counterparty = msg.get("counterparty")
             tac_msg.amount = msg.get("amount")
-            tac_msg.quantities.extend(_from_dict_to_pairs(msg.get("quantities_by_good_pbk")))
+            tac_msg.quantities.extend(
+                _from_dict_to_pairs(msg.get("quantities_by_good_pbk"))
+            )
             tac_container.transaction.CopyFrom(tac_msg)
         elif tac_type == TACMessage.Type.GET_STATE_UPDATE:
             tac_msg = tac_pb2.TACAgent.GetStateUpdate()  # type: ignore
@@ -98,8 +100,12 @@ class TACSerializer(Serializer):
             tac_msg.nb_agents = msg.get("nb_agents")
             tac_msg.nb_goods = msg.get("nb_goods")
             tac_msg.tx_fee = msg.get("tx_fee")
-            tac_msg.agent_pbk_to_name.extend(_from_dict_to_pairs(msg.get("agent_pbk_to_name")))
-            tac_msg.good_pbk_to_name.extend(_from_dict_to_pairs(msg.get("good_pbk_to_name")))
+            tac_msg.agent_pbk_to_name.extend(
+                _from_dict_to_pairs(msg.get("agent_pbk_to_name"))
+            )
+            tac_msg.good_pbk_to_name.extend(
+                _from_dict_to_pairs(msg.get("good_pbk_to_name"))
+            )
             tac_container.game_data.CopyFrom(tac_msg)
         elif tac_type == TACMessage.Type.TRANSACTION_CONFIRMATION:
             tac_msg = tac_pb2.TACController.TransactionConfirmation()  # type: ignore
@@ -128,7 +134,9 @@ class TACSerializer(Serializer):
                 tx.is_sender_buyer = t.get("is_sender_buyer")
                 tx.counterparty = t.get("counterparty")
                 tx.amount = t.get("amount")
-                tx.quantities.extend(_from_dict_to_pairs(t.get("quantities_by_good_pbk")))
+                tx.quantities.extend(
+                    _from_dict_to_pairs(t.get("quantities_by_good_pbk"))
+                )
                 transactions.append(tx)
             tac_msg.txs.extend(transactions)
             tac_container.state_update.CopyFrom(tac_msg)
@@ -171,7 +179,9 @@ class TACSerializer(Serializer):
             new_body["is_sender_buyer"] = tac_container.transaction.is_sender_buyer
             new_body["counterparty"] = tac_container.transaction.counterparty
             new_body["amount"] = tac_container.transaction.amount
-            new_body["quantities_by_good_pbk"] = _from_pairs_to_dict(tac_container.transaction.quantities)
+            new_body["quantities_by_good_pbk"] = _from_pairs_to_dict(
+                tac_container.transaction.quantities
+            )
         elif tac_type == "get_state_update":
             new_body["type"] = TACMessage.Type.GET_STATE_UPDATE
         elif tac_type == "cancelled":
@@ -184,11 +194,17 @@ class TACSerializer(Serializer):
             new_body["nb_agents"] = tac_container.game_data.nb_agents
             new_body["nb_goods"] = tac_container.game_data.nb_goods
             new_body["tx_fee"] = tac_container.game_data.tx_fee
-            new_body["agent_pbk_to_name"] = _from_pairs_to_dict(tac_container.game_data.agent_pbk_to_name)
-            new_body["good_pbk_to_name"] = _from_pairs_to_dict(tac_container.game_data.good_pbk_to_name)
+            new_body["agent_pbk_to_name"] = _from_pairs_to_dict(
+                tac_container.game_data.agent_pbk_to_name
+            )
+            new_body["good_pbk_to_name"] = _from_pairs_to_dict(
+                tac_container.game_data.good_pbk_to_name
+            )
         elif tac_type == "transaction_confirmation":
             new_body["type"] = TACMessage.Type.TRANSACTION_CONFIRMATION
-            new_body["transaction_id"] = tac_container.transaction_confirmation.transaction_id
+            new_body[
+                "transaction_id"
+            ] = tac_container.transaction_confirmation.transaction_id
         elif tac_type == "state_update":
             new_body["type"] = TACMessage.Type.STATE_UPDATE
             game_data = dict(
@@ -198,8 +214,12 @@ class TACSerializer(Serializer):
                 nb_agents=tac_container.state_update.initial_state.nb_agents,
                 nb_goods=tac_container.state_update.initial_state.nb_goods,
                 tx_fee=tac_container.state_update.initial_state.tx_fee,
-                agent_pbk_to_name=_from_pairs_to_dict(tac_container.state_update.initial_state.agent_pbk_to_name),
-                good_pbk_to_name=_from_pairs_to_dict(tac_container.state_update.initial_state.good_pbk_to_name),
+                agent_pbk_to_name=_from_pairs_to_dict(
+                    tac_container.state_update.initial_state.agent_pbk_to_name
+                ),
+                good_pbk_to_name=_from_pairs_to_dict(
+                    tac_container.state_update.initial_state.good_pbk_to_name
+                ),
             )
             new_body["initial_state"] = game_data
             transactions = []
@@ -215,7 +235,9 @@ class TACSerializer(Serializer):
             new_body["transactions"] = transactions
         elif tac_type == "error":
             new_body["type"] = TACMessage.Type.TAC_ERROR
-            new_body["error_code"] = TACMessage.ErrorCode(tac_container.error.error_code)
+            new_body["error_code"] = TACMessage.ErrorCode(
+                tac_container.error.error_code
+            )
             if tac_container.error.error_msg:
                 new_body["error_msg"] = tac_container.error.error_msg
             if tac_container.error.details:

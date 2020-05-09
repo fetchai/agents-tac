@@ -44,7 +44,7 @@ from pygments.lexers.python import PythonLexer
 
 def stacktraces() -> str:
     """Tracks stack traces."""
-    print('Stacktraces captured!')
+    print("Stacktraces captured!")
     code = []
     for threadId, stack in sys._current_frames().items():
         code.append("\n# ThreadID: {}".format(threadId))
@@ -53,7 +53,11 @@ def stacktraces() -> str:
             if line:
                 code.append("  %s" % (line.strip()))
 
-    return highlight("\n".join(code), PythonLexer(), HtmlFormatter(full=False, style="native", noclasses=True))
+    return highlight(
+        "\n".join(code),
+        PythonLexer(),
+        HtmlFormatter(full=False, style="native", noclasses=True),
+    )
 
 
 class TraceDumper(threading.Thread):
@@ -70,7 +74,7 @@ class TraceDumper(threading.Thread):
         :param interval: In seconds: how often to update the trace file.
         :return: None
         """
-        assert(interval > 0.1)
+        assert interval > 0.1
         self.auto = auto
         self.interval = interval
         self.fpath = os.path.abspath(fpath)

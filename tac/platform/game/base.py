@@ -49,22 +49,24 @@ DEFAULT_PRICE = 0.0
 class GamePhase(Enum):
     """This class defines the TAC game stages."""
 
-    PRE_GAME = 'pre_game'
-    GAME_SETUP = 'game_setup'
-    GAME = 'game'
-    POST_GAME = 'post_game'
+    PRE_GAME = "pre_game"
+    GAME_SETUP = "game_setup"
+    GAME = "game"
+    POST_GAME = "post_game"
 
 
 class GameConfiguration:
     """Class containing the game configuration of a TAC instance."""
 
-    def __init__(self,
-                 version_id: str,
-                 nb_agents: int,
-                 nb_goods: int,
-                 tx_fee: float,
-                 agent_pbk_to_name: Dict[str, str],
-                 good_pbk_to_name: Dict[str, str]):
+    def __init__(
+        self,
+        version_id: str,
+        nb_agents: int,
+        nb_goods: int,
+        tx_fee: float,
+        agent_pbk_to_name: Dict[str, str],
+        good_pbk_to_name: Dict[str, str],
+    ):
         """
         Instantiate a game configuration.
 
@@ -145,10 +147,18 @@ class GameConfiguration:
         assert self.tx_fee >= 0, "Tx fee must be non-negative."
         assert self.nb_agents > 1, "Must have at least two agents."
         assert self.nb_goods > 1, "Must have at least two goods."
-        assert len(self.agent_pbks) == self.nb_agents, "There must be one public key for each agent."
-        assert len(set(self.agent_names)) == self.nb_agents, "Agents' names must be unique."
-        assert len(self.good_pbks) == self.nb_goods, "There must be one public key for each good."
-        assert len(set(self.good_names)) == self.nb_goods, "Goods' names must be unique."
+        assert (
+            len(self.agent_pbks) == self.nb_agents
+        ), "There must be one public key for each agent."
+        assert (
+            len(set(self.agent_names)) == self.nb_agents
+        ), "Agents' names must be unique."
+        assert (
+            len(self.good_pbks) == self.nb_goods
+        ), "There must be one public key for each good."
+        assert (
+            len(set(self.good_names)) == self.nb_goods
+        ), "Goods' names must be unique."
 
     def to_dict(self) -> Dict[str, Any]:
         """Get a dictionary from the object."""
@@ -158,11 +168,11 @@ class GameConfiguration:
             "nb_goods": self.nb_goods,
             "tx_fee": self.tx_fee,
             "agent_pbk_to_name": self.agent_pbk_to_name,
-            "good_pbk_to_name": self.good_pbk_to_name
+            "good_pbk_to_name": self.good_pbk_to_name,
         }
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> 'GameConfiguration':
+    def from_dict(cls, d: Dict[str, Any]) -> "GameConfiguration":
         """Instantiate an object from the dictionary."""
         obj = cls(
             d["version_id"],
@@ -170,19 +180,21 @@ class GameConfiguration:
             d["nb_goods"],
             d["tx_fee"],
             d["agent_pbk_to_name"],
-            d["good_pbk_to_name"]
+            d["good_pbk_to_name"],
         )
         return obj
 
     def __eq__(self, other):
         """Compare equality of two objects."""
-        return isinstance(other, GameConfiguration) and \
-            self.version_id == other.version_id and \
-            self.nb_agents == other.nb_agents and \
-            self.nb_goods == other.nb_goods and \
-            self.tx_fee == other.tx_fee and \
-            self.agent_pbk_to_name == other.agent_pbk_to_name and \
-            self.good_pbk_to_name == other.good_pbk_to_name
+        return (
+            isinstance(other, GameConfiguration)
+            and self.version_id == other.version_id
+            and self.nb_agents == other.nb_agents
+            and self.nb_goods == other.nb_goods
+            and self.tx_fee == other.tx_fee
+            and self.agent_pbk_to_name == other.agent_pbk_to_name
+            and self.good_pbk_to_name == other.good_pbk_to_name
+        )
 
 
 class GoodState:
@@ -212,8 +224,15 @@ class GoodState:
 class Transaction:
     """Convenience representation of a transaction."""
 
-    def __init__(self, transaction_id: TransactionId, is_sender_buyer: bool, counterparty: Address,
-                 amount: float, quantities_by_good_pbk: Dict[str, int], sender: Address) -> None:
+    def __init__(
+        self,
+        transaction_id: TransactionId,
+        is_sender_buyer: bool,
+        counterparty: Address,
+        amount: float,
+        quantities_by_good_pbk: Dict[str, int],
+        sender: Address,
+    ) -> None:
         """
         Instantiate transaction request.
 
@@ -261,7 +280,9 @@ class Transaction:
         """
         assert self.sender != self.counterparty
         assert self.amount >= 0
-        assert len(self.quantities_by_good_pbk.keys()) == len(set(self.quantities_by_good_pbk.keys()))
+        assert len(self.quantities_by_good_pbk.keys()) == len(
+            set(self.quantities_by_good_pbk.keys())
+        )
         assert all(quantity >= 0 for quantity in self.quantities_by_good_pbk.values())
 
     def to_dict(self) -> Dict[str, Any]:
@@ -272,11 +293,11 @@ class Transaction:
             "counterparty": self.counterparty,
             "amount": self.amount,
             "quantities_by_good_pbk": self.quantities_by_good_pbk,
-            "sender": self.sender
+            "sender": self.sender,
         }
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any]) -> 'Transaction':
+    def from_dict(cls, d: Dict[str, Any]) -> "Transaction":
         """Return a class instance from a dictionary."""
         return cls(
             transaction_id=d["transaction_id"],
@@ -284,12 +305,18 @@ class Transaction:
             counterparty=d["counterparty"],
             amount=d["amount"],
             quantities_by_good_pbk=d["quantities_by_good_pbk"],
-            sender=d["sender"]
+            sender=d["sender"],
         )
 
     @classmethod
-    def from_proposal(cls, proposal: Description, transaction_id: TransactionId,
-                      is_sender_buyer: bool, counterparty: Address, sender: Address) -> 'Transaction':
+    def from_proposal(
+        cls,
+        proposal: Description,
+        transaction_id: TransactionId,
+        is_sender_buyer: bool,
+        counterparty: Address,
+        sender: Address,
+    ) -> "Transaction":
         """
         Create a transaction from a proposal.
 
@@ -303,19 +330,33 @@ class Transaction:
         data = copy.deepcopy(proposal.values)
         price = data.pop("price")
         quantity_by_good_pbk = {key: value for key, value in data.items()}
-        return Transaction(transaction_id, is_sender_buyer, counterparty, price, quantity_by_good_pbk, sender)
+        return Transaction(
+            transaction_id,
+            is_sender_buyer,
+            counterparty,
+            price,
+            quantity_by_good_pbk,
+            sender,
+        )
 
     @classmethod
-    def from_message(cls, message: TACMessage, sender: Address) -> 'Transaction':
+    def from_message(cls, message: TACMessage, sender: Address) -> "Transaction":
         """
         Create a transaction from a proposal.
 
         :param message: the message
         :return: Transaction
         """
-        return Transaction(message.get("transaction_id"), message.get("is_sender_buyer"), message.get("counterparty"), message.get("amount"), message.get("quantities_by_good_pbk"), sender)
+        return Transaction(
+            message.get("transaction_id"),
+            message.get("is_sender_buyer"),
+            message.get("counterparty"),
+            message.get("amount"),
+            message.get("quantities_by_good_pbk"),
+            sender,
+        )
 
-    def matches(self, other: 'Transaction') -> bool:
+    def matches(self, other: "Transaction") -> bool:
         """
         Check if the transaction matches with another (mirroring) transaction.
 
@@ -340,22 +381,35 @@ class Transaction:
 
     def __eq__(self, other):
         """Compare to another object."""
-        return isinstance(other, Transaction) \
-            and self.transaction_id == other.transaction_id \
-            and self.is_sender_buyer == other.is_sender_buyer \
-            and self.counterparty == other.counterparty \
-            and self.amount == other.amount \
-            and self.quantities_by_good_pbk == other.quantities_by_good_pbk \
-            and self.sender == other.sender \
-            and self.buyer_pbk == other.buyer_pbk \
+        return (
+            isinstance(other, Transaction)
+            and self.transaction_id == other.transaction_id
+            and self.is_sender_buyer == other.is_sender_buyer
+            and self.counterparty == other.counterparty
+            and self.amount == other.amount
+            and self.quantities_by_good_pbk == other.quantities_by_good_pbk
+            and self.sender == other.sender
+            and self.buyer_pbk == other.buyer_pbk
             and self.seller_pbk == other.seller_pbk
+        )
 
 
 class GameData:
     """Convenience representation of the game data."""
 
-    def __init__(self, sender: Address, money: float, endowment: List[int], utility_params: List[float],
-                 nb_agents: int, nb_goods: int, tx_fee: float, agent_pbk_to_name: Dict[str, str], good_pbk_to_name: Dict[str, str], version_id: str) -> None:
+    def __init__(
+        self,
+        sender: Address,
+        money: float,
+        endowment: List[int],
+        utility_params: List[float],
+        nb_agents: int,
+        nb_goods: int,
+        tx_fee: float,
+        agent_pbk_to_name: Dict[str, str],
+        good_pbk_to_name: Dict[str, str],
+        version_id: str,
+    ) -> None:
         """
         Initialize a game data object.
 

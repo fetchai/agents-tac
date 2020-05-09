@@ -24,7 +24,14 @@ from typing import Dict, List, Set, Sequence
 
 from aea.helpers.dialogue.base import DialogueLabel
 from aea.mail.base import Address
-from aea.protocols.oef.models import DataModel, Attribute, Description, Query, Constraint, Or
+from aea.protocols.oef.models import (
+    DataModel,
+    Attribute,
+    Description,
+    Query,
+    Constraint,
+    Or,
+)
 from tac.platform.game.base import TransactionId
 from oef.query import GtEq
 
@@ -36,7 +43,12 @@ TAC_DEMAND_DATAMODEL_NAME = "tac_demand"
 QUANTITY_SHIFT = 1  # Any non-negative integer is fine.
 
 
-def generate_transaction_id(agent_pbk: Address, opponent_pbk: Address, dialogue_label: DialogueLabel, agent_is_seller: bool) -> str:
+def generate_transaction_id(
+    agent_pbk: Address,
+    opponent_pbk: Address,
+    dialogue_label: DialogueLabel,
+    agent_is_seller: bool,
+) -> str:
     """
     Make a transaction id.
 
@@ -48,12 +60,21 @@ def generate_transaction_id(agent_pbk: Address, opponent_pbk: Address, dialogue_
     """
     # the format is {buyer_pbk}_{seller_pbk}_{dialogue_id}_{dialogue_starter_pbk}
     assert opponent_pbk == dialogue_label.dialogue_opponent_pbk
-    buyer_pbk, seller_pbk = (opponent_pbk, agent_pbk) if agent_is_seller else (agent_pbk, opponent_pbk)
-    transaction_id = "{}_{}_{}_{}".format(buyer_pbk, seller_pbk, dialogue_label.dialogue_id, dialogue_label.dialogue_starter_pbk)
+    buyer_pbk, seller_pbk = (
+        (opponent_pbk, agent_pbk) if agent_is_seller else (agent_pbk, opponent_pbk)
+    )
+    transaction_id = "{}_{}_{}_{}".format(
+        buyer_pbk,
+        seller_pbk,
+        dialogue_label.dialogue_id,
+        dialogue_label.dialogue_starter_pbk,
+    )
     return transaction_id
 
 
-def dialogue_label_from_transaction_id(agent_pbk: Address, transaction_id: TransactionId) -> DialogueLabel:
+def dialogue_label_from_transaction_id(
+    agent_pbk: Address, transaction_id: TransactionId
+) -> DialogueLabel:
     """
     Recover dialogue label from transaction id.
 
@@ -61,12 +82,14 @@ def dialogue_label_from_transaction_id(agent_pbk: Address, transaction_id: Trans
     :param transaction_id: the transaction id
     :return: a dialogue label
     """
-    buyer_pbk, seller_pbk, dialogue_id, dialogue_starter_pbk = transaction_id.split('_')
+    buyer_pbk, seller_pbk, dialogue_id, dialogue_starter_pbk = transaction_id.split("_")
     if agent_pbk == buyer_pbk:
         dialogue_opponent_pbk = seller_pbk
     else:
         dialogue_opponent_pbk = buyer_pbk
-    dialogue_label = DialogueLabel(int(dialogue_id), dialogue_opponent_pbk, dialogue_starter_pbk)
+    dialogue_label = DialogueLabel(
+        int(dialogue_id), dialogue_opponent_pbk, dialogue_starter_pbk
+    )
     return dialogue_label
 
 
@@ -79,15 +102,18 @@ def build_datamodel(good_pbks: List[str], is_supply: bool) -> DataModel:
 
     :return: the data model.
     """
-    goods_quantities_attributes = [Attribute(good_pbk, int, False)
-                                   for good_pbk in good_pbks]
+    goods_quantities_attributes = [
+        Attribute(good_pbk, int, False) for good_pbk in good_pbks
+    ]
     price_attribute = Attribute("price", float, False)
     description = TAC_SUPPLY_DATAMODEL_NAME if is_supply else TAC_DEMAND_DATAMODEL_NAME
     data_model = DataModel(description, goods_quantities_attributes + [price_attribute])
     return data_model
 
 
-def get_goods_quantities_description(good_pbks: List[str], good_quantities: List[int], is_supply: bool) -> Description:
+def get_goods_quantities_description(
+    good_pbks: List[str], good_quantities: List[int], is_supply: bool
+) -> Description:
     """
     Get the TAC description for supply or demand.
 
@@ -120,8 +146,10 @@ def get_goods_quantities_description(good_pbks: List[str], good_quantities: List
     :return: the description to advertise on the Service Directory.
     """
     data_model = build_datamodel(good_pbks, is_supply=is_supply)
-    desc = Description({good_pbk: quantity for good_pbk, quantity in zip(good_pbks, good_quantities)},
-                       data_model=data_model)
+    desc = Description(
+        {good_pbk: quantity for good_pbk, quantity in zip(good_pbks, good_quantities)},
+        data_model=data_model,
+    )
     return desc
 
 
@@ -145,7 +173,11 @@ def build_query(good_pbks: Set[str], is_searching_for_sellers: bool) -> Query:
 
     :return: the query
     """
-    data_model = None if good_pbks is None else build_datamodel(list(good_pbks), is_supply=is_searching_for_sellers)
+    data_model = (
+        None
+        if good_pbks is None
+        else build_datamodel(list(good_pbks), is_supply=is_searching_for_sellers)
+    )
     constraints = [Constraint(good_pbk, GtEq(1)) for good_pbk in good_pbks]
 
     if len(good_pbks) > 1:
@@ -165,5 +197,5 @@ def build_dict(good_pbks: Set[str], is_supply: bool) -> Dict[str, Sequence[str]]
     :return: the dictionary
     """
     description = TAC_SUPPLY_DATAMODEL_NAME if is_supply else TAC_DEMAND_DATAMODEL_NAME
-    result = {'description': description, 'services': list(good_pbks)}
+    result = {"description": description, "services": list(good_pbks)}
     return result

@@ -71,11 +71,10 @@ class TACMessage(Message):
         ErrorCode.TRANSACTION_NOT_MATCHING: "The transaction request does not match with a previous transaction request with the same id.",
         ErrorCode.AGENT_NAME_NOT_IN_WHITELIST: "Agent name not in whitelist.",
         ErrorCode.COMPETITION_NOT_RUNNING: "The competition is not running yet.",
-        ErrorCode.DIALOGUE_INCONSISTENT: "The message is inconsistent with the dialogue."
+        ErrorCode.DIALOGUE_INCONSISTENT: "The message is inconsistent with the dialogue.",
     }  # type: Dict[ErrorCode, str]
 
-    def __init__(self, tac_type: Optional[Type] = None,
-                 **kwargs):
+    def __init__(self, tac_type: Optional[Type] = None, **kwargs):
         """
         Initialize.
 
@@ -100,9 +99,15 @@ class TACMessage(Message):
                 amount = cast(float, self.get("amount"))
                 assert amount >= 0.0
                 assert self.is_set("quantities_by_good_pbk")
-                quantities_by_good_pbk = cast(Dict[str, int], self.get("quantities_by_good_pbk"))
-                assert len(quantities_by_good_pbk.keys()) == len(set(quantities_by_good_pbk.keys()))
-                assert all(quantity >= 0 for quantity in quantities_by_good_pbk.values())
+                quantities_by_good_pbk = cast(
+                    Dict[str, int], self.get("quantities_by_good_pbk")
+                )
+                assert len(quantities_by_good_pbk.keys()) == len(
+                    set(quantities_by_good_pbk.keys())
+                )
+                assert all(
+                    quantity >= 0 for quantity in quantities_by_good_pbk.values()
+                )
             elif tac_type == TACMessage.Type.GET_STATE_UPDATE:
                 pass
             elif tac_type == TACMessage.Type.CANCELLED:

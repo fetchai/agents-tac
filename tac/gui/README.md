@@ -19,7 +19,7 @@ Here `#{data_output_dir}/#{version_id}` is the path to the folder containing the
 
 Assuming the output of `sandbox/run_iterated_games.py` is in `sandbox/data`, do:
 
-    python tac/gui/dashboards/leaderboard.py --datadir sandbox/data
+    python tac/gui/dashboards/leaderboard.py --datadir sandbox/data --dump_stats
 
 ## Alternative Visualization
 

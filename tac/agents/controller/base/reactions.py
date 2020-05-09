@@ -38,7 +38,9 @@ logger = logging.getLogger(__name__)
 class OEFReactions(OEFReactionInterface):
     """The OEFReactions class defines the reactions of an agent towards the OEF."""
 
-    def __init__(self, crypto: Crypto, liveness: Liveness, mailbox: MailBox, agent_name: str) -> None:
+    def __init__(
+        self, crypto: Crypto, liveness: Liveness, mailbox: MailBox, agent_name: str
+    ) -> None:
         """
         Instantiate the OEFReactions.
 
@@ -63,8 +65,11 @@ class OEFReactions(OEFReactionInterface):
         :return: None
         """
         oef_error = OEFSerializer().decode(envelope.message)
-        logger.error("[{}]: Received OEF error: answer_id={}, operation={}"
-                     .format(self.agent_name, oef_error.get("id"), oef_error.get("operation")))
+        logger.error(
+            "[{}]: Received OEF error: answer_id={}, operation={}".format(
+                self.agent_name, oef_error.get("id"), oef_error.get("operation")
+            )
+        )
 
     def on_dialogue_error(self, envelope: Envelope) -> None:
         """
@@ -75,5 +80,11 @@ class OEFReactions(OEFReactionInterface):
         :return: None
         """
         dialogue_error = OEFSerializer().decode(envelope.message)
-        logger.error("[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}"
-                     .format(self.agent_name, dialogue_error.get("id"), dialogue_error.get("dialogue_id"), dialogue_error.get("origin")))
+        logger.error(
+            "[{}]: Received Dialogue error: answer_id={}, dialogue_id={}, origin={}".format(
+                self.agent_name,
+                dialogue_error.get("id"),
+                dialogue_error.get("dialogue_id"),
+                dialogue_error.get("origin"),
+            )
+        )

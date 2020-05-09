@@ -29,7 +29,11 @@ from aea.mail.base import Address
 from aea.protocols.oef.models import Description, Query
 
 from tac.agents.participant.v1.base.dialogues import Dialogues, Dialogue
-from tac.agents.participant.v1.base.helpers import build_dict, build_query, get_goods_quantities_description
+from tac.agents.participant.v1.base.helpers import (
+    build_dict,
+    build_query,
+    get_goods_quantities_description,
+)
 from tac.agents.participant.v1.base.states import AgentState, WorldState
 from tac.agents.participant.v1.base.stats_manager import StatsManager
 from tac.agents.participant.v1.base.strategy import Strategy
@@ -68,13 +72,16 @@ class Search:
 class GameInstance:
     """The GameInstance maintains state of the game from the agent's perspective."""
 
-    def __init__(self, agent_name: str,
-                 strategy: Strategy,
-                 mail_stats: MailStats,
-                 expected_version_id: str,
-                 services_interval: int = 10,
-                 pending_transaction_timeout: int = 10,
-                 dashboard: Optional[AgentDashboard] = None) -> None:
+    def __init__(
+        self,
+        agent_name: str,
+        strategy: Strategy,
+        mail_stats: MailStats,
+        expected_version_id: str,
+        services_interval: int = 10,
+        pending_transaction_timeout: int = 10,
+        dashboard: Optional[AgentDashboard] = None,
+    ) -> None:
         """
         Instantiate a game instance.
 
@@ -106,12 +113,16 @@ class GameInstance:
 
         self._services_interval = datetime.timedelta(0, services_interval)
         self._last_update_time = datetime.datetime.now() - self._services_interval
-        self._last_search_time = datetime.datetime.now() - datetime.timedelta(0, round(services_interval / 2.0))
+        self._last_search_time = datetime.datetime.now() - datetime.timedelta(
+            0, round(services_interval / 2.0)
+        )
 
         self.goods_supplied_description = None
         self.goods_demanded_description = None
 
-        self.transaction_manager = TransactionManager(agent_name, pending_transaction_timeout=pending_transaction_timeout)
+        self.transaction_manager = TransactionManager(
+            agent_name, pending_transaction_timeout=pending_transaction_timeout
+        )
 
         self.stats_manager = StatsManager(mail_stats, dashboard)
 
@@ -131,14 +142,28 @@ class GameInstance:
         """
         # TODO: extend TAC messages to include reference to version id; then replace below with assert
         game_data.version_id = self.expected_version_id
-        self._game_configuration = GameConfiguration(game_data.version_id, game_data.nb_agents, game_data.nb_goods, game_data.tx_fee,
-                                                     game_data.agent_pbk_to_name, game_data.good_pbk_to_name)
-        self._initial_agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
-        self._agent_state = AgentState(game_data.money, game_data.endowment, game_data.utility_params)
+        self._game_configuration = GameConfiguration(
+            game_data.version_id,
+            game_data.nb_agents,
+            game_data.nb_goods,
+            game_data.tx_fee,
+            game_data.agent_pbk_to_name,
+            game_data.good_pbk_to_name,
+        )
+        self._initial_agent_state = AgentState(
+            game_data.money, game_data.endowment, game_data.utility_params
+        )
+        self._agent_state = AgentState(
+            game_data.money, game_data.endowment, game_data.utility_params
+        )
         if self.strategy.is_world_modeling:
             opponent_pbks = self.game_configuration.agent_pbks
             opponent_pbks.remove(agent_pbk)
-            self._world_state = WorldState(opponent_pbks, self.game_configuration.good_pbks, self.initial_agent_state)
+            self._world_state = WorldState(
+                opponent_pbks,
+                self.game_configuration.good_pbks,
+                self.initial_agent_state,
+            )
 
     def on_state_update(self, message: TACMessage, agent_pbk: Address) -> None:
         """
@@ -188,7 +213,9 @@ class GameInstance:
     @property
     def initial_agent_state(self) -> AgentState:
         """Get the initial agent state."""
-        assert self._initial_agent_state is not None, "Initial agent state not assigned!"
+        assert (
+            self._initial_agent_state is not None
+        ), "Initial agent state not assigned!"
         return self._initial_agent_state
 
     @property
@@ -242,7 +269,9 @@ class GameInstance:
             self._last_search_time = now
         return result
 
-    def is_profitable_transaction(self, transaction: Transaction, dialogue: Dialogue) -> Tuple[bool, str]:
+    def is_profitable_transaction(
+        self, transaction: Transaction, dialogue: Dialogue
+    ) -> Tuple[bool, str]:
         """
         Check if a transaction is profitable.
 
@@ -258,13 +287,26 @@ class GameInstance:
         """
         state_after_locks = self.state_after_locks(dialogue.is_seller)
 
-        if not state_after_locks.check_transaction_is_consistent(transaction, self.game_configuration.tx_fee):
-            message = "[{}]: the proposed transaction is not consistent with the state after locks.".format(self.agent_name)
+        if not state_after_locks.check_transaction_is_consistent(
+            transaction, self.game_configuration.tx_fee
+        ):
+            message = "[{}]: the proposed transaction is not consistent with the state after locks.".format(
+                self.agent_name
+            )
             return False, message
-        proposal_delta_score = state_after_locks.get_score_diff_from_transaction(transaction, self.game_configuration.tx_fee)
+        proposal_delta_score = state_after_locks.get_score_diff_from_transaction(
+            transaction, self.game_configuration.tx_fee
+        )
 
         result = self.strategy.is_acceptable_proposal(proposal_delta_score)
-        message = "[{}]: is good proposal for {}? {}: tx_id={}, delta_score={}, amount={}".format(self.agent_name, dialogue.role, result, transaction.transaction_id, proposal_delta_score, transaction.amount)
+        message = "[{}]: is good proposal for {}? {}: tx_id={}, delta_score={}, amount={}".format(
+            self.agent_name,
+            dialogue.role,
+            result,
+            transaction.transaction_id,
+            proposal_delta_score,
+            transaction.amount,
+        )
         return result, message
 
     def get_service_description(self, is_supply: bool) -> Description:
@@ -275,9 +317,11 @@ class GameInstance:
 
         :return: the description (to advertise on the Service Directory).
         """
-        desc = get_goods_quantities_description(self.game_configuration.good_pbks,
-                                                self.get_goods_quantities(is_supply),
-                                                is_supply=is_supply)
+        desc = get_goods_quantities_description(
+            self.game_configuration.good_pbks,
+            self.get_goods_quantities(is_supply),
+            is_supply=is_supply,
+        )
         return desc
 
     def build_services_query(self, is_searching_for_sellers: bool) -> Optional[Query]:
@@ -294,10 +338,16 @@ class GameInstance:
         """
         good_pbks = self.get_goods_pbks(is_supply=not is_searching_for_sellers)
 
-        res = None if len(good_pbks) == 0 else build_query(good_pbks, is_searching_for_sellers)
+        res = (
+            None
+            if len(good_pbks) == 0
+            else build_query(good_pbks, is_searching_for_sellers)
+        )
         return res
 
-    def build_services_dict(self, is_supply: bool) -> Optional[Dict[str, Sequence[str]]]:
+    def build_services_dict(
+        self, is_supply: bool
+    ) -> Optional[Dict[str, Sequence[str]]]:
         """
         Build a dictionary containing the services demanded/supplied.
 
@@ -310,7 +360,11 @@ class GameInstance:
         res = None if len(good_pbks) == 0 else build_dict(good_pbks, is_supply)
         return res
 
-    def is_matching(self, cfp_services: Dict[str, Union[bool, List[Any]]], goods_description: Description) -> bool:
+    def is_matching(
+        self,
+        cfp_services: Dict[str, Union[bool, List[Any]]],
+        goods_description: Description,
+    ) -> bool:
         """
         Check for a match between the CFP services and the goods description.
 
@@ -319,13 +373,14 @@ class GameInstance:
 
         :return: Bool
         """
-        services = cfp_services['services']
+        services = cfp_services["services"]
         services = cast(List[Any], services)
-        if cfp_services['description'] is goods_description.data_model.name:
+        if cfp_services["description"] is goods_description.data_model.name:
             # The call for proposal description and the goods model name cannot be the same for trading agent pairs.
             return False
         for good_pbk in goods_description.data_model.attributes_by_name.keys():
-            if good_pbk not in services: continue
+            if good_pbk not in services:
+                continue
             return True
         return False
 
@@ -338,7 +393,15 @@ class GameInstance:
         :return: a list of good public keys
         """
         state_after_locks = self.state_after_locks(is_seller=is_supply)
-        good_pbks = self.strategy.supplied_good_pbks(self.game_configuration.good_pbks, state_after_locks.current_holdings) if is_supply else self.strategy.demanded_good_pbks(self.game_configuration.good_pbks, state_after_locks.current_holdings)
+        good_pbks = (
+            self.strategy.supplied_good_pbks(
+                self.game_configuration.good_pbks, state_after_locks.current_holdings
+            )
+            if is_supply
+            else self.strategy.demanded_good_pbks(
+                self.game_configuration.good_pbks, state_after_locks.current_holdings
+            )
+        )
         return good_pbks
 
     def get_goods_quantities(self, is_supply: bool) -> List[int]:
@@ -350,7 +413,13 @@ class GameInstance:
         :return: the vector of good quantities offered/requested.
         """
         state_after_locks = self.state_after_locks(is_seller=is_supply)
-        quantities = self.strategy.supplied_good_quantities(state_after_locks.current_holdings) if is_supply else self.strategy.demanded_good_quantities(state_after_locks.current_holdings)
+        quantities = (
+            self.strategy.supplied_good_quantities(state_after_locks.current_holdings)
+            if is_supply
+            else self.strategy.demanded_good_quantities(
+                state_after_locks.current_holdings
+            )
+        )
         return quantities
 
     def state_after_locks(self, is_seller: bool) -> AgentState:
@@ -364,12 +433,19 @@ class GameInstance:
         :return: the agent state with the locks applied to current state
         """
         assert self._agent_state is not None, "Agent state not assigned!"
-        transactions = list(self.transaction_manager.locked_txs_as_seller.values()) if is_seller \
+        transactions = (
+            list(self.transaction_manager.locked_txs_as_seller.values())
+            if is_seller
             else list(self.transaction_manager.locked_txs_as_buyer.values())
-        state_after_locks = self._agent_state.apply(transactions, self.game_configuration.tx_fee)
+        )
+        state_after_locks = self._agent_state.apply(
+            transactions, self.game_configuration.tx_fee
+        )
         return state_after_locks
 
-    def generate_proposal(self, cfp_services: Dict[str, Union[bool, List[Any]]], is_seller: bool) -> Optional[Description]:
+    def generate_proposal(
+        self, cfp_services: Dict[str, Union[bool, List[Any]]], is_seller: bool
+    ) -> Optional[Description]:
         """
         Wrap the function which generates proposals from a seller or buyer.
 
@@ -381,11 +457,20 @@ class GameInstance:
         :return: a list of descriptions
         """
         state_after_locks = self.state_after_locks(is_seller=is_seller)
-        candidate_proposals = self.strategy.get_proposals(self.game_configuration.good_pbks, state_after_locks.current_holdings, state_after_locks.utility_params, self.game_configuration.tx_fee, is_seller, self._world_state)
+        candidate_proposals = self.strategy.get_proposals(
+            self.game_configuration.good_pbks,
+            state_after_locks.current_holdings,
+            state_after_locks.utility_params,
+            self.game_configuration.tx_fee,
+            is_seller,
+            self._world_state,
+        )
         proposals = []
         for proposal in candidate_proposals:
-            if not self.is_matching(cfp_services, proposal): continue
-            if not proposal.values["price"] > 0: continue
+            if not self.is_matching(cfp_services, proposal):
+                continue
+            if not proposal.values["price"] > 0:
+                continue
             proposals.append(proposal)
         if not proposals:
             return None

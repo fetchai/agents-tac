@@ -46,12 +46,14 @@ class VisdomServer:
 
     def __enter__(self):
         """Define what the context manager should do at the beginning of the block."""
-        if platform.system() == 'Darwin':
+        if platform.system() == "Darwin":
             # This is required due to a bug in mac os Mojave
             print("Setting environment var...")
             os.environ["OBJC_DISABLE_INITIALIZE_FORK_SAFETY"] = "YES"
         print("Starting Visdom server...")
-        self.proc = subprocess.Popen(["python3", "-m", "visdom.server"], env=os.environ, cwd=ROOT_DIR)
+        self.proc = subprocess.Popen(
+            ["python3", "-m", "visdom.server"], env=os.environ, cwd=ROOT_DIR
+        )
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Define what the context manager should do after the block has been executed."""
@@ -76,7 +78,8 @@ class OEFNode:
         for loop in range(0, 30):
             oef_healthcheck = OEFHealthCheck("127.0.0.1", 10000)
             is_success = oef_healthcheck.run()
-            if is_success: break
+            if is_success:
+                break
             time.sleep(1)
 
     def __enter__(self):
@@ -85,12 +88,18 @@ class OEFNode:
         script_path = os.path.join("scripts", "oef", "launch.py")
         configuration_file_path = os.path.join("scripts", "oef", "launch_config.json")
 
-        register_shared_dir(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../data/shared'))
-        os.environ['SHARED_DIR'] = get_shared_dir()
+        register_shared_dir(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "../data/shared")
+        )
+        os.environ["SHARED_DIR"] = get_shared_dir()
 
         print("Launching new OEF Node...")
-        self.oef_process = subprocess.Popen(["python3", script_path, "-c", configuration_file_path, "--background"],
-                                            stdout=subprocess.PIPE, env=os.environ, cwd=ROOT_DIR)
+        self.oef_process = subprocess.Popen(
+            ["python3", script_path, "-c", configuration_file_path, "--background"],
+            stdout=subprocess.PIPE,
+            env=os.environ,
+            cwd=ROOT_DIR,
+        )
         self._wait_for_oef()
         self.id = self._get_image_id()
         print("ID: ", self.id)
@@ -107,8 +116,8 @@ class OEFNode:
         return id
 
 
-if __name__ == '__main__':
-    sys.argv += ['--dashboard', '--version-id', 'tac_v1']
+if __name__ == "__main__":
+    sys.argv += ["--dashboard", "--version-id", "tac_v1"]
     args = parse_arguments()
     simulation_params = build_simulation_parameters(args)
 

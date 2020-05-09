@@ -47,8 +47,6 @@ services:
     depends_on:
       - oef-node
       - visdom
-    volumes:
-      - ../:/build
     build:
       context: ../
       dockerfile: docker-tac-develop/Dockerfile
@@ -56,8 +54,6 @@ services:
       main_net:
         ipv4_address: 172.28.1.3
     entrypoint:
-      - "pipenv"
-      - "run"
       - "sandbox/wait-for-oef.sh"
       - "172.28.1.1"
       - "10000"
@@ -74,7 +70,7 @@ services:
       - "--oef-port"
       - "${OEF_PORT}"
       - "--data-output-dir"
-      - "sandbox/${DATA_OUTPUT_DIR}"
+      - "${DATA_OUTPUT_DIR}"
       - "--version-id"
       - "${VERSION_ID}"
       - "--lower-bound-factor"

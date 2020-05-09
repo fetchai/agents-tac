@@ -39,7 +39,9 @@ def launcher():
     """Render the launcher page."""
     sandbox_form = SandboxForm()
     agent_form = AgentForm()
-    return render_template("launcher.html", form_sandbox=sandbox_form, form_agent=agent_form)
+    return render_template(
+        "launcher.html", form_sandbox=sandbox_form, form_agent=agent_form
+    )
 
 
 @bp.route("/grid-search", methods=["GET"])

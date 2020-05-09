@@ -28,7 +28,7 @@ from tac.platform.shared_sim_status import clear_temp_dir
 
 def create_api(app):
     """Wrap the Flask app with the Flask-RESTful Api object."""
-    api = Api(app, prefix='/api')
+    api = Api(app, prefix="/api")
 
     api.add_resource(SandboxList, "/sandboxes")
     api.add_resource(Sandbox, "/sandboxes/<int:sandbox_id>")

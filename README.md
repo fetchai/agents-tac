@@ -1,12 +1,14 @@
 # agents-tac
 
+![TAC sanity checks and tests](https://github.com/fetchai/agents-tac/workflows/TAC%20sanity%20checks%20and%20tests/badge.svg)
+
 Competition and Agent Frameworks for the Trading Agents Competition
 
 ## Cloning
 
 This repository contains submodules. Clone with recursive strategy:
 
-	  git clone git@github.com:fetchai/agents-tac.git --recursive && cd agents-tac
+    git clone git@github.com:fetchai/agents-tac.git --recursive && cd agents-tac
 
 ## Option 1: Quick Start:
 
@@ -56,11 +58,19 @@ Once agent is connected and searching for the competition:
 </p>
 
 The controller GUI at http://localhost:8097 provides real time insights:
-![Controller GUI](../master/docs/controller_gui.png)
+<!--![Controller GUI](../master/docs/controller_gui.png)-->
+![Controller GUI](../master/docs/controller_gui.gif)
 
 - [x] Have a look at the documentation and start developing your first agent.
 
 ## Quick Links
+
+
+### 📝 📝 📝 Publications 📝 📝 📝 
+
+The following publication relates to this repository:
+
+- [Trading Agent Competition with Autonomous Economic Agents](http://ifaamas.org/Proceedings/aamas2020/pdfs/p2107.pdf)
 
 ### 📜 📜 📜 Documentation 📜 📜 📜
 
@@ -82,15 +92,20 @@ The [agent templates](../master/templates) provide starting points for agent dev
 
 The [competition sandbox](../master/sandbox) provides the code to build the docker image to run the competiton.
 
+### 🚀🚀🚀 AEA Framework 🚀🚀🚀
+
+This project has sparked the development of an Autonomous Economic Agent framework. The project is available [here](https://github.com/fetchai/agents-aea) and we recomment you check it out!
+
 ## Repository structure
 
 - `data`: default folder for storage of the simulation data.
+- `docker-agent-image`: Lightweight docker image for agent execution.
 - `docker-images`: submodule to the [docker-images](https://github.com/uvue-git/docker-images.git)
 - `docker-tac-develop`: Docker image for the development of TAC related stuff.  
 - `docs`: the docs for this project.
 - `notebooks`: contains jupyter notebooks with exploratory code.
-- `proto`: contains the protobuf schema.
-- `sandbox`: setup for using Docker compose.
+- `sandbox`: competition setup using Docker compose.
+- `scripts`: scripts to run.
 - `simulation`: contains scripts for simulation of the TAC.
 - `tac`: the main folder containing the Python package.
 - `templates`: template agents.
@@ -131,32 +146,45 @@ The following steps are only relevant if you intend to contribute to the reposit
 
 - Install development dependencies:
 
-	  pipenv install --dev
+      pipenv install --dev
 
 - Install package in (development mode):
 
-	  pip3 install -e .
+      pip install -e .
 
 - After changes to the protobuf schema run:
 
-	  python setup.py protoc
+      python setup.py protoc
 
 - To run tests (ensure no oef docker containers are running):
 
-	  tox -e py37
+      tox -e py37
 
 - To run linters (code style checks):
 
-    tox -e flake8
+      tox -e flake8
 
 - To run static type checks:
 
-    tox -e mypy
+      tox -e mypy
 
 - We recommend you use the latest OEF build:
 
-	  python scripts/oef/launch.py -c ./scripts/oef/launch_config.json
+      python scripts/oef/launch.py -c ./scripts/oef/launch_config.json
 
 ## Resources
 
 - Detailed documentation of the OEF Python SDK is available [here](https://fetchai.github.io/oef-sdk-python/oef.html).
+
+## Cite
+
+If you are using our software in a publication, please 
+consider to cite it with the following BibTex entry:
+
+```
+@misc{agents-aea,
+  Author = {Marco Favorito and David Minarsch and Diarmid Campbell},
+  Title = {Trading Agent Competition with Autonomous Economic Agents},
+  Year = {2019},
+}
+```

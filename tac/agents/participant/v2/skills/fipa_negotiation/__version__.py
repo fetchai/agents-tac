@@ -20,9 +20,9 @@
 
 """Specifies the version of the skill."""
 
-__title__ = 'fipa_negotiation_v1'
-__description__ = 'FIPA Negotiation'
-__version__ = '0.0.1'
-__author__ = 'Fetch.AI Limited'
-__license__ = 'Apache 2.0'
-__copyright__ = '2019 Fetch.AI Limited'
+__title__ = "fipa_negotiation_v1"
+__description__ = "FIPA Negotiation"
+__version__ = "0.0.1"
+__author__ = "Fetch.AI Limited"
+__license__ = "Apache 2.0"
+__copyright__ = "2019 Fetch.AI Limited"

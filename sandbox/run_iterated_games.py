@@ -23,12 +23,14 @@
 
 import argparse
 import datetime
+import docker
 import inspect
 import json
 import logging
 import os
 import pprint
 import random
+import re
 import shutil
 import subprocess
 import time
@@ -45,18 +47,48 @@ logging.basicConfig(level=logging.INFO)
 
 def parse_args() -> argparse.Namespace:
     """Argument parsing."""
-    parser = argparse.ArgumentParser("run_iterated_games",
-                                     description="Run the sandbox multiple times and collect scores for every run.")
-    parser.add_argument("--nb_games", type=int, default=1, help="How many times the competition must be run.")
-    parser.add_argument("--output_dir", type=str, default="TAC", help="The directory that will contain all the data for every game.")
-    parser.add_argument("--seeds", nargs="+", type=int, default=[], help="The list of seeds to use for different games.")
-    parser.add_argument("--skip", action="store_true", help="Don't ask to user for continuation.")
-    parser.add_argument("--interval", type=int, default=5, help="The minimum number of minutes to wait for the next TAC."
-                                                                "E.g. if 5, and the time is 09:00, "
-                                                                "then the next competition will start at 09:05:00.")
-    parser.add_argument("--config", type=str, default=None, help="The path for a config file (in JSON format). "
-                                                                 "If None, use only command line arguments. "
-                                                                 "The config file overrides the command line options.")
+    parser = argparse.ArgumentParser(
+        "run_iterated_games",
+        description="Run the sandbox multiple times and collect scores for every run.",
+    )
+    parser.add_argument(
+        "--nb_games",
+        type=int,
+        default=1,
+        help="How many times the competition must be run.",
+    )
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        default="TAC",
+        help="The directory that will contain all the data for every game.",
+    )
+    parser.add_argument(
+        "--seeds",
+        nargs="+",
+        type=int,
+        default=[],
+        help="The list of seeds to use for different games.",
+    )
+    parser.add_argument(
+        "--skip", action="store_true", help="Don't ask to user for continuation."
+    )
+    parser.add_argument(
+        "--interval",
+        type=int,
+        default=5,
+        help="The minimum number of minutes to wait for the next TAC."
+        "E.g. if 5, and the time is 09:00, "
+        "then the next competition will start at 09:05:00.",
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        default=None,
+        help="The path for a config file (in JSON format). "
+        "If None, use only command line arguments. "
+        "The config file overrides the command line options.",
+    )
 
     arguments = parser.parse_args()
     return arguments
@@ -71,7 +103,9 @@ def build_tac_env_variables(tournament_id: str, version_id: str, seed: int) -> s
     :param seed: the seed for the random module
     :return: a string encapsulating the params
     """
-    return "DATA_OUTPUT_DIR={} VERSION_ID={} SEED={}".format(tournament_id, version_id, seed)
+    return "DATA_OUTPUT_DIR={} VERSION_ID={} SEED={}".format(
+        tournament_id, version_id, seed
+    )
 
 
 def ask_for_continuation(iteration: int) -> bool:
@@ -82,7 +116,9 @@ def ask_for_continuation(iteration: int) -> bool:
     :return: True if the user decided to continue the execution, False otherwise.
     """
     try:
-        answer = input("Would you like to proceed with iteration {}? [y/N]".format(iteration))
+        answer = input(
+            "Would you like to proceed with iteration {}? [y/N]".format(iteration)
+        )
         if answer != "y":
             return False
         else:
@@ -117,7 +153,7 @@ def wait_at_least_n_minutes(n: int):
     :return: None
     """
     now = datetime.datetime.now()
-    timedelta = datetime.timedelta(0, (n + 1) * 60 - now.second, - now.microsecond)
+    timedelta = datetime.timedelta(0, (n + 1) * 60 - now.second, -now.microsecond)
     start_time = now + timedelta
     seconds_to_sleep = (start_time - now).seconds
 
@@ -127,7 +163,27 @@ def wait_at_least_n_minutes(n: int):
     logging.info("... Done.")
 
 
-def run_games(game_names: List[str], seeds: List[int], output_data_dir: str = "data", interval: int = 5, skip: bool = False) -> List[str]:
+def _stop_oef_search_images():
+    """Stop any running OEF nodes."""
+    client = docker.from_env()
+    for container in client.containers.list():
+        if any(re.match("fetchai/oef-search", tag) for tag in container.image.tags):
+            print("Stopping existing OEF Node...")
+            container.stop()
+
+
+def shutdown_running_oef_or_visdom_servers():
+    """Stop running services."""
+    _stop_oef_search_images()
+
+
+def run_games(
+    game_names: List[str],
+    seeds: List[int],
+    output_data_dir: str = "data",
+    interval: int = 5,
+    skip: bool = False,
+) -> List[str]:
     """
     Run a TAC for every game name in the input list.
 
@@ -147,6 +203,8 @@ def run_games(game_names: List[str], seeds: List[int], output_data_dir: str = "d
             shall_continue: bool = ask_for_continuation(i)
             if not shall_continue:
                 break
+
+        shutdown_running_oef_or_visdom_servers()
 
         wait_at_least_n_minutes(interval)
 
@@ -172,7 +230,9 @@ def collect_data(datadir: str, experiment_names: List[str]) -> List[GameStats]:
     """
     result = []
     for experiment_name in experiment_names:
-        json_experiment_data = json.load(open(os.path.join(datadir, experiment_name, "game.json")))
+        json_experiment_data = json.load(
+            open(os.path.join(datadir, experiment_name, "game.json"))
+        )
         game_stats = GameStats.from_json(json_experiment_data)
         result.append(game_stats)
 
@@ -214,7 +274,9 @@ def _process_seeds(arguments: Dict[str, Any]) -> List[int]:
     seeds = list(arguments["seeds"])
     if len(seeds) < arguments["nb_games"]:
         logging.info("Filling missing random seeds...")
-        seeds += [random.randint(1, 1000) for _ in range(arguments["nb_games"] - len(seeds))]
+        seeds += [
+            random.randint(1, 1000) for _ in range(arguments["nb_games"] - len(seeds))
+        ]
 
     return seeds
 
@@ -225,7 +287,9 @@ def main():
 
     # process input
     args_dict = vars(arguments)
-    json_dict = json.load(open(arguments.config)) if arguments.config is not None else {}
+    json_dict = (
+        json.load(open(arguments.config)) if arguments.config is not None else {}
+    )
     args_dict.update(json_dict)
 
     logging.info("Arguments: {}".format(pprint.pformat(args_dict)))
@@ -235,15 +299,24 @@ def main():
     output_dir = args_dict["output_dir"]
     logging.info("Removing directory {}...".format(repr(output_dir)))
     shutil.rmtree(output_dir, ignore_errors=True)
+    logging.info("Creating directory {}...".format(repr(output_dir)))
+    os.makedirs(output_dir, exist_ok=True)
 
     # do the job
-    correctly_executed_games: List[str] = run_games(game_names, seeds, output_data_dir=output_dir, interval=args_dict["interval"], skip=args_dict["skip"])
+    correctly_executed_games: List[str] = run_games(
+        game_names,
+        seeds,
+        output_data_dir=output_dir,
+        interval=args_dict["interval"],
+        skip=args_dict["skip"],
+    )
 
     # process the output
-    all_game_stats = collect_data(output_dir, correctly_executed_games)
+    target_dir = os.path.join("data", "shared", output_dir)
+    all_game_stats = collect_data(target_dir, correctly_executed_games)
     scores_by_name = compute_aggregate_scores(all_game_stats)
     print_aggregate_scores(scores_by_name)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

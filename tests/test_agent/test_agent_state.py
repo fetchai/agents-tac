@@ -26,6 +26,8 @@ from threading import Thread
 from aea.agent import Agent, AgentState
 from aea.channels.oef.connection import OEFMailBox
 
+import pytest
+
 
 class TAgent(Agent):
     """A class to implement an agent for testing."""
@@ -36,7 +38,7 @@ class TAgent(Agent):
         self.mailbox = OEFMailBox(self.crypto.public_key, "127.0.0.1", 10000)
 
     def setup(self) -> None:
-        """Setup."""
+        """Set up the agent."""
         pass
 
     def teardown(self) -> None:
@@ -59,6 +61,7 @@ def test_agent_initiated():
     assert test_agent.agent_state == AgentState.INITIATED
 
 
+@pytest.mark.integration
 def test_agent_connected(network_node):
     """Test that when the agent is connected, her state is AgentState.CONNECTED."""
     test_agent = TAgent()
@@ -67,6 +70,7 @@ def test_agent_connected(network_node):
     test_agent.mailbox.disconnect()
 
 
+@pytest.mark.integration
 def test_agent_running(network_node):
     """Test that when the agent is running, her state is AgentState.RUNNING."""
     test_agent = TAgent()

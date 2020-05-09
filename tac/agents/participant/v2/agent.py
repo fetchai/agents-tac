@@ -35,13 +35,16 @@ logger = logging.getLogger(__name__)
 class ParticipantAgent(Agent):
     """The participant agent class implements a base agent for TAC."""
 
-    def __init__(self, name: str,
-                 oef_addr: str,
-                 oef_port: int,
-                 dashboard: Optional[AgentDashboard] = None,
-                 private_key_pem: Optional[str] = None,
-                 agent_timeout: Optional[float] = 1.0,
-                 debug: bool = False):
+    def __init__(
+        self,
+        name: str,
+        oef_addr: str,
+        oef_port: int,
+        dashboard: Optional[AgentDashboard] = None,
+        private_key_pem: Optional[str] = None,
+        agent_timeout: Optional[float] = 1.0,
+        debug: bool = False,
+    ):
         """
         Initialize a participant agent.
 
@@ -53,7 +56,9 @@ class ParticipantAgent(Agent):
         :param private_key_pem: the path to a private key in PEM format.
         :param debug: if True, run the agent in debug mode.
         """
-        super().__init__(name, oef_addr, oef_port, private_key_pem, agent_timeout, debug=debug)
+        super().__init__(
+            name, oef_addr, oef_port, private_key_pem, agent_timeout, debug=debug
+        )
         self.mailbox = OEFMailBox(self.crypto.public_key, oef_addr, oef_port)
 
     def act(self) -> None:
@@ -72,7 +77,7 @@ class ParticipantAgent(Agent):
         :return: None
         """
         counter = 0
-        while (not self.mailbox.inbox.empty() and counter < self.max_reactions):
+        while not self.mailbox.inbox.empty() and counter < self.max_reactions:
             counter += 1
             msg = self.mailbox.inbox.get_nowait()  # type: Envelope
             logger.debug("processing message of protocol={}".format(msg.protocol_id))

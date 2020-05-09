@@ -59,14 +59,18 @@ class StatsManager(object):
 
         self._mail_stats = mail_stats
 
-        self._self_initiated_dialogue_stats = {EndState.SUCCESSFUL: 0,
-                                               EndState.DECLINED_CFP: 0,
-                                               EndState.DECLINED_PROPOSE: 0,
-                                               EndState.DECLINED_ACCEPT: 0}  # type: Dict[EndState, int]
-        self._other_initiated_dialogue_stats = {EndState.SUCCESSFUL: 0,
-                                                EndState.DECLINED_CFP: 0,
-                                                EndState.DECLINED_PROPOSE: 0,
-                                                EndState.DECLINED_ACCEPT: 0}  # type: Dict[EndState, int]
+        self._self_initiated_dialogue_stats = {
+            EndState.SUCCESSFUL: 0,
+            EndState.DECLINED_CFP: 0,
+            EndState.DECLINED_PROPOSE: 0,
+            EndState.DECLINED_ACCEPT: 0,
+        }  # type: Dict[EndState, int]
+        self._other_initiated_dialogue_stats = {
+            EndState.SUCCESSFUL: 0,
+            EndState.DECLINED_CFP: 0,
+            EndState.DECLINED_PROPOSE: 0,
+            EndState.DECLINED_ACCEPT: 0,
+        }  # type: Dict[EndState, int]
 
     @property
     def mail_stats(self) -> MailStats:
@@ -83,7 +87,9 @@ class StatsManager(object):
         """Get the stats dictionary on other initiated dialogues."""
         return self._other_initiated_dialogue_stats
 
-    def add_dialogue_endstate(self, end_state: EndState, is_self_initiated: bool) -> None:
+    def add_dialogue_endstate(
+        self, end_state: EndState, is_self_initiated: bool
+    ) -> None:
         """
         Add dialogue endstate stats.
 
@@ -171,8 +177,10 @@ class StatsManager(object):
 
         :return: None
         """
-        assert self._update_stats_task is not None, "Call start before calling stop."
         if self._update_stats_task_is_running:
+            assert (
+                self._update_stats_task is not None
+            ), "Call start before calling stop."
             self._update_stats_task_is_running = False
             self._update_stats_task.join()
 
