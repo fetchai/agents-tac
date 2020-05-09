@@ -18,50 +18,45 @@
 #   limitations under the License.
 #
 # ------------------------------------------------------------------------------
-import fileinput
+
+"""Setup of package."""
+
 import glob
 import os
-import re
-import shutil
-import subprocess
-import sys
 
-from setuptools import setup, find_packages, Command
+from setuptools import setup, find_packages
+from typing import Dict
 
 PACKAGE_NAME = "tac"
 
 here = os.path.abspath(os.path.dirname(__file__))
-about = {}
-with open(os.path.join(here, PACKAGE_NAME, '__version__.py'), 'r') as f:
+about = {}  # type: Dict[str, str]
+with open(
+    os.path.join(here, PACKAGE_NAME, "__version__.py"), "r", encoding="utf-8"
+) as f:
     exec(f.read(), about)
 
-with open('README.md', 'r') as f:
+with open("README.md", "r") as f:
     readme = f.read()
 
 
-extras = {
-    "gui": [
-        "flask",
-        "flask_restful",
-        "wtforms"
-    ]
-}
+extras = {"gui": ["flask", "flask_restful", "wtforms"]}
 
 setup(
-    name=about['__title__'],
-    description=about['__description__'],
-    version=about['__version__'],
-    author=about['__author__'],
-    url=about['__url__'],
+    name=about["__title__"],
+    description=about["__description__"],
+    version=about["__version__"],
+    author=about["__author__"],
+    url=about["__url__"],
     long_description=readme,
     packages=find_packages(include=["tac*"]),
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
-        'Intended Audience :: Developers',
-        'Natural Language :: English',
-        'License :: OSI Approved :: Apache Software License',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
+        "Development Status :: 2 - Pre-Alpha",
+        "Intended Audience :: Developers",
+        "Natural Language :: English",
+        "License :: OSI Approved :: Apache Software License",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
     ],
     install_requires=[
         "aea",
@@ -69,22 +64,27 @@ setup(
         "colorlog",  # TODO 'oef' dependency, to be fixed.
         "numpy",
         "python-dateutil",
-        "visdom"
+        "visdom",
     ],
     tests_require=["tox"],
     extras_require=extras,
     zip_safe=False,
     include_package_data=True,
     data_files=[
-        ("sandbox", ["sandbox/docker-compose.yml", "sandbox/config.json", "sandbox/.env"]
-         + glob.glob("sandbox/*.py")
-         + glob.glob("sandbox/*.sh")),
+        (
+            "sandbox",
+            ["sandbox/docker-compose.yml", "sandbox/config.json", "sandbox/.env"]
+            + glob.glob("sandbox/*.py")
+            + glob.glob("sandbox/*.sh"),
+        ),
         ("templates/v1", glob.glob("templates/v1/*.py")),
         ("scripts/oef", glob.glob("scripts/oef/*.json")),
         ("simulation/v1", glob.glob("simulation/v1/*")),
-        ("oef_search_pluto_scripts", glob.glob("oef_search_pluto_scripts/*.py") + glob.glob("oef_search_pluto_scripts/*.json"))
+        (
+            "oef_search_pluto_scripts",
+            glob.glob("oef_search_pluto_scripts/*.py")
+            + glob.glob("oef_search_pluto_scripts/*.json"),
+        ),
     ],
-    license=about['__license__'],
+    license=about["__license__"],
 )
-
-
