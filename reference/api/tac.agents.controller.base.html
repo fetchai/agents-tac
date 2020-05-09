@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>tac.agents.controller.base package &#8212; TAC 0.1.5 documentation</title>
+    <title>tac.agents.controller.base package &#8212; TAC 0.1.8 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
@@ -12,6 +12,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -544,6 +545,12 @@ If something bad happen, return a “generic” error.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="tac.agents.controller.base.states.Game.get_holdings_dict">
+<code class="sig-name descname">get_holdings_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict[str, List[int]]<a class="headerlink" href="#tac.agents.controller.base.states.Game.get_holdings_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a dictionary of current holdings.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="tac.agents.controller.base.states.Game.get_holdings_matrix">
 <code class="sig-name descname">get_holdings_matrix</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; List[List[int]]<a class="headerlink" href="#tac.agents.controller.base.states.Game.get_holdings_matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the holdings matrix of shape (nb_agents, nb_goods).</p>
@@ -797,7 +804,7 @@ If something bad happen, return a “generic” error.</p>
 <p>TACParameters: this class contains the parameters for the TAC.</p>
 <dl class="class">
 <dt id="tac.agents.controller.base.tac_parameters.TACParameters">
-<em class="property">class </em><code class="sig-prename descclassname">tac.agents.controller.base.tac_parameters.</code><code class="sig-name descname">TACParameters</code><span class="sig-paren">(</span><em class="sig-param">min_nb_agents: int = 5</em>, <em class="sig-param">money_endowment: int = 200</em>, <em class="sig-param">nb_goods: int = 5</em>, <em class="sig-param">tx_fee: float = 1.0</em>, <em class="sig-param">base_good_endowment: int = 2</em>, <em class="sig-param">lower_bound_factor: int = 1</em>, <em class="sig-param">upper_bound_factor: int = 1</em>, <em class="sig-param">start_time: datetime.datetime = datetime.datetime(2019</em>, <em class="sig-param">9</em>, <em class="sig-param">23</em>, <em class="sig-param">15</em>, <em class="sig-param">38</em>, <em class="sig-param">43</em>, <em class="sig-param">50038)</em>, <em class="sig-param">registration_timeout: int = 10</em>, <em class="sig-param">competition_timeout: int = 20</em>, <em class="sig-param">inactivity_timeout: int = 10</em>, <em class="sig-param">whitelist: Optional[Set[str]] = None</em>, <em class="sig-param">data_output_dir: str = 'data'</em>, <em class="sig-param">version_id: str = '9763'</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.agents.controller.base.tac_parameters.TACParameters" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">tac.agents.controller.base.tac_parameters.</code><code class="sig-name descname">TACParameters</code><span class="sig-paren">(</span><em class="sig-param">min_nb_agents: int = 5</em>, <em class="sig-param">money_endowment: int = 200</em>, <em class="sig-param">nb_goods: int = 5</em>, <em class="sig-param">tx_fee: float = 1.0</em>, <em class="sig-param">base_good_endowment: int = 2</em>, <em class="sig-param">lower_bound_factor: int = 1</em>, <em class="sig-param">upper_bound_factor: int = 1</em>, <em class="sig-param">start_time: datetime.datetime = datetime.datetime(2020</em>, <em class="sig-param">5</em>, <em class="sig-param">9</em>, <em class="sig-param">12</em>, <em class="sig-param">48</em>, <em class="sig-param">34</em>, <em class="sig-param">426722)</em>, <em class="sig-param">registration_timeout: int = 10</em>, <em class="sig-param">competition_timeout: int = 20</em>, <em class="sig-param">inactivity_timeout: int = 10</em>, <em class="sig-param">whitelist: Optional[Set[str]] = None</em>, <em class="sig-param">data_output_dir: str = 'data'</em>, <em class="sig-param">version_id: str = '6287'</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.agents.controller.base.tac_parameters.TACParameters" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>This class contains the parameters for the TAC.</p>
 <dl class="method">

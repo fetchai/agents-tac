@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>tac.gui.launcher.api.resources package &#8212; TAC 0.1.5 documentation</title>
+    <title>tac.gui.launcher.api.resources package &#8212; TAC 0.1.8 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
@@ -12,6 +12,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -177,8 +178,40 @@
 </dd></dl>
 
 <dl class="class">
+<dt id="tac.gui.launcher.api.resources.sandboxes.SandboxProcessState">
+<em class="property">class </em><code class="sig-prename descclassname">tac.gui.launcher.api.resources.sandboxes.</code><code class="sig-name descname">SandboxProcessState</code><a class="headerlink" href="#tac.gui.launcher.api.resources.sandboxes.SandboxProcessState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>The state of execution of a sandbox.</p>
+<dl class="attribute">
+<dt id="tac.gui.launcher.api.resources.sandboxes.SandboxProcessState.FAILED">
+<code class="sig-name descname">FAILED</code><em class="property"> = 'Failed'</em><a class="headerlink" href="#tac.gui.launcher.api.resources.sandboxes.SandboxProcessState.FAILED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.launcher.api.resources.sandboxes.SandboxProcessState.FINISHED">
+<code class="sig-name descname">FINISHED</code><em class="property"> = 'Finished'</em><a class="headerlink" href="#tac.gui.launcher.api.resources.sandboxes.SandboxProcessState.FINISHED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.launcher.api.resources.sandboxes.SandboxProcessState.NOT_STARTED">
+<code class="sig-name descname">NOT_STARTED</code><em class="property"> = 'Not started yet'</em><a class="headerlink" href="#tac.gui.launcher.api.resources.sandboxes.SandboxProcessState.NOT_STARTED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.launcher.api.resources.sandboxes.SandboxProcessState.RUNNING">
+<code class="sig-name descname">RUNNING</code><em class="property"> = 'Running'</em><a class="headerlink" href="#tac.gui.launcher.api.resources.sandboxes.SandboxProcessState.RUNNING" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="tac.gui.launcher.api.resources.sandboxes.SandboxProcessState.STOPPING">
+<code class="sig-name descname">STOPPING</code><em class="property"> = 'Stopping'</em><a class="headerlink" href="#tac.gui.launcher.api.resources.sandboxes.SandboxProcessState.STOPPING" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="tac.gui.launcher.api.resources.sandboxes.SandboxRunner">
-<em class="property">class </em><code class="sig-prename descclassname">tac.gui.launcher.api.resources.sandboxes.</code><code class="sig-name descname">SandboxRunner</code><span class="sig-paren">(</span><em class="sig-param">id: int, params: Dict[str, Any]</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.gui.launcher.api.resources.sandboxes.SandboxRunner" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">tac.gui.launcher.api.resources.sandboxes.</code><code class="sig-name descname">SandboxRunner</code><span class="sig-paren">(</span><em class="sig-param">id: int, params: Dict[str, Any], game_id: str</em><span class="sig-paren">)</span><a class="headerlink" href="#tac.gui.launcher.api.resources.sandboxes.SandboxRunner" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Wrapper class to track the execution of a sandbox.</p>
 <dl class="method">
@@ -190,13 +223,13 @@
 <dl class="method">
 <dt id="tac.gui.launcher.api.resources.sandboxes.SandboxRunner.stop">
 <code class="sig-name descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#tac.gui.launcher.api.resources.sandboxes.SandboxRunner.stop" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stop the execution of the sandbox.</p>
+<dd><p>Stop the sandbox.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="tac.gui.launcher.api.resources.sandboxes.SandboxRunner.to_dict">
 <code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict[str, Any]<a class="headerlink" href="#tac.gui.launcher.api.resources.sandboxes.SandboxRunner.to_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Serialize the object into a dictionary.</p>
+<dd><p>Convert class data into dictionary so we can jasonise it and send it to web frontend.</p>
 </dd></dl>
 
 <dl class="method">
@@ -204,33 +237,6 @@
 <code class="sig-name descname">wait</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tac.gui.launcher.api.resources.sandboxes.SandboxRunner.wait" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wait for the completion of the sandbox.</p>
 </dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="tac.gui.launcher.api.resources.sandboxes.SandboxState">
-<em class="property">class </em><code class="sig-prename descclassname">tac.gui.launcher.api.resources.sandboxes.</code><code class="sig-name descname">SandboxState</code><a class="headerlink" href="#tac.gui.launcher.api.resources.sandboxes.SandboxState" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
-<p>The state of execution of a sandbox.</p>
-<dl class="attribute">
-<dt id="tac.gui.launcher.api.resources.sandboxes.SandboxState.FAILED">
-<code class="sig-name descname">FAILED</code><em class="property"> = 'Failed'</em><a class="headerlink" href="#tac.gui.launcher.api.resources.sandboxes.SandboxState.FAILED" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="tac.gui.launcher.api.resources.sandboxes.SandboxState.FINISHED">
-<code class="sig-name descname">FINISHED</code><em class="property"> = 'Finished'</em><a class="headerlink" href="#tac.gui.launcher.api.resources.sandboxes.SandboxState.FINISHED" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="tac.gui.launcher.api.resources.sandboxes.SandboxState.NOT_STARTED">
-<code class="sig-name descname">NOT_STARTED</code><em class="property"> = 'Not started yet'</em><a class="headerlink" href="#tac.gui.launcher.api.resources.sandboxes.SandboxState.NOT_STARTED" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="tac.gui.launcher.api.resources.sandboxes.SandboxState.RUNNING">
-<code class="sig-name descname">RUNNING</code><em class="property"> = 'Running'</em><a class="headerlink" href="#tac.gui.launcher.api.resources.sandboxes.SandboxState.RUNNING" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 

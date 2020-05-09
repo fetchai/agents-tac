@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Baseline Agent v1 &#8212; TAC 0.1.5 documentation</title>
+    <title>Baseline Agent v1 &#8212; TAC 0.1.8 documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -12,9 +12,10 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
-    <script type="text/javascript" src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/mermaid@8.4.8/dist/mermaid.min.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Developing Your Own Agent" href="develop_agent.html" />
@@ -124,14 +125,7 @@ Upon exit, the framework will call the user’s implementation of the
 <h2>Negotiation<a class="headerlink" href="#negotiation" title="Permalink to this headline">¶</a></h2>
 <p>The <a class="reference internal" href="../reference/api/tac.agents.participant.v1.html#tac.agents.participant.v1.agent.ParticipantAgent" title="tac.agents.participant.v1.agent.ParticipantAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParticipantAgent</span></code></a> implements the FIPA negotiation protocol in <a class="reference internal" href="../reference/api/tac.agents.participant.v1.base.html#tac.agents.participant.v1.base.negotiation_behaviours.FIPABehaviour" title="tac.agents.participant.v1.base.negotiation_behaviours.FIPABehaviour"><code class="xref py py-class docutils literal notranslate"><span class="pre">FIPABehaviour</span></code></a>. A FIPA negotiation starts with a call for proposal (<a class="reference external" href="https://fetchai.github.io/oef-sdk-python/oef.html#oef.messages.CFP" title="(in oef v0.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">CFP</span></code></a>) which contains a <a class="reference external" href="https://fetchai.github.io/oef-sdk-python/oef.html#oef.query.Query" title="(in oef v0.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Query</span></code></a> referencing the services which are demanded or supplied by the sending agent. The receiving agent then responds, if it implements the FIPA negotiation protocol, with a suitable proposal (<a class="reference external" href="https://fetchai.github.io/oef-sdk-python/oef.html#oef.messages.Propose" title="(in oef v0.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Propose</span></code></a>) which contains a list of <a class="reference external" href="https://fetchai.github.io/oef-sdk-python/oef.html#oef.schema.Description" title="(in oef v0.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Description</span></code></a> objects (think individual proposals). The first agent responds to the proposal with either a <a class="reference external" href="https://fetchai.github.io/oef-sdk-python/oef.html#oef.messages.Decline" title="(in oef v0.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Decline</span></code></a> or an <a class="reference external" href="https://fetchai.github.io/oef-sdk-python/oef.html#oef.messages.Accept" title="(in oef v0.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Accept</span></code></a>. Assuming the agent accepts, it will also send the <a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage" title="tac.platform.protocols.tac.message.TACMessage"><code class="xref py py-class docutils literal notranslate"><span class="pre">TACMessage</span></code></a> of type <a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage.Type.TRANSACTION" title="tac.platform.protocols.tac.message.TACMessage.Type.TRANSACTION"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRANSACTION</span></code></a> to the <a class="reference internal" href="../reference/api/tac.agents.controller.html#tac.agents.controller.agent.ControllerAgent" title="tac.agents.controller.agent.ControllerAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ControllerAgent</span></code></a>. Finally, the second agent can close the negotiation by responding with a matching <a class="reference external" href="https://fetchai.github.io/oef-sdk-python/oef.html#oef.messages.Accept" title="(in oef v0.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Accept</span></code></a> and a submission of the <a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage" title="tac.platform.protocols.tac.message.TACMessage"><code class="xref py py-class docutils literal notranslate"><span class="pre">TACMessage</span></code></a> of type <a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage.Type.TRANSACTION" title="tac.platform.protocols.tac.message.TACMessage.Type.TRANSACTION"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRANSACTION</span></code></a> to the <a class="reference internal" href="../reference/api/tac.agents.controller.html#tac.agents.controller.agent.ControllerAgent" title="tac.agents.controller.agent.ControllerAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ControllerAgent</span></code></a>. The controller only settles a transaction if it receives matching transactions from each one of the two trading parties referenced in the transaction.</p>
 <div class="figure align-center" id="id1">
-
-            <style>
-            /* mermaid issue 527 workaround */
-            .section {
-                opacity: 1.0 !important;
-            }
-            </style>
-            <script>mermaid.initialize({startOnLoad:true});</script><div class="mermaid">
+<script>mermaid.initialize({startOnLoad:true});</script><div class="mermaid">
             sequenceDiagram
     participant Agent_0
 	participant Agent_1
@@ -151,14 +145,7 @@ Upon exit, the framework will call the user’s implementation of the
 </div>
 <p>Trade can break down at various stages in the negotiation due to the <a class="reference internal" href="../reference/api/tac.agents.participant.v1.base.html#tac.agents.participant.v1.base.strategy.Strategy" title="tac.agents.participant.v1.base.strategy.Strategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Strategy</span></code></a> employed by the agents:</p>
 <div class="figure align-center" id="id2">
-
-            <style>
-            /* mermaid issue 527 workaround */
-            .section {
-                opacity: 1.0 !important;
-            }
-            </style>
-            <div class="mermaid">
+<div class="mermaid">
             sequenceDiagram
 	participant Agent_0
 	participant Agent_1
@@ -175,14 +162,7 @@ Upon exit, the framework will call the user’s implementation of the
         </div><p class="caption"><span class="caption-text">An unsuccessful FIPA negotiation between two agents breaking down after initial accept.</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
 </div>
 <div class="figure align-center" id="id3">
-
-            <style>
-            /* mermaid issue 527 workaround */
-            .section {
-                opacity: 1.0 !important;
-            }
-            </style>
-            <div class="mermaid">
+<div class="mermaid">
             sequenceDiagram
 	participant Agent_0
 	participant Agent_1
@@ -198,14 +178,7 @@ Upon exit, the framework will call the user’s implementation of the
         </div><p class="caption"><span class="caption-text">An unsuccessful FIPA negotiation between two agents breaking down after proposal.</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
 </div>
 <div class="figure align-center" id="id4">
-
-            <style>
-            /* mermaid issue 527 workaround */
-            .section {
-                opacity: 1.0 !important;
-            }
-            </style>
-            <div class="mermaid">
+<div class="mermaid">
             sequenceDiagram
 	participant Agent_0
 	participant Agent_1

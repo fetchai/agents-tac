@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Index &#8212; TAC 0.1.5 documentation</title>
+    <title>Index &#8212; TAC 0.1.8 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -13,9 +13,10 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/language_data.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
-    <script type="text/javascript" src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/mermaid@8.4.8/dist/mermaid.min.js"></script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
    
@@ -196,6 +197,8 @@
 </li>
       <li><a href="reference/api/tac.gui.dashboards.html#tac.gui.dashboards.leaderboard.compute_aggregate_scores">compute_aggregate_scores() (in module tac.gui.dashboards.leaderboard)</a>
 </li>
+      <li><a href="reference/api/tac.gui.dashboards.html#tac.gui.dashboards.leaderboard.compute_statistics">compute_statistics() (in module tac.gui.dashboards.leaderboard)</a>
+</li>
       <li><a href="reference/api/tac.agents.controller.base.html#tac.agents.controller.base.states.Game.configuration">configuration() (tac.agents.controller.base.states.Game property)</a>
 </li>
       <li><a href="reference/api/tac.agents.participant.v1.base.html#tac.agents.participant.v1.base.interfaces.ControllerActionInterface">ControllerActionInterface (class in tac.agents.participant.v1.base.interfaces)</a>
@@ -343,13 +346,13 @@
       <li><a href="reference/api/tac.gui.launcher.api.resources.html#tac.gui.launcher.api.resources.agents.AgentState.FAILED">FAILED (tac.gui.launcher.api.resources.agents.AgentState attribute)</a>
 
       <ul>
-        <li><a href="reference/api/tac.gui.launcher.api.resources.html#tac.gui.launcher.api.resources.sandboxes.SandboxState.FAILED">(tac.gui.launcher.api.resources.sandboxes.SandboxState attribute)</a>
+        <li><a href="reference/api/tac.gui.launcher.api.resources.html#tac.gui.launcher.api.resources.sandboxes.SandboxProcessState.FAILED">(tac.gui.launcher.api.resources.sandboxes.SandboxProcessState attribute)</a>
 </li>
       </ul></li>
       <li><a href="reference/api/tac.gui.launcher.api.resources.html#tac.gui.launcher.api.resources.agents.AgentState.FINISHED">FINISHED (tac.gui.launcher.api.resources.agents.AgentState attribute)</a>
 
       <ul>
-        <li><a href="reference/api/tac.gui.launcher.api.resources.html#tac.gui.launcher.api.resources.sandboxes.SandboxState.FINISHED">(tac.gui.launcher.api.resources.sandboxes.SandboxState attribute)</a>
+        <li><a href="reference/api/tac.gui.launcher.api.resources.html#tac.gui.launcher.api.resources.sandboxes.SandboxProcessState.FINISHED">(tac.gui.launcher.api.resources.sandboxes.SandboxProcessState attribute)</a>
 </li>
       </ul></li>
       <li><a href="reference/api/tac.agents.participant.v1.base.html#tac.agents.participant.v1.base.negotiation_behaviours.FIPABehaviour">FIPABehaviour (class in tac.agents.participant.v1.base.negotiation_behaviours)</a>
@@ -452,6 +455,8 @@
 </li>
       <li><a href="reference/api/tac.agents.participant.v1.base.html#tac.agents.participant.v1.base.dialogues.Dialogues.get_dialogue">get_dialogue() (tac.agents.participant.v1.base.dialogues.Dialogues method)</a>
 </li>
+      <li><a href="reference/api/tac.platform.game.html#tac.platform.game.stats.GameStats.get_eq_scores">get_eq_scores() (tac.platform.game.stats.GameStats method)</a>
+</li>
       <li><a href="reference/api/tac.agents.controller.base.html#tac.agents.controller.base.states.Game.get_equilibrium_summary">get_equilibrium_summary() (tac.agents.controller.base.states.Game method)</a>
 </li>
       <li><a href="reference/api/tac.agents.participant.v1.base.html#tac.agents.participant.v1.base.game_instance.GameInstance.get_goods_pbks">get_goods_pbks() (tac.agents.participant.v1.base.game_instance.GameInstance method)</a>
@@ -460,12 +465,18 @@
 </li>
       <li><a href="reference/api/tac.agents.participant.v1.base.html#tac.agents.participant.v1.base.helpers.get_goods_quantities_description">get_goods_quantities_description() (in module tac.agents.participant.v1.base.helpers)</a>
 </li>
+      <li><a href="reference/api/tac.agents.controller.base.html#tac.agents.controller.base.states.Game.get_holdings_dict">get_holdings_dict() (tac.agents.controller.base.states.Game method)</a>
+</li>
       <li><a href="reference/api/tac.agents.controller.base.html#tac.agents.controller.base.states.Game.get_holdings_matrix">get_holdings_matrix() (tac.agents.controller.base.states.Game method)</a>
 </li>
       <li><a href="reference/api/tac.agents.controller.base.html#tac.agents.controller.base.states.Game.get_holdings_summary">get_holdings_summary() (tac.agents.controller.base.states.Game method)</a>
 </li>
       <li><a href="reference/api/tac.agents.controller.base.html#tac.agents.controller.base.states.Game.get_initial_scores">get_initial_scores() (tac.agents.controller.base.states.Game method)</a>
+
+      <ul>
+        <li><a href="reference/api/tac.platform.game.html#tac.platform.game.stats.GameStats.get_initial_scores">(tac.platform.game.stats.GameStats method)</a>
 </li>
+      </ul></li>
       <li><a href="reference/api/tac.agents.participant.v1.base.html#tac.agents.participant.v1.base.game_instance.Search.get_next_id">get_next_id() (tac.agents.participant.v1.base.game_instance.Search method)</a>
 </li>
       <li><a href="reference/api/tac.agents.participant.v1.base.html#tac.agents.participant.v1.base.price_model.GoodPriceModel.get_price_expectation">get_price_expectation() (tac.agents.participant.v1.base.price_model.GoodPriceModel method)</a>
@@ -723,7 +734,7 @@
       <li><a href="reference/api/tac.gui.launcher.api.resources.html#tac.gui.launcher.api.resources.agents.AgentState.NOT_STARTED">NOT_STARTED (tac.gui.launcher.api.resources.agents.AgentState attribute)</a>
 
       <ul>
-        <li><a href="reference/api/tac.gui.launcher.api.resources.html#tac.gui.launcher.api.resources.sandboxes.SandboxState.NOT_STARTED">(tac.gui.launcher.api.resources.sandboxes.SandboxState attribute)</a>
+        <li><a href="reference/api/tac.gui.launcher.api.resources.html#tac.gui.launcher.api.resources.sandboxes.SandboxProcessState.NOT_STARTED">(tac.gui.launcher.api.resources.sandboxes.SandboxProcessState attribute)</a>
 </li>
       </ul></li>
       <li><a href="reference/api/tac.agents.controller.base.html#tac.agents.controller.base.handlers.GameHandler.notify_competition_cancelled">notify_competition_cancelled() (tac.agents.controller.base.handlers.GameHandler method)</a>
@@ -985,7 +996,7 @@
       <li><a href="reference/api/tac.gui.launcher.api.resources.html#tac.gui.launcher.api.resources.agents.AgentState.RUNNING">RUNNING (tac.gui.launcher.api.resources.agents.AgentState attribute)</a>
 
       <ul>
-        <li><a href="reference/api/tac.gui.launcher.api.resources.html#tac.gui.launcher.api.resources.sandboxes.SandboxState.RUNNING">(tac.gui.launcher.api.resources.sandboxes.SandboxState attribute)</a>
+        <li><a href="reference/api/tac.gui.launcher.api.resources.html#tac.gui.launcher.api.resources.sandboxes.SandboxProcessState.RUNNING">(tac.gui.launcher.api.resources.sandboxes.SandboxProcessState attribute)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -1002,9 +1013,9 @@
 </li>
       <li><a href="reference/api/tac.gui.launcher.api.resources.html#tac.gui.launcher.api.resources.sandboxes.SandboxList">SandboxList (class in tac.gui.launcher.api.resources.sandboxes)</a>
 </li>
-      <li><a href="reference/api/tac.gui.launcher.api.resources.html#tac.gui.launcher.api.resources.sandboxes.SandboxRunner">SandboxRunner (class in tac.gui.launcher.api.resources.sandboxes)</a>
+      <li><a href="reference/api/tac.gui.launcher.api.resources.html#tac.gui.launcher.api.resources.sandboxes.SandboxProcessState">SandboxProcessState (class in tac.gui.launcher.api.resources.sandboxes)</a>
 </li>
-      <li><a href="reference/api/tac.gui.launcher.api.resources.html#tac.gui.launcher.api.resources.sandboxes.SandboxState">SandboxState (class in tac.gui.launcher.api.resources.sandboxes)</a>
+      <li><a href="reference/api/tac.gui.launcher.api.resources.html#tac.gui.launcher.api.resources.sandboxes.SandboxRunner">SandboxRunner (class in tac.gui.launcher.api.resources.sandboxes)</a>
 </li>
       <li><a href="reference/api/tac.platform.game.html#tac.platform.game.stats.GameStats.score_history">score_history() (tac.platform.game.stats.GameStats method)</a>
 </li>
@@ -1132,6 +1143,8 @@
         <li><a href="reference/api/tac.gui.html#tac.gui.monitor.VisdomMonitor.stop">(tac.gui.monitor.VisdomMonitor method)</a>
 </li>
       </ul></li>
+      <li><a href="reference/api/tac.gui.launcher.api.resources.html#tac.gui.launcher.api.resources.sandboxes.SandboxProcessState.STOPPING">STOPPING (tac.gui.launcher.api.resources.sandboxes.SandboxProcessState attribute)</a>
+</li>
       <li><a href="reference/api/tac.agents.participant.v1.base.html#tac.agents.participant.v1.base.strategy.Strategy">Strategy (class in tac.agents.participant.v1.base.strategy)</a>
 </li>
       <li><a href="reference/api/tac.agents.participant.v1.base.html#tac.agents.participant.v1.base.game_instance.GameInstance.strategy">strategy() (tac.agents.participant.v1.base.game_instance.GameInstance property)</a>
@@ -1258,10 +1271,10 @@
 </li>
       <li><a href="reference/api/tac.gui.launcher.api.html#module-tac.gui.launcher.api">tac.gui.launcher.api (module)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/tac.gui.launcher.api.resources.html#module-tac.gui.launcher.api.resources">tac.gui.launcher.api.resources (module)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/tac.gui.launcher.api.resources.html#module-tac.gui.launcher.api.resources.agents">tac.gui.launcher.api.resources.agents (module)</a>
 </li>
       <li><a href="reference/api/tac.gui.launcher.api.resources.html#module-tac.gui.launcher.api.resources.sandboxes">tac.gui.launcher.api.resources.sandboxes (module)</a>
@@ -1360,6 +1373,8 @@
 </li>
       <li><a href="reference/api/tac.gui.dashboards.html#tac.gui.dashboards.agent.TransactionTable">TransactionTable (class in tac.gui.dashboards.agent)</a>
 </li>
+      <li><a href="reference/api/tac.platform.game.html#tac.platform.game.stats.GameStats.tx_counts">tx_counts() (tac.platform.game.stats.GameStats method)</a>
+</li>
       <li><a href="reference/api/tac.gui.launcher.forms.html#tac.gui.launcher.forms.sandbox.SandboxForm.tx_fee">tx_fee (tac.gui.launcher.forms.sandbox.SandboxForm attribute)</a>
 </li>
       <li><a href="reference/api/tac.agents.controller.base.html#tac.agents.controller.base.tac_parameters.TACParameters.tx_fee">tx_fee() (tac.agents.controller.base.tac_parameters.TACParameters property)</a>
@@ -1368,6 +1383,8 @@
         <li><a href="reference/api/tac.platform.game.html#tac.platform.game.base.GameConfiguration.tx_fee">(tac.platform.game.base.GameConfiguration property)</a>
 </li>
       </ul></li>
+      <li><a href="reference/api/tac.platform.game.html#tac.platform.game.stats.GameStats.tx_prices">tx_prices() (tac.platform.game.stats.GameStats method)</a>
+</li>
   </ul></td>
 </tr></table>
 

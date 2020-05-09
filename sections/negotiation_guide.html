@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Step-by-step agent negotiation &#8212; TAC 0.1.5 documentation</title>
+    <title>Step-by-step agent negotiation &#8212; TAC 0.1.8 documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -12,9 +12,10 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
-    <script type="text/javascript" src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/mermaid@8.4.8/dist/mermaid.min.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Step-by-step agent state management" href="agent_state_management_guide.html" />
@@ -40,16 +41,16 @@
 /* CSS for nbsphinx extension */
 
 /* remove conflicting styling from Sphinx themes */
-div.nbinput,
-div.nbinput div.prompt,
-div.nbinput div.input_area,
-div.nbinput div[class*=highlight],
-div.nbinput div[class*=highlight] pre,
-div.nboutput,
-div.nbinput div.prompt,
-div.nbinput div.output_area,
-div.nboutput div[class*=highlight],
-div.nboutput div[class*=highlight] pre {
+div.nbinput.container,
+div.nbinput.container div.prompt,
+div.nbinput.container div.input_area,
+div.nbinput.container div[class*=highlight],
+div.nbinput.container div[class*=highlight] pre,
+div.nboutput.container,
+div.nboutput.container div.prompt,
+div.nboutput.container div.output_area,
+div.nboutput.container div[class*=highlight],
+div.nboutput.container div[class*=highlight] pre {
     background: none;
     border: none;
     padding: 0 0;
@@ -58,13 +59,13 @@ div.nboutput div[class*=highlight] pre {
 }
 
 /* avoid gaps between output lines */
-div.nboutput div[class*=highlight] pre {
+div.nboutput.container div[class*=highlight] pre {
     line-height: normal;
 }
 
 /* input/output containers */
-div.nbinput,
-div.nboutput {
+div.nbinput.container,
+div.nboutput.container {
     display: -webkit-flex;
     display: flex;
     align-items: flex-start;
@@ -72,92 +73,104 @@ div.nboutput {
     width: 100%;
 }
 @media (max-width: 540px) {
-    div.nbinput,
-    div.nboutput {
+    div.nbinput.container,
+    div.nboutput.container {
         flex-direction: column;
     }
 }
 
 /* input container */
-div.nbinput {
+div.nbinput.container {
     padding-top: 5px;
 }
 
 /* last container */
-div.nblast {
+div.nblast.container {
     padding-bottom: 5px;
 }
 
 /* input prompt */
-div.nbinput div.prompt pre {
+div.nbinput.container div.prompt pre {
     color: #307FC1;
 }
 
 /* output prompt */
-div.nboutput div.prompt pre {
+div.nboutput.container div.prompt pre {
     color: #BF5B3D;
 }
 
 /* all prompts */
-div.nbinput div.prompt,
-div.nboutput div.prompt {
-    min-width: 5ex;
-    padding-top: 0.4em;
-    padding-right: 0.4em;
-    text-align: right;
-    flex: 0;
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
 }
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
 @media (max-width: 540px) {
-    div.nbinput div.prompt,
-    div.nboutput div.prompt {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
         text-align: left;
         padding: 0.4em;
     }
-    div.nboutput div.prompt.empty {
+    div.nboutput.container div.prompt.empty {
         padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
     }
 }
 
 /* disable scrollbars on prompts */
-div.nbinput div.prompt pre,
-div.nboutput div.prompt pre {
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
     overflow: hidden;
 }
 
 /* input/output area */
-div.nbinput div.input_area,
-div.nboutput div.output_area {
-    padding: 0.4em;
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
     -webkit-flex: 1;
     flex: 1;
     overflow: auto;
 }
 @media (max-width: 540px) {
-    div.nbinput div.input_area,
-    div.nboutput div.output_area {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
         width: 100%;
     }
 }
 
 /* input area */
-div.nbinput div.input_area {
+div.nbinput.container div.input_area {
     border: 1px solid #e0e0e0;
     border-radius: 2px;
     background: #f5f5f5;
 }
 
 /* override MathJax center alignment in output cells */
-div.nboutput div[class*=MathJax] {
+div.nboutput.container div[class*=MathJax] {
     text-align: left !important;
 }
 
 /* override sphinx.ext.imgmath center alignment in output cells */
-div.nboutput div.math p {
+div.nboutput.container div.math p {
     text-align: left;
 }
 
 /* standard error */
-div.nboutput div.output_area.stderr {
+div.nboutput.container div.output_area.stderr {
     background: #fdd;
 }
 
@@ -201,6 +214,27 @@ div.nboutput div.output_area.stderr {
 .ansi-bold { font-weight: bold; }
 .ansi-underline { text-decoration: underline; }
 
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt a.copybtn {
+    display: none;
+}
+
 /* Some additional styling taken form the Jupyter notebook CSS */
 div.rendered_html table {
   border: none;
@@ -241,14 +275,7 @@ div.rendered_html tbody tr:hover {
 <div class="section" id="The-big-picture">
 <h2>The big picture<a class="headerlink" href="#The-big-picture" title="Permalink to this headline">¶</a></h2>
 <p>The following diagram gives you a high-level understanding on how a generic negotiation works.</p>
-
-            <style>
-            /* mermaid issue 527 workaround */
-            .section {
-                opacity: 1.0 !important;
-            }
-            </style>
-            <script>mermaid.initialize({startOnLoad:true});</script><div class="mermaid">
+<script>mermaid.initialize({startOnLoad:true});</script><div class="mermaid">
             sequenceDiagram
 
     participant Agent_1
@@ -322,8 +349,8 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">tac.agents.participant.v1.examples.baseline</span> <span class="k">import</span> <span class="n">BaselineAgent</span>
-<span class="kn">from</span> <span class="nn">tac.agents.participant.v1.examples.strategy</span> <span class="k">import</span> <span class="n">BaselineStrategy</span>
+<span></span><span class="kn">from</span> <span class="nn">tac.agents.participant.v1.examples.baseline</span> <span class="kn">import</span> <span class="n">BaselineAgent</span>
+<span class="kn">from</span> <span class="nn">tac.agents.participant.v1.examples.strategy</span> <span class="kn">import</span> <span class="n">BaselineStrategy</span>
 
 <span class="n">strategy</span> <span class="o">=</span> <span class="n">BaselineStrategy</span><span class="p">()</span>
 <span class="n">agent</span> <span class="o">=</span> <span class="n">BaselineAgent</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;tac_agent&quot;</span><span class="p">,</span> <span class="n">oef_addr</span><span class="o">=</span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="n">oef_port</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="n">strategy</span><span class="p">)</span>
@@ -345,7 +372,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">oef.schema</span> <span class="k">import</span> <span class="n">Description</span>
+<span></span><span class="kn">from</span> <span class="nn">oef.schema</span> <span class="kn">import</span> <span class="n">Description</span>
 
 
 <span class="n">description</span> <span class="o">=</span> <span class="n">Description</span><span class="p">({</span>
@@ -381,7 +408,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">tac.agents.participant.v1.examples.strategy</span> <span class="k">import</span> <span class="n">BaselineStrategy</span>
+<span></span><span class="kn">from</span> <span class="nn">tac.agents.participant.v1.examples.strategy</span> <span class="kn">import</span> <span class="n">BaselineStrategy</span>
 <span class="n">baseline_strategy</span> <span class="o">=</span> <span class="n">BaselineStrategy</span><span class="p">()</span>
 
 <span class="n">current_holdings</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
@@ -426,7 +453,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 
-<span></span><span class="kn">from</span> <span class="nn">tac.agents.participant.v1.examples.strategy</span> <span class="k">import</span> <span class="n">BaselineStrategy</span>
+<span></span><span class="kn">from</span> <span class="nn">tac.agents.participant.v1.examples.strategy</span> <span class="kn">import</span> <span class="n">BaselineStrategy</span>
 <span class="n">baseline_strategy</span> <span class="o">=</span> <span class="n">BaselineStrategy</span><span class="p">()</span>
 
 <span class="n">good_pbks</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;tac_good_0_pbk&quot;</span><span class="p">,</span> <span class="s2">&quot;tac_good_1_pbk&quot;</span><span class="p">,</span> <span class="s2">&quot;tac_good_2_pbk&quot;</span><span class="p">,</span> <span class="s2">&quot;tac_good_3_pbk&quot;</span><span class="p">]</span>
@@ -473,7 +500,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">tac.agents.participant.v1.examples.strategy</span> <span class="k">import</span> <span class="n">BaselineStrategy</span>
+<span></span><span class="kn">from</span> <span class="nn">tac.agents.participant.v1.examples.strategy</span> <span class="kn">import</span> <span class="n">BaselineStrategy</span>
 <span class="n">baseline_strategy</span> <span class="o">=</span> <span class="n">BaselineStrategy</span><span class="p">()</span>
 <span class="n">proposals</span> <span class="o">=</span> <span class="n">baseline_strategy</span><span class="o">.</span><span class="n">get_proposals</span><span class="p">(</span>
     <span class="n">good_pbks</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;tac_good_0_pbk&quot;</span><span class="p">,</span> <span class="s2">&quot;tac_good_1_pbk&quot;</span><span class="p">],</span>

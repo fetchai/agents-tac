@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Registration Phase &#8212; TAC 0.1.5 documentation</title>
+    <title>Registration Phase &#8212; TAC 0.1.8 documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -12,9 +12,10 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
-    <script type="text/javascript" src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/mermaid@8.4.8/dist/mermaid.min.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Trading Phase" href="trading_phase.html" />
@@ -76,14 +77,7 @@ which is a string. The TAC controller agent will register with <code class="docu
 participant, it will start the competition. Otherwise, it will send back a <a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage" title="tac.platform.protocols.tac.message.TACMessage"><code class="xref py py-class docutils literal notranslate"><span class="pre">TACMessage</span></code></a> of type <a class="reference internal" href="../reference/api/tac.platform.protocols.tac.html#tac.platform.protocols.tac.message.TACMessage.Type.CANCELLED" title="tac.platform.protocols.tac.message.TACMessage.Type.CANCELLED"><code class="xref py py-class docutils literal notranslate"><span class="pre">CANCELLED</span></code></a> to every
 registered participant</p>
 <div class="figure align-center" id="id2">
-
-            <style>
-            /* mermaid issue 527 workaround */
-            .section {
-                opacity: 1.0 !important;
-            }
-            </style>
-            <script>mermaid.initialize({startOnLoad:true});</script><div class="mermaid">
+<script>mermaid.initialize({startOnLoad:true});</script><div class="mermaid">
             sequenceDiagram
     participant OEF
     participant Controller
@@ -110,14 +104,7 @@ registered participant</p>
 <div class="section" id="search-for-controller-agent">
 <h3>Search for controller agent<a class="headerlink" href="#search-for-controller-agent" title="Permalink to this headline">¶</a></h3>
 <div class="figure align-center" id="id3">
-
-            <style>
-            /* mermaid issue 527 workaround */
-            .section {
-                opacity: 1.0 !important;
-            }
-            </style>
-            <div class="mermaid">
+<div class="mermaid">
             sequenceDiagram
 	participant Agent
     participant OEF
@@ -137,14 +124,7 @@ registered participant</p>
 the registration, the agent can unregister from the competition by sending the <cite>Unregister</cite>
 message.</p>
 <div class="figure align-center" id="id4">
-
-            <style>
-            /* mermaid issue 527 workaround */
-            .section {
-                opacity: 1.0 !important;
-            }
-            </style>
-            <div class="mermaid">
+<div class="mermaid">
             sequenceDiagram
 	participant Agent
     participant OEF
@@ -177,14 +157,7 @@ and the <em>trading phase</em> begins.</p>
 <h2>Summary<a class="headerlink" href="#summary" title="Permalink to this headline">¶</a></h2>
 <p>In the following, a transition diagram that sumarize the <em>registration phase</em>:</p>
 <div class="figure align-center" id="id5">
-
-            <style>
-            /* mermaid issue 527 workaround */
-            .section {
-                opacity: 1.0 !important;
-            }
-            </style>
-            <div class="mermaid">
+<div class="mermaid">
             sequenceDiagram
 	participant Agent_1
 	participant Agent_2
