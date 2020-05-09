@@ -54,8 +54,6 @@ services:
       main_net:
         ipv4_address: 172.28.1.3
     entrypoint:
-      - "pipenv"
-      - "run"
       - "sandbox/wait-for-oef.sh"
       - "172.28.1.1"
       - "10000"
