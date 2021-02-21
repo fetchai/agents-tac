@@ -70,7 +70,7 @@ setup(
         "Topic :: System",
     ],
     install_requires=[
-        "aea",
+        "aea==0.1.4",
         "oef",
         "colorlog",  # TODO 'oef' dependency, to be fixed.
         "numpy",
