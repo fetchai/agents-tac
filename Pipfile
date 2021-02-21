@@ -33,7 +33,7 @@ flask-restful = "*"
 nbsphinx = "*"
 numpy = "*"
 matplotlib = "*"
-oef = {index = "test-pypi",version = "==0.6.10"}
+oef = {index = "test-pypi",version = "==0.8.1"}
 pandas = "*"
 python-dateutil = "*"
 scipy = "*"
