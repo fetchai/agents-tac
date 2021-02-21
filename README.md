@@ -140,13 +140,18 @@ The following dependency is only relevant if you intend to contribute to the rep
 
 The following steps are only relevant if you intend to contribute to the repository. They are not required for agent development.
 
-- Clear cache
+- Clear cache and remove old environment
 
       pipenv --clear
+      pipenv --rm
 
 - Install development dependencies:
 
       pipenv install --dev
+
+- (Optional) to install exact dependencies use:
+
+      pip install -r requirements_all.txt --extra-index-url https://test.pypi.org/simple/
 
 - Install package in (development mode):
 
