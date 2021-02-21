@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Developing Your Own Agent &#8212; TAC 0.1.8 documentation</title>
+    <title>Developing Your Own Agent &#8212; TAC 0.1.9 documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -50,7 +50,7 @@
 </div>
 <div class="section" id="basic-tuning-the-agent-s-parameters">
 <h2>Basic: Tuning the Agent’s Parameters<a class="headerlink" href="#basic-tuning-the-agent-s-parameters" title="Permalink to this headline">¶</a></h2>
-<p>We have developed a <a class="reference internal" href="../reference/api/tac.agents.participant.v1.examples.html#tac.agents.participant.v1.examples.baseline.BaselineAgent" title="tac.agents.participant.v1.examples.baseline.BaselineAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaselineAgent</span></code></a> and a <a class="reference internal" href="../reference/api/tac.agents.participant.v1.examples.html#tac.agents.participant.v1.examples.strategy.BaselineStrategy" title="tac.agents.participant.v1.examples.strategy.BaselineStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaselineStrategy</span></code></a> for you. You can run this agent via the <a class="reference external" href="https://github.com/fetchai/agents-tac/blob/master/templates/participant/basic.py">basic template</a>.</p>
+<p>We have developed a <a class="reference internal" href="../reference/api/tac.agents.participant.v1.examples.html#tac.agents.participant.v1.examples.baseline.BaselineAgent" title="tac.agents.participant.v1.examples.baseline.BaselineAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaselineAgent</span></code></a> and a <a class="reference internal" href="../reference/api/tac.agents.participant.v1.examples.html#tac.agents.participant.v1.examples.strategy.BaselineStrategy" title="tac.agents.participant.v1.examples.strategy.BaselineStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaselineStrategy</span></code></a> for you. You can run this agent via the <a class="reference external" href="https://github.com/fetchai/agents-tac/blob/main/templates/participant/basic.py">basic template</a>.</p>
 <p>By tuning the parameters the agent’s trading performance can be improved.</p>
 <p>The relevant parameters for agent tuning are:</p>
 <ul class="simple">
@@ -61,7 +61,7 @@
 <li><p><cite>–is-world-modeling</cite>, which specifies whether the agent models its environment, specifically the goods’ prices.</p></li>
 <li><p><cite>–services-interval</cite>, which specifies the number of seconds to wait before doing another search. Searches kick off negotiations. A lower services interval directly translates to a higher number of negotiations.</p></li>
 </ul>
-<p>To evaluate changes in parameters on agent performance you can run your agent against several agents with baseline parameters in the sandbox (see the quickstart on <a class="reference external" href="https://github.com/fetchai/agents-tac/blob/master/README.md">main readme</a> or the guide in <a class="reference external" href="https://github.com/fetchai/agents-tac/blob/master/sandbox/README.md">sandbox readme</a> for details how to start the sandbox and your agent).</p>
+<p>To evaluate changes in parameters on agent performance you can run your agent against several agents with baseline parameters in the sandbox (see the quickstart on <a class="reference external" href="https://github.com/fetchai/agents-tac/blob/main/README.md">main readme</a> or the guide in <a class="reference external" href="https://github.com/fetchai/agents-tac/blob/main/sandbox/README.md">sandbox readme</a> for details how to start the sandbox and your agent).</p>
 <p>Alternatively, you can use our Sandbox Launch App to do a grid parameter search for a population of agents. The Sandbox Launch App can be launched via executing the following command from root directory:</p>
 <p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">tac/gui/launcher/app.py</span></code></p>
 </div>
