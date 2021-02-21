@@ -1,0 +1,13 @@
+# Basic set up for three package managers
+
+version: 2
+updates:
+
+  # Maintain dependencies for Pip
+  - package-ecosystem: "pip"
+    directory: "."
+    schedule:
+      interval: "daily"
+    target-branch: "develop"
+    labels:
+      - "dependencies"

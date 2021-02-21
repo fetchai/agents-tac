@@ -49,17 +49,17 @@ The controller GUI at http://localhost:8097 provides real time insights.
 
 The sandbox is starting up:
 <p align="center">
-  <img src="https://github.com/fetchai/agents-tac/blob/master/docs/sandbox.png?raw=true" alt="Sandbox" width="60%"/>
+  <img src="https://github.com/fetchai/agents-tac/blob/main/docs/sandbox.png?raw=true" alt="Sandbox" width="60%"/>
 </p>
 
 Once agent is connected and searching for the competition:
 <p align="center">
-  <img src="https://github.com/fetchai/agents-tac/blob/master/docs/agent.png?raw=true" alt="Sandbox" width="60%"/>
+  <img src="https://github.com/fetchai/agents-tac/blob/main/docs/agent.png?raw=true" alt="Sandbox" width="60%"/>
 </p>
 
 The controller GUI at http://localhost:8097 provides real time insights:
-<!--![Controller GUI](../master/docs/controller_gui.png)-->
-![Controller GUI](../master/docs/controller_gui.gif)
+<!--![Controller GUI](../main/docs/controller_gui.png)-->
+![Controller GUI](../main/docs/controller_gui.gif)
 
 - [x] Have a look at the documentation and start developing your first agent.
 
@@ -74,23 +74,23 @@ The following publication relates to this repository:
 
 ### 📜 📜 📜 Documentation 📜 📜 📜
 
-The [package documentation](../master/docs) introduces the key components of the agent and competition frameworks and helps agent developers getting started. _This is **required** reading material if you want to build your own agent._
+The [package documentation](../main/docs) introduces the key components of the agent and competition frameworks and helps agent developers getting started. _This is **required** reading material if you want to build your own agent._
 
 ### 📏 📏 📏 Specification 📏 📏 📏
 
-The [framework specification](../master/docs/Trading_Agent_Competition____Specification.pdf) introduces the agent and competition frameworks and discusses the project vision and components. _This is complementary reading material._
+The [framework specification](../main/docs/Trading_Agent_Competition____Specification.pdf) introduces the agent and competition frameworks and discusses the project vision and components. _This is complementary reading material._
 
 ### 🤖 🤖 🤖 Simulation 🤖 🤖 🤖
 
-The [simulation](../master/simulation) provides code to simulate a competition with a population of baseline agents.
+The [simulation](../main/simulation) provides code to simulate a competition with a population of baseline agents.
 
 ### 🛠🛠🛠 Templates 🛠🛠🛠
 
-The [agent templates](../master/templates) provide starting points for agent development.
+The [agent templates](../main/templates) provide starting points for agent development.
 
 ### 🏆 🏆 🏆 Competition 🏆 🏆 🏆
 
-The [competition sandbox](../master/sandbox) provides the code to build the docker image to run the competiton.
+The [competition sandbox](../main/sandbox) provides the code to build the docker image to run the competiton.
 
 ### 🚀🚀🚀 AEA Framework 🚀🚀🚀
 
