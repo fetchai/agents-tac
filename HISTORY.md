@@ -1,5 +1,11 @@
 # Release History
 
+## 0.1.9 (2021-02-21)
+
+- Fixes dependency problems
+- Adds improved graphs of simulation data
+- Adds miscelaneous repo info
+
 ## 0.1.8 (2020-05-09)
 
 - Fixes simulation

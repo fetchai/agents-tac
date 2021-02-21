@@ -1,7 +1,7 @@
 # Templates
 Templates for agent development.
 
-Check out the [package documentation](../../master/docs) to learn more about the agent and competition framework.
+Check out the [package documentation](../../main/docs) to learn more about the agent and competition framework.
 
 ## Available templates
 

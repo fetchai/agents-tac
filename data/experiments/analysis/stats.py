@@ -98,11 +98,12 @@ def analysis_scores_initial_and_final_vs_equilibrium():
     reject = p_value < alpha
     print("One-sided t-test p-value: {}, reject H_0: {}".format(p_value, reject))
     means = [np.mean(fi_v_eq), np.mean(in_v_eq)]
-    print("Mean: fi_v_eq={}, in_v_eq={}".format(means[0], means[1]))
+    print("Mean: fi_v_eq={}, in_v_eq={}".format(means[0], means[1]), "score bin")
     _plot(
         in_v_eq,
         fi_v_eq,
         "scores_in_d_eq_vs_fi_d_eq.png",
+        "score bin",
         label_one="Difference btw initial and equilibrium scores",
         label_two="Difference btw final and equilibrium scores",
     )
@@ -157,7 +158,7 @@ def analysis_scores_final_min_initial():
     print("Mean: w_model={}, baseline={}".format(means[0], means[1]))
     # sns.distplot(w_model)
     # plt.show()
-    _plot(baseline, w_model, "scores_final_min_initial.png")
+    _plot(baseline, w_model, "scores_final_min_initial.png", "score bin")
 
 
 def analysis_scores():
@@ -200,7 +201,7 @@ def analysis_scores():
     print("Mean: w_model={}, baseline={}".format(means[0], means[1]))
     # sns.distplot(w_model)
     # plt.show()
-    _plot(baseline, w_model, "scores.png")
+    _plot(baseline, w_model, "scores.png", "score", extra = 2)
 
 
 def analysis_txs():
@@ -247,7 +248,7 @@ def analysis_txs():
         print("Mean: w_model={}, baseline={}".format(means[0], means[1]))
         # sns.distplot(w_model)
         # plt.show()
-        _plot(baseline, w_model, "txs_{}.png".format(typ))
+        _plot(baseline, w_model, "txs_{}.png".format(typ), "no. of transactions", extra = 2)
 
 
 def analysis_prices():
@@ -284,17 +285,21 @@ def analysis_prices():
     print("Mean: w_model={}, baseline={}".format(means[0], means[1]))
     # sns.distplot(w_model)
     # plt.show()
-    _plot(baseline, w_model, "prices.png")
+    _plot(baseline, w_model, "prices.png", "price", extra=0.2)
 
 
-def _plot(baseline, w_model, file, label_one="baseline", label_two="w_model"):
+def _plot(baseline, w_model, file, x_label, label_one="baseline", label_two="w_model", cut_at_zero = True, extra = 10):
     """Plot helpert function."""
-    min_bin = min(baseline.min(), w_model.min()) - 10
-    max_bin = max(baseline.max(), w_model.max()) + 10
+    min_bin = min(baseline.min(), w_model.min()) - extra
+    if cut_at_zero:
+        min_bin = max(min_bin, 0)
+    max_bin = max(baseline.max(), w_model.max()) + extra
     bins = np.linspace(min_bin, max_bin, 100)
     plt.hist(baseline, bins, alpha=0.5, label=label_one)
     plt.hist(w_model, bins, alpha=0.5, label=label_two)
     plt.legend(loc="upper right")
+    plt.ylabel('count')
+    plt.xlabel(x_label)
     # plt.show()
     plt.savefig(file)
     plt.clf()

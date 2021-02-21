@@ -27,7 +27,7 @@ Basic: Tuning the Agent's Parameters
 
 We have developed a :class:`~tac.agents.participant.v1.examples.baseline.BaselineAgent` and a :class:`~tac.agents.participant.v1.examples.strategy.BaselineStrategy` for you. You can run this agent via the `basic template`_.
 
-.. _basic template: https://github.com/fetchai/agents-tac/blob/master/templates/participant/basic.py
+.. _basic template: https://github.com/fetchai/agents-tac/blob/main/templates/participant/basic.py
 
 By tuning the parameters the agent's trading performance can be improved.
 
@@ -42,9 +42,9 @@ The relevant parameters for agent tuning are:
 
 To evaluate changes in parameters on agent performance you can run your agent against several agents with baseline parameters in the sandbox (see the quickstart on `main readme`_ or the guide in `sandbox readme`_ for details how to start the sandbox and your agent).
 
-.. _main readme: https://github.com/fetchai/agents-tac/blob/master/README.md
+.. _main readme: https://github.com/fetchai/agents-tac/blob/main/README.md
 
-.. _sandbox readme: https://github.com/fetchai/agents-tac/blob/master/sandbox/README.md
+.. _sandbox readme: https://github.com/fetchai/agents-tac/blob/main/sandbox/README.md
 
 Alternatively, you can use our Sandbox Launch App to do a grid parameter search for a population of agents. The Sandbox Launch App can be launched via executing the following command from root directory:
 
