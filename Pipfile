@@ -40,7 +40,7 @@ scipy = "*"
 seaborn = "*"
 sphinxcontrib-mermaid = "*"
 sphinxcontrib-apidoc = "*"
-sphinx = "==2.1.2"
+sphinx = "==3.5.4"
 visdom = "*"
 wtforms = "*"
 
