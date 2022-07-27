@@ -1,3 +1,5 @@
+## NOTE: This repo is archived. Please refer to the [AEA Framework](https://github.com/fetchai/agents-aea) repo which is the new framework for creating autonomous economic agents. There are example TAC agents in that repo as well.
+
 # agents-tac
 
 ![TAC sanity checks and tests](https://github.com/fetchai/agents-tac/workflows/TAC%20sanity%20checks%20and%20tests/badge.svg)
